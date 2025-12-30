@@ -219,6 +219,88 @@ class LVGLCompressData {
   }
 }
 
+class RAWImage {
+  constructor(cf = ColorFormat.UNKNOWN, data = Buffer.alloc(0)) { this.cf = cf; this.data = Buffer.from(data); }
+
+  from_file(filename, cf) {
+    if (cf !== ColorFormat.RAW && cf !== ColorFormat.RAW_ALPHA) throw new Error(`Invalid color format: ${cf}`);
+    this.data = fs.readFileSync(filename);
+    this.cf = cf;
+    return this;
+  }
+
+  to_c_array(filename, outputname = null) {
+    if (!filename.endsWith('.c')) throw new Error("filename not ended with '.c'");
+    const dir = path.dirname(filename);
+    if (dir && !fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+    const varname = outputname || path.basename(filename).split('.')[0].replace(/[-.]/g, '_').replace(/\./g,'_');
+    const flagsArr = [];
+    if (this.premultiplied) flagsArr.push('LV_IMAGE_FLAGS_PREMULTIPLIED');
+    const flags = flagsArr.length ? '0 | ' + flagsArr.join(' | ') : '0';
+    const macro = 'LV_ATTRIBUTE_' + varname.toUpperCase();
+
+    let header = `#if defined(LV_LVGL_H_INCLUDE_SIMPLE)\n#include "lvgl.h"\n#elif defined(LV_LVGL_H_INCLUDE_SYSTEM)\n#include <lvgl.h>\n#elif defined(LV_BUILD_TEST)\n#include "../lvgl.h"\n#else\n#include "lvgl/lvgl.h"\n#endif\n\n#ifndef LV_ATTRIBUTE_MEM_ALIGN\n#define LV_ATTRIBUTE_MEM_ALIGN\n#endif\n\n#ifndef ${macro}\n#define ${macro}\n#endif\n\nstatic const\nLV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST ${macro}\nuint8_t ${varname}_map[] = {\n`;
+
+    const ending = `\n};\n\nconst lv_image_dsc_t ${varname} = {\n  .header = {\n    .magic = LV_IMAGE_HEADER_MAGIC,\n    .cf = LV_COLOR_FORMAT_${Object.keys(ColorFormat).find(k=>ColorFormat[k]===this.cf)||'UNKNOWN'},\n    .flags = ${flags},\n    .w = 0,\n    .h = 0,\n    .stride = 0,\n    .reserved_2 = 0,\n  },\n  .data_size = sizeof(${varname}_map),\n  .data = ${varname}_map,\n  .reserved = NULL,\n};\n`;
+
+    function write_binary(f, dataBuf, stride) {
+      stride = stride === 0 ? 16 : stride;
+      for (let i=0;i<dataBuf.length;i++) {
+        if (i % stride === 0) f.write('\r\n    ');
+        f.write(`0x${dataBuf[i].toString(16).padStart(2,'0')},`);
+      }
+      f.write('\r\n');
+    }
+
+    if (!this.data || this.data.length === 0) throw new Error('RAW data is empty; cannot write C array');
+    const fh = fs.createWriteStream(filename, {flags:'w'});
+    fh.write('\r\n' + header.replace(/\n/g,'\r\n'));
+    write_binary(fh, this.data, 16);
+    fh.write(ending.replace(/\n/g,'\r\n'));
+    // Append final CRLF to match Python's output trailing blank line
+    fh.write('\r\n');
+    fh.end();
+  }
+
+  to_c_array_as_string(filename = null, outputname = null) {
+    if (!this.data || this.data.length === 0) throw new Error('RAW data is empty; cannot create C array string');
+
+    // Derive varname: prefer explicit outputname, then filename, then fallback 'raw_image'
+    let varname = 'raw_image';
+    if (outputname) varname = outputname;
+    else if (filename) varname = path.basename(filename).split('.')[0];
+    varname = varname.replace(/[-.]/g, '_').replace(/\./g, '_');
+
+    const flagsArr = [];
+    if (this.premultiplied) flagsArr.push('LV_IMAGE_FLAGS_PREMULTIPLIED');
+    const flags = flagsArr.length ? '0 | ' + flagsArr.join(' | ') : '0';
+    const macro = 'LV_ATTRIBUTE_' + varname.toUpperCase();
+
+    let header_s = `#if defined(LV_LVGL_H_INCLUDE_SIMPLE)\n#include "lvgl.h"\n#elif defined(LV_LVGL_H_INCLUDE_SYSTEM)\n#include <lvgl.h>\n#elif defined(LV_BUILD_TEST)\n#include "../lvgl.h"\n#else\n#include "lvgl/lvgl.h"\n#endif\n\n#ifndef LV_ATTRIBUTE_MEM_ALIGN\n#define LV_ATTRIBUTE_MEM_ALIGN\n#endif\n\n#ifndef ${macro}\n#define ${macro}\n#endif\n\nstatic const\nLV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST ${macro}\nuint8_t ${varname}_map[] = {\n`;
+
+    const ending_s = `\n};\n\nconst lv_image_dsc_t ${varname} = {\n  .header = {\n    .magic = LV_IMAGE_HEADER_MAGIC,\n    .cf = LV_COLOR_FORMAT_${Object.keys(ColorFormat).find(k=>ColorFormat[k]===this.cf)||'UNKNOWN'},\n    .flags = ${flags},\n    .w = 0,\n    .h = 0,\n    .stride = 0,\n    .reserved_2 = 0,\n  },\n  .data_size = sizeof(${varname}_map),\n  .data = ${varname}_map,\n  .reserved = NULL,\n};\n`;
+
+    function write_binary_str(dataBuf, stride) {
+      stride = stride === 0 ? 16 : stride;
+      let out = '';
+      for (let i=0;i<dataBuf.length;i++) {
+        if (i % stride === 0) out += '\r\n    ';
+        out += `0x${dataBuf[i].toString(16).padStart(2,'0')},`;
+      }
+      out += '\r\n';
+      return out;
+    }
+
+    let outStr = '';
+    outStr += '\r\n' + header_s.replace(/\n/g, '\r\n');
+    outStr += write_binary_str(this.data, 16);
+    outStr += ending_s.replace(/\n/g, '\r\n');
+    outStr += '\r\n';
+    return outStr;
+  }
+}
+
 class LVGLImage {
   constructor(cf = ColorFormat.UNKNOWN, w = 0, h = 0, data = Buffer.alloc(0)) {
     this.cf = cf; this.w = w; this.h = h; this.stride = 0; this.premultiplied = false; this.rgb565_dither = false; this.nema_gfx = false;
@@ -648,12 +730,43 @@ class LVGLImage {
     } else {
       throw new Error('Unsupported input for PNG: expected filename, data URI, or Buffer');
     }
-    return PNG.sync.read(buf, {inputHasAlpha:true});
+    // store the last input buffer so callers (e.g., to_c_array) can decide
+    // whether the original input was a file (PNG/JPEG) and possibly embed
+    // the original bytes when producing C arrays for RAW inputs.
+    this._last_input_buf = buf;
+    try {
+      return PNG.sync.read(buf, {inputHasAlpha:true});
+    } catch (err) {
+      // Try to recover from common cases where the buffer has leading/trailing
+      // garbage (e.g., some data URIs or wrapped files). First look for the PNG
+      // signature (0x89 'PNG') and re-attempt parsing from there.
+      const sig = Buffer.from([0x89,0x50,0x4E,0x47]);
+      const pos = buf.indexOf(sig);
+      if (pos > 0) {
+        buf = buf.slice(pos);
+        this._last_input_buf = buf;
+        return PNG.sync.read(buf, {inputHasAlpha:true});
+      }
+      // If signature found at start but parsing failed, try trimming trailing
+      // bytes after the IEND chunk in case extra bytes were appended.
+      const iend = Buffer.from('IEND');
+      const iendPos = buf.indexOf(iend);
+      if (iendPos !== -1) {
+        const endPos = iendPos + 8; // IEND + CRC
+        // Only trim if it actually shortens the buffer
+        if (endPos < buf.length) {
+          buf = buf.slice(0, endPos);
+          this._last_input_buf = buf;
+          return PNG.sync.read(buf, {inputHasAlpha:true});
+        }
+      }
+      throw err;
+    }
   }
 
   _png_to_indexed(cf, filename) {
     // read raw PNG bytes
-    const png = this._readPNG(filename);
+    let png = this._readPNG(filename);
 
     // For simplicity, always use pngquant when target is indexed and colors less than 256
     const auto_cf = (cf === null || cf === undefined);
@@ -699,10 +812,15 @@ class LVGLImage {
     const palette_buf = Buffer.alloc(ncolors(cf)*4);
     for (let i=0;i<ncolors(cf);i++) {
       const idxv = palette[i] || [255,255,255,0];
-      palette_buf.writeUInt8(idxv[2], i*4 + 0);
-      palette_buf.writeUInt8(idxv[1], i*4 + 1);
-      palette_buf.writeUInt8(idxv[0], i*4 + 2);
-      palette_buf.writeUInt8(idxv[3], i*4 + 3);
+      // Coerce/clamp each component to a valid 0..255 integer to avoid writeUInt8 range errors
+      const b = Number.isFinite(Number(idxv[2])) ? (Number(idxv[2]) & 0xff) : 0;
+      const g = Number.isFinite(Number(idxv[1])) ? (Number(idxv[1]) & 0xff) : 0;
+      const r = Number.isFinite(Number(idxv[0])) ? (Number(idxv[0]) & 0xff) : 0;
+      const a = Number.isFinite(Number(idxv[3])) ? (Number(idxv[3]) & 0xff) : 0;
+      palette_buf.writeUInt8(b, i*4 + 0);
+      palette_buf.writeUInt8(g, i*4 + 1);
+      palette_buf.writeUInt8(r, i*4 + 2);
+      palette_buf.writeUInt8(a, i*4 + 3);
     }
 
     // Build bitmap data: either use quantResult.rows or map pixels to palette indices
@@ -817,6 +935,25 @@ class LVGLImage {
     this.set_data(ColorFormat.L8, png.width, png.height, raw);
   }
 
+  _png_to_raw(cf, filename) {
+    const png = this._readPNG(filename);
+    const out = [];
+    for (let y=0;y<png.height;y++) {
+      for (let x=0;x<png.width;x++) {
+        const i=(png.width*y+x)*4; const r=png.data[i], g=png.data[i+1], b=png.data[i+2], a=png.data[i+3];
+        if (cf === ColorFormat.RAW) {
+          const [rr,gg,bb,aa] = color_pre_multiply(r,g,b,a, this.background || 0);
+          out.push(uint32_t((0xff<<24)|(rr<<16)|(gg<<8)|bb));
+        } else {
+          out.push(uint32_t((a<<24)|(r<<16)|(g<<8)|b));
+        }
+      }
+    }
+    const raw = Buffer.concat(out.map(b=>Buffer.from(b)));
+    // stride is 4 bytes per pixel for RAW formats
+    this.set_data(cf, png.width, png.height, raw, png.width * 4);
+  }
+
   _png_to_colormap(cf, filename) {
     const png = this._readPNG(filename);
     const rows = [];
@@ -903,10 +1040,26 @@ class LVGLImage {
       }
     }
 
+    // Special-case: if caller provided a data URI and requested RAW/RAW_ALPHA,
+    // treat it as an embedded file and avoid feeding it through pngjs (some
+    // small data-URI PNGs may provoke strict parser errors). Store the raw
+    // bytes in `this._last_input_buf` and set image to RAW-as-file layout.
+    if ((cf === ColorFormat.RAW || cf === ColorFormat.RAW_ALPHA) && typeof filename === 'string' && filename.startsWith('data:')) {
+      let buf;
+      if (filename.startsWith('data:image/png;base64,')) buf = Buffer.from(filename.split(',')[1], 'base64');
+      else { const parts = filename.split(','); buf = parts.length>1 ? Buffer.from(parts[1], 'base64') : Buffer.from(''); }
+      this._last_input_buf = buf;
+      this.cf = cf;
+      this.w = 0; this.h = 0; this.stride = 0;
+      this.data = buf;
+      return this;
+    }
+
     if (!cf || is_indexed(cf)) this._png_to_indexed(cf, filename);
     else if (is_alpha_only(cf)) this._png_to_alpha_only(cf, filename);
     else if (cf === ColorFormat.AL88) this._png_to_al88(cf, filename);
     else if (cf === ColorFormat.L8) this._png_to_luma_only(cf, filename);
+    else if (cf === ColorFormat.RAW || cf === ColorFormat.RAW_ALPHA) this._png_to_raw(cf, filename);
     else if (has_alpha(cf) || bpp(cf) > 8) this._png_to_colormap(cf, filename);
     else {
       const cfName = Object.keys(ColorFormat).find(k => ColorFormat[k] === cf) || cf;
@@ -952,6 +1105,13 @@ class LVGLImage {
       const arr = this.unpack_colors(this.data, this.cf, this.w);
       rgba = Buffer.alloc(this.w * this.h * 4);
       for (let i=0;i<arr.length/4;i++) { const r=arr[i*4], g=arr[i*4+1], b=arr[i*4+2], a=arr[i*4+3]; const off=i*4; rgba[off]=r; rgba[off+1]=g; rgba[off+2]=b; rgba[off+3]=a; }
+    } else if (this.cf === ColorFormat.RAW || this.cf === ColorFormat.RAW_ALPHA) {
+      rgba = Buffer.alloc(this.w * this.h * 4);
+      for (let i = 0; i < this.w * this.h; i++) {
+        const off = i * 4; const b = this.data[off], g = this.data[off+1], r = this.data[off+2], a = this.data[off+3];
+        const alpha = this.cf === ColorFormat.RAW ? 255 : a;
+        const o = i*4; rgba[o]=r; rgba[o+1]=g; rgba[o+2]=b; rgba[o+3]=alpha;
+      }
     } else {
       throw new Error(`missing logic: ${this.cf}`);
     }
@@ -966,6 +1126,21 @@ class LVGLImage {
     if (!filename.endsWith('.c')) throw new Error("filename not ended with '.c'");
     const dir = path.dirname(filename);
     if (dir && !fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+    // For RAW/RAW_ALPHA: if data looks like a file (PNG signature), delegate to RAWImage behavior
+    if ((this.cf === ColorFormat.RAW || this.cf === ColorFormat.RAW_ALPHA) && compress === 'NONE') {
+      const pngSig = Buffer.from([0x89,0x50,0x4e,0x47]);
+      const hasFileSig = (this.data && this.data.length >= 4 && this.data.slice(0,4).equals(pngSig)) || (this._last_input_buf && this._last_input_buf.length >= 4 && this._last_input_buf.slice(0,4).equals(pngSig));
+      if (hasFileSig) {
+        // When the image was originally loaded from a file/data-uri we may want to
+        // embed the original file bytes in the C array (RAW-as-file behavior).
+        // Use RAWImage to produce the same layout (zeroed w/h/stride).
+        const buf = (this.data && this.data.length >=4 && this.data.slice(0,4).equals(pngSig)) ? this.data : this._last_input_buf;
+        const tmp = new RAWImage(this.cf, buf);
+        tmp.premultiplied = this.premultiplied;
+        return tmp.to_c_array(filename, outputname);
+      }
+    }
 
     let data = null;
     if (compress !== 'NONE') data = new LVGLCompressData(this.cf, compress, this.data).compressed; else data = this.data;
@@ -984,14 +1159,15 @@ class LVGLImage {
     function write_binary(f, dataBuf, stride) {
       stride = stride === 0 ? 16 : stride;
       for (let i=0;i<dataBuf.length;i++) {
-        if (i % stride === 0) f.write('\n    ');
+        if (i % stride === 0) f.write('\r\n    ');
         f.write(`0x${dataBuf[i].toString(16).padStart(2,'0')},`);
       }
-      f.write('\n');
+      f.write('\r\n');
     }
 
     const fh = fs.createWriteStream(filename, {flags:'w'});
-    fh.write(header);
+    const normalizedHeader = '\r\n' + header.replace(/\n/g, '\r\n');
+    fh.write(normalizedHeader);
 
     if (compress !== 'NONE') {
       write_binary(fh, data, 16);
@@ -1006,10 +1182,22 @@ class LVGLImage {
   }
 
   to_c_array_as_string(filename, outputname = null, compress = 'NONE') {
+    // For RAW/RAW_ALPHA: if data looks like a file (PNG signature), delegate to RAWImage-style output
+    if ((this.cf === ColorFormat.RAW || this.cf === ColorFormat.RAW_ALPHA) && compress === 'NONE') {
+      const pngSig = Buffer.from([0x89,0x50,0x4e,0x47]);
+      const hasFileSig = (this.data && this.data.length >= 4 && this.data.slice(0,4).equals(pngSig)) || (this._last_input_buf && this._last_input_buf.length >= 4 && this._last_input_buf.slice(0,4).equals(pngSig));
+      if (hasFileSig) {
+        const buf = (this.data && this.data.length >=4 && this.data.slice(0,4).equals(pngSig)) ? this.data : this._last_input_buf;
+        const tmp = new RAWImage(this.cf, buf);
+        tmp.premultiplied = this.premultiplied;
+        return tmp.to_c_array_as_string(filename, outputname);
+      }
+    }
+
     let data = null;
     if (compress !== 'NONE') data = new LVGLCompressData(this.cf, compress, this.data).compressed; else data = this.data;
 
-    const varname = outputname || path.basename(filename).split('.')[0].replace(/[-.]/g, '_');
+    const varname = outputname || (filename ? path.basename(filename).split('.')[0].replace(/[-.]/g, '_') : 'image');
     const flagsArr = [];
     if (compress !== 'NONE') flagsArr.push('LV_IMAGE_FLAGS_COMPRESSED');
     if (this.premultiplied) flagsArr.push('LV_IMAGE_FLAGS_PREMULTIPLIED');
@@ -1024,15 +1212,15 @@ class LVGLImage {
       stride = stride === 0 ? 16 : stride;
       let out = '';
       for (let i=0;i<dataBuf.length;i++) {
-        if (i % stride === 0) out += '\n    ';
+        if (i % stride === 0) out += '\r\n    ';
         out += `0x${dataBuf[i].toString(16).padStart(2,'0')},`;
       }
-      out += '\n';
+      out += '\r\n';
       return out;
     }
 
     let outStr = '';
-    outStr += header;
+    outStr += '\r\n' + header.replace(/\n/g, '\r\n');
 
     if (compress !== 'NONE') {
       outStr += write_binary_str(data, 16);
@@ -1047,4 +1235,4 @@ class LVGLImage {
   }
 }
 
-module.exports = { LVGLImage, LVGLImageHeader, LVGLCompressData, RLEImage, ColorFormat, bpp, ncolors, is_indexed, is_alpha_only, has_alpha };
+module.exports = { LVGLImage, RAWImage, LVGLImageHeader, LVGLCompressData, RLEImage, ColorFormat, bpp, ncolors, is_indexed, is_alpha_only, has_alpha };

@@ -32,7 +32,6 @@ import {
 import { sourceRootDir } from "eez-studio-shared/util";
 import { getSelectorBuildCode } from "project-editor/lvgl/style-helper";
 import type { LVGLGroup } from "./groups";
-import { showBuildImageInfoDialog } from "./build-image-info-dialog";
 import tinycolor from "tinycolor2";
 import { GENERATED_NAME_PREFIX } from "./identifiers";
 import type { Flow } from "project-editor/flow/flow";
@@ -2397,8 +2396,6 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
             return;
         }
 
-        let showInfoDialog = false;
-
         await Promise.all(
             this.bitmaps.map(bitmap =>
                 (async () => {
@@ -2435,9 +2432,6 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                                 MessageType.ERROR,
                                 `Error genereting bitmap file '${output}.bin': ${err}`
                             );
-                            if (this.isV9) {
-                                showInfoDialog = true;
-                            }
                         }
                     } else {
                         // write C file
@@ -2480,18 +2474,11 @@ ${source}`;
                                 MessageType.ERROR,
                                 `Error genereting bitmap file '${output}.c': ${err}`
                             );
-                            if (this.isV9) {
-                                showInfoDialog = true;
-                            }
                         }
                     }
                 })()
             )
         );
-
-        if (showInfoDialog) {
-            showBuildImageInfoDialog();
-        }
     }
 
     async copyFontFiles() {
