@@ -1,5 +1,6 @@
 import { observer } from "mobx-react";
 import React from "react";
+import { Menu, MenuItem } from "@electron/remote";
 
 import { Icon } from "eez-studio-ui/icon";
 
@@ -29,13 +30,77 @@ const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+function collectMessagesText(allMessages: OutputMessage[], clickedMessage: OutputMessage | undefined = undefined): string {
+    const lines: string[] = [];
+    let foundClickedMessage = clickedMessage ? false : true;
+
+    function collect(messages: OutputMessage[], indent: number, path: string[]) {
+        for (const message of messages) {
+            if (foundClickedMessage) {
+                if (message.type == MessageType.GROUP) {
+                    if (message.messages!.length == 1) {
+                        collect(message.messages!, indent, [...path, message.text]);
+                    } else {
+                        lines.push("    ".repeat(indent) + [...path, message.text].join(" / "));
+                        collect(message.messages!, indent + 1, []);
+                    }
+                } else if (
+                    message.type == MessageType.ERROR ||
+                    message.type == MessageType.WARNING ||
+                    message.type == MessageType.INFO
+                ) {
+                    if (path.length > 0) {
+                        lines.push("    ".repeat(indent) + path.join(" / "));
+                        lines.push("    ".repeat(indent + 1) + message.text);
+                    } else {
+                        lines.push(message.text);
+                    }
+                }
+            } else if (clickedMessage && clickedMessage.id == message.id) {
+                foundClickedMessage = true;
+
+                if (message.type == MessageType.GROUP) {
+                    collect(message.messages!, indent, [...path, message.text]);
+                } else if (
+                    message.type == MessageType.ERROR ||
+                    message.type == MessageType.WARNING ||
+                    message.type == MessageType.INFO
+                ) {
+                    if (path.length > 0) {
+                        lines.push("    ".repeat(indent) + path.join(" / "));
+                        lines.push("    ".repeat(indent + 1) + message.text);
+                    } else {
+                        lines.push(message.text);
+                    }
+                }
+
+                foundClickedMessage = false;
+            } else {
+                if (message.type == MessageType.GROUP) {
+                    collect(message.messages!, indent, [...path, message.text]);
+                }
+            }
+        }
+    }
+
+    collect(allMessages, 0, []);
+
+    return lines.join("\n");
+}
+
+function copyToClipboard(text: string) {
+    const { clipboard } = require("electron");
+    clipboard.writeText(text);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const Messages = observer(
     class Messages
         extends React.Component<{
             section: OutputSection;
         }>
-        implements IPanel
-    {
+        implements IPanel {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -130,12 +195,77 @@ export const Messages = observer(
             }
         };
 
+        onContextMenu = (event: React.MouseEvent) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (this.props.section.showsSearchResults || this.props.section.messages.messages.length == 0) {
+                return;
+            }
+
+            const target = event.target as HTMLElement;
+            const messageElement = target.closest('[data-object-id]');
+
+            let clickedMessage: OutputMessage | undefined;
+
+            if (messageElement) {
+                const messageId = messageElement.getAttribute('data-object-id');
+
+                if (messageId) {
+                    // Find the message by ID and build flattened parent path
+                    const findMessageById = (messages: OutputMessage[]): OutputMessage | undefined => {
+                        for (const message of messages) {
+                            if (message.id === messageId) {
+                                clickedMessage = message;
+                                return;
+                            }
+                            if (message.messages && message.type === MessageType.GROUP) {
+                                findMessageById(message.messages);
+                                if (clickedMessage) return;
+                            }
+                        }
+                        return undefined;
+                    };
+
+                    findMessageById(this.props.section.messages.messages);
+                }
+            }
+
+            const menu = new Menu();
+
+            if (clickedMessage) {
+                menu.append(
+                    new MenuItem({
+                        label: "Copy",
+                        click: () => {
+                            copyToClipboard(collectMessagesText(this.props.section.messages.messages, clickedMessage));
+
+                        }
+                    })
+                );
+            }
+
+            menu.append(
+                new MenuItem({
+                    label: "Copy All",
+                    click: () => {
+                        copyToClipboard(collectMessagesText(this.props.section.messages.messages));
+                    }
+                })
+            );
+
+            if (menu.items.length > 0) {
+                menu.popup({});
+            }
+        };
+
         render() {
             return (
                 <div
                     ref={this.divRef}
                     className="EezStudio_Messages"
                     onFocus={this.onFocus}
+                    onContextMenu={this.onContextMenu}
                     tabIndex={0}
                 >
                     <Tree
