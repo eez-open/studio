@@ -376,6 +376,10 @@ export interface WorkerToRenderMessage {
         name: string;
     };
 
+    getLvglObjectNameFromIndex?: {
+        index: number;
+    };
+
     lvglObjAddStyle?: {
         targetObj: number;
         styleIndex: number;

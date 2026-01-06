@@ -413,6 +413,10 @@ export class WasmRuntime extends RemoteRuntime {
                     workerToRenderMessage.getLvglImageByName.name
                 ) ?? 0
             );
+        } else if (workerToRenderMessage.getLvglObjectNameFromIndex) {
+            return this.lgvlPageRuntime?.getLvglObjectNameFromIndex(
+                workerToRenderMessage.getLvglObjectNameFromIndex.index
+            );
         } else if (workerToRenderMessage.lvglObjAddStyle) {
             this.lgvlPageRuntime?.addStyle(
                 workerToRenderMessage.lvglObjAddStyle.targetObj,

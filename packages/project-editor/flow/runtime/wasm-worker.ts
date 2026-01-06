@@ -563,6 +563,17 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
     });
 }
 
+function getLvglObjectNameFromIndex(wasmModuleId: number, index: number) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglObjectNameFromIndex: { index }
+    });
+}
+
 function lvglObjAddStyle(
     wasmModuleId: number,
     targetObj: number,
@@ -689,6 +700,7 @@ function lvglOnEventHandler(
 (global as any).getLvglGroupByName = getLvglGroupByName;
 (global as any).getLvglStyleByName = getLvglStyleByName;
 (global as any).getLvglImageByName = getLvglImageByName;
+(global as any).getLvglObjectNameFromIndex = getLvglObjectNameFromIndex;
 (global as any).lvglObjAddStyle = lvglObjAddStyle;
 (global as any).lvglObjRemoveStyle = lvglObjRemoveStyle;
 (global as any).lvglSetColorTheme = lvglSetColorTheme;

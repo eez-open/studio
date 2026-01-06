@@ -5307,16 +5307,18 @@ var ASM_CONSTS = {
  1064575: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
  1064628: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
  1064681: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1064734: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1064767: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1064803: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1064848: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1064954: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1064990: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1065027: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1065067: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1065124: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1065183: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+ 1064734: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1064781: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1064814: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1064850: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1064895: ($0, $1) => { js_dispatch_event($0, $1); },  
+ 1064926: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1065032: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1065068: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1065105: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1065145: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1065202: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1065261: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5599,6 +5601,8 @@ var _lvglDeleteScreenOnUnload = Module['_lvglDeleteScreenOnUnload'] = makeInvali
 var _lvglGetTabName = Module['_lvglGetTabName'] = makeInvalidEarlyAccess('_lvglGetTabName');
 var _lv_tabview_get_tab_bar = Module['_lv_tabview_get_tab_bar'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_bar');
 var _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = makeInvalidEarlyAccess('_lv_obj_get_child_by_type');
+var _global_event_dispatcher = Module['_global_event_dispatcher'] = makeInvalidEarlyAccess('_global_event_dispatcher');
+var _get_global_dispatcher_ptr = Module['_get_global_dispatcher_ptr'] = makeInvalidEarlyAccess('_get_global_dispatcher_ptr');
 var _lv_group_init = Module['_lv_group_init'] = makeInvalidEarlyAccess('_lv_group_init');
 var _lv_group_deinit = Module['_lv_group_deinit'] = makeInvalidEarlyAccess('_lv_group_deinit');
 var _lv_ll_init = Module['_lv_ll_init'] = makeInvalidEarlyAccess('_lv_ll_init');
@@ -7578,6 +7582,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglGetTabName'] != 'undefined', 'missing Wasm export: lvglGetTabName');
   assert(typeof wasmExports['lv_tabview_get_tab_bar'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_bar');
   assert(typeof wasmExports['lv_obj_get_child_by_type'] != 'undefined', 'missing Wasm export: lv_obj_get_child_by_type');
+  assert(typeof wasmExports['global_event_dispatcher'] != 'undefined', 'missing Wasm export: global_event_dispatcher');
+  assert(typeof wasmExports['get_global_dispatcher_ptr'] != 'undefined', 'missing Wasm export: get_global_dispatcher_ptr');
   assert(typeof wasmExports['lv_group_init'] != 'undefined', 'missing Wasm export: lv_group_init');
   assert(typeof wasmExports['lv_group_deinit'] != 'undefined', 'missing Wasm export: lv_group_deinit');
   assert(typeof wasmExports['lv_ll_init'] != 'undefined', 'missing Wasm export: lv_ll_init');
@@ -9554,6 +9560,8 @@ function assignWasmExports(wasmExports) {
   _lvglGetTabName = Module['_lvglGetTabName'] = createExportWrapper('lvglGetTabName', 3);
   _lv_tabview_get_tab_bar = Module['_lv_tabview_get_tab_bar'] = createExportWrapper('lv_tabview_get_tab_bar', 1);
   _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = createExportWrapper('lv_obj_get_child_by_type', 3);
+  _global_event_dispatcher = Module['_global_event_dispatcher'] = createExportWrapper('global_event_dispatcher', 1);
+  _get_global_dispatcher_ptr = Module['_get_global_dispatcher_ptr'] = createExportWrapper('get_global_dispatcher_ptr', 0);
   _lv_group_init = Module['_lv_group_init'] = createExportWrapper('lv_group_init', 0);
   _lv_group_deinit = Module['_lv_group_deinit'] = createExportWrapper('lv_group_deinit', 0);
   _lv_ll_init = Module['_lv_ll_init'] = createExportWrapper('lv_ll_init', 2);

@@ -1362,8 +1362,20 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
                     : "?"
             )
             .join(USER_WIDGET_IDENTIFIER_SEPARATOR);
-
+        
         return this.runtime.assetsMap.lvglWidgetIndexes[identifier];
+    }
+
+    getLvglObjectNameFromIndex(index: number) {
+        for (const [name, idx] of Object.entries(
+            this.runtime.assetsMap.lvglWidgetIndexes
+        )) {
+            if (idx == index) {
+                return this.stringLiteral(name);
+            }
+        }
+
+        return 0;
     }
 
     override addTickCallback(callback: (flowState: number) => void) {
