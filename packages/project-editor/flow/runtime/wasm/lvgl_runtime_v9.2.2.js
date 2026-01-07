@@ -1480,8 +1480,17 @@ async function createWasm() {
   };
   
   
+  var zeroMemory = (ptr, size) => HEAPU8.fill(0, ptr, ptr + size);
+  
+  var alignMemory = (size, alignment) => {
+      assert(alignment, "alignment argument is required");
+      return Math.ceil(size / alignment) * alignment;
+    };
   var mmapAlloc = (size) => {
-      abort('internal error: mmapAlloc called but `emscripten_builtin_memalign` native symbol not exported');
+      size = alignMemory(size, 65536);
+      var ptr = _emscripten_builtin_memalign(65536, size);
+      if (ptr) zeroMemory(ptr, size);
+      return ptr;
     };
   var MEMFS = {
   ops_table:null,
@@ -3799,6 +3808,16 @@ async function createWasm() {
   }
   }
 
+  function ___syscall_fstat64(fd, buf) {
+  try {
+  
+      return SYSCALLS.writeStat(buf, FS.fstat(fd));
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+
   var stringToUTF8 = (str, outPtr, maxBytesToWrite) => {
       assert(typeof maxBytesToWrite == 'number', 'stringToUTF8(str, outPtr, maxBytesToWrite) is missing the third parameter that specifies the length of the output buffer!');
       return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite);
@@ -3960,6 +3979,33 @@ async function createWasm() {
   }
   }
 
+  function ___syscall_lstat64(path, buf) {
+  try {
+  
+      path = SYSCALLS.getStr(path);
+      return SYSCALLS.writeStat(buf, FS.lstat(path));
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+
+  function ___syscall_newfstatat(dirfd, path, buf, flags) {
+  try {
+  
+      path = SYSCALLS.getStr(path);
+      var nofollow = flags & 256;
+      var allowEmpty = flags & 4096;
+      flags = flags & (~6400);
+      assert(!flags, `unknown flags in __syscall_newfstatat: ${flags}`);
+      path = SYSCALLS.calculateAt(dirfd, path, allowEmpty);
+      return SYSCALLS.writeStat(buf, nofollow ? FS.lstat(path) : FS.stat(path));
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+
   
   function ___syscall_openat(dirfd, path, flags, varargs) {
   SYSCALLS.varargs = varargs;
@@ -3975,8 +4021,72 @@ async function createWasm() {
   }
   }
 
+  function ___syscall_stat64(path, buf) {
+  try {
+  
+      path = SYSCALLS.getStr(path);
+      return SYSCALLS.writeStat(buf, FS.stat(path));
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+
   var __abort_js = () =>
       abort('native code called abort()');
+
+  var __emscripten_throw_longjmp = () => {
+      throw Infinity;
+    };
+
+  
+  
+  
+  
+  
+  var INT53_MAX = 9007199254740992;
+  
+  var INT53_MIN = -9007199254740992;
+  var bigintToI53Checked = (num) => (num < INT53_MIN || num > INT53_MAX) ? NaN : Number(num);
+  function __mmap_js(len, prot, flags, fd, offset, allocated, addr) {
+    offset = bigintToI53Checked(offset);
+  
+  
+  try {
+  
+      // musl's mmap doesn't allow values over a certain limit
+      // see OFF_MASK in mmap.c.
+      assert(!isNaN(offset));
+      var stream = SYSCALLS.getStreamFromFD(fd);
+      var res = FS.mmap(stream, len, offset, prot, flags);
+      var ptr = res.ptr;
+      HEAP32[((allocated)>>2)] = res.allocated;
+      HEAPU32[((addr)>>2)] = ptr;
+      return 0;
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  ;
+  }
+
+  
+  function __munmap_js(addr, len, prot, flags, fd, offset) {
+    offset = bigintToI53Checked(offset);
+  
+  
+  try {
+  
+      var stream = SYSCALLS.getStreamFromFD(fd);
+      if (prot & 2) {
+        SYSCALLS.doMsync(addr, stream, len, flags, offset);
+      }
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  ;
+  }
 
   var _emscripten_get_now = () => performance.now();
   
@@ -3986,10 +4096,6 @@ async function createWasm() {
   
   var checkWasiClock = (clock_id) => clock_id >= 0 && clock_id <= 3;
   
-  var INT53_MAX = 9007199254740992;
-  
-  var INT53_MIN = -9007199254740992;
-  var bigintToI53Checked = (num) => (num < INT53_MIN || num > INT53_MAX) ? NaN : Number(num);
   function _clock_time_get(clk_id, ignored_precision, ptime) {
     ignored_precision = bigintToI53Checked(ignored_precision);
   
@@ -4103,10 +4209,6 @@ async function createWasm() {
       // casing all heap size related code to treat 0 specially.
       2147483648;
   
-  var alignMemory = (size, alignment) => {
-      assert(alignment, "alignment argument is required");
-      return Math.ceil(size / alignment) * alignment;
-    };
   
   var growMemory = (size) => {
       var oldHeapSize = wasmMemory.buffer.byteLength;
@@ -4173,6 +4275,65 @@ async function createWasm() {
       }
       err(`Failed to grow the heap from ${oldSize} bytes to ${newSize} bytes, not enough memory!`);
       return false;
+    };
+
+  var ENV = {
+  };
+  
+  var getExecutableName = () => thisProgram || './this.program';
+  var getEnvStrings = () => {
+      if (!getEnvStrings.strings) {
+        // Default values.
+        // Browser language detection #8751
+        var lang = ((typeof navigator == 'object' && navigator.language) || 'C').replace('-', '_') + '.UTF-8';
+        var env = {
+          'USER': 'web_user',
+          'LOGNAME': 'web_user',
+          'PATH': '/',
+          'PWD': '/',
+          'HOME': '/home/web_user',
+          'LANG': lang,
+          '_': getExecutableName()
+        };
+        // Apply the user-provided values, if any.
+        for (var x in ENV) {
+          // x is a key in ENV; if ENV[x] is undefined, that means it was
+          // explicitly set to be so. We allow user code to do that to
+          // force variables with default values to remain unset.
+          if (ENV[x] === undefined) delete env[x];
+          else env[x] = ENV[x];
+        }
+        var strings = [];
+        for (var x in env) {
+          strings.push(`${x}=${env[x]}`);
+        }
+        getEnvStrings.strings = strings;
+      }
+      return getEnvStrings.strings;
+    };
+  
+  var _environ_get = (__environ, environ_buf) => {
+      var bufSize = 0;
+      var envp = 0;
+      for (var string of getEnvStrings()) {
+        var ptr = environ_buf + bufSize;
+        HEAPU32[(((__environ)+(envp))>>2)] = ptr;
+        bufSize += stringToUTF8(string, ptr, Infinity) + 1;
+        envp += 4;
+      }
+      return 0;
+    };
+
+  
+  var _environ_sizes_get = (penviron_count, penviron_buf_size) => {
+      var strings = getEnvStrings();
+      HEAPU32[((penviron_count)>>2)] = strings.length;
+      var bufSize = 0;
+      for (var string of strings) {
+        bufSize += lengthBytesUTF8(string) + 1;
+      }
+      HEAPU32[((penviron_buf_size)>>2)] = bufSize;
+      return 0;
     };
 
   function _fd_close(fd) {
@@ -4272,6 +4433,20 @@ async function createWasm() {
   }
   }
 
+  var wasmTableMirror = [];
+  
+  
+  var getWasmTableEntry = (funcPtr) => {
+      var func = wasmTableMirror[funcPtr];
+      if (!func) {
+        /** @suppress {checkTypes} */
+        wasmTableMirror[funcPtr] = func = wasmTable.get(funcPtr);
+      }
+      /** @suppress {checkTypes} */
+      assert(wasmTable.get(funcPtr) == func, 'JavaScript-side Wasm function table mirror is out of date!');
+      return func;
+    };
+
   
   
   var stringToNewUTF8 = (str) => {
@@ -4289,6 +4464,7 @@ async function createWasm() {
         str += String.fromCharCode(ch);
       }
     };
+
 
 
   var handleException = (e) => {
@@ -4889,6 +5065,7 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
   Module['AsciiToString'] = AsciiToString;
   Module['stringToNewUTF8'] = stringToNewUTF8;
   Module['requestFullscreen'] = requestFullscreen;
+  Module['FS'] = FS;
   var missingLibrarySymbols = [
   'writeI53ToI64',
   'writeI53ToI64Clamped',
@@ -4904,7 +5081,6 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
   'getTempRet0',
   'setTempRet0',
   'createNamedFunction',
-  'zeroMemory',
   'withStackSave',
   'inetPton4',
   'inetNtop4',
@@ -4914,7 +5090,6 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
   'writeSockaddr',
   'runMainThreadEmAsm',
   'jstoi_q',
-  'getExecutableName',
   'autoResumeAudioContext',
   'getDynCaller',
   'dynCall',
@@ -4991,7 +5166,6 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
   'jsStackTrace',
   'getCallstack',
   'convertPCtoSourceLocation',
-  'getEnvStrings',
   'wasiRightsToMuslOFlags',
   'wasiOFlagsToMuslOFlags',
   'setImmediateWrapped',
@@ -5065,6 +5239,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'stackSave',
   'stackRestore',
   'ptrToString',
+  'zeroMemory',
   'exitJS',
   'getHeapMax',
   'growMemory',
@@ -5079,6 +5254,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'readEmAsmArgsArray',
   'readEmAsmArgs',
   'runEmAsmFunction',
+  'getExecutableName',
   'handleException',
   'keepRuntimeAlive',
   'callUserCallback',
@@ -5113,6 +5289,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'restoreOldWindowedStyle',
   'UNWIND_CACHE',
   'ExitStatus',
+  'getEnvStrings',
   'checkWasiClock',
   'doReadv',
   'doWritev',
@@ -5150,7 +5327,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'FS_createPath',
   'FS_createDevice',
   'FS_readFile',
-  'FS',
   'FS_root',
   'FS_mounts',
   'FS_devices',
@@ -5294,31 +5470,31 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1042480: ($0) => { startToDebuggerMessage($0); },  
- 1042512: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1042587: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1042662: ($0) => { finishToDebuggerMessage($0); },  
- 1042695: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1042725: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1042755: ($0) => { lvglScreenTick($0); },  
- 1042779: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1042819: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1042873: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1042927: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1042980: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1043033: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1043086: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1043133: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1043166: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1043202: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1043247: ($0, $1) => { js_dispatch_event($0, $1); },  
- 1043278: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1043384: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1043420: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1043457: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1043497: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1043554: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1043613: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1158128: ($0) => { startToDebuggerMessage($0); },  
+ 1158160: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1158235: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1158310: ($0) => { finishToDebuggerMessage($0); },  
+ 1158343: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1158373: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1158403: ($0) => { lvglScreenTick($0); },  
+ 1158427: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1158467: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1158521: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1158575: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1158628: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1158681: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1158734: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1158781: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1158814: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1158850: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1158895: ($0, $1) => { js_dispatch_event($0, $1); },  
+ 1158926: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1159032: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1159068: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1159105: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1159145: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1159202: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1159261: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5603,12 +5779,13 @@ var _lv_tabview_get_tab_bar = Module['_lv_tabview_get_tab_bar'] = makeInvalidEar
 var _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = makeInvalidEarlyAccess('_lv_obj_get_child_by_type');
 var _global_event_dispatcher = Module['_global_event_dispatcher'] = makeInvalidEarlyAccess('_global_event_dispatcher');
 var _get_global_dispatcher_ptr = Module['_get_global_dispatcher_ptr'] = makeInvalidEarlyAccess('_get_global_dispatcher_ptr');
+var _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = makeInvalidEarlyAccess('_lvglCreateFreeTypeFont');
+var _lv_log_add = Module['_lv_log_add'] = makeInvalidEarlyAccess('_lv_log_add');
 var _lv_group_init = Module['_lv_group_init'] = makeInvalidEarlyAccess('_lv_group_init');
 var _lv_group_deinit = Module['_lv_group_deinit'] = makeInvalidEarlyAccess('_lv_group_deinit');
 var _lv_ll_init = Module['_lv_ll_init'] = makeInvalidEarlyAccess('_lv_ll_init');
 var _lv_ll_clear = Module['_lv_ll_clear'] = makeInvalidEarlyAccess('_lv_ll_clear');
 var _lv_ll_ins_head = Module['_lv_ll_ins_head'] = makeInvalidEarlyAccess('_lv_ll_ins_head');
-var _lv_log_add = Module['_lv_log_add'] = makeInvalidEarlyAccess('_lv_log_add');
 var _lv_group_delete = Module['_lv_group_delete'] = makeInvalidEarlyAccess('_lv_group_delete');
 var _lv_indev_get_next = Module['_lv_indev_get_next'] = makeInvalidEarlyAccess('_lv_indev_get_next');
 var _lv_indev_get_type = Module['_lv_indev_get_type'] = makeInvalidEarlyAccess('_lv_indev_get_type');
@@ -6287,6 +6464,16 @@ var _lv_bin_decoder_info = Module['_lv_bin_decoder_info'] = makeInvalidEarlyAcce
 var _lv_bin_decoder_open = Module['_lv_bin_decoder_open'] = makeInvalidEarlyAccess('_lv_bin_decoder_open');
 var _lv_bin_decoder_get_area = Module['_lv_bin_decoder_get_area'] = makeInvalidEarlyAccess('_lv_bin_decoder_get_area');
 var _lv_bin_decoder_close = Module['_lv_bin_decoder_close'] = makeInvalidEarlyAccess('_lv_bin_decoder_close');
+var _strcmp = Module['_strcmp'] = makeInvalidEarlyAccess('_strcmp');
+var _free = Module['_free'] = makeInvalidEarlyAccess('_free');
+var _strncmp = Module['_strncmp'] = makeInvalidEarlyAccess('_strncmp');
+var _lv_cache_create = Module['_lv_cache_create'] = makeInvalidEarlyAccess('_lv_cache_create');
+var _lv_cache_set_name = Module['_lv_cache_set_name'] = makeInvalidEarlyAccess('_lv_cache_set_name');
+var _lv_strcmp = Module['_lv_strcmp'] = makeInvalidEarlyAccess('_lv_strcmp');
+var _lv_strlen = Module['_lv_strlen'] = makeInvalidEarlyAccess('_lv_strlen');
+var _lv_cache_acquire_or_create = Module['_lv_cache_acquire_or_create'] = makeInvalidEarlyAccess('_lv_cache_acquire_or_create');
+var _lv_cache_entry_get_ref = Module['_lv_cache_entry_get_ref'] = makeInvalidEarlyAccess('_lv_cache_entry_get_ref');
+var _lv_cache_drop = Module['_lv_cache_drop'] = makeInvalidEarlyAccess('_lv_cache_drop');
 var _lv_fs_stdio_init = Module['_lv_fs_stdio_init'] = makeInvalidEarlyAccess('_lv_fs_stdio_init');
 var _lv_canvas_get_draw_buf = Module['_lv_canvas_get_draw_buf'] = makeInvalidEarlyAccess('_lv_canvas_get_draw_buf');
 var _lv_image_cache_drop = Module['_lv_image_cache_drop'] = makeInvalidEarlyAccess('_lv_image_cache_drop');
@@ -6314,7 +6501,6 @@ var _lv_trigo_cos = Module['_lv_trigo_cos'] = makeInvalidEarlyAccess('_lv_trigo_
 var _lv_point_from_precise = Module['_lv_point_from_precise'] = makeInvalidEarlyAccess('_lv_point_from_precise');
 var _lv_point_swap = Module['_lv_point_swap'] = makeInvalidEarlyAccess('_lv_point_swap');
 var _lv_fs_get_ext = Module['_lv_fs_get_ext'] = makeInvalidEarlyAccess('_lv_fs_get_ext');
-var _lv_strcmp = Module['_lv_strcmp'] = makeInvalidEarlyAccess('_lv_strcmp');
 var _lv_snprintf = Module['_lv_snprintf'] = makeInvalidEarlyAccess('_lv_snprintf');
 var _lv_strlcpy = Module['_lv_strlcpy'] = makeInvalidEarlyAccess('_lv_strlcpy');
 var _lv_deinit = Module['_lv_deinit'] = makeInvalidEarlyAccess('_lv_deinit');
@@ -6328,15 +6514,11 @@ var _lv_fs_deinit = Module['_lv_fs_deinit'] = makeInvalidEarlyAccess('_lv_fs_dei
 var _lv_timer_core_deinit = Module['_lv_timer_core_deinit'] = makeInvalidEarlyAccess('_lv_timer_core_deinit');
 var _lv_mem_deinit = Module['_lv_mem_deinit'] = makeInvalidEarlyAccess('_lv_mem_deinit');
 var _lv_log_register_print_cb = Module['_lv_log_register_print_cb'] = makeInvalidEarlyAccess('_lv_log_register_print_cb');
-var _lv_cache_create = Module['_lv_cache_create'] = makeInvalidEarlyAccess('_lv_cache_create');
 var _lv_cache_entry_acquire_data = Module['_lv_cache_entry_acquire_data'] = makeInvalidEarlyAccess('_lv_cache_entry_acquire_data');
 var _lv_cache_entry_release_data = Module['_lv_cache_entry_release_data'] = makeInvalidEarlyAccess('_lv_cache_entry_release_data');
-var _lv_cache_entry_get_ref = Module['_lv_cache_entry_get_ref'] = makeInvalidEarlyAccess('_lv_cache_entry_get_ref');
 var _lv_cache_entry_is_invalid = Module['_lv_cache_entry_is_invalid'] = makeInvalidEarlyAccess('_lv_cache_entry_is_invalid');
 var _lv_cache_entry_delete = Module['_lv_cache_entry_delete'] = makeInvalidEarlyAccess('_lv_cache_entry_delete');
-var _lv_cache_acquire_or_create = Module['_lv_cache_acquire_or_create'] = makeInvalidEarlyAccess('_lv_cache_acquire_or_create');
 var _lv_cache_reserve = Module['_lv_cache_reserve'] = makeInvalidEarlyAccess('_lv_cache_reserve');
-var _lv_cache_drop = Module['_lv_cache_drop'] = makeInvalidEarlyAccess('_lv_cache_drop');
 var _lv_cache_entry_set_invalid = Module['_lv_cache_entry_set_invalid'] = makeInvalidEarlyAccess('_lv_cache_entry_set_invalid');
 var _lv_cache_evict_one = Module['_lv_cache_evict_one'] = makeInvalidEarlyAccess('_lv_cache_evict_one');
 var _lv_cache_drop_all = Module['_lv_cache_drop_all'] = makeInvalidEarlyAccess('_lv_cache_drop_all');
@@ -6348,7 +6530,6 @@ var _lv_cache_is_enabled = Module['_lv_cache_is_enabled'] = makeInvalidEarlyAcce
 var _lv_cache_set_compare_cb = Module['_lv_cache_set_compare_cb'] = makeInvalidEarlyAccess('_lv_cache_set_compare_cb');
 var _lv_cache_set_create_cb = Module['_lv_cache_set_create_cb'] = makeInvalidEarlyAccess('_lv_cache_set_create_cb');
 var _lv_cache_set_free_cb = Module['_lv_cache_set_free_cb'] = makeInvalidEarlyAccess('_lv_cache_set_free_cb');
-var _lv_cache_set_name = Module['_lv_cache_set_name'] = makeInvalidEarlyAccess('_lv_cache_set_name');
 var _lv_cache_get_name = Module['_lv_cache_get_name'] = makeInvalidEarlyAccess('_lv_cache_get_name');
 var _lv_cache_entry_reset_ref = Module['_lv_cache_entry_reset_ref'] = makeInvalidEarlyAccess('_lv_cache_entry_reset_ref');
 var _lv_cache_entry_inc_ref = Module['_lv_cache_entry_inc_ref'] = makeInvalidEarlyAccess('_lv_cache_entry_inc_ref');
@@ -6470,7 +6651,6 @@ var _lv_fs_dir_open = Module['_lv_fs_dir_open'] = makeInvalidEarlyAccess('_lv_fs
 var _lv_fs_dir_read = Module['_lv_fs_dir_read'] = makeInvalidEarlyAccess('_lv_fs_dir_read');
 var _lv_fs_dir_close = Module['_lv_fs_dir_close'] = makeInvalidEarlyAccess('_lv_fs_dir_close');
 var _lv_fs_get_letters = Module['_lv_fs_get_letters'] = makeInvalidEarlyAccess('_lv_fs_get_letters');
-var _lv_strlen = Module['_lv_strlen'] = makeInvalidEarlyAccess('_lv_strlen');
 var _lv_fs_up = Module['_lv_fs_up'] = makeInvalidEarlyAccess('_lv_fs_up');
 var _lv_fs_get_last = Module['_lv_fs_get_last'] = makeInvalidEarlyAccess('_lv_fs_get_last');
 var _lv_ll_chg_list = Module['_lv_ll_chg_list'] = makeInvalidEarlyAccess('_lv_ll_chg_list');
@@ -7025,9 +7205,7 @@ var _lv_win_add_title = Module['_lv_win_add_title'] = makeInvalidEarlyAccess('_l
 var _lv_win_get_header = Module['_lv_win_get_header'] = makeInvalidEarlyAccess('_lv_win_get_header');
 var _lv_win_add_button = Module['_lv_win_add_button'] = makeInvalidEarlyAccess('_lv_win_add_button');
 var _lv_win_get_content = Module['_lv_win_get_content'] = makeInvalidEarlyAccess('_lv_win_get_content');
-var _strncmp = Module['_strncmp'] = makeInvalidEarlyAccess('_strncmp');
 var _onMqttEvent = Module['_onMqttEvent'] = makeInvalidEarlyAccess('_onMqttEvent');
-var _strcmp = Module['_strcmp'] = makeInvalidEarlyAccess('_strcmp');
 var __evalTextProperty = Module['__evalTextProperty'] = makeInvalidEarlyAccess('__evalTextProperty');
 var __evalIntegerProperty = Module['__evalIntegerProperty'] = makeInvalidEarlyAccess('__evalIntegerProperty');
 var __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = makeInvalidEarlyAccess('__evalUnsignedIntegerProperty');
@@ -7035,10 +7213,11 @@ var __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'
 var __assignStringProperty = Module['__assignStringProperty'] = makeInvalidEarlyAccess('__assignStringProperty');
 var __assignIntegerProperty = Module['__assignIntegerProperty'] = makeInvalidEarlyAccess('__assignIntegerProperty');
 var _compareRollerOptions = Module['_compareRollerOptions'] = makeInvalidEarlyAccess('_compareRollerOptions');
-var _free = Module['_free'] = makeInvalidEarlyAccess('_free');
-var _strerror = makeInvalidEarlyAccess('_strerror');
 var _emscripten_stack_get_end = makeInvalidEarlyAccess('_emscripten_stack_get_end');
 var _emscripten_stack_get_base = makeInvalidEarlyAccess('_emscripten_stack_get_base');
+var _emscripten_builtin_memalign = makeInvalidEarlyAccess('_emscripten_builtin_memalign');
+var _strerror = makeInvalidEarlyAccess('_strerror');
+var _setThrew = makeInvalidEarlyAccess('_setThrew');
 var _emscripten_stack_init = makeInvalidEarlyAccess('_emscripten_stack_init');
 var _emscripten_stack_get_free = makeInvalidEarlyAccess('_emscripten_stack_get_free');
 var __emscripten_stack_restore = makeInvalidEarlyAccess('__emscripten_stack_restore');
@@ -7047,6 +7226,7 @@ var _emscripten_stack_get_current = makeInvalidEarlyAccess('_emscripten_stack_ge
 var memory = makeInvalidEarlyAccess('memory');
 var __indirect_function_table = makeInvalidEarlyAccess('__indirect_function_table');
 var wasmMemory = makeInvalidEarlyAccess('wasmMemory');
+var wasmTable = makeInvalidEarlyAccess('wasmTable');
 
 function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_display_flush_ready'] != 'undefined', 'missing Wasm export: lv_display_flush_ready');
@@ -7330,12 +7510,13 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_get_child_by_type'] != 'undefined', 'missing Wasm export: lv_obj_get_child_by_type');
   assert(typeof wasmExports['global_event_dispatcher'] != 'undefined', 'missing Wasm export: global_event_dispatcher');
   assert(typeof wasmExports['get_global_dispatcher_ptr'] != 'undefined', 'missing Wasm export: get_global_dispatcher_ptr');
+  assert(typeof wasmExports['lvglCreateFreeTypeFont'] != 'undefined', 'missing Wasm export: lvglCreateFreeTypeFont');
+  assert(typeof wasmExports['lv_log_add'] != 'undefined', 'missing Wasm export: lv_log_add');
   assert(typeof wasmExports['lv_group_init'] != 'undefined', 'missing Wasm export: lv_group_init');
   assert(typeof wasmExports['lv_group_deinit'] != 'undefined', 'missing Wasm export: lv_group_deinit');
   assert(typeof wasmExports['lv_ll_init'] != 'undefined', 'missing Wasm export: lv_ll_init');
   assert(typeof wasmExports['lv_ll_clear'] != 'undefined', 'missing Wasm export: lv_ll_clear');
   assert(typeof wasmExports['lv_ll_ins_head'] != 'undefined', 'missing Wasm export: lv_ll_ins_head');
-  assert(typeof wasmExports['lv_log_add'] != 'undefined', 'missing Wasm export: lv_log_add');
   assert(typeof wasmExports['lv_group_delete'] != 'undefined', 'missing Wasm export: lv_group_delete');
   assert(typeof wasmExports['lv_indev_get_next'] != 'undefined', 'missing Wasm export: lv_indev_get_next');
   assert(typeof wasmExports['lv_indev_get_type'] != 'undefined', 'missing Wasm export: lv_indev_get_type');
@@ -8014,6 +8195,16 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_bin_decoder_open'] != 'undefined', 'missing Wasm export: lv_bin_decoder_open');
   assert(typeof wasmExports['lv_bin_decoder_get_area'] != 'undefined', 'missing Wasm export: lv_bin_decoder_get_area');
   assert(typeof wasmExports['lv_bin_decoder_close'] != 'undefined', 'missing Wasm export: lv_bin_decoder_close');
+  assert(typeof wasmExports['strcmp'] != 'undefined', 'missing Wasm export: strcmp');
+  assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
+  assert(typeof wasmExports['strncmp'] != 'undefined', 'missing Wasm export: strncmp');
+  assert(typeof wasmExports['lv_cache_create'] != 'undefined', 'missing Wasm export: lv_cache_create');
+  assert(typeof wasmExports['lv_cache_set_name'] != 'undefined', 'missing Wasm export: lv_cache_set_name');
+  assert(typeof wasmExports['lv_strcmp'] != 'undefined', 'missing Wasm export: lv_strcmp');
+  assert(typeof wasmExports['lv_strlen'] != 'undefined', 'missing Wasm export: lv_strlen');
+  assert(typeof wasmExports['lv_cache_acquire_or_create'] != 'undefined', 'missing Wasm export: lv_cache_acquire_or_create');
+  assert(typeof wasmExports['lv_cache_entry_get_ref'] != 'undefined', 'missing Wasm export: lv_cache_entry_get_ref');
+  assert(typeof wasmExports['lv_cache_drop'] != 'undefined', 'missing Wasm export: lv_cache_drop');
   assert(typeof wasmExports['lv_fs_stdio_init'] != 'undefined', 'missing Wasm export: lv_fs_stdio_init');
   assert(typeof wasmExports['lv_canvas_get_draw_buf'] != 'undefined', 'missing Wasm export: lv_canvas_get_draw_buf');
   assert(typeof wasmExports['lv_image_cache_drop'] != 'undefined', 'missing Wasm export: lv_image_cache_drop');
@@ -8041,7 +8232,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_point_from_precise'] != 'undefined', 'missing Wasm export: lv_point_from_precise');
   assert(typeof wasmExports['lv_point_swap'] != 'undefined', 'missing Wasm export: lv_point_swap');
   assert(typeof wasmExports['lv_fs_get_ext'] != 'undefined', 'missing Wasm export: lv_fs_get_ext');
-  assert(typeof wasmExports['lv_strcmp'] != 'undefined', 'missing Wasm export: lv_strcmp');
   assert(typeof wasmExports['lv_snprintf'] != 'undefined', 'missing Wasm export: lv_snprintf');
   assert(typeof wasmExports['lv_strlcpy'] != 'undefined', 'missing Wasm export: lv_strlcpy');
   assert(typeof wasmExports['lv_deinit'] != 'undefined', 'missing Wasm export: lv_deinit');
@@ -8055,15 +8245,11 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_timer_core_deinit'] != 'undefined', 'missing Wasm export: lv_timer_core_deinit');
   assert(typeof wasmExports['lv_mem_deinit'] != 'undefined', 'missing Wasm export: lv_mem_deinit');
   assert(typeof wasmExports['lv_log_register_print_cb'] != 'undefined', 'missing Wasm export: lv_log_register_print_cb');
-  assert(typeof wasmExports['lv_cache_create'] != 'undefined', 'missing Wasm export: lv_cache_create');
   assert(typeof wasmExports['lv_cache_entry_acquire_data'] != 'undefined', 'missing Wasm export: lv_cache_entry_acquire_data');
   assert(typeof wasmExports['lv_cache_entry_release_data'] != 'undefined', 'missing Wasm export: lv_cache_entry_release_data');
-  assert(typeof wasmExports['lv_cache_entry_get_ref'] != 'undefined', 'missing Wasm export: lv_cache_entry_get_ref');
   assert(typeof wasmExports['lv_cache_entry_is_invalid'] != 'undefined', 'missing Wasm export: lv_cache_entry_is_invalid');
   assert(typeof wasmExports['lv_cache_entry_delete'] != 'undefined', 'missing Wasm export: lv_cache_entry_delete');
-  assert(typeof wasmExports['lv_cache_acquire_or_create'] != 'undefined', 'missing Wasm export: lv_cache_acquire_or_create');
   assert(typeof wasmExports['lv_cache_reserve'] != 'undefined', 'missing Wasm export: lv_cache_reserve');
-  assert(typeof wasmExports['lv_cache_drop'] != 'undefined', 'missing Wasm export: lv_cache_drop');
   assert(typeof wasmExports['lv_cache_entry_set_invalid'] != 'undefined', 'missing Wasm export: lv_cache_entry_set_invalid');
   assert(typeof wasmExports['lv_cache_evict_one'] != 'undefined', 'missing Wasm export: lv_cache_evict_one');
   assert(typeof wasmExports['lv_cache_drop_all'] != 'undefined', 'missing Wasm export: lv_cache_drop_all');
@@ -8075,7 +8261,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_cache_set_compare_cb'] != 'undefined', 'missing Wasm export: lv_cache_set_compare_cb');
   assert(typeof wasmExports['lv_cache_set_create_cb'] != 'undefined', 'missing Wasm export: lv_cache_set_create_cb');
   assert(typeof wasmExports['lv_cache_set_free_cb'] != 'undefined', 'missing Wasm export: lv_cache_set_free_cb');
-  assert(typeof wasmExports['lv_cache_set_name'] != 'undefined', 'missing Wasm export: lv_cache_set_name');
   assert(typeof wasmExports['lv_cache_get_name'] != 'undefined', 'missing Wasm export: lv_cache_get_name');
   assert(typeof wasmExports['lv_cache_entry_reset_ref'] != 'undefined', 'missing Wasm export: lv_cache_entry_reset_ref');
   assert(typeof wasmExports['lv_cache_entry_inc_ref'] != 'undefined', 'missing Wasm export: lv_cache_entry_inc_ref');
@@ -8197,7 +8382,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_fs_dir_read'] != 'undefined', 'missing Wasm export: lv_fs_dir_read');
   assert(typeof wasmExports['lv_fs_dir_close'] != 'undefined', 'missing Wasm export: lv_fs_dir_close');
   assert(typeof wasmExports['lv_fs_get_letters'] != 'undefined', 'missing Wasm export: lv_fs_get_letters');
-  assert(typeof wasmExports['lv_strlen'] != 'undefined', 'missing Wasm export: lv_strlen');
   assert(typeof wasmExports['lv_fs_up'] != 'undefined', 'missing Wasm export: lv_fs_up');
   assert(typeof wasmExports['lv_fs_get_last'] != 'undefined', 'missing Wasm export: lv_fs_get_last');
   assert(typeof wasmExports['lv_ll_chg_list'] != 'undefined', 'missing Wasm export: lv_ll_chg_list');
@@ -8752,9 +8936,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_win_get_header'] != 'undefined', 'missing Wasm export: lv_win_get_header');
   assert(typeof wasmExports['lv_win_add_button'] != 'undefined', 'missing Wasm export: lv_win_add_button');
   assert(typeof wasmExports['lv_win_get_content'] != 'undefined', 'missing Wasm export: lv_win_get_content');
-  assert(typeof wasmExports['strncmp'] != 'undefined', 'missing Wasm export: strncmp');
   assert(typeof wasmExports['onMqttEvent'] != 'undefined', 'missing Wasm export: onMqttEvent');
-  assert(typeof wasmExports['strcmp'] != 'undefined', 'missing Wasm export: strcmp');
   assert(typeof wasmExports['_evalTextProperty'] != 'undefined', 'missing Wasm export: _evalTextProperty');
   assert(typeof wasmExports['_evalIntegerProperty'] != 'undefined', 'missing Wasm export: _evalIntegerProperty');
   assert(typeof wasmExports['_evalUnsignedIntegerProperty'] != 'undefined', 'missing Wasm export: _evalUnsignedIntegerProperty');
@@ -8762,10 +8944,11 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['_assignStringProperty'] != 'undefined', 'missing Wasm export: _assignStringProperty');
   assert(typeof wasmExports['_assignIntegerProperty'] != 'undefined', 'missing Wasm export: _assignIntegerProperty');
   assert(typeof wasmExports['compareRollerOptions'] != 'undefined', 'missing Wasm export: compareRollerOptions');
-  assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
-  assert(typeof wasmExports['strerror'] != 'undefined', 'missing Wasm export: strerror');
   assert(typeof wasmExports['emscripten_stack_get_end'] != 'undefined', 'missing Wasm export: emscripten_stack_get_end');
   assert(typeof wasmExports['emscripten_stack_get_base'] != 'undefined', 'missing Wasm export: emscripten_stack_get_base');
+  assert(typeof wasmExports['emscripten_builtin_memalign'] != 'undefined', 'missing Wasm export: emscripten_builtin_memalign');
+  assert(typeof wasmExports['strerror'] != 'undefined', 'missing Wasm export: strerror');
+  assert(typeof wasmExports['setThrew'] != 'undefined', 'missing Wasm export: setThrew');
   assert(typeof wasmExports['emscripten_stack_init'] != 'undefined', 'missing Wasm export: emscripten_stack_init');
   assert(typeof wasmExports['emscripten_stack_get_free'] != 'undefined', 'missing Wasm export: emscripten_stack_get_free');
   assert(typeof wasmExports['_emscripten_stack_restore'] != 'undefined', 'missing Wasm export: _emscripten_stack_restore');
@@ -9054,12 +9237,13 @@ function assignWasmExports(wasmExports) {
   _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = createExportWrapper('lv_obj_get_child_by_type', 3);
   _global_event_dispatcher = Module['_global_event_dispatcher'] = createExportWrapper('global_event_dispatcher', 1);
   _get_global_dispatcher_ptr = Module['_get_global_dispatcher_ptr'] = createExportWrapper('get_global_dispatcher_ptr', 0);
+  _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = createExportWrapper('lvglCreateFreeTypeFont', 3);
+  _lv_log_add = Module['_lv_log_add'] = createExportWrapper('lv_log_add', 6);
   _lv_group_init = Module['_lv_group_init'] = createExportWrapper('lv_group_init', 0);
   _lv_group_deinit = Module['_lv_group_deinit'] = createExportWrapper('lv_group_deinit', 0);
   _lv_ll_init = Module['_lv_ll_init'] = createExportWrapper('lv_ll_init', 2);
   _lv_ll_clear = Module['_lv_ll_clear'] = createExportWrapper('lv_ll_clear', 1);
   _lv_ll_ins_head = Module['_lv_ll_ins_head'] = createExportWrapper('lv_ll_ins_head', 1);
-  _lv_log_add = Module['_lv_log_add'] = createExportWrapper('lv_log_add', 6);
   _lv_group_delete = Module['_lv_group_delete'] = createExportWrapper('lv_group_delete', 1);
   _lv_indev_get_next = Module['_lv_indev_get_next'] = createExportWrapper('lv_indev_get_next', 1);
   _lv_indev_get_type = Module['_lv_indev_get_type'] = createExportWrapper('lv_indev_get_type', 1);
@@ -9738,6 +9922,16 @@ function assignWasmExports(wasmExports) {
   _lv_bin_decoder_open = Module['_lv_bin_decoder_open'] = createExportWrapper('lv_bin_decoder_open', 2);
   _lv_bin_decoder_get_area = Module['_lv_bin_decoder_get_area'] = createExportWrapper('lv_bin_decoder_get_area', 4);
   _lv_bin_decoder_close = Module['_lv_bin_decoder_close'] = createExportWrapper('lv_bin_decoder_close', 2);
+  _strcmp = Module['_strcmp'] = createExportWrapper('strcmp', 2);
+  _free = Module['_free'] = createExportWrapper('free', 1);
+  _strncmp = Module['_strncmp'] = createExportWrapper('strncmp', 3);
+  _lv_cache_create = Module['_lv_cache_create'] = createExportWrapper('lv_cache_create', 4);
+  _lv_cache_set_name = Module['_lv_cache_set_name'] = createExportWrapper('lv_cache_set_name', 2);
+  _lv_strcmp = Module['_lv_strcmp'] = createExportWrapper('lv_strcmp', 2);
+  _lv_strlen = Module['_lv_strlen'] = createExportWrapper('lv_strlen', 1);
+  _lv_cache_acquire_or_create = Module['_lv_cache_acquire_or_create'] = createExportWrapper('lv_cache_acquire_or_create', 3);
+  _lv_cache_entry_get_ref = Module['_lv_cache_entry_get_ref'] = createExportWrapper('lv_cache_entry_get_ref', 1);
+  _lv_cache_drop = Module['_lv_cache_drop'] = createExportWrapper('lv_cache_drop', 3);
   _lv_fs_stdio_init = Module['_lv_fs_stdio_init'] = createExportWrapper('lv_fs_stdio_init', 0);
   _lv_canvas_get_draw_buf = Module['_lv_canvas_get_draw_buf'] = createExportWrapper('lv_canvas_get_draw_buf', 1);
   _lv_image_cache_drop = Module['_lv_image_cache_drop'] = createExportWrapper('lv_image_cache_drop', 1);
@@ -9765,7 +9959,6 @@ function assignWasmExports(wasmExports) {
   _lv_point_from_precise = Module['_lv_point_from_precise'] = createExportWrapper('lv_point_from_precise', 2);
   _lv_point_swap = Module['_lv_point_swap'] = createExportWrapper('lv_point_swap', 2);
   _lv_fs_get_ext = Module['_lv_fs_get_ext'] = createExportWrapper('lv_fs_get_ext', 1);
-  _lv_strcmp = Module['_lv_strcmp'] = createExportWrapper('lv_strcmp', 2);
   _lv_snprintf = Module['_lv_snprintf'] = createExportWrapper('lv_snprintf', 4);
   _lv_strlcpy = Module['_lv_strlcpy'] = createExportWrapper('lv_strlcpy', 3);
   _lv_deinit = Module['_lv_deinit'] = createExportWrapper('lv_deinit', 0);
@@ -9779,15 +9972,11 @@ function assignWasmExports(wasmExports) {
   _lv_timer_core_deinit = Module['_lv_timer_core_deinit'] = createExportWrapper('lv_timer_core_deinit', 0);
   _lv_mem_deinit = Module['_lv_mem_deinit'] = createExportWrapper('lv_mem_deinit', 0);
   _lv_log_register_print_cb = Module['_lv_log_register_print_cb'] = createExportWrapper('lv_log_register_print_cb', 1);
-  _lv_cache_create = Module['_lv_cache_create'] = createExportWrapper('lv_cache_create', 4);
   _lv_cache_entry_acquire_data = Module['_lv_cache_entry_acquire_data'] = createExportWrapper('lv_cache_entry_acquire_data', 1);
   _lv_cache_entry_release_data = Module['_lv_cache_entry_release_data'] = createExportWrapper('lv_cache_entry_release_data', 2);
-  _lv_cache_entry_get_ref = Module['_lv_cache_entry_get_ref'] = createExportWrapper('lv_cache_entry_get_ref', 1);
   _lv_cache_entry_is_invalid = Module['_lv_cache_entry_is_invalid'] = createExportWrapper('lv_cache_entry_is_invalid', 1);
   _lv_cache_entry_delete = Module['_lv_cache_entry_delete'] = createExportWrapper('lv_cache_entry_delete', 1);
-  _lv_cache_acquire_or_create = Module['_lv_cache_acquire_or_create'] = createExportWrapper('lv_cache_acquire_or_create', 3);
   _lv_cache_reserve = Module['_lv_cache_reserve'] = createExportWrapper('lv_cache_reserve', 3);
-  _lv_cache_drop = Module['_lv_cache_drop'] = createExportWrapper('lv_cache_drop', 3);
   _lv_cache_entry_set_invalid = Module['_lv_cache_entry_set_invalid'] = createExportWrapper('lv_cache_entry_set_invalid', 2);
   _lv_cache_evict_one = Module['_lv_cache_evict_one'] = createExportWrapper('lv_cache_evict_one', 2);
   _lv_cache_drop_all = Module['_lv_cache_drop_all'] = createExportWrapper('lv_cache_drop_all', 2);
@@ -9799,7 +9988,6 @@ function assignWasmExports(wasmExports) {
   _lv_cache_set_compare_cb = Module['_lv_cache_set_compare_cb'] = createExportWrapper('lv_cache_set_compare_cb', 3);
   _lv_cache_set_create_cb = Module['_lv_cache_set_create_cb'] = createExportWrapper('lv_cache_set_create_cb', 3);
   _lv_cache_set_free_cb = Module['_lv_cache_set_free_cb'] = createExportWrapper('lv_cache_set_free_cb', 3);
-  _lv_cache_set_name = Module['_lv_cache_set_name'] = createExportWrapper('lv_cache_set_name', 2);
   _lv_cache_get_name = Module['_lv_cache_get_name'] = createExportWrapper('lv_cache_get_name', 1);
   _lv_cache_entry_reset_ref = Module['_lv_cache_entry_reset_ref'] = createExportWrapper('lv_cache_entry_reset_ref', 1);
   _lv_cache_entry_inc_ref = Module['_lv_cache_entry_inc_ref'] = createExportWrapper('lv_cache_entry_inc_ref', 1);
@@ -9921,7 +10109,6 @@ function assignWasmExports(wasmExports) {
   _lv_fs_dir_read = Module['_lv_fs_dir_read'] = createExportWrapper('lv_fs_dir_read', 3);
   _lv_fs_dir_close = Module['_lv_fs_dir_close'] = createExportWrapper('lv_fs_dir_close', 1);
   _lv_fs_get_letters = Module['_lv_fs_get_letters'] = createExportWrapper('lv_fs_get_letters', 1);
-  _lv_strlen = Module['_lv_strlen'] = createExportWrapper('lv_strlen', 1);
   _lv_fs_up = Module['_lv_fs_up'] = createExportWrapper('lv_fs_up', 1);
   _lv_fs_get_last = Module['_lv_fs_get_last'] = createExportWrapper('lv_fs_get_last', 1);
   _lv_ll_chg_list = Module['_lv_ll_chg_list'] = createExportWrapper('lv_ll_chg_list', 4);
@@ -10476,9 +10663,7 @@ function assignWasmExports(wasmExports) {
   _lv_win_get_header = Module['_lv_win_get_header'] = createExportWrapper('lv_win_get_header', 1);
   _lv_win_add_button = Module['_lv_win_add_button'] = createExportWrapper('lv_win_add_button', 3);
   _lv_win_get_content = Module['_lv_win_get_content'] = createExportWrapper('lv_win_get_content', 1);
-  _strncmp = Module['_strncmp'] = createExportWrapper('strncmp', 3);
   _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent', 4);
-  _strcmp = Module['_strcmp'] = createExportWrapper('strcmp', 2);
   __evalTextProperty = Module['__evalTextProperty'] = createExportWrapper('_evalTextProperty', 6);
   __evalIntegerProperty = Module['__evalIntegerProperty'] = createExportWrapper('_evalIntegerProperty', 6);
   __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = createExportWrapper('_evalUnsignedIntegerProperty', 6);
@@ -10486,17 +10671,18 @@ function assignWasmExports(wasmExports) {
   __assignStringProperty = Module['__assignStringProperty'] = createExportWrapper('_assignStringProperty', 7);
   __assignIntegerProperty = Module['__assignIntegerProperty'] = createExportWrapper('_assignIntegerProperty', 7);
   _compareRollerOptions = Module['_compareRollerOptions'] = createExportWrapper('compareRollerOptions', 4);
-  _free = Module['_free'] = createExportWrapper('free', 1);
-  _strerror = createExportWrapper('strerror', 1);
   _emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'];
   _emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'];
+  _emscripten_builtin_memalign = createExportWrapper('emscripten_builtin_memalign', 2);
+  _strerror = createExportWrapper('strerror', 1);
+  _setThrew = createExportWrapper('setThrew', 2);
   _emscripten_stack_init = wasmExports['emscripten_stack_init'];
   _emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'];
   __emscripten_stack_restore = wasmExports['_emscripten_stack_restore'];
   __emscripten_stack_alloc = wasmExports['_emscripten_stack_alloc'];
   _emscripten_stack_get_current = wasmExports['emscripten_stack_get_current'];
   memory = wasmMemory = wasmExports['memory'];
-  __indirect_function_table = wasmExports['__indirect_function_table'];
+  __indirect_function_table = wasmTable = wasmExports['__indirect_function_table'];
 }
 
 var wasmImports = {
@@ -10507,13 +10693,27 @@ var wasmImports = {
   /** @export */
   __syscall_fcntl64: ___syscall_fcntl64,
   /** @export */
+  __syscall_fstat64: ___syscall_fstat64,
+  /** @export */
   __syscall_getdents64: ___syscall_getdents64,
   /** @export */
   __syscall_ioctl: ___syscall_ioctl,
   /** @export */
+  __syscall_lstat64: ___syscall_lstat64,
+  /** @export */
+  __syscall_newfstatat: ___syscall_newfstatat,
+  /** @export */
   __syscall_openat: ___syscall_openat,
   /** @export */
+  __syscall_stat64: ___syscall_stat64,
+  /** @export */
   _abort_js: __abort_js,
+  /** @export */
+  _emscripten_throw_longjmp: __emscripten_throw_longjmp,
+  /** @export */
+  _mmap_js: __mmap_js,
+  /** @export */
+  _munmap_js: __munmap_js,
   /** @export */
   clock_time_get: _clock_time_get,
   /** @export */
@@ -10525,14 +10725,57 @@ var wasmImports = {
   /** @export */
   emscripten_resize_heap: _emscripten_resize_heap,
   /** @export */
+  environ_get: _environ_get,
+  /** @export */
+  environ_sizes_get: _environ_sizes_get,
+  /** @export */
   fd_close: _fd_close,
   /** @export */
   fd_read: _fd_read,
   /** @export */
   fd_seek: _fd_seek,
   /** @export */
-  fd_write: _fd_write
+  fd_write: _fd_write,
+  /** @export */
+  invoke_iii,
+  /** @export */
+  invoke_iiiii,
+  /** @export */
+  invoke_viiii
 };
+
+function invoke_viiii(index,a1,a2,a3,a4) {
+  var sp = stackSave();
+  try {
+    getWasmTableEntry(index)(a1,a2,a3,a4);
+  } catch(e) {
+    stackRestore(sp);
+    if (e !== e+0) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iii(index,a1,a2) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2);
+  } catch(e) {
+    stackRestore(sp);
+    if (e !== e+0) throw e;
+    _setThrew(1, 0);
+  }
+}
+
+function invoke_iiiii(index,a1,a2,a3,a4) {
+  var sp = stackSave();
+  try {
+    return getWasmTableEntry(index)(a1,a2,a3,a4);
+  } catch(e) {
+    stackRestore(sp);
+    if (e !== e+0) throw e;
+    _setThrew(1, 0);
+  }
+}
 
 
 // include: postamble.js

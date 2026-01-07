@@ -543,6 +543,8 @@ export interface IWasmFlowRuntime {
     HEAPF32: Float32Array;
     HEAPF64: Float64Array;
 
+    FS: any;
+
     stringToNewUTF8(str: string): number;
     UTF8ToString(ptr: number): string;
     AsciiToString(ptr: number): string;
@@ -737,6 +739,8 @@ export interface IWasmFlowRuntime {
     _lvglDeleteScreenOnUnload(screenIndex: number);
 
     _lvglAddEventHandler(obj: number, eventCode: number): void;
+
+    _lvglCreateFreeTypeFont(filePath: number, size: number, style: number): number
 }
 
 export interface IDashboardComponentContext {

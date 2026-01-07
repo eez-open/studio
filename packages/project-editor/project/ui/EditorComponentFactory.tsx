@@ -44,7 +44,7 @@ export function getEditorComponent(
         return { object, EditorComponent: ActionEditor };
     }
 
-    if (object instanceof Font) {
+    if (object instanceof Font && !object.lvglUseFreeType) {
         return { object, EditorComponent: FontEditor };
     }
 

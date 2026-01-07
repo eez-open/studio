@@ -715,6 +715,11 @@ export class LVGLBuild extends Build {
 
     getFontAccessor(font: Font) {
         const variableName = this.getFontVariableName(font);
+
+        if (font.lvglUseFreeType) {
+            return variableName;
+        }
+
         return this.project.settings.build.fontExportMode == "binary"
             ? variableName
             : `&${variableName}`;
@@ -1767,6 +1772,21 @@ export class LVGLBuild extends Build {
             }
 
             build.line("");
+        } 
+        
+        {
+            let anyFontWithFreeType = false;
+
+            for (const font of this.fonts) {
+                if (font.lvglUseFreeType) {
+                    build.line(`lv_font_t *${this.getFontVariableName(font)};`);
+                    anyFontWithFreeType = true;
+                }
+            }
+
+            if (anyFontWithFreeType) {
+                build.line("");                
+            }
         }
 
         //
@@ -1816,6 +1836,59 @@ export class LVGLBuild extends Build {
             }
 
             build.line("");
+        }
+
+        {
+            let anyFontWithFreeType = false;
+
+            for (const font of this.fonts) {
+                if (font.lvglUseFreeType) {
+
+                if (this.isV9) {
+                    build.blockStart("{");
+
+                    build.line(
+                        `${this.getFontVariableName(font)} = lv_freetype_font_create(${escapeCString(
+                            font.lvglFreeTypeFilePath
+                        )}, LV_FREETYPE_FONT_RENDER_MODE_BITMAP, ${font.source!.size}, ${font.lvglFreeTypeStyle == "BOLD" ? "LV_FREETYPE_FONT_STYLE_BOLD" : font.lvglFreeTypeStyle == "ITALIC" ? "LV_FREETYPE_FONT_STYLE_ITALIC" : "LV_FREETYPE_FONT_STYLE_NORMAL"});`
+                    );
+
+                    build.blockStart(`if (!${this.getFontVariableName(font)}) {`);
+                        build.line(`LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`);
+                    build.blockEnd("}");
+
+                    build.blockEnd("}");
+                } else {
+                    build.blockStart("{");
+
+                    build.line(`lv_ft_info_t info;`);
+
+                    build.line(`info.name = ${escapeCString(font.lvglFreeTypeFilePath)};`);
+                    build.line(`info.weight = ${font.source!.size};`);
+                    build.line(`info.style = ${font.lvglFreeTypeStyle == "BOLD" ? "FT_FONT_STYLE_BOLD" : font.lvglFreeTypeStyle == "ITALIC" ? "FT_FONT_STYLE_ITALIC" : "FT_FONT_STYLE_NORMAL"};`);
+                    build.line(`info.mem = 0;`);
+
+                    build.blockStart(`if (!lv_ft_font_init(&info)) {`);
+                        build.line(`LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`);
+                    build.unindent();
+                    build.line("} else {");
+                    build.indent();
+                        build.line(`${this.getFontVariableName(font)} = info.font;`);
+                    build.blockEnd("}");
+
+                    //return info->font;
+
+                    build.blockEnd("}");
+                }
+
+
+                anyFontWithFreeType = true;
+                }
+            }
+
+            if (anyFontWithFreeType) {
+                build.line("");                
+            }
         }
 
         if (this.project.lvglGroups.groups.length > 0) {
@@ -1951,7 +2024,7 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
         const build = this;
 
         for (const font of this.fonts) {
-            if (this.project.settings.build.fontExportMode == "binary") {
+            if (this.project.settings.build.fontExportMode == "binary" || font.lvglUseFreeType) {
                 build.line(
                     `extern lv_font_t *${this.getFontVariableName(font)};`
                 );
@@ -2491,7 +2564,7 @@ ${source}`;
             this.fonts.map(font =>
                 (async () => {
                     if (
-                        this.project.settings.build.fontExportMode == "binary"
+                        this.project.settings.build.fontExportMode == "binary" && !font.lvglUseFreeType
                     ) {
                         const lvglBinaryFileBase64 = font.lvglBinFile;
                         const lvglBinaryFile = lvglBinaryFileBase64
@@ -2526,7 +2599,7 @@ ${source}`;
                                 );
                             }
                         }
-                    } else {
+                    } else if (!font.lvglUseFreeType) {
                         const lvglSourceFile = await font.getLvglSourceFile();
                         if (lvglSourceFile) {
                             const output = getName(
