@@ -22,7 +22,6 @@ import {
 } from "project-editor/store";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { escapeCString, unescapeCString } from "../widget-common";
-import { IWasmFlowRuntime } from "eez-studio-types";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 import { LV_BUTTONMATRIX_CTRL } from "../lvgl-constants";
 
@@ -283,11 +282,6 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
     buttons: LVGLMatrixButton[];
     oneCheck: boolean;
 
-    _mapBuffer: number;
-    _mapArray: Uint32Array;
-    _ctrlMapBuffer: number;
-    _buffersWasm: IWasmFlowRuntime;
-
     override makeEditable() {
         super.makeEditable();
 
@@ -525,21 +519,7 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
 
         if (code.pageRuntime) {
             const runtime = code.pageRuntime!;
-
-            if (this._mapBuffer && this._buffersWasm == runtime.wasm) {
-                this._mapArray
-                    .slice(0, -1)
-                    .forEach(value => runtime.wasm._free(value));
-                runtime.wasm._free(this._mapBuffer);
-                if (this._ctrlMapBuffer) {
-                    runtime.wasm._free(this._ctrlMapBuffer);
-                }
-            }
-
-            this._mapBuffer = mapArg as number;
-            this._mapArray = mapArray!;
-            this._ctrlMapBuffer = ctrlMapArg as number;
-            this._buffersWasm = runtime.wasm;
+            runtime.addButtonMatrixBuffers(mapArg as number, mapArray! , ctrlMapArg as number);
         }
     }
 }

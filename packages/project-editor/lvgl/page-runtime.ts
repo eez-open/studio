@@ -612,6 +612,37 @@ export abstract class LVGLPageRuntime {
     ) {}
 
     lvglOnEventHandler(obj: number, eventCode: number, event: number) {}
+
+    // button matrix buffers
+    buttonMatrixBuffers: {
+        mapBuffer: number;
+        mapArray: Uint32Array;
+        ctrlMapBuffer: number;
+    }[] = [];
+
+    addButtonMatrixBuffers(mapBuffer: number, mapArray: Uint32Array, ctrlMapBuffer: number) {
+        this.buttonMatrixBuffers.push({
+            mapBuffer,
+            mapArray,
+            ctrlMapBuffer
+        });
+    }
+
+    freeAllButtonMatrixBuffers() {
+        for (const buffers of this.buttonMatrixBuffers) {
+            buffers.mapArray
+                    .slice(0, -1)
+                    .forEach(value => this.wasm._free(value));
+
+            this.wasm._free(buffers.mapBuffer);
+
+            if (buffers.ctrlMapBuffer) {
+                this.wasm._free(buffers.ctrlMapBuffer);
+            }
+        }
+
+        this.buttonMatrixBuffers = [];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -721,6 +752,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                         this.wasm._lvglClearTimeline();
 
                         this.freePointers();
+
+                        this.freeAllButtonMatrixBuffers();
 
                         this.createStyles();
 
@@ -1616,6 +1649,8 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                             widget => (widget._lvglObj = undefined)
                         );
                     });
+
+                    this.freeAllButtonMatrixBuffers();
 
                     this.selectedStyle;
                     this.project._store.uiStateStore.lvglState;
