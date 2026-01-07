@@ -2301,11 +2301,11 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
                             {
                                 if (build.isV9) {
                                     build.line(
-                                        `style = lv_malloc(sizeof(lv_style_t));`
+                                        `style = (lv_style_t *)lv_malloc(sizeof(lv_style_t));`
                                     );
                                 } else {
                                     build.line(
-                                        `style = lv_mem_alloc(sizeof(lv_style_t));`
+                                        `style = (lv_style_t *)lv_mem_alloc(sizeof(lv_style_t));`
                                     );
                                 }
 
