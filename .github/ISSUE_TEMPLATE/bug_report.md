@@ -27,8 +27,7 @@ If applicable, add screenshots to help explain your problem.
  - OS: [e.g. Windows]
  - Version [e.g. 10]
 
-** LVGL version (if used)**
-
+**LVGL version (if used)**
 - 8.x or 9.x
 
 **Additional context**
