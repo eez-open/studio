@@ -24,11 +24,11 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Desktop (please complete the following information):**
- - OS: [e.g. Windows]
- - Version [e.g. 10]
+- OS: [e.g. Windows]
+- Version [e.g. 10]
 
 **LVGL version (if used)**
-- 8.x or 9.x
+- 8.4.0, 9.2.2, 9.3.0 or 9.4.0
 
 **Additional context**
 Add any other context about the problem here.
