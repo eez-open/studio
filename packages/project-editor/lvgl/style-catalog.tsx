@@ -2475,8 +2475,8 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
             "Properties related to size, position, alignment and layout of the objects.",
         properties: [
             align_property_info,
-            //width_property_info,
-            //height_property_info,
+            width_property_info,
+            height_property_info,
 
             length_property_info,
 
@@ -2485,8 +2485,8 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
             min_height_property_info,
             max_height_property_info,
 
-            //x_property_info,
-            //y_property_info,
+            x_property_info,
+            y_property_info,
 
             transform_width_property_info,
             transform_height_property_info,
