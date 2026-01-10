@@ -25,6 +25,7 @@ export interface LVGLCode {
     get lvglBuild(): LVGLBuild | undefined;
 
     get isV9(): boolean;
+    isLVGLVersion(prefixes: string[]): boolean;
     get hasFlowSupport(): boolean;
     get screensLifetimeSupport(): boolean;
 
@@ -224,6 +225,10 @@ export class SimulatorLVGLCode implements LVGLCode {
 
     get isV9(): boolean {
         return this.runtime.isV9;
+    }
+
+    isLVGLVersion(prefixes: string[]): boolean {
+        return this.runtime.isLVGLVersion(prefixes);
     }
 
     get hasFlowSupport() {
@@ -751,6 +756,10 @@ export class BuildLVGLCode implements LVGLCode {
 
     get isV9(): boolean {
         return this.build.isV9;
+    }
+
+    isLVGLVersion(prefixes: string[]): boolean {
+        return this.build.isLVGLVersion(prefixes);
     }
 
     get hasFlowSupport() {

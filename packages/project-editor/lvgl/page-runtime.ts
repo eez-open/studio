@@ -139,6 +139,15 @@ export abstract class LVGLPageRuntime {
         return this.lvglVersion.startsWith("9.");
     }
 
+    isLVGLVersion(prefixes: string[]): boolean {
+        for (const prefix of prefixes) {
+            if (this.lvglVersion.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     abstract get isEditor(): boolean;
 
     abstract mount(): void;

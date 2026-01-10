@@ -369,6 +369,15 @@ export class LVGLBuild extends Build {
         return this.project.settings.general.lvglVersion.startsWith("9.");
     }
 
+    isLVGLVersion(prefixes: string[]): boolean {
+        for (const prefix of prefixes) {
+            if (this.project.settings.general.lvglVersion.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     getStylePropName(stylePropName: string) {
         return getLvglStylePropName(this.project, stylePropName);
     }

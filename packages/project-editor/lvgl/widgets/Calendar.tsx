@@ -24,7 +24,7 @@ export class LVGLCalendarWidget extends LVGLWidget {
     todayDay: number;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
+        enabledInComponentPalette: (projectType: ProjectType, projectStore) =>
             projectType === ProjectType.LVGL,
 
         componentPaletteGroupName: "!1Input",
@@ -145,19 +145,33 @@ export class LVGLCalendarWidget extends LVGLWidget {
     }
 
     override toLVGLCode(code: LVGLCode) {
-        code.createObject("lv_calendar_create");
+            code.createObject("lv_calendar_create");
 
-        code.callObjectFunction("lv_calendar_header_arrow_create");
+        if (code.isLVGLVersion(["8.", "9.2"])) {
+            code.callObjectFunction("lv_calendar_header_arrow_create");
+        } else {
+            code.callObjectFunction("lv_calendar_add_header_arrow");
+        }
+
         code.callObjectFunction(
             "lv_calendar_set_today_date",
             this.todayYear,
             this.todayMonth,
             this.todayDay
         );
-        code.callObjectFunction(
-            "lv_calendar_set_showed_date",
-            this.todayYear,
-            this.todayMonth
-        );
+
+        if (code.isLVGLVersion(["8.", "9.2"])) {
+            code.callObjectFunction(
+                "lv_calendar_set_showed_date",
+                this.todayYear,
+                this.todayMonth
+            );
+        } else {
+            code.callObjectFunction(
+                "lv_calendar_set_month_shown",
+                this.todayYear,
+                this.todayMonth
+            );  
+        }
     }
 }
