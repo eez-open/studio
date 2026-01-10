@@ -78,32 +78,34 @@ export const ArrayProperty = observer(
                 .find(collapsed => collapsed.object == object);
 
             if (!objectCollapsed) {
-                const collapsed = new Set<IEezObject>();
+                    const collapsed = new Set<IEezObject>();
 
-                if (
-                    this.props.propertyInfo
-                        .showArrayCollapsedByDefaultInPropertyGrid == true
-                ) {
-                    if (this.value) {
-                        for (const object of this.value) {
-                            collapsed.add(object);
+                    if (
+                        this.props.propertyInfo
+                            .showArrayCollapsedByDefaultInPropertyGrid == true
+                    ) {
+                        if (this.value) {
+                            for (const object of this.value) {
+                                collapsed.add(object);
+                            }
                         }
                     }
-                }
 
-                objectCollapsed = {
-                    object,
-                    collapsed
-                };
+                    objectCollapsed = {
+                        object,
+                        collapsed
+                    };
 
-                if (
-                    objectCollapsedStore.get().length ==
-                    MAX_OBJECTS_IN_COLLAPSED_STORE
-                ) {
-                    objectCollapsedStore.get().unshift();
-                }
+                setTimeout(action(() => {
+                    if (
+                        objectCollapsedStore.get().length ==
+                        MAX_OBJECTS_IN_COLLAPSED_STORE
+                    ) {
+                        objectCollapsedStore.get().unshift();
+                    }
 
-                objectCollapsedStore.get().push(objectCollapsed);
+                    objectCollapsedStore.get().push(objectCollapsed!);
+                }), 0);
             }
 
             return objectCollapsed.collapsed;
