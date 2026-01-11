@@ -1,4 +1,5 @@
 import React from "react";
+import path from "path";
 import {
     action,
     computed,
@@ -10,10 +11,13 @@ import {
 
 import {
     fetchUrlOrReadFromCache,
-    isDev
+    isDev,
+    readJsObjectFromFile
 } from "eez-studio-shared/util-electron";
 
 import type { ITreeNode } from "eez-studio-ui/tree";
+
+import { settingsController } from "home/settings";
 
 import { ProjectType } from "project-editor/project/project";
 import { ProjectStore, loadProject } from "project-editor/store";
@@ -181,15 +185,31 @@ class Model {
         this.loadModel();
     }
 
+    getTemplatePathOrUrl(relativePath: string): string {
+        if (
+            settingsController.useLocalTemplates &&
+            settingsController.localTemplatesPath
+        ) {
+            return path.join(
+                settingsController.localTemplatesPath,
+                relativePath
+            );
+        }
+        return (
+            "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/" +
+            relativePath
+        );
+    }
+
     async loadModel() {
         this.dashboardProjectStore = await this.createProjectStore(
-            "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/dashboard.eez-project"
+            this.getTemplatePathOrUrl("templates/dashboard.eez-project")
         );
         this.eezguiProjectStore = await this.createProjectStore(
-            "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/firmware.eez-project"
+            this.getTemplatePathOrUrl("templates/firmware.eez-project")
         );
         this.lvglProjectStore = await this.createProjectStore(
-            "https://raw.githubusercontent.com/eez-open/eez-project-templates/master/templates/LVGL-8.3.eez-project"
+            this.getTemplatePathOrUrl("templates/LVGL-8.3.eez-project")
         );
 
         await this.loadComponents();
@@ -211,8 +231,21 @@ class Model {
         setupMarkdownWatcher();
     }
 
-    async createProjectStore(projectFileUrl: string) {
-        const jsonStr = await fetchUrlOrReadFromCache(projectFileUrl, "json");
+    async createProjectStore(projectFilePathOrUrl: string) {
+        let jsonStr;
+        if (
+            settingsController.useLocalTemplates &&
+            settingsController.localTemplatesPath &&
+            !projectFilePathOrUrl.startsWith("http://") &&
+            !projectFilePathOrUrl.startsWith("https://")
+        ) {
+            jsonStr = await readJsObjectFromFile(projectFilePathOrUrl);
+        } else {
+            jsonStr = await fetchUrlOrReadFromCache(
+                projectFilePathOrUrl,
+                "json"
+            );
+        }
 
         const projectStore = ProjectStore.create({ type: "read-only" });
 

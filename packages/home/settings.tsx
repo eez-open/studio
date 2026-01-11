@@ -42,6 +42,7 @@ import { Loader } from "eez-studio-ui/loader";
 import {
     AbsoluteFileInputProperty,
     BooleanProperty,
+    InputProperty,
     PropertyList,
     SelectProperty,
     StaticProperty
@@ -140,6 +141,9 @@ class SettingsController {
     pythonUseCustomPath: boolean = false;
     pythonCustomPath: string = "";
 
+    useLocalTemplates: boolean = false;
+    localTemplatesPath: string = "";
+
     _showComponentsPaletteInProjectEditor: boolean =
         getShowComponentsPaletteInProjectEditor();
 
@@ -150,6 +154,13 @@ class SettingsController {
                 : false;
         this.pythonCustomPath =
             window.localStorage.getItem("pythonCustomPath") ?? "";
+
+        this.useLocalTemplates =
+            window.localStorage.getItem("useLocalTemplates") == "1"
+                ? true
+                : false;
+        this.localTemplatesPath =
+            window.localStorage.getItem("localTemplatesPath") ?? "";
 
         this.selectedDatabase = instrumentDatabases.activeDatabase;
 
@@ -167,7 +178,9 @@ class SettingsController {
             switchTheme: action.bound,
             removeItemFromMRU: action,
             pythonUseCustomPath: observable,
-            pythonCustomPath: observable
+            pythonCustomPath: observable,
+            useLocalTemplates: observable,
+            localTemplatesPath: observable
         });
 
         this.onThemeSwitched();
@@ -185,6 +198,23 @@ class SettingsController {
                 window.localStorage.setItem(
                     "pythonCustomPath",
                     customPythonPath
+                );
+            }
+        );
+
+        reaction(
+            () => ({
+                useLocalTemplates: this.useLocalTemplates,
+                localTemplatesPath: this.localTemplatesPath
+            }),
+            ({ useLocalTemplates, localTemplatesPath }) => {
+                window.localStorage.setItem(
+                    "useLocalTemplates",
+                    useLocalTemplates ? "1" : "0"
+                );
+                window.localStorage.setItem(
+                    "localTemplatesPath",
+                    localTemplatesPath
                 );
             }
         );
@@ -860,6 +890,83 @@ const PythonSettings = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class AbsoluteDirectoryInputProperty extends React.Component<
+    {
+        name?: string;
+        value: string;
+        onChange: (value: string) => void;
+    },
+    {}
+> {
+    onSelect = async () => {
+        const result = await dialog.showOpenDialog(getCurrentWindow(), {
+            properties: ["openDirectory"]
+        });
+
+        if (result.filePaths && result.filePaths[0]) {
+            this.props.onChange(result.filePaths[0]);
+        }
+    };
+
+    render() {
+        return (
+            <InputProperty
+                name={this.props.name}
+                value={this.props.value}
+                onChange={this.props.onChange}
+                type="text"
+                inputGroupButton={
+                    <button
+                        className="btn btn-secondary"
+                        type="button"
+                        onClick={this.onSelect}
+                    >
+                        &hellip;
+                    </button>
+                }
+            />
+        );
+    }
+}
+
+const TemplateSettings = observer(
+    class TemplateSettings extends React.Component {
+        render() {
+            return (
+                <tr>
+                    <td>Project Templates</td>
+                    <td>
+                        <PropertyList>
+                            <BooleanProperty
+                                name={`Use local templates folder`}
+                                value={settingsController.useLocalTemplates}
+                                onChange={action(
+                                    value =>
+                                        (settingsController.useLocalTemplates =
+                                            value)
+                                )}
+                                checkboxStyleSwitch={true}
+                            />
+                            {settingsController.useLocalTemplates && (
+                                <AbsoluteDirectoryInputProperty
+                                    name="Local templates path (cloned eez-project-templates)"
+                                    value={settingsController.localTemplatesPath}
+                                    onChange={action(value => {
+                                        settingsController.localTemplatesPath =
+                                            value;
+                                    })}
+                                />
+                            )}
+                        </PropertyList>
+                    </td>
+                </tr>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const Settings = observer(
     class Settings extends React.Component {
         render() {
@@ -919,6 +1026,7 @@ export const Settings = observer(
                             ))}
                         </SelectProperty>
                         <PythonSettings />
+                        <TemplateSettings />
                         <BooleanProperty
                             name={`Dark theme`}
                             value={settingsController.isDarkTheme}
