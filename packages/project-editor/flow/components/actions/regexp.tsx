@@ -241,6 +241,7 @@ class RegexpExecutionStateForStream extends RegexpExecutionState {
     private propagate = true;
     private isDone = false;
     private matches: RegExpExecArray[] = [];
+    private streamSnitch: StreamSnitch;
 
     constructor(
         private context: IDashboardComponentContext,
@@ -249,7 +250,7 @@ class RegexpExecutionStateForStream extends RegexpExecutionState {
     ) {
         super();
 
-        const streamSnitch = new StreamSnitch(
+        this.streamSnitch = new StreamSnitch(
             re,
             (m: RegExpExecArray) => {
                 if (this.propagate) {
@@ -270,9 +271,9 @@ class RegexpExecutionStateForStream extends RegexpExecutionState {
                 this.isDone = true;
             }
         );
-        stream.pipe(streamSnitch);
+        stream.pipe(this.streamSnitch);
         stream.on("close", () => {
-            streamSnitch.destroy();
+            this.streamSnitch.destroy();
         });
     }
 
@@ -292,6 +293,7 @@ class RegexpExecutionStateForStream extends RegexpExecutionState {
         this.context.propagateValue("done", null);
         this.context.setComponentExecutionState(undefined);
         this.isDone = true;
+        this.streamSnitch.destroy();
     }
 }
 
