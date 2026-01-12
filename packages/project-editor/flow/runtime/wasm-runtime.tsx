@@ -377,7 +377,9 @@ export class WasmRuntime extends RemoteRuntime {
             }
 
             return result;
-        } else if (workerToRenderMessage.getBitmapAsDataURL) {
+        }
+        
+        if (workerToRenderMessage.getBitmapAsDataURL) {
             const bitmap = findBitmap(
                 this.projectStore.project,
                 workerToRenderMessage.getBitmapAsDataURL.name
@@ -386,69 +388,107 @@ export class WasmRuntime extends RemoteRuntime {
                 return bitmap.imageSrc;
             }
             return null;
-        } else if (workerToRenderMessage.setDashboardColorTheme) {
+        }
+        
+        if (workerToRenderMessage.setDashboardColorTheme) {
             const themeName =
                 workerToRenderMessage.setDashboardColorTheme.themeName;
             runInAction(() => (this.selectedDashboardTheme = themeName));
-        } else if (workerToRenderMessage.getLvglScreenByName) {
+            return;
+        }
+        
+        if (workerToRenderMessage.getLvglScreenByName) {
             return this.lgvlPageRuntime?.getLvglScreenByName(
                 workerToRenderMessage.getLvglScreenByName.name
             );
-        } else if (workerToRenderMessage.getLvglObjectByName) {
+        }
+        
+        if (workerToRenderMessage.getLvglObjectByName) {
             return this.lgvlPageRuntime?.getLvglObjectByName(
                 workerToRenderMessage.getLvglObjectByName.name,
                 []
             );
-        } else if (workerToRenderMessage.getLvglGroupByName) {
+        }
+        
+        if (workerToRenderMessage.getLvglGroupByName) {
             return this.lgvlPageRuntime?.getLvglGroupByName(
                 workerToRenderMessage.getLvglGroupByName.name
             );
-        } else if (workerToRenderMessage.getLvglStyleByName) {
+        }
+        
+        if (workerToRenderMessage.getLvglStyleByName) {
             return this.lgvlPageRuntime?.getLvglStyleByName(
                 workerToRenderMessage.getLvglStyleByName.name
             );
-        } else if (workerToRenderMessage.getLvglImageByName) {
+        }
+        
+        if (workerToRenderMessage.getLvglImageByName) {
             return (
                 this.lgvlPageRuntime?.getBitmapPtrByName(
                     workerToRenderMessage.getLvglImageByName.name
                 ) ?? 0
             );
-        } else if (workerToRenderMessage.getLvglObjectNameFromIndex) {
+        }
+        
+        if (workerToRenderMessage.getLvglObjectNameFromIndex) {
             return this.lgvlPageRuntime?.getLvglObjectNameFromIndex(
                 workerToRenderMessage.getLvglObjectNameFromIndex.index
             );
-        } else if (workerToRenderMessage.lvglObjAddStyle) {
+        }
+        
+        if (workerToRenderMessage.lvglObjAddStyle) {
             this.lgvlPageRuntime?.addStyle(
                 workerToRenderMessage.lvglObjAddStyle.targetObj,
                 workerToRenderMessage.lvglObjAddStyle.styleIndex
             );
-        } else if (workerToRenderMessage.lvglObjRemoveStyle) {
+            return;
+        }
+        
+        if (workerToRenderMessage.lvglObjRemoveStyle) {
             this.lgvlPageRuntime?.removeStyle(
                 workerToRenderMessage.lvglObjRemoveStyle.targetObj,
                 workerToRenderMessage.lvglObjRemoveStyle.styleIndex
             );
-        } else if (workerToRenderMessage.lvglSetColorTheme) {
+            return;
+        }
+        
+        if (workerToRenderMessage.lvglSetColorTheme) {
             this.lgvlPageRuntime?.setColorTheme(
                 workerToRenderMessage.lvglSetColorTheme.themeName
             );
-        } else if (workerToRenderMessage.lvglCreateScreen) {
+            return;
+        }
+        
+        if (workerToRenderMessage.lvglCreateScreen) {
             this.lgvlPageRuntime?.lvglCreateScreen(
                 workerToRenderMessage.lvglCreateScreen.screenIndex
             );
-        } else if (workerToRenderMessage.lvglDeleteScreen) {
+            return;
+        }
+        
+        if (workerToRenderMessage.lvglDeleteScreen) {
             this.lgvlPageRuntime?.lvglDeleteScreen(
                 workerToRenderMessage.lvglDeleteScreen.screenIndex
             );
-        } else if (workerToRenderMessage.lvglScreenTick) {
+            return;
+        }
+        
+        if (workerToRenderMessage.lvglScreenTick) {
             this.lgvlPageRuntime?.lvglScreenTick();
-        } else if (workerToRenderMessage.lvglOnEventHandler) {
+            return;
+        }
+        
+        if (workerToRenderMessage.lvglOnEventHandler) {
             this.lgvlPageRuntime?.lvglOnEventHandler(
                 workerToRenderMessage.lvglOnEventHandler.obj,
                 workerToRenderMessage.lvglOnEventHandler.eventCode,
                 workerToRenderMessage.lvglOnEventHandler.event
             );
+            return;
         }
+
         this.onWorkerMessageAsync(workerToRenderMessage);
+
         return undefined;
     };
 
@@ -573,24 +613,14 @@ export class WasmRuntime extends RemoteRuntime {
         }
     };
 
-    //mainLoopCounter = 0;
-    //mainLoopCounterTime = performance.now();
-
     runMainLoop = () => {
-        // this.mainLoopCounter++;
-        // if (performance.now() - this.mainLoopCounterTime >= 1000) {
-        //     console.log(this.mainLoopCounter);
-        //     this.mainLoopCounterTime = performance.now();
-        //     this.mainLoopCounter = 0;
-        // }
-
         if (this.isStopped) {
             return;
         }
 
         this.worker.wasm._mainLoop(); // should run max. 5 ms so it doesn't block the UI
 
-        this.mainLoopTimeoutId = setTimeout(this.runMainLoop, 0);
+        this.mainLoopTimeoutId = window.requestAnimationFrame(this.runMainLoop);
     };
 
     animationFrameLoop = () => {

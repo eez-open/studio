@@ -649,7 +649,8 @@ export class ProjectEditorTab implements IHomeTab {
             } else {
                 if (
                     !(event.target instanceof HTMLInputElement) &&
-                    !(event.target instanceof HTMLTextAreaElement)
+                    !(event.target instanceof HTMLTextAreaElement) &&
+                    !(event.target instanceof HTMLElement && event.target.tagName == "TRIX-EDITOR")
                 ) {
                     if (
                         (event.ctrlKey || event.metaKey) &&
@@ -677,7 +678,7 @@ export class ProjectEditorTab implements IHomeTab {
                         !event.altKey
                     ) {
                         if (event.key == "Delete") {
-                            deleteSelection();
+                            //deleteSelection();
                         }
                     }
                 }
