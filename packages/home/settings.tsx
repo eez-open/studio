@@ -795,9 +795,7 @@ const Databases = observer(
         render() {
             return (
                 <tr>
-                    <td>Databases</td>
-
-                    <td>
+                    <td colSpan={2}>
                         <div className="EezStudio_Settings_Databases">
                             <FlexLayoutContainer
                                 model={homeLayoutModels.databaseSettings}
@@ -929,6 +927,9 @@ class AbsoluteDirectoryInputProperty extends React.Component<
     }
 }
 
+const EEZ_PROJECT_TEMPLATES_REPO_URL =
+    "https://github.com/eez-open/eez-project-templates";
+
 const TemplateSettings = observer(
     class TemplateSettings extends React.Component {
         render() {
@@ -948,14 +949,34 @@ const TemplateSettings = observer(
                                 checkboxStyleSwitch={true}
                             />
                             {settingsController.useLocalTemplates && (
-                                <AbsoluteDirectoryInputProperty
-                                    name="Local templates path (cloned eez-project-templates)"
-                                    value={settingsController.localTemplatesPath}
-                                    onChange={action(value => {
-                                        settingsController.localTemplatesPath =
-                                            value;
-                                    })}
-                                />
+                                <>
+                                    <AbsoluteDirectoryInputProperty
+                                        name="Local templates path"
+                                        value={
+                                            settingsController.localTemplatesPath
+                                        }
+                                        onChange={action(value => {
+                                            settingsController.localTemplatesPath =
+                                                value;
+                                        })}
+                                    />
+                                    <tr>
+                                        <td>Repository</td>
+                                        <td>
+                                            <a
+                                                href="#"
+                                                onClick={e => {
+                                                    e.preventDefault();
+                                                    shell.openExternal(
+                                                        EEZ_PROJECT_TEMPLATES_REPO_URL
+                                                    );
+                                                }}
+                                            >
+                                                {EEZ_PROJECT_TEMPLATES_REPO_URL}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </>
                             )}
                         </PropertyList>
                     </td>
@@ -967,13 +988,30 @@ const TemplateSettings = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const SettingsSectionHeader = ({
+    title
+}: {
+    title: string;
+}) => (
+    <tr className="EezStudio_SettingsSectionHeader">
+        <td colSpan={2}>
+            <h5>{title}</h5>
+        </td>
+    </tr>
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export const Settings = observer(
     class Settings extends React.Component {
         render() {
             return (
                 <div className="EezStudio_HomeSettingsBody">
                     <PropertyList>
+                        <SettingsSectionHeader title="Databases" />
                         <Databases />
+
+                        <SettingsSectionHeader title="Localization" />
                         <SelectProperty
                             name="Locale"
                             value={settingsController.locale}
@@ -1025,8 +1063,14 @@ export const Settings = observer(
                                 </option>
                             ))}
                         </SelectProperty>
+
+                        <SettingsSectionHeader title="External Tools" />
                         <PythonSettings />
+
+                        <SettingsSectionHeader title="Project Editor" />
                         <TemplateSettings />
+
+                        <SettingsSectionHeader title="Appearance" />
                         <BooleanProperty
                             name={`Dark theme`}
                             value={settingsController.isDarkTheme}
