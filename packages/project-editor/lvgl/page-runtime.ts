@@ -262,61 +262,96 @@ export abstract class LVGLPageRuntime {
     }
 
     getFontPtr(font: Font) {
-        let cashedFont;
-        
-        if (!font.lvglUseFreeType) {
-            cashedFont = this.fontsCache.get(font);
-            if (!cashedFont || cashedFont.lvglBinFile != font.lvglBinFile) {
-                if (cashedFont) {
-                    this.wasm._lvglFreeFont(cashedFont.fontPtr);
-                    this.fontsCache.delete(font);
-                    this.fontAddressToFont.delete(cashedFont.fontPtr);
-                }
-
-                const lvglBinFile = font.lvglBinFile;
-                if (lvglBinFile) {
-                    const bin = Buffer.from(lvglBinFile, "base64");
-
-                    const fontMemPtr = this.wasm._malloc(bin.length);
-                    if (!fontMemPtr) {
-                        return 0;
-                    }
-                    for (let i = 0; i < bin.length; i++) {
-                        this.wasm.HEAP8[fontMemPtr + i] = bin[i];
+        try {
+            let cashedFont;
+            
+            if (!font.lvglUseFreeType) {
+                cashedFont = this.fontsCache.get(font);
+                if (!cashedFont || cashedFont.lvglBinFile != font.lvglBinFile) {
+                    if (cashedFont) {
+                        this.wasm._lvglFreeFont(cashedFont.fontPtr);
+                        this.fontsCache.delete(font);
+                        this.fontAddressToFont.delete(cashedFont.fontPtr);
                     }
 
-                    const fontPathStr = this.wasm.stringToNewUTF8("M:" + fontMemPtr);
+                    const lvglBinFile = font.lvglBinFile;
+                    if (lvglBinFile) {
+                        const bin = Buffer.from(lvglBinFile, "base64");
 
-                    let fallbackUserFont = 0;
-                    let fallbackBuiltinFont = -1;
-                    if (font.lvglFallbackFont) {
-                        if (font.lvglFallbackFont.startsWith("ui_font_")) {
-                            const fallbackFont = findFontByVarName(
-                                this.project,
-                                font.lvglFallbackFont
-                            );
-
-                            if (fallbackFont) {
-                                fallbackUserFont = this.getFontPtr(fallbackFont);
-                            }
-                        } else if (font.lvglFallbackFont.startsWith("lv_font_")) {
-                            fallbackBuiltinFont = BUILT_IN_FONTS.indexOf(
-                                font.lvglFallbackFont
-                                    .slice("lv_font_".length)
-                                    .toUpperCase()
-                            );
+                        const fontMemPtr = this.wasm._malloc(bin.length);
+                        if (!fontMemPtr) {
+                            return 0;
                         }
+                        for (let i = 0; i < bin.length; i++) {
+                            this.wasm.HEAP8[fontMemPtr + i] = bin[i];
+                        }
+
+                        const fontPathStr = this.wasm.stringToNewUTF8("M:" + fontMemPtr);
+
+                        let fallbackUserFont = 0;
+                        let fallbackBuiltinFont = -1;
+                        if (font.lvglFallbackFont) {
+                            if (font.lvglFallbackFont.startsWith("ui_font_")) {
+                                const fallbackFont = findFontByVarName(
+                                    this.project,
+                                    font.lvglFallbackFont
+                                );
+
+                                if (fallbackFont) {
+                                    fallbackUserFont = this.getFontPtr(fallbackFont);
+                                }
+                            } else if (font.lvglFallbackFont.startsWith("lv_font_")) {
+                                fallbackBuiltinFont = BUILT_IN_FONTS.indexOf(
+                                    font.lvglFallbackFont
+                                        .slice("lv_font_".length)
+                                        .toUpperCase()
+                                );
+                            }
+                        }
+
+                        let fontPtr = this.wasm._lvglLoadFont(
+                            fontPathStr,
+                            fallbackUserFont,
+                            fallbackBuiltinFont
+                        );
+
+                        this.wasm._free(fontPathStr);
+
+                        this.wasm._free(fontMemPtr);
+
+                        cashedFont = {
+                            lvglBinFile,
+                            fontPtr
+                        };
+
+                        this.fontsCache.set(font, cashedFont);
+                        this.fontAddressToFont.set(fontPtr, font);
                     }
+                }
+            } else {
+                cashedFont = this.fontsCache.get(font);
 
-                    let fontPtr = this.wasm._lvglLoadFont(
-                        fontPathStr,
-                        fallbackUserFont,
-                        fallbackBuiltinFont
+                let fontSize = font.source!.size || 16;
+                let lvglBinFile = `fontSize=${fontSize};style=${font.lvglFreeTypeStyle}`;
+
+                if (!cashedFont || cashedFont.lvglBinFile != lvglBinFile) {
+                    // read font file from font.source.filePath to Uint8Array variable using fs.readFileSync code
+                    const fontFileBuffer = fs.readFileSync( this.project._store.getAbsoluteFilePath(font.source!.filePath));
+                    const fontFileUint8Array = new Uint8Array(fontFileBuffer);
+                    
+                    const fsFilePath = `/runtime_font_${font.name}_${fontSize}.ttf`;
+
+                    this.wasm.FS.writeFile(fsFilePath, fontFileUint8Array);
+                    
+                    const style: number = 
+                        font.lvglFreeTypeStyle == "BOLD" ? 1 << 1 : 
+                        font.lvglFreeTypeStyle == "ITALIC" ? 1 << 0 : 0;
+
+                    const fontPtr = this.wasm._lvglCreateFreeTypeFont(
+                        this.wasm.stringToNewUTF8(fsFilePath), 
+                        fontSize, 
+                        style
                     );
-
-                    this.wasm._free(fontPathStr);
-
-                    this.wasm._free(fontMemPtr);
 
                     cashedFont = {
                         lvglBinFile,
@@ -327,46 +362,16 @@ export abstract class LVGLPageRuntime {
                     this.fontAddressToFont.set(fontPtr, font);
                 }
             }
-        } else {
-            cashedFont = this.fontsCache.get(font);
 
-            let fontSize = font.source!.size || 16;
-            let lvglBinFile = `fontSize=${fontSize};style=${font.lvglFreeTypeStyle}`;
-
-            if (!cashedFont || cashedFont.lvglBinFile != lvglBinFile) {
-                // read font file from font.source.filePath to Uint8Array variable using fs.readFileSync code
-                const fontFileBuffer = fs.readFileSync(font.source!.filePath);
-                const fontFileUint8Array = new Uint8Array(fontFileBuffer);
-                
-                const fsFilePath = '/runtime_font.ttf';
-
-                this.wasm.FS.writeFile(fsFilePath, fontFileUint8Array);
-                
-                const style: number = 
-                    font.lvglFreeTypeStyle == "BOLD" ? 1 << 1 : 
-                    font.lvglFreeTypeStyle == "ITALIC" ? 1 << 0 : 0;
-
-                const fontPtr = this.wasm._lvglCreateFreeTypeFont(
-                    this.wasm.stringToNewUTF8(fsFilePath), 
-                    fontSize, 
-                    style
-                );
-
-                cashedFont = {
-                    lvglBinFile,
-                    fontPtr
-                };
-
-                this.fontsCache.set(font, cashedFont);
-                this.fontAddressToFont.set(fontPtr, font);
+            if (cashedFont) {
+                return cashedFont.fontPtr;
             }
-        }
 
-        if (cashedFont) {
-            return cashedFont.fontPtr;
+            return 0;
+        } catch (err) {
+            console.error("Error in getFontPtr:", err);
+            return 0;
         }
-
-        return 0;
     }
 
     allocateUTF8(str: string, free: boolean) {

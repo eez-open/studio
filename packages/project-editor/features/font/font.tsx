@@ -1,8 +1,9 @@
+import fs from "fs";
+import path from "path";
 import React from "react";
 import { observer } from "mobx-react";
 import { clipboard, nativeImage } from "@electron/remote";
 import { observable, computed, makeObservable, runInAction } from "mobx";
-import fs from "fs";
 import { dialog, getCurrentWindow } from "@electron/remote";
 
 import { Rect } from "eez-studio-shared/geometry";
@@ -1418,7 +1419,8 @@ export class Font extends EezObject {
                     encodings: EncodingRange[];
                     symbols: string;
                 };
-            }
+            },
+            project: Project
         ) => {
             if ((fontJs as any).renderEngine != undefined) {
                 fontJs.renderingEngine = (fontJs as any).renderEngine;
@@ -1457,6 +1459,11 @@ export class Font extends EezObject {
 
             if (fontJs.lvglSourceFile) {
                 delete fontJs.lvglSourceFile;
+            }
+
+            if (fontJs.source?.filePath && path.isAbsolute(fontJs.source.filePath)) {
+                const projectStore = project._store;
+                fontJs.source.filePath = projectStore.getFilePathRelativeToProjectPath(fontJs.source.filePath);
             }
         },
         afterLoadHook: (font: Font, project) => {
@@ -1714,12 +1721,18 @@ export class Font extends EezObject {
                     try {
                         let font;
                         if (projectStore.projectTypeTraits.isLVGL && result.values.useFreeType) {
+                            let relativeFilePath = getProjectStore(
+                                parent
+                            ).getFilePathRelativeToProjectPath(
+                                result.values.filePath
+                            );
+
                             font = createObject<Font>(
                                 projectStore,
                                 {
                                     name: result.values.name,
                                     source: {
-                                        filePath: result.values.filePath,
+                                        filePath: relativeFilePath,
                                         size: result.values.size
                                     } as any,
                                     glyphs: [],
