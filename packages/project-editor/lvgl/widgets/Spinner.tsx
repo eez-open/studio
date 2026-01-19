@@ -57,17 +57,16 @@ export class LVGLSpinnerWidget extends LVGLWidget {
     }
 
     override toLVGLCode(code: LVGLCode) {
-        const SPIN_TIME = 1000;
-        const ARC_LENGTH = 60;
-
         if (code.isV9) {
             code.createObject(`lv_spinner_create`);
-            code.callObjectFunction(
-                "lv_spinner_set_anim_params",
-                SPIN_TIME,
-                ARC_LENGTH
-            );
+            // code.callObjectFunction(
+            //     "lv_spinner_set_anim_params",
+            //     SPIN_TIME,
+            //     ARC_LENGTH
+            // );
         } else {
+            const SPIN_TIME = 1000;
+            const ARC_LENGTH = 60;
             code.createObject(`lv_spinner_create`, SPIN_TIME, ARC_LENGTH);
         }
     }
