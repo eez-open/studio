@@ -25,14 +25,14 @@ import {
     PropertyInfo,
     getProperty,
     PropertyProps,
-    isPropertyDisabled
+    isPropertyDisabled,
+    getParent
 } from "project-editor/core/object";
 import {
     getChildOfObject,
     Message,
     propertyNotSetMessage,
     createObject,
-    isEezObjectArray,
     getAncestorOfType,
     findPropertyByNameInObject
 } from "project-editor/store";
@@ -1312,7 +1312,8 @@ export interface IEnumMember {
 
 export class EnumMember extends EezObject implements IEnumMember {
     name: string;
-    value: number;
+    automaticValue: boolean;
+    specificValue: number;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -1322,8 +1323,23 @@ export class EnumMember extends EezObject implements IEnumMember {
                 uniqueIdentifier: true
             },
             {
+                name: "automaticValue",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "specificValue",
+                displayName: "Value",
+                type: PropertyType.Number,
+                disabled: (enumMember: EnumMember) => enumMember.automaticValue
+            },
+            {
                 name: "value",
-                type: PropertyType.Number
+                displayName: "Value",
+                type: PropertyType.Number,
+                computed: true,
+                readOnlyInPropertyGrid: true,
+                disabled: (enumMember: EnumMember) => !enumMember.automaticValue
             }
         ],
         listLabel: (member: EnumMember, collapsed: boolean) =>
@@ -1333,11 +1349,33 @@ export class EnumMember extends EezObject implements IEnumMember {
                 messages.push(propertyNotSetMessage(enumMember, "name"));
             }
 
-            if (enumMember.value == undefined) {
+            if (!enumMember.automaticValue && enumMember.value == undefined) {
                 messages.push(propertyNotSetMessage(enumMember, "value"));
             }
         },
         defaultValue: {},
+        beforeLoadHook(object, jsObject, project) {
+            if (jsObject.value !== undefined) {
+                jsObject.specificValue = jsObject.value;
+                delete jsObject.value;
+            }
+
+            if (jsObject.automaticValue === undefined) {
+                jsObject.automaticValue = false;
+            }
+        },
+        updateObjectValueHook: (enumMember: EnumMember, values: any) => {
+            const project = ProjectEditor.getProject(enumMember);
+            if (!values.automaticValue && values.specificValue == undefined) {
+                project._store.updateObject(enumMember, {
+                    specificValue: enumMember.value
+                });
+            } else if (values.automaticValue && values.specificValue != undefined) {
+                project._store.updateObject(enumMember, {
+                    specificValue: undefined
+                });
+            }
+        },
         newItem: async (parent: IEezObject) => {
             const result = await showGenericDialog({
                 dialogDefinition: {
@@ -1359,10 +1397,8 @@ export class EnumMember extends EezObject implements IEnumMember {
 
             const enumMemberProperties: Partial<EnumMember> = {
                 name: result.values.name,
-                value:
-                    isEezObjectArray(parent) && parent.length > 0
-                        ? (parent[parent.length - 1] as EnumMember).value + 1
-                        : 0
+                specificValue: undefined,
+                automaticValue: true
             };
 
             const project = ProjectEditor.getProject(parent);
@@ -1382,8 +1418,22 @@ export class EnumMember extends EezObject implements IEnumMember {
 
         makeObservable(this, {
             name: observable,
-            value: observable
+            automaticValue: observable,
+            specificValue: observable,
+            value: computed
         });
+    }
+
+    get value(): number {
+        if (!this.automaticValue) {
+            return this.specificValue;
+        }
+        const parentArray = getParent(this) as EnumMember[];
+        const index = parentArray.indexOf(this);
+        if (index > 0) {
+            return parentArray[index - 1].value + 1;
+        }
+        return 0;
     }
 }
 

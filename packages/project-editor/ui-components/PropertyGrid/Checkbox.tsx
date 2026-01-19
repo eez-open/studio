@@ -41,7 +41,7 @@ export const Checkbox = observer(
                 />
             );
             const input = this.props.switchStyle ? (
-                <div className="form-check form-switch">&nbsp;{innerInput}</div>
+                <div className="form-check form-switch" style={{marginTop: 2, marginBottom: 4}}>&nbsp;{innerInput}</div>
             ) : (
                 innerInput
             );
