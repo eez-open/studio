@@ -42,3 +42,5 @@ tools/eez-framework-amalgamation/build
 tools/lvgl-api/build
 
 .env
+
+/test/**

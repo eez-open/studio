@@ -401,6 +401,12 @@ export class LVGLSliderWidget extends LVGLWidget {
             );
         }
 
+        const lv_slider_set_start_value =
+            PREFIX +
+            (code.isLVGLVersion(["8.", "9.2"])
+                ? "lv_slider_set_left_value"
+                : "lv_slider_set_start_value");
+
         // valueLeft
         if (this.mode == "RANGE") {
             if (this.valueLeftType == "literal") {
@@ -415,7 +421,7 @@ export class LVGLSliderWidget extends LVGLWidget {
                 }
 
                 code.callObjectFunction(
-                    PREFIX + "lv_slider_set_left_value",
+                    lv_slider_set_start_value,
                     this.valueLeft,
                     code.constant(
                         this.enableAnimation ? "LV_ANIM_ON" : "LV_ANIM_OFF"
@@ -429,7 +435,7 @@ export class LVGLSliderWidget extends LVGLWidget {
 
                     if (!isNaN(previewValueLeft)) {
                         code.callObjectFunction(
-                            PREFIX + "lv_slider_set_left_value",
+                            lv_slider_set_start_value,
                             previewValueLeft,
                             code.constant(
                                 this.enableAnimation
@@ -458,7 +464,7 @@ export class LVGLSliderWidget extends LVGLWidget {
                         code.tickChangeStart();
 
                         code.callObjectFunction(
-                            PREFIX + "lv_slider_set_left_value",
+                            lv_slider_set_start_value,
                             new_val,
                             code.constant(
                                 this.enableAnimation
