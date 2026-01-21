@@ -43,4 +43,6 @@ tools/lvgl-api/build
 
 .env
 
+/libs/docker-build/output/**
+
 /test/**

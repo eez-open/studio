@@ -159,8 +159,8 @@ export class Assets {
         dashboardComponentTypeToNameMap: {},
         types: [],
         typeIndexes: {},
-        displayWidth: this.displayWidth,
-        displayHeight: this.displayHeight,
+        displayWidth: 0,
+        displayHeight: 0,
         bitmaps: [],
         lvglWidgetIndexes: {},
         lvglWidgetGeneratedIdentifiers: {}
@@ -214,6 +214,9 @@ export class Assets {
         buildConfiguration: BuildConfiguration | undefined,
         public option: "check" | "buildAssets" | "buildFiles"
     ) {
+        this.map.displayWidth = rootProject.settings.general.displayWidth;
+        this.map.displayHeight = rootProject.settings.general.displayHeight;
+
         if (rootProject.projectTypeTraits.isLVGL) {
             this.lvglBuild = new LVGLBuild(this);
             this.lvglBuild.firtsPassStart();

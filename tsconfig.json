@@ -2,7 +2,7 @@
     "compilerOptions": {
         "lib": ["ES2020", "DOM"],
         "module": "commonjs",
-        "target": "ES2020",
+        "target": "ES2022",
         "moduleResolution": "node",
         "esModuleInterop": true,
         "jsx": "react",
@@ -19,7 +19,8 @@
         "outDir": "./build",
         "skipLibCheck": true,
         "strictPropertyInitialization": false,
-        "useDefineForClassFields": true
+        "useDefineForClassFields": true,
+        "importHelpers": true
     },
     "include": ["./packages"]
 }

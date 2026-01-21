@@ -503,12 +503,17 @@ class AssetsMap {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Assets {
-    maps = {
-        name: new AssetsMap(this, "name"),
-        id: new AssetsMap(this, "id")
+    maps: {
+        name: AssetsMap;
+        id: AssetsMap;
     };
 
     constructor(public project: Project) {
+        this.maps = {
+            name: new AssetsMap(this, "name"),
+            id: new AssetsMap(this, "id")
+        };
+
         makeObservable(this, {
             pages: computed
         });
