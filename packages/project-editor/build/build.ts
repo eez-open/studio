@@ -36,6 +36,7 @@ import {
 import { buildAssets } from "project-editor/build/assets";
 import { buildScpi } from "project-editor/build/scpi";
 import { generateSourceCodeForEezFramework } from "project-editor/lvgl/build";
+import { cleanupSourceFile } from "project-editor/build/cleanup-c-source-files";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,11 +66,46 @@ function disableBuildTracking() {
     trackingDestinationFolder = null;
 }
 
+// Flag to indicate if EEZ_FOR_LVGL blocks should be removed (for eez-flow-lite or no-flow projects)
+
+interface SourceCleanupOptions {
+    hasFlowSupport: boolean;
+    generateSourceCodeForEezFramework: boolean;
+
+}
+
+let sourceCleanupOptions: SourceCleanupOptions = {
+    hasFlowSupport: true,
+    generateSourceCodeForEezFramework: true
+};
+
+export function setSourceCleanupOptions(options: SourceCleanupOptions) {
+    sourceCleanupOptions = options;
+}
+
+
 // Tracked write functions - these track files when tracking is enabled
 export async function writeTextFile(
     filePath: string,
     content: string
 ): Promise<void> {
+    // Clean up .c and .h files to remove consecutive empty lines
+    const basename = path.basename(filePath).toLowerCase();
+    if (basename.endsWith('.c') || basename.endsWith('.h') && basename != 'eez-flow.h') {
+        content = cleanupSourceFile(
+            content, 
+            
+            // hasFlowSupport then EEZ_FOR_LVGL is defined
+            sourceCleanupOptions.hasFlowSupport ? ["EEZ_FOR_LVGL"] : [],
+            
+            // noFlow then EEZ_FOR_LVGL is NOT defined
+            sourceCleanupOptions.hasFlowSupport ? [] : ["EEZ_FOR_LVGL"], 
+
+            // Always exclude eez/ folder when generating source code for eez framework
+            sourceCleanupOptions.hasFlowSupport && sourceCleanupOptions.generateSourceCodeForEezFramework ? ["eez/"] : []
+        );
+    }
+    
     await originalWriteTextFile(filePath, content);
     if (trackingDestinationFolder) {
         trackBuildFile(filePath, trackingDestinationFolder);
@@ -450,6 +486,12 @@ export async function build(
 
                 // Enable build file tracking before any files are written
                 enableBuildTracking(destinationFolderPath);
+                
+                // Set source cleanup options based on project type
+                setSourceCleanupOptions({
+                    hasFlowSupport: project.projectTypeTraits.hasFlowSupport,
+                    generateSourceCodeForEezFramework: project.settings.build.generateSourceCodeForEezFramework
+                });
             }
         }
 

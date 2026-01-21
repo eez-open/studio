@@ -34,6 +34,7 @@ import { GENERATED_NAME_PREFIX } from "./identifiers";
 import type { Flow } from "project-editor/flow/flow";
 import { escapeCString, isGeometryControlledByParent } from "./widget-common";
 import { BuildLVGLCode } from "project-editor/lvgl/to-lvgl-code";
+import { cleanupSourceFile } from "project-editor/build/cleanup-c-source-files";
 
 interface Identifiers {
     identifiers: string[];
@@ -2746,13 +2747,6 @@ export async function generateSourceCodeForEezFramework(
         ? resolve(`${sourceRootDir()}/../resources/eez-framework-amalgamation`)
         : process.resourcesPath! + "/eez-framework-amalgamation";
 
-    // Copy eez-flow.cpp
-    const eezFlowCpp = await fs.promises.readFile(
-        eezframeworkAmalgamationPath + "/eez-flow.cpp",
-        "utf-8"
-    );
-    await writeTextFile(destinationFolderPath + "/eez-flow.cpp", eezFlowCpp);
-
     // Copy eez-flow.h (will be modified below)
     const eezFlowH = await fs.promises.readFile(
         eezframeworkAmalgamationPath + "/eez-flow.h",
@@ -2764,6 +2758,8 @@ export async function generateSourceCodeForEezFramework(
         destinationFolderPath + "/eez-flow.h",
         "utf-8"
     );
+
+    let defines = [];
 
     if (project.settings.build.compressFlowDefinition) {
         const lz4C = await fs.promises.readFile(
@@ -2782,6 +2778,8 @@ export async function generateSourceCodeForEezFramework(
             "#define EEZ_FOR_LVGL_LZ4_OPTION 1",
             "#define EEZ_FOR_LVGL_LZ4_OPTION 0"
         );
+        
+        defines.push("EEZ_FOR_LVGL_LZ4_OPTION=0");
     }
 
     if (isUsingCrypyoSha256) {
@@ -2807,6 +2805,8 @@ export async function generateSourceCodeForEezFramework(
             "#define EEZ_FOR_LVGL_SHA256_OPTION 1",
             "#define EEZ_FOR_LVGL_SHA256_OPTION 0"
         );
+        
+        defines.push("EEZ_FOR_LVGL_SHA256_OPTION=0");
     }
 
     eezH = eezH.replace(
@@ -2841,7 +2841,23 @@ export async function generateSourceCodeForEezFramework(
         );
     }
 
+    if (defines.length > 0) {
+        eezH = cleanupSourceFile(eezH, defines);
+    }
+
     await writeTextFile(destinationFolderPath + "/eez-flow.h", eezH);
+
+    // Copy eez-flow.cpp
+    let eezFlowCpp = await fs.promises.readFile(
+        eezframeworkAmalgamationPath + "/eez-flow.cpp",
+        "utf-8"
+    );
+
+    if (defines.length > 0) {
+        eezFlowCpp = cleanupSourceFile(eezFlowCpp, defines);
+    }
+
+    await writeTextFile(destinationFolderPath + "/eez-flow.cpp", eezFlowCpp);
 
     project._store.outputSectionsStore.write(
         Section.OUTPUT,
