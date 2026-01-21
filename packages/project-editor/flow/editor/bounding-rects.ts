@@ -15,6 +15,7 @@ import type {
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getId } from "project-editor/core/object";
+import { ComponentGroup } from "project-editor/flow/component-group";
 
 export function getObjectBoundingRect(
     viewState: IViewState,
@@ -47,6 +48,9 @@ export function getObjectBoundingRect(
             width: objectAdapter.rect.width,
             height: objectAdapter.rect.height
         };
+    } else if (object instanceof ComponentGroup) {
+        // Use the full bounding rect for selection visualization
+        return object.boundingRect;
     } else if (
         object instanceof ProjectEditor.ActionClass ||
         object instanceof ProjectEditor.PageClass

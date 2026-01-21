@@ -44,6 +44,7 @@ import type {
     IResizeHandler,
     IFlowContext
 } from "project-editor/flow/flow-interfaces";
+import { ComponentGroupRenderer } from "project-editor/flow/editor/ComponentGroupRenderer";
 import {
     ComponentsContainerEnclosure,
     ComponentEnclosure,
@@ -866,19 +867,30 @@ export class Page extends Flow {
         return (
             <>
                 {!flowContext.frontFace && (
-                    <ComponentsContainerEnclosure
-                        parent={this}
-                        components={this.components.filter(
-                            component => !(component instanceof Widget)
-                        )}
-                        flowContext={
-                            flowContext.flowState
-                                ? flowContext
-                                : flowContext.overrideDataContext(
-                                    this.dataContextOverridesObject
-                                )
-                        }
-                    />
+                    <>
+                        {/* Render component groups first (behind components) */}
+                        {this.componentGroups.map(group => (
+                            <ComponentGroupRenderer
+                                key={getId(group)}
+                                group={group}
+                                flowContext={flowContext}
+                            />
+                        ))}
+
+                        <ComponentsContainerEnclosure
+                            parent={this}
+                            components={this.components.filter(
+                                component => !(component instanceof Widget)
+                            )}
+                            flowContext={
+                                flowContext.flowState
+                                    ? flowContext
+                                    : flowContext.overrideDataContext(
+                                          this.dataContextOverridesObject
+                                      )
+                            }
+                        />
+                    </>
                 )}
             </>
         );

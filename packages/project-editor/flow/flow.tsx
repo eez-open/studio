@@ -48,6 +48,7 @@ import {
     userPropertiesProperty,
     UserProperty
 } from "project-editor/flow/user-property";
+import { ComponentGroup } from "project-editor/flow/component-group";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -70,6 +71,12 @@ export abstract class Flow extends EezObject {
                 name: "localVariables",
                 type: PropertyType.Array,
                 typeClass: Variable,
+                hideInPropertyGrid: true
+            },
+            {
+                name: "componentGroups",
+                type: PropertyType.Array,
+                typeClass: ComponentGroup,
                 hideInPropertyGrid: true
             },
             userPropertiesProperty
@@ -150,12 +157,17 @@ export abstract class Flow extends EezObject {
             if (!jsObject.userProperties) {
                 jsObject.userProperties = [];
             }
+
+            if (!jsObject.componentGroups) {
+                jsObject.componentGroups = [];
+            }
         }
     };
 
     components: Component[] = [];
     connectionLines: ConnectionLine[] = [];
     localVariables: Variable[] = [];
+    componentGroups: ComponentGroup[] = [];
     userProperties: UserProperty[];
 
     get userPropertiesAndLocalVariables() {
@@ -182,6 +194,7 @@ export abstract class Flow extends EezObject {
             components: observable,
             connectionLines: observable,
             localVariables: observable,
+            componentGroups: observable,
             userProperties: observable
         });
     }

@@ -13,6 +13,7 @@ import { ConnectionLine } from "project-editor/flow/connection-line";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getClassInfo } from "project-editor/store";
+import { ComponentGroup } from "project-editor/flow/component-group";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,6 +63,19 @@ export function getConnectionLineShape(
         }
         if (context.viewState.isObjectIdSelected(getId(object))) {
             return true;
+        }
+        // Check if the object is a component inside a selected group
+        if (object instanceof ProjectEditor.ComponentClass) {
+            const objectId = getId(object);
+            for (const selectedObject of context.viewState.selectedObjects) {
+                const classInfo = getClassInfo(selectedObject.object);
+                if (classInfo === ComponentGroup.classInfo) {
+                    const group = selectedObject.object as ComponentGroup;
+                    if (group.components.includes(objectId)) {
+                        return true;
+                    }
+                }
+            }
         }
         if (object instanceof ProjectEditor.ActionComponentClass) {
             return false;

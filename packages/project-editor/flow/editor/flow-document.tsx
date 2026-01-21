@@ -13,13 +13,16 @@ import {
 import { IEezObject, getId, getParent } from "project-editor/core/object";
 import {
     createObject,
+    updateObject,
+    deleteObject,
     getAncestorOfType,
     getProjectStore
 } from "project-editor/store";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { Flow } from "project-editor/flow/flow";
 import { ConnectionLine } from "project-editor/flow/connection-line";
-import { Component } from "project-editor/flow/component";
+import { Component, ActionComponent } from "project-editor/flow/component";
+import { ComponentGroup } from "project-editor/flow/component-group";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Page } from "project-editor/features/page/page";
 import { canPasteWithDependencies } from "project-editor/store/paste-with-dependencies";
@@ -165,11 +168,157 @@ export class FlowDocument implements IDocument {
             atPoint?: Point;
         }
     ) {
-        const flow = this.flow.object;
-        const isPage = flow instanceof ProjectEditor.PageClass;
+        const flow = this.flow.object as Flow;
 
         let additionalMenuItems: Electron.MenuItem[] = [];
 
+        // Add Group/Ungroup menu items for action components
+        const selectedActionComponents = objects.filter(
+            obj => obj.object instanceof ActionComponent
+        );
+        const selectedGroups = objects.filter(
+            obj => obj.object instanceof ComponentGroup
+        );
+        // Only show grouping options when all selected objects are either ActionComponents or ComponentGroups
+        if (selectedActionComponents.length + selectedGroups.length == objects.length) {
+            // Filter out components that are already in a group
+            const componentsNotInGroup = selectedActionComponents.filter(obj => {
+                const componentId = getId(obj.object);
+                return !this.findGroupForComponent(componentId);
+            });
+
+            // Find components that are in a group
+            const componentsInGroup = selectedActionComponents.filter(obj => {
+                const componentId = getId(obj.object);
+                return !!this.findGroupForComponent(componentId);
+            });
+
+            // Check if all components in groups belong to the same group
+            let commonGroup: ComponentGroup | undefined;
+            if (componentsInGroup.length > 0) {
+                const firstComponentId = getId(componentsInGroup[0].object);
+                commonGroup = this.findGroupForComponent(
+                    firstComponentId
+                );
+
+                // Verify all other components are in the same group
+                for (let i = 1; i < componentsInGroup.length; i++) {
+                    const componentId = getId(componentsInGroup[i].object);
+                    const group = this.findGroupForComponent(componentId);
+                    if (group !== commonGroup) {
+                        commonGroup = undefined;
+                        break;
+                    }
+                }
+            }
+
+            // Add to Group option when:
+            // 1. A group is explicitly selected with ungrouped components, OR
+            // 2. Some components are in the same group and others are not
+            let addToGroupShown = false;
+            if (selectedGroups.length === 1 && componentsNotInGroup.length >= 1) {
+                // Add to explicitly selected group
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Add to Group",
+                        click: async () => {
+                            this.addComponentsToGroup(
+                                selectedGroups[0].object as ComponentGroup,
+                                componentsNotInGroup
+                            );
+                        }
+                    })
+                );
+                addToGroupShown = true;
+            } else if (selectedGroups.length === 0 && commonGroup && componentsNotInGroup.length >= 1) {
+                // Add to the common group that some selected components belong to
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Add to Group",
+                        click: async () => {
+                            this.addComponentsToGroup(
+                                commonGroup!,
+                                componentsNotInGroup
+                            );
+                        }
+                    })
+                );
+                addToGroupShown = true;
+            }
+
+            // Show Group option only when:
+            // - There are ungrouped components AND
+            // - "Add to Group" is not shown (no mixed selection with grouped components)
+            if (componentsNotInGroup.length >= 1 && !addToGroupShown) {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Group",
+                        click: async () => {
+                            this.groupSelectedComponents(componentsNotInGroup);
+                        }
+                    })
+                );
+            }
+
+            if (componentsInGroup.length > 0) {
+                // Show Ungroup option when there are components in groups
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Remove from Group",
+                        click: async () => {
+                            this.projectStore.undoManager.setCombineCommands(true);
+                            for (const obj of componentsInGroup) {
+                                const componentId = getId(obj.object);
+                                this.ungroupComponent(componentId);
+                            }
+                            this.projectStore.undoManager.setCombineCommands(false);
+                        }
+                    })
+                );
+            } else if (selectedGroups.length > 0) {
+                // Show Ungroup All option when groups are selected
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Ungroup All",
+                        click: async () => {
+                            this.projectStore.undoManager.setCombineCommands(true);
+                            for (const group of selectedGroups) {
+                                this.projectStore.deleteObject(
+                                    group.object
+                                );
+                            }
+                            this.projectStore.undoManager.setCombineCommands(false);
+                        }
+                    })
+                );
+            }
+
+            // Add Merge Groups menu item when multiple groups are selected
+            if (selectedGroups.length >= 2) {
+                additionalMenuItems.push(
+                    new MenuItem({
+                        label: "Merge Groups",
+                        click: async () => {
+                            this.mergeGroups(
+                                selectedGroups.map(
+                                    obj => obj.object as ComponentGroup
+                                )
+                            );
+                        }
+                    })
+                );
+            }
+        }
+
+        if (additionalMenuItems.length > 0) {
+            additionalMenuItems.push(
+                new MenuItem({
+                    type: "separator"
+                })
+            );
+        }
+
+        const isPage = flow instanceof ProjectEditor.PageClass;
         if (isPage && objects.length == 0) {
             additionalMenuItems.push(
                 new MenuItem({
@@ -356,6 +505,113 @@ export class FlowDocument implements IDocument {
 
     get projectStore() {
         return getProjectStore(this.flow.object);
+    }
+
+    // Group management methods
+    findGroupForComponent(componentId: string): ComponentGroup | undefined {
+        const flow = this.flow.object as Flow;
+        return flow.componentGroups.find(group =>
+            group.components.includes(componentId)
+        );
+    }
+
+    groupSelectedComponents(selectedComponents: TreeObjectAdapter[]) {
+        const flow = this.flow.object as Flow;
+        const componentIds = selectedComponents.map(obj => getId(obj.object));
+
+        this.projectStore.undoManager.setCombineCommands(true);
+
+        const group = createObject<ComponentGroup>(
+            this.projectStore,
+            {
+                description: "Group",
+                components: componentIds
+            },
+            ComponentGroup
+        );
+
+        this.projectStore.addObject(flow.componentGroups, group);
+
+        this.projectStore.undoManager.setCombineCommands(false);
+
+        // Select the newly created group
+        runInAction(() => {
+            const groupAdapter = this.flowContext.document.findObjectById(
+                getId(group)
+            );
+            if (groupAdapter) {
+                this.flow.selectItem(groupAdapter);
+            }
+        });
+    }
+
+    ungroupComponent(componentId: string) {
+        const group = this.findGroupForComponent(componentId);
+        if (group) {
+            const index = group.components.indexOf(componentId);
+            const newComponents = [...group.components];
+            newComponents.splice(index, 1);
+            updateObject(group, { components: newComponents });
+
+            // Delete group if it has no components
+            if (newComponents.length === 0) {
+                deleteObject(group);
+            }
+        }
+    }
+
+    addComponentsToGroup(
+        group: ComponentGroup,
+        componentsToAdd: TreeObjectAdapter[]
+    ) {
+        const newComponentIds = componentsToAdd.map(obj => getId(obj.object));
+        const updatedComponents = [...group.components, ...newComponentIds];
+
+        updateObject(group, { components: updatedComponents });
+    }
+
+    mergeGroups(groups: ComponentGroup[]) {
+        if (groups.length < 2) return;
+
+        // Use the first group as the target, merge all others into it
+        const targetGroup = groups[0];
+        const allComponentIds = new Set<string>(targetGroup.components);
+
+        // Collect all component IDs and descriptions from other groups
+        const descriptions: string[] = [];
+        for (const group of groups) {
+            if (group.description && group.description.trim()) {
+                descriptions.push(group.description.trim());
+            }
+            if (group !== targetGroup) {
+                group.components.forEach(id => allComponentIds.add(id));
+            }
+        }
+
+        this.projectStore.undoManager.setCombineCommands(true);
+
+        // Update the target group with all components and merged description
+        updateObject(targetGroup, {
+            components: Array.from(allComponentIds),
+            description: descriptions.join(", ")
+        });
+
+        // Delete the other groups
+        for (let i = 1; i < groups.length; i++) {
+            this.projectStore.deleteObject(groups[i]);
+        }
+
+        this.projectStore.undoManager.setCombineCommands(false);
+
+        // Select the merged group
+        runInAction(() => {
+            const groupAdapter = this.flowContext.document.findObjectById(
+                getId(targetGroup)
+            );
+            if (groupAdapter) {
+                this.flow.selectItem(groupAdapter);
+            }
+        });
     }
 
     onDragStart(): void {

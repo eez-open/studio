@@ -109,7 +109,7 @@
     },
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "workbench.editor.enablePreview": false,
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "C_Cpp.formatting": "disabled",
     "cortex-debug.variableUseNaturalFormat": false
 }

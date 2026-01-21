@@ -11,7 +11,8 @@ import {
     MessageType,
     EezObject,
     IMessage,
-    PropertyProps
+    PropertyProps,
+    getId
 } from "project-editor/core/object";
 import { createObject, Message } from "project-editor/store";
 import {
@@ -27,6 +28,7 @@ import { getProjectStore } from "project-editor/store";
 import { Flow } from "project-editor/flow/flow";
 import { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
+import { ComponentGroupRenderer } from "project-editor/flow/editor/ComponentGroupRenderer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     generalGroup,
@@ -131,8 +133,8 @@ export const NativeActionImplementationInfoPropertyUI = observer(
                                 className="form-select"
                                 value={this.implementationLanguage}
                                 onChange={event =>
-                                (this.implementationLanguage =
-                                    event.target.value)
+                                    (this.implementationLanguage =
+                                        event.target.value)
                                 }
                             >
                                 <option value="C">C</option>
@@ -329,7 +331,8 @@ export class Action extends Flow {
                             ],
                             visible: () =>
                                 !projectStore.projectTypeTraits.isDashboard &&
-                                projectStore.projectTypeTraits.hasFlowSupport && !projectStore.masterProject
+                                projectStore.projectTypeTraits.hasFlowSupport &&
+                                !projectStore.masterProject
                         }
                     ]
                 },
@@ -344,10 +347,10 @@ export class Action extends Flow {
                 },
                 projectStore.projectTypeTraits.hasFlowSupport
                     ? ({
-                        implementationType: result.values.implementationType,
-                        components: [],
-                        connectionLine: []
-                    } as Partial<Action>)
+                          implementationType: result.values.implementationType,
+                          components: [],
+                          connectionLine: []
+                      } as Partial<Action>)
                     : {}
             );
 
@@ -377,11 +380,22 @@ export class Action extends Flow {
 
     renderActionComponents(flowContext: IFlowContext) {
         return (
-            <ComponentsContainerEnclosure
-                parent={this}
-                components={this.components}
-                flowContext={flowContext}
-            />
+            <>
+                {/* Render component groups first (behind components) */}
+                {this.componentGroups.map(group => (
+                    <ComponentGroupRenderer
+                        key={getId(group)}
+                        group={group}
+                        flowContext={flowContext}
+                    />
+                ))}
+
+                <ComponentsContainerEnclosure
+                    parent={this}
+                    components={this.components}
+                    flowContext={flowContext}
+                />
+            </>
         );
     }
 }

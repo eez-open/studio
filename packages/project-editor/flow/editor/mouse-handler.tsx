@@ -27,6 +27,7 @@ import { getId } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { LVGLWidget } from "project-editor/lvgl/widgets/Base";
+import { ComponentGroup } from "project-editor/flow/component-group";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -362,6 +363,10 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
     selectionNode: HTMLElement;
     objectNodes: HTMLElement[];
 
+    // For group dragging - track component nodes inside groups
+    groupComponentNodes: HTMLElement[];
+    groupComponentPositionsAtDown: Point[];
+
     constructor() {
         super();
 
@@ -547,6 +552,16 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
 
         this.left = this.selectionBoundingRectAtDown.left;
         this.top = this.selectionBoundingRectAtDown.top;
+
+        // If only groups are being dragged, use groups-only snap lines
+        const allAreGroups =
+            this.selectedObjects.length > 0 &&
+            this.selectedObjects.every(
+                obj => obj.object instanceof ComponentGroup
+            );
+        if (allAreGroups) {
+            this.snapLines.find(context, "groups-only");
+        }
     }
 
     move(context: IFlowContext, event: IPointerEvent) {
@@ -596,6 +611,29 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
                         `[data-eez-flow-object-id="${selectedObject.id}"]`
                     ) as HTMLElement
             );
+
+            // Collect component nodes inside groups for visual dragging
+            this.groupComponentNodes = [];
+            this.groupComponentPositionsAtDown = [];
+
+            for (const selectedObject of this.selectedObjects) {
+                if (selectedObject.object instanceof ComponentGroup) {
+                    const group = selectedObject.object as ComponentGroup;
+                    for (const component of group.componentObjects) {
+                        const componentId = getId(component);
+                        const node = container.querySelector(
+                            `[data-eez-flow-object-id="${componentId}"]`
+                        ) as HTMLElement;
+                        if (node) {
+                            this.groupComponentNodes.push(node);
+                            this.groupComponentPositionsAtDown.push({
+                                x: component.left,
+                                y: component.top
+                            });
+                        }
+                    }
+                }
+            }
         }
 
         if (!context.projectStore.projectTypeTraits.isDashboard) {
@@ -630,6 +668,14 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
             node.style.left = this.rects[i].left + "px";
             node.style.top = this.rects[i].top + "px";
         }
+
+        // Update component nodes inside groups
+        for (let i = 0; i < this.groupComponentNodes.length; ++i) {
+            const node = this.groupComponentNodes[i];
+            const pos = this.groupComponentPositionsAtDown[i];
+            node.style.left = Math.round(pos.x + viewState.dxMouseDrag) + "px";
+            node.style.top = Math.round(pos.y + viewState.dyMouseDrag) + "px";
+        }
     }
 
     up(context: IFlowContext, cancel: boolean) {
@@ -640,6 +686,16 @@ export class DragMouseHandler extends MouseHandlerWithSnapLines {
                 const node = this.objectNodes[i];
                 node.style.left = this.objectPositionsAtDown[i].x + "px";
                 node.style.top = this.objectPositionsAtDown[i].y + "px";
+            }
+        }
+
+        // Reset component nodes inside groups
+        if (this.groupComponentNodes) {
+            for (let i = 0; i < this.groupComponentNodes.length; ++i) {
+                const node = this.groupComponentNodes[i];
+                const pos = this.groupComponentPositionsAtDown[i];
+                node.style.left = pos.x + "px";
+                node.style.top = pos.y + "px";
             }
         }
 

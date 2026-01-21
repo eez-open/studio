@@ -66,7 +66,8 @@ class PageTreeObjectAdapter extends TreeObjectAdapter {
 
         return [
             ...this.page.components.map(child => this.transformer(child)),
-            ...this.page.connectionLines.map(child => this.transformer(child))
+            ...this.page.connectionLines.map(child => this.transformer(child)),
+            ...this.page.componentGroups.map(child => this.transformer(child))
         ];
     }
 }
@@ -132,7 +133,7 @@ export class PageTabState extends FlowTabState {
 
     get frontFace() {
         return this.isRuntime
-            ? this.projectStore.uiStateStore?.pageRuntimeFrontFace ?? true
+            ? (this.projectStore.uiStateStore?.pageRuntimeFrontFace ?? true)
             : this.projectStore.uiStateStore.pageEditorFrontFace;
     }
 
@@ -215,7 +216,7 @@ export class PageTabState extends FlowTabState {
                 },
                 scale: this.projectStore.uiStateStore.globalFlowZoom
                     ? this.projectStore.uiStateStore.flowZoom
-                    : state.transform.scale ?? 1
+                    : (state.transform.scale ?? 1)
             });
         }
 

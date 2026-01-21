@@ -11,6 +11,7 @@ import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { Component } from "project-editor/flow/component";
 import type { Flow } from "project-editor/flow/flow";
+import { ComponentGroup } from "project-editor/flow/component-group";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
@@ -66,7 +67,12 @@ export interface ISnapLines {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function findSnapLines(flowContext: IFlowContext): ISnapLines {
+export type SnapLineFilter = "all" | "groups-only";
+
+export function findSnapLines(
+    flowContext: IFlowContext,
+    filter: SnapLineFilter = "all"
+): ISnapLines {
     const selectedObjects = flowContext.viewState.selectedObjects.map(
         objectAdapter => objectAdapter.object
     );
@@ -183,6 +189,24 @@ export function findSnapLines(flowContext: IFlowContext): ISnapLines {
     }
 
     function findSnapLinesInNode(node: TreeObjectAdapter) {
+        // Handle ComponentGroups
+        if (node.object && node.object instanceof ComponentGroup) {
+            if (!isSelectedObject(node.object)) {
+                const rect1 = getObjectBoundingRect(
+                    flowContext.viewState,
+                    node
+                );
+                addLines(rect1, false);
+            }
+            return; // Don't recurse into group children
+        }
+
+        // For groups-only filter, skip non-group objects
+        if (filter === "groups-only") {
+            each(node.children, (item: any) => findSnapLinesInNode(item));
+            return;
+        }
+
         if (
             node.object &&
             (node.object instanceof ProjectEditor.PageClass ||
@@ -339,9 +363,11 @@ export function drawSnapLinesGeneric(
 export class SnapLines {
     lines: ISnapLines;
     enabled: boolean = false;
+    filter: SnapLineFilter = "all";
 
-    find(context: IFlowContext) {
-        this.lines = findSnapLines(context);
+    find(context: IFlowContext, filter: SnapLineFilter = "all") {
+        this.filter = filter;
+        this.lines = findSnapLines(context, filter);
     }
 
     findSnapPosition(

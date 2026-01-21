@@ -689,7 +689,8 @@ class FlowTreeObjectAdapter extends TreeObjectAdapter {
     get children() {
         return [
             ...this.flow.components.map(child => this.transformer(child)),
-            ...this.flow.connectionLines.map(child => this.transformer(child))
+            ...this.flow.connectionLines.map(child => this.transformer(child)),
+            ...this.flow.componentGroups.map(child => this.transformer(child))
         ];
     }
 }
