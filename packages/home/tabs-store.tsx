@@ -14,6 +14,8 @@ import {
 } from "mobx";
 import * as path from "path";
 
+import { dockerBuildState } from "project-editor/lvgl/docker-build/docker-build-state";
+
 import { onSimpleMessage } from "eez-studio-shared/util-renderer";
 
 import {
@@ -415,13 +417,22 @@ export class ProjectEditorTab implements IHomeTab {
             projectStore: observable,
             error: observable,
             makeActive: action,
-            _icon: observable
+            _icon: observable,
+            loading: computed
         });
     }
 
     permanent: boolean = true;
     _active: boolean = false;
-    loading: boolean = false;
+
+    /**
+     * Show loader in tab when Docker build is in progress for this project
+     * and the tab is not currently active.
+     */
+    get loading(): boolean {
+        const projectState = dockerBuildState.getProjectState(this._filePath);
+        return projectState.state === "building";
+    }
 
     get modified() {
         return this.projectStore && this.projectStore.isModified;
@@ -650,7 +661,10 @@ export class ProjectEditorTab implements IHomeTab {
                 if (
                     !(event.target instanceof HTMLInputElement) &&
                     !(event.target instanceof HTMLTextAreaElement) &&
-                    !(event.target instanceof HTMLElement && event.target.tagName == "TRIX-EDITOR")
+                    !(
+                        event.target instanceof HTMLElement &&
+                        event.target.tagName == "TRIX-EDITOR"
+                    )
                 ) {
                     if (
                         (event.ctrlKey || event.metaKey) &&

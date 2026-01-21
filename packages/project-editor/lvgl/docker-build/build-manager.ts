@@ -3,6 +3,10 @@
  *
  * Orchestrates the Docker-based build process for LVGL projects,
  * integrating with the EEZ Studio UI to show progress and logs.
+ *
+ * Multiple projects can be in Full Simulator mode simultaneously.
+ * Each project has its own logs, preview state, and preview logs.
+ * Build operations are mutually exclusive - only one project can build at a time.
  */
 
 import * as path from "path";
@@ -27,63 +31,42 @@ import {
     stopRunningContainers
 } from "./docker-build-lib";
 import { previewServer } from "./preview-server";
-import {
-    dockerSimulatorLogsStore,
-    dockerBuildLogFunction
-} from "./DockerSimulatorLogsPanel";
-import { dockerSimulatorPreviewStore } from "./DockerSimulatorPreviewPanel";
-import { previewLogsStore } from "./PreviewLogsPanel";
+import { dockerBuildState, LogType } from "./docker-build-state";
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Create a log function for a specific project
+ */
+function createLogFunction(projectPath: string | undefined) {
+    return (message: string, type?: LogType) => {
+        runInAction(() => {
+            dockerBuildState.getProjectState(projectPath).addLog(message, type || "info");
+        });
+    };
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class DockerBuildManager {
-    private isBuilding = false;
-    private isCancelled = false;
-    // Track last build revision per project path (in-memory only, resets when EEZ Studio restarts)
-    private lastDockerBuildRevisions = new Map<string, symbol>();
-    private currentBuildingProjectPath: string | undefined = undefined;
-    private activeSimulatorProjectPath: string | undefined = undefined;
-
     /**
-     * Reset the simulator state (call when project is closed)
+     * Reset the simulator state for a project (call when project is closed)
      */
-    resetSimulatorState(): void {
-        this.activeSimulatorProjectPath = undefined;
-    }
-
-    /**
-     * Check if Full Simulator mode is active for another project
-     */
-    isActiveForOtherProject(projectPath: string | undefined): boolean {
-        return (
-            this.activeSimulatorProjectPath !== undefined &&
-            this.activeSimulatorProjectPath !== projectPath
-        );
-    }
-
-    /**
-     * Get the name of the project currently in Full Simulator mode
-     */
-    getActiveProjectName(): string | undefined {
-        if (this.activeSimulatorProjectPath) {
-            return path.basename(this.activeSimulatorProjectPath);
+    resetSimulatorState(projectPath?: string): void {
+        if (projectPath) {
+            dockerBuildState.removeProjectState(projectPath);
         }
-        return undefined;
     }
 
     /**
      * Get the path to the docker-build resources
      */
     private getDockerBuildPath(): string {
-        // In development, resources are in the project root
-        // In production, they are in the app resources
         const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 
         if (isDev) {
-            // Development: resources/docker-build
             return path.join(__dirname, "../../../../resources/docker-build");
         } else {
-            // Production: resources/docker-build (relative to app path)
             return path.join(process.resourcesPath, "docker-build");
         }
     }
@@ -92,8 +75,6 @@ export class DockerBuildManager {
      * Get the build configuration
      */
     private getBuildConfig(): BuildConfig {
-        // Use a single shared volume for all projects
-        // The build.sh script handles switching between different projects
         return {
             repositoryName: "lvgl-simulator-for-studio-docker-build",
             dockerVolumeName: "eez-studio-lvgl-build",
@@ -116,7 +97,10 @@ export class DockerBuildManager {
     /**
      * Build ProjectInfo from in-memory projectStore
      */
-    private buildProjectInfo(projectStore: ProjectStore): ProjectInfo {
+    private buildProjectInfo(
+        projectStore: ProjectStore,
+        logFn: (message: string, type?: LogType) => void
+    ): ProjectInfo {
         if (!projectStore.filePath) {
             throw new Error("Project must be saved before building");
         }
@@ -124,11 +108,7 @@ export class DockerBuildManager {
         const projectData = projectStore.project;
         const projectDir = path.dirname(projectStore.filePath);
 
-        return buildProjectInfoFromProjectData(
-            projectData,
-            projectDir,
-            dockerBuildLogFunction
-        );
+        return buildProjectInfoFromProjectData(projectData, projectDir, logFn);
     }
 
     /**
@@ -153,84 +133,64 @@ export class DockerBuildManager {
     }
 
     /**
-     * Check if project needs rebuild
-     */
-    private needsRebuild(
-        projectStore: ProjectStore,
-        outputPath: string
-    ): boolean {
-        const projectPath = projectStore.filePath;
-        if (!projectPath) {
-            return true;
-        }
-
-        // No previous build revision tracked for this project (first build since EEZ Studio started)
-        const lastRevision = this.lastDockerBuildRevisions.get(projectPath);
-        if (!lastRevision) {
-            return true;
-        }
-
-        // Project has changed since last Docker build
-        if (lastRevision !== projectStore.lastRevisionStable) {
-            return true;
-        }
-
-        // Build output doesn't exist
-        if (!this.hasBuildOutput(outputPath)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Start the full simulator build and preview
-     * @param projectStore The project store
-     * @param forceRebuild If true, rebuild even if project hasn't changed
+     * Start the full simulator - enter Full Sim mode for a project.
+     * If preview exists, show it immediately.
+     * If no preview exists, start build (if no other build is running).
      */
     async startFullSimulator(
         projectStore: ProjectStore,
         forceRebuild: boolean = false
     ): Promise<void> {
-        // Check if another project is already in Full Simulator mode
-        if (this.isActiveForOtherProject(projectStore.filePath)) {
-            dockerBuildLogFunction(
-                `Full Simulator is already active for another project: ${this.getActiveProjectName()}`,
+        const projectPath = projectStore.filePath;
+        const projectState = dockerBuildState.getProjectState(projectPath);
+        const logFn = createLogFunction(projectPath);
+
+        // Check if project is saved
+        if (!projectPath) {
+            logFn("Please save the project before running the full simulator", "error");
+            return;
+        }
+
+        const outputPath = this.getBuildOutputPath(projectStore);
+        const hasOutput = this.hasBuildOutput(outputPath);
+
+        // Check if a build is already in progress for THIS project
+        const isBuildingThisProject =
+            dockerBuildState.isBuilding &&
+            dockerBuildState.currentBuildingProjectPath === projectPath;
+        if (isBuildingThisProject) {
+            return;
+        }
+
+        // If we have build output and not forcing rebuild, show preview immediately
+        if (hasOutput && !forceRebuild) {
+            logFn("=== Starting Full Simulator ===", "info");
+            logFn("Starting preview server...", "info");
+            const previewUrl = await previewServer.start(outputPath);
+            logFn(`Preview server running at ${previewUrl}`, "success");
+
+            // Clear preview logs for new session
+            projectState.clearPreviewLogs();
+
+            runInAction(() => {
+                projectState.setRunning(previewUrl);
+            });
+
+            logFn("=== Full Simulator Ready ===", "success");
+            return;
+        }
+
+        // No build output (or force rebuild) - need to build
+        // Try to acquire build lock
+        const canBuild = runInAction(() => dockerBuildState.startBuild(projectPath));
+
+        if (!canBuild) {
+            logFn(
+                `Build already in progress for another project: ${dockerBuildState.getBuildingProjectName()}. Please wait for it to complete.`,
                 "warning"
             );
             return;
         }
-
-        // Check if this project is already in Full Simulator mode (ignore repeated clicks)
-        if (
-            this.activeSimulatorProjectPath === projectStore.filePath &&
-            !forceRebuild
-        ) {
-            // Already active for this project, ignore
-            return;
-        }
-
-        if (this.isBuilding) {
-            if (
-                this.currentBuildingProjectPath &&
-                this.currentBuildingProjectPath !== projectStore.filePath
-            ) {
-                dockerBuildLogFunction(
-                    `Build already in progress for another project: ${path.basename(
-                        this.currentBuildingProjectPath
-                    )}`,
-                    "warning"
-                );
-            } else {
-                dockerBuildLogFunction("Build already in progress", "warning");
-            }
-            return;
-        }
-
-        this.isBuilding = true;
-        this.isCancelled = false;
-        this.currentBuildingProjectPath = projectStore.filePath;
-        this.activeSimulatorProjectPath = projectStore.filePath;
 
         // Reset abort state from any previous build
         resetAbort();
@@ -238,59 +198,11 @@ export class DockerBuildManager {
         const startTime = Date.now();
 
         try {
-            // Clear previous logs
             runInAction(() => {
-                dockerSimulatorLogsStore.clear();
-                dockerSimulatorPreviewStore.setBuilding("Initializing...");
+                projectState.setBuilding("Initializing...");
             });
 
-            // Check prerequisites
-            dockerBuildLogFunction("=== Starting Full Simulator ===", "info");
-
-            // Check if project is saved
-            if (!projectStore.filePath) {
-                throw new Error(
-                    "Please save the project before running the full simulator"
-                );
-            }
-
-            const outputPath = this.getBuildOutputPath(projectStore);
-
-            // Check if we can skip the build
-            if (!forceRebuild && !this.needsRebuild(projectStore, outputPath)) {
-                dockerBuildLogFunction(
-                    "Project unchanged since last build, skipping Docker build...",
-                    "success"
-                );
-
-                // Just start the preview server with existing build
-                runInAction(() => {
-                    dockerSimulatorPreviewStore.setBuilding(
-                        "Starting preview server..."
-                    );
-                });
-
-                dockerBuildLogFunction("Starting preview server...", "info");
-                const previewUrl = await previewServer.start(outputPath);
-                dockerBuildLogFunction(
-                    `Preview server running at ${previewUrl}`,
-                    "success"
-                );
-
-                // Clear preview logs for new session
-                previewLogsStore.clear();
-
-                runInAction(() => {
-                    dockerSimulatorPreviewStore.setRunning(previewUrl);
-                });
-
-                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-                dockerBuildLogFunction(
-                    `=== Full Simulator Ready (${duration}s) ===`,
-                    "success"
-                );
-                return;
-            }
+            logFn("=== Starting Full Simulator Build ===", "info");
 
             // Check Docker build resources
             if (!this.checkDockerBuildResources()) {
@@ -301,26 +213,26 @@ export class DockerBuildManager {
 
             // Check Docker
             runInAction(() => {
-                dockerSimulatorPreviewStore.setBuilding("Checking Docker...");
+                projectState.setBuilding("Checking Docker...");
             });
 
-            const dockerReady = await checkDocker(dockerBuildLogFunction);
+            const dockerReady = await checkDocker(logFn);
             if (!dockerReady) {
                 throw new Error(
                     "Docker is not available. Please install and start Docker Desktop."
                 );
             }
 
-            if (this.isCancelled) return;
+            if (dockerBuildState.isCancelled) return;
 
             // Build the EEZ project first
             runInAction(() => {
-                dockerSimulatorPreviewStore.setBuilding(
-                    "Building EEZ project..."
-                );
+                projectState.setBuilding("Building EEZ project...");
             });
 
-            dockerBuildLogFunction("Building EEZ project...", "info");
+            let lastRevisionStable = projectStore.lastRevisionStable;
+
+            logFn("Building EEZ project...", "info");
             await projectStore.build();
 
             // Check if build produced errors
@@ -333,171 +245,188 @@ export class DockerBuildManager {
                 );
             }
 
-            dockerBuildLogFunction("EEZ project built successfully", "success");
+            logFn("EEZ project built successfully", "success");
 
-            if (this.isCancelled) return;
+            if (dockerBuildState.isCancelled) return;
 
-            // Build project info from in-memory project store
+            // Build project info
             runInAction(() => {
-                dockerSimulatorPreviewStore.setBuilding(
-                    "Reading project configuration..."
-                );
+                projectState.setBuilding("Reading project configuration...");
             });
 
-            const projectInfo = this.buildProjectInfo(projectStore);
+            const projectInfo = this.buildProjectInfo(projectStore, logFn);
 
-            if (this.isCancelled) return;
+            if (dockerBuildState.isCancelled) return;
 
             // Get build configuration
             const buildConfig = this.getBuildConfig();
 
+            // Check if we need a clean build first (because another project
+            // built and changed the shared Docker volume)
+            if (projectState.needsCleanBuild) {
+                runInAction(() => {
+                    projectState.setBuilding("Cleaning build cache...");
+                });
+
+                logFn("Another project has built since last build - performing clean build first...", "info");
+                await cleanBuild(buildConfig, logFn);
+
+                if (dockerBuildState.isCancelled) return;
+            }
+
             // Setup Docker project
             runInAction(() => {
-                dockerSimulatorPreviewStore.setBuilding(
-                    "Setting up Docker environment..."
-                );
+                projectState.setBuilding("Setting up Docker environment...");
             });
 
             const setupResult = await setupProject(
                 projectInfo,
                 buildConfig,
-                dockerBuildLogFunction
+                logFn
             );
 
-            if (this.isCancelled) return;
+            if (dockerBuildState.isCancelled) return;
 
             // Build with Docker
             runInAction(() => {
-                dockerSimulatorPreviewStore.setBuilding(
-                    "Building with Emscripten..."
-                );
+                projectState.setBuilding("Building with Emscripten...");
             });
 
             await buildProject(
                 projectInfo,
                 buildConfig,
-                dockerBuildLogFunction,
+                logFn,
                 setupResult.skipEmcmakeCmake
             );
 
-            if (this.isCancelled) return;
+            if (dockerBuildState.isCancelled) return;
 
             // Extract build output
             runInAction(() => {
-                dockerSimulatorPreviewStore.setBuilding(
-                    "Extracting build files..."
-                );
+                projectState.setBuilding("Extracting build files...");
             });
 
-            await extractBuild(outputPath, buildConfig, dockerBuildLogFunction);
+            await extractBuild(outputPath, buildConfig, logFn);
 
-            if (this.isCancelled) return;
+            if (dockerBuildState.isCancelled) return;
 
-            // Track this build revision for this project
-            if (projectStore.filePath) {
-                this.lastDockerBuildRevisions.set(
-                    projectStore.filePath,
-                    projectStore.lastRevisionStable
-                );
-            }
+            // Track this build revision
+            runInAction(() => {
+                projectState.lastBuildRevision = lastRevisionStable;
+            });
+
+            // Mark build as complete (no longer needs clean build)
+            dockerBuildState.markBuildComplete(projectPath);
 
             // Start preview server
             runInAction(() => {
-                dockerSimulatorPreviewStore.setBuilding(
-                    "Starting preview server..."
-                );
+                projectState.setBuilding("Starting preview server...");
             });
 
-            dockerBuildLogFunction("Starting preview server...", "info");
+            logFn("Starting preview server...", "info");
             const previewUrl = await previewServer.start(outputPath);
-            dockerBuildLogFunction(
-                `Preview server running at ${previewUrl}`,
-                "success"
-            );
+            logFn(`Preview server running at ${previewUrl}`, "success");
 
             // Clear preview logs for new session
-            previewLogsStore.clear();
+            projectState.clearPreviewLogs();
 
-            // Update UI to show preview
             runInAction(() => {
-                dockerSimulatorPreviewStore.setRunning(previewUrl);
+                projectState.setRunning(previewUrl);
             });
 
             const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-            dockerBuildLogFunction(
-                `=== Full Simulator Ready (${duration}s) ===`,
-                "success"
-            );
+            logFn(`=== Full Simulator Ready (${duration}s) ===`, "success");
         } catch (error) {
             const errorMessage =
                 error instanceof Error ? error.message : String(error);
-            dockerBuildLogFunction(`Error: ${errorMessage}`, "error");
+            logFn(`Error: ${errorMessage}`, "error");
 
             runInAction(() => {
-                dockerSimulatorPreviewStore.setError(errorMessage);
+                projectState.setError(errorMessage);
             });
         } finally {
-            this.isBuilding = false;
-            this.currentBuildingProjectPath = undefined;
+            runInAction(() => {
+                dockerBuildState.endBuild();
+            });
         }
     }
 
     /**
-     * Stop the full simulator
+     * Leave Full Simulator UI mode without stopping the build.
+     * Call this when user exits Full Sim mode but build should continue.
      */
-    async stopFullSimulator(): Promise<void> {
-        this.isCancelled = true;
-        this.isBuilding = false;
-        this.currentBuildingProjectPath = undefined;
-        this.activeSimulatorProjectPath = undefined;
+    leaveFullSimulatorUI(projectPath?: string): void {
+        // Nothing to do - the build will continue in the background
+        // and the project state remains valid
+    }
 
-        // Abort any running build processes
-        abortBuild();
+    /**
+     * Stop the full simulator for a specific project
+     */
+    async stopFullSimulator(projectPath?: string): Promise<void> {
+        const logFn = createLogFunction(projectPath);
+        const projectState = dockerBuildState.getProjectState(projectPath);
 
-        // Stop any running Docker containers
-        const buildConfig = this.getBuildConfig();
-        await stopRunningContainers(buildConfig, dockerBuildLogFunction);
+        // If this project is currently building, cancel it
+        if (
+            dockerBuildState.isBuilding &&
+            dockerBuildState.currentBuildingProjectPath === projectPath
+        ) {
+            runInAction(() => {
+                dockerBuildState.cancelBuild();
+            });
+
+            // Abort any running build processes
+            abortBuild();
+
+            // Stop any running Docker containers
+            const buildConfig = this.getBuildConfig();
+            await stopRunningContainers(buildConfig, logFn);
+        }
 
         if (previewServer.isRunning) {
-            dockerBuildLogFunction("Stopping preview server...", "info");
+            logFn("Stopping preview server...", "info");
             await previewServer.stop();
-            dockerBuildLogFunction("Preview server stopped", "success");
+            logFn("Preview server stopped", "success");
         }
 
         runInAction(() => {
-            dockerSimulatorPreviewStore.setIdle();
+            projectState.setIdle();
         });
     }
 
     /**
-     * Rebuild the simulator (quick rebuild without full setup)
+     * Rebuild the simulator
      */
     async rebuildFullSimulator(projectStore: ProjectStore): Promise<void> {
-        await this.stopFullSimulator();
-        await this.startFullSimulator(projectStore);
+        await this.stopFullSimulator(projectStore.filePath);
+        await this.startFullSimulator(projectStore, true);
     }
 
     /**
      * Clean the Docker build cache
      */
     async cleanBuildCache(projectStore: ProjectStore): Promise<void> {
-        if (this.isBuilding) {
-            dockerBuildLogFunction("Cannot clean while building", "warning");
+        const logFn = createLogFunction(projectStore.filePath);
+
+        if (dockerBuildState.isBuilding) {
+            logFn(
+                `Cannot clean: build in progress for ${dockerBuildState.getBuildingProjectName()}. Please wait for it to complete.`,
+                "warning"
+            );
             return;
         }
 
         try {
-            // Reset abort state in case previous build was stopped
             resetAbort();
 
             const buildConfig = this.getBuildConfig();
-            // Ensure no containers are running before cleaning
-            await stopRunningContainers(buildConfig, dockerBuildLogFunction);
-            await cleanBuild(buildConfig, dockerBuildLogFunction);
+            await stopRunningContainers(buildConfig, logFn);
+            await cleanBuild(buildConfig, logFn);
         } catch (error) {
             const errorMessage =
                 error instanceof Error ? error.message : String(error);
-            dockerBuildLogFunction(`Clean failed: ${errorMessage}`, "error");
+            logFn(`Clean failed: ${errorMessage}`, "error");
         }
     }
 
@@ -505,26 +434,26 @@ export class DockerBuildManager {
      * Clean all Docker resources for a fresh start
      */
     async cleanAll(projectStore: ProjectStore): Promise<void> {
-        if (this.isBuilding) {
-            dockerBuildLogFunction("Cannot clean while building", "warning");
+        const logFn = createLogFunction(projectStore.filePath);
+
+        if (dockerBuildState.isBuilding) {
+            logFn(
+                `Cannot clean: build in progress for ${dockerBuildState.getBuildingProjectName()}. Please wait for it to complete.`,
+                "warning"
+            );
             return;
         }
 
         try {
-            // Reset abort state in case previous build was stopped
             resetAbort();
 
             const buildConfig = this.getBuildConfig();
-            // Ensure no containers are running before cleaning
-            await stopRunningContainers(buildConfig, dockerBuildLogFunction);
-            await cleanAll(buildConfig, dockerBuildLogFunction);
+            await stopRunningContainers(buildConfig, logFn);
+            await cleanAll(buildConfig, logFn);
         } catch (error) {
             const errorMessage =
                 error instanceof Error ? error.message : String(error);
-            dockerBuildLogFunction(
-                `Clean all failed: ${errorMessage}`,
-                "error"
-            );
+            logFn(`Clean all failed: ${errorMessage}`, "error");
         }
     }
 }

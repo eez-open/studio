@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { Icon } from "eez-studio-ui/icon";
+import { Loader } from "eez-studio-ui/loader";
 
 const Action = observer(
     class Action extends React.Component<
@@ -136,6 +137,7 @@ export const ButtonAction = observer(
         className?: string;
         style?: React.CSSProperties;
         attention?: boolean;
+        loader?: boolean;
     }> {
         render() {
             const { style, icon, iconSize, text } = this.props;
@@ -157,6 +159,9 @@ export const ButtonAction = observer(
                         />
                     )}
                     {text}
+                    {this.props.loader && (
+                        <Loader size={20} style={{ marginLeft: 5 }} />
+                    )}
                 </Action>
             );
         }

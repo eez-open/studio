@@ -193,7 +193,7 @@ export const TabView = observer(
                     <div>
                         {title}
                         {tab.loading && (
-                            <Loader size={24} style={{ marginLeft: 10 }} />
+                            <Loader size={20} style={{ marginLeft: 5 }} />
                         )}
                         {closeIcon}
                     </div>

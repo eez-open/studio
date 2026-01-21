@@ -450,10 +450,11 @@ export class ProjectStore {
 
         // Stop Docker simulator and reset state when project is closed
         if (this.projectTypeTraits.isLVGL) {
+            const projectPath = this.filePath;
             import("project-editor/lvgl/docker-build/build-manager").then(
                 async ({ dockerBuildManager }) => {
-                    await dockerBuildManager.stopFullSimulator();
-                    dockerBuildManager.resetSimulatorState();
+                    await dockerBuildManager.stopFullSimulator(projectPath);
+                    dockerBuildManager.resetSimulatorState(projectPath);
                 }
             );
         }
@@ -1338,14 +1339,6 @@ export class ProjectStore {
             "project-editor/lvgl/docker-build/build-manager"
         );
 
-        // Check if Full Simulator is already active for another project
-        if (dockerBuildManager.isActiveForOtherProject(this.filePath)) {
-            notification.warn(
-                `Full Simulator is already active for another project: ${dockerBuildManager.getActiveProjectName()}`
-            );
-            return;
-        }
-
         // Exit any existing runtime mode first
         if (this.runtime) {
             await this.setEditorMode(true);
@@ -1357,6 +1350,8 @@ export class ProjectStore {
         });
 
         // Start the full simulator build and preview
+        // Note: Multiple projects can show preview simultaneously,
+        // but only one can build at a time (handled inside startFullSimulator)
         await dockerBuildManager.startFullSimulator(this);
     };
 
@@ -1365,7 +1360,9 @@ export class ProjectStore {
             "project-editor/lvgl/docker-build/build-manager"
         );
 
-        await dockerBuildManager.stopFullSimulator();
+        // Only change UI state - do not stop the build
+        // Build continues in the background and user can re-enter Full Sim mode
+        dockerBuildManager.leaveFullSimulatorUI(this.filePath);
 
         runInAction(() => {
             this.layoutModels.isDockerSimulatorMode = false;

@@ -31,6 +31,8 @@ export class Loader extends React.Component<
             let style = Object.assign(
                 {},
                 {
+                    minWidth: size + "px",
+                    minHeight: size + "px",
                     width: size + "px",
                     height: size + "px"
                 },

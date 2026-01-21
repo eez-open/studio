@@ -46,3 +46,5 @@ tools/lvgl-api/build
 /libs/docker-build/output/**
 
 /test/**
+
+.claude

@@ -1,64 +1,22 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { makeObservable, observable, action } from "mobx";
 
 import { IconAction } from "eez-studio-ui/action";
+import { ProjectContext } from "project-editor/project/context";
+import { dockerBuildState, PreviewLogType } from "./docker-build-state";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type PreviewLogType = "log" | "info" | "warn" | "error" | "debug";
-
-export interface PreviewLogEntry {
-    id: number;
-    timestamp: Date;
-    type: PreviewLogType;
-    message: string;
-}
-
-export class PreviewLogsStore {
-    logs: PreviewLogEntry[] = [];
-    private nextId = 1;
-
-    constructor() {
-        makeObservable(this, {
-            logs: observable,
-            addLog: action,
-            clear: action
-        });
-    }
-
-    addLog(type: PreviewLogType, message: string) {
-        this.logs.push({
-            id: this.nextId++,
-            timestamp: new Date(),
-            type,
-            message
-        });
-
-        // Keep only last 1000 logs
-        if (this.logs.length > 1000) {
-            this.logs.shift();
-        }
-    }
-
-    clear() {
-        this.logs = [];
-        this.nextId = 1;
-    }
-}
-
-// Global store instance
-export const previewLogsStore = new PreviewLogsStore();
-
-// Function to log from external sources
-export function previewLog(type: PreviewLogType, message: string) {
-    previewLogsStore.addLog(type, message);
-}
+// Re-export types for backward compatibility
+export type { PreviewLogType, PreviewLogEntry } from "./docker-build-state";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export const PreviewLogsPanel = observer(
     class PreviewLogsPanel extends React.Component {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
         contentRef = React.createRef<HTMLDivElement>();
 
         componentDidUpdate() {
@@ -69,8 +27,12 @@ export const PreviewLogsPanel = observer(
             }
         }
 
+        get projectState() {
+            return dockerBuildState.getProjectState(this.context?.filePath);
+        }
+
         handleClear = () => {
-            previewLogsStore.clear();
+            this.projectState.clearPreviewLogs();
         };
 
         getTypeClassName(type: PreviewLogType): string {
@@ -89,6 +51,8 @@ export const PreviewLogsPanel = observer(
         }
 
         render() {
+            const projectState = this.projectState;
+
             return (
                 <div className="EezStudio_PreviewLogsPanel">
                     <div className="EezStudio_PreviewLogsPanel_Header">
@@ -104,7 +68,7 @@ export const PreviewLogsPanel = observer(
                         className="EezStudio_PreviewLogsPanel_Content"
                         ref={this.contentRef}
                     >
-                        {previewLogsStore.logs.map(log => (
+                        {projectState.previewLogs.map(log => (
                             <div
                                 key={log.id}
                                 className={`EezStudio_PreviewLogsPanel_LogEntry ${this.getTypeClassName(
@@ -120,7 +84,7 @@ export const PreviewLogsPanel = observer(
                                 <span className="message">{log.message}</span>
                             </div>
                         ))}
-                        {previewLogsStore.logs.length === 0 && (
+                        {projectState.previewLogs.length === 0 && (
                             <div className="EezStudio_PreviewLogsPanel_Empty">
                                 No logs yet.
                             </div>

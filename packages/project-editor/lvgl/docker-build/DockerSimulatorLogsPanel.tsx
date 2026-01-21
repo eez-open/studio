@@ -1,63 +1,16 @@
 import React from "react";
 import { observer } from "mobx-react";
-import { makeObservable, observable, action, runInAction } from "mobx";
 import classNames from "classnames";
 
 import { IconAction, TextAction } from "eez-studio-ui/action";
 import { ProjectContext } from "project-editor/project/context";
 import { dockerBuildManager } from "./build-manager";
-import { dockerSimulatorPreviewStore } from "./DockerSimulatorPreviewPanel";
+import { dockerBuildState } from "./docker-build-state";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export interface LogEntry {
-    id: number;
-    message: string;
-    type: "info" | "success" | "error" | "warning";
-    timestamp: Date;
-}
-
-export class DockerSimulatorLogsStore {
-    logs: LogEntry[] = [];
-    private nextId = 1;
-
-    constructor() {
-        makeObservable(this, {
-            logs: observable,
-            addLog: action,
-            clear: action
-        });
-    }
-
-    addLog(
-        message: string,
-        type: "info" | "success" | "error" | "warning" = "info"
-    ) {
-        this.logs.push({
-            id: this.nextId++,
-            message,
-            type,
-            timestamp: new Date()
-        });
-    }
-
-    clear() {
-        this.logs = [];
-    }
-}
-
-// Global logs store instance
-export const dockerSimulatorLogsStore = new DockerSimulatorLogsStore();
-
-// Log function compatible with docker-build-lib
-export const dockerBuildLogFunction = (
-    message: string,
-    type?: "info" | "success" | "error" | "warning"
-) => {
-    runInAction(() => {
-        dockerSimulatorLogsStore.addLog(message, type || "info");
-    });
-};
+// Re-export types for backward compatibility
+export type { LogEntry, LogType } from "./docker-build-state";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,8 +29,12 @@ export const DockerSimulatorLogsPanel = observer(
             this.logsEndRef.current?.scrollIntoView({ behavior: "instant" });
         };
 
+        get projectState() {
+            return dockerBuildState.getProjectState(this.context?.filePath);
+        }
+
         handleClear = () => {
-            dockerSimulatorLogsStore.clear();
+            this.projectState.clearLogs();
         };
 
         handleBuild = async () => {
@@ -99,11 +56,12 @@ export const DockerSimulatorLogsPanel = observer(
         };
 
         handleStop = async () => {
-            await dockerBuildManager.stopFullSimulator();
+            await dockerBuildManager.stopFullSimulator(this.context?.filePath);
         };
 
         render() {
-            const isBuilding = dockerSimulatorPreviewStore.state === "building";
+            const projectState = this.projectState;
+            const isBuilding = projectState.state === "building";
 
             return (
                 <div className="EezStudio_DockerSimulatorLogsPanel">
@@ -126,7 +84,7 @@ export const DockerSimulatorLogsPanel = observer(
                                     />
                                     <TextAction
                                         icon="material:delete_sweep"
-                                        title="Clean All (remove volume and rebuild from scratch)"
+                                        title="Clean All (remove Docker volume and rebuild from scratch)"
                                         text="Clean All"
                                         onClick={this.handleCleanAll}
                                     />
@@ -150,7 +108,7 @@ export const DockerSimulatorLogsPanel = observer(
                         </div>
                     </div>
                     <div className="EezStudio_DockerSimulatorLogsPanel_Content">
-                        {dockerSimulatorLogsStore.logs.map(log => (
+                        {projectState.logs.map(log => (
                             <div
                                 key={log.id}
                                 className={classNames(

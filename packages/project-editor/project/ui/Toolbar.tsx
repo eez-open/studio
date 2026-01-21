@@ -35,6 +35,7 @@ import {
 } from "project-editor/store/scrapbook";
 import { closest } from "eez-studio-shared/dom";
 import { Icon } from "eez-studio-ui/icon";
+import { dockerBuildState } from "project-editor/lvgl/docker-build/docker-build-state";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -846,6 +847,13 @@ const RunEditSwitchControls = observer(
             return this.context.layoutModels.isDockerSimulatorMode;
         }
 
+        get isFullSimulatorBuilding() {
+            const previewStore = dockerBuildState.getProjectState(
+                this.context.filePath
+            );
+            return previewStore.state === "building";
+        }
+
         render() {
             const iconSize = 30;
             return (
@@ -920,6 +928,7 @@ const RunEditSwitchControls = observer(
                             iconSize={iconSize}
                             onClick={this.context.onSetFullSimulatorMode}
                             selected={this.isFullSimulatorMode}
+                            loader={this.isFullSimulatorBuilding}
                         />
                     )}
                 </div>
