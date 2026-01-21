@@ -55,6 +55,7 @@ export const TextAction = observer(
         {
             text: string;
             icon?: string;
+            iconSize?: number;
             title: string;
             onClick: () => void;
             selected?: boolean;
@@ -66,7 +67,12 @@ export const TextAction = observer(
         render() {
             return (
                 <Action className="EezStudio_TextAction" {...this.props}>
-                    {this.props.icon && <Icon icon={this.props.icon} />}{" "}
+                    {this.props.icon && (
+                        <Icon
+                            icon={this.props.icon}
+                            size={this.props.iconSize}
+                        />
+                    )}{" "}
                     {this.props.text}
                 </Action>
             );

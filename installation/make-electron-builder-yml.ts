@@ -21,9 +21,17 @@ async function getExtraResource() {
         to: "eez-framework-amalgamation/" + file
     }));
 
+    let dockerBuild = (
+        await fs.promises.readdir("./resources/docker-build")
+    ).map(file => ({
+        from: "./resources/docker-build/" + file,
+        to: "docker-build/" + file
+    }));
+
     return [
         ...extraResources,
         ...eezframeworkAmalgamation,
+        ...dockerBuild,
         ...[
             {
                 from: "./LICENSE.TXT",

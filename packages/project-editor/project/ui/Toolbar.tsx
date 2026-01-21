@@ -834,6 +834,18 @@ const RunEditSwitchControls = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        get showFullSimulatorButton() {
+            const projectStore = this.context;
+            return (
+                projectStore.projectTypeTraits.isLVGL &&
+                projectStore.project.settings.build.useDockerDesktop
+            );
+        }
+
+        get isFullSimulatorMode() {
+            return this.context.layoutModels.isDockerSimulatorMode;
+        }
+
         render() {
             const iconSize = 30;
             return (
@@ -844,7 +856,9 @@ const RunEditSwitchControls = observer(
                         icon="material:mode_edit"
                         iconSize={iconSize}
                         onClick={this.context.onSetEditorMode}
-                        selected={!this.context.runtime}
+                        selected={
+                            !this.context.runtime && !this.isFullSimulatorMode
+                        }
                     />
 
                     <ButtonAction
@@ -855,7 +869,8 @@ const RunEditSwitchControls = observer(
                         onClick={this.context.onSetRuntimeMode}
                         selected={
                             this.context.runtime &&
-                            !this.context.runtime.isDebuggerActive
+                            !this.context.runtime.isDebuggerActive &&
+                            !this.isFullSimulatorMode
                         }
                     />
 
@@ -886,7 +901,8 @@ const RunEditSwitchControls = observer(
                         onClick={this.context.onSetDebuggerMode}
                         selected={
                             this.context.runtime &&
-                            this.context.runtime.isDebuggerActive
+                            this.context.runtime.isDebuggerActive &&
+                            !this.isFullSimulatorMode
                         }
                         attention={
                             !!(
@@ -895,6 +911,17 @@ const RunEditSwitchControls = observer(
                             )
                         }
                     />
+
+                    {this.showFullSimulatorButton && (
+                        <ButtonAction
+                            text="Full Sim"
+                            title="Run in Full Simulator (F7)"
+                            icon="material:computer"
+                            iconSize={iconSize}
+                            onClick={this.context.onSetFullSimulatorMode}
+                            selected={this.isFullSimulatorMode}
+                        />
+                    )}
                 </div>
             );
         }

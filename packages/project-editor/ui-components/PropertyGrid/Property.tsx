@@ -3,6 +3,7 @@ import { observable, action, runInAction, autorun, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 import { dialog, getCurrentWindow } from "@electron/remote";
+import { shell } from "electron";
 
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
@@ -1026,6 +1027,39 @@ export const Property = observer(
                                 >
                                     &hellip;
                                 </button>
+                                {this._value && (
+                                    <button
+                                        className="btn btn-secondary"
+                                        type="button"
+                                        title="Open in system explorer"
+                                        onClick={async () => {
+                                            if (
+                                                this.context.filePath &&
+                                                this._value
+                                            ) {
+                                                const absolutePath =
+                                                    this.context.getAbsoluteFilePath(
+                                                        this._value
+                                                    );
+                                                try {
+                                                    await shell.openPath(
+                                                        absolutePath
+                                                    );
+                                                } catch (err) {
+                                                    info(
+                                                        "Error opening folder",
+                                                        `Could not open folder: ${err}`
+                                                    );
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        <Icon
+                                            icon="material:folder_open"
+                                            size={14}
+                                        />
+                                    </button>
+                                )}
                             </>
                         )}
                     </div>

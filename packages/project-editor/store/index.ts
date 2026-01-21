@@ -387,6 +387,22 @@ export class ProjectStore {
             }
             return true;
         });
+
+        // F7 - Full Simulator mode (for LVGL projects with Docker Desktop enabled)
+        Mousetrap.bind("f7", () => {
+            if (
+                this.projectTypeTraits.isLVGL &&
+                this.project.settings.build.useDockerDesktop
+            ) {
+                if (this.layoutModels.isDockerSimulatorMode) {
+                    this.onSetEditorMode();
+                } else {
+                    this.onSetFullSimulatorMode();
+                }
+                return false;
+            }
+            return true;
+        });
     }
 
     onDeactivate() {
@@ -430,6 +446,16 @@ export class ProjectStore {
 
         if (this.changingRuntimeMode) {
             clearTimeout(this.changingRuntimeMode);
+        }
+
+        // Stop Docker simulator and reset state when project is closed
+        if (this.projectTypeTraits.isLVGL) {
+            import("project-editor/lvgl/docker-build/build-manager").then(
+                async ({ dockerBuildManager }) => {
+                    await dockerBuildManager.stopFullSimulator();
+                    dockerBuildManager.resetSimulatorState();
+                }
+            );
         }
     }
 
@@ -793,11 +819,15 @@ export class ProjectStore {
                 this.layoutModels.root,
                 LayoutModels.OUTPUT_TAB_ID
             );
+            notification.error("Build failed. Check Output panel for errors.");
         } else {
             runInAction(() => {
                 this.lastSuccessfulBuildRevision = this.lastRevisionStable;
             });
-            notification.info("Build successful.", { autoClose: 1000 });
+            // Don't show "Build successful" if Docker build will follow (in Full Simulator mode)
+            if (!this.layoutModels?.isDockerSimulatorMode) {
+                notification.info("Build successful.", { autoClose: 1000 });
+            }
         }
         return result;
     }
@@ -1236,11 +1266,22 @@ export class ProjectStore {
 
             this.editorsStore?.refresh(true);
         }
+
+        // Also exit full simulator mode if active
+        if (this.layoutModels.isDockerSimulatorMode) {
+            await this.onExitFullSimulatorMode();
+        }
     }
 
-    onSetEditorMode = () => {
+    onSetEditorMode = async () => {
         if (this.changingRuntimeMode) {
             this.changingRuntimeModeNewMode = "editor";
+            return;
+        }
+
+        // Exit full simulator mode if active
+        if (this.layoutModels.isDockerSimulatorMode) {
+            await this.onExitFullSimulatorMode();
             return;
         }
 
@@ -1289,6 +1330,46 @@ export class ProjectStore {
             this.layoutModels.root,
             LayoutModels.DEBUGGER_TAB_ID
         );
+    };
+
+    onSetFullSimulatorMode = async () => {
+        // Import and use the build manager
+        const { dockerBuildManager } = await import(
+            "project-editor/lvgl/docker-build/build-manager"
+        );
+
+        // Check if Full Simulator is already active for another project
+        if (dockerBuildManager.isActiveForOtherProject(this.filePath)) {
+            notification.warn(
+                `Full Simulator is already active for another project: ${dockerBuildManager.getActiveProjectName()}`
+            );
+            return;
+        }
+
+        // Exit any existing runtime mode first
+        if (this.runtime) {
+            await this.setEditorMode(true);
+        }
+
+        // Toggle the mode
+        runInAction(() => {
+            this.layoutModels.isDockerSimulatorMode = true;
+        });
+
+        // Start the full simulator build and preview
+        await dockerBuildManager.startFullSimulator(this);
+    };
+
+    onExitFullSimulatorMode = async () => {
+        const { dockerBuildManager } = await import(
+            "project-editor/lvgl/docker-build/build-manager"
+        );
+
+        await dockerBuildManager.stopFullSimulator();
+
+        runInAction(() => {
+            this.layoutModels.isDockerSimulatorMode = false;
+        });
     };
 
     onRestart = () => {

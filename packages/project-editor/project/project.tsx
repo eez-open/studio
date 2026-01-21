@@ -281,6 +281,7 @@ export class Build extends EezObject {
     imageExportMode: "source" | "binary";
     fontExportMode: "source" | "binary";
     fileSystemPath: string;
+    useDockerDesktop: boolean;
 
     static classInfo: ClassInfo = {
         label: () => "Build",
@@ -365,6 +366,13 @@ export class Build extends EezObject {
                 disabled: isNotLVGLProject
             },
             {
+                name: "useDockerDesktop",
+                displayName: "Use Docker Desktop for full simulator",
+                checkboxStyleSwitch: true,
+                type: PropertyType.Boolean,
+                disabled: isNotLVGLProject
+            },
+            {
                 name: "generateSourceCodeForEezFramework",
                 displayName:
                     "Generate source code for EEZ Flow engine (eez-framework)",
@@ -430,6 +438,10 @@ export class Build extends EezObject {
                 jsObject.screensLifetimeSupport = false;
             }
 
+            if (jsObject.useDockerDesktop == undefined) {
+                jsObject.useDockerDesktop = true;
+            }
+
             if ((jsObject as any).fontsAreStoredInFilesystem === true) {
                 jsObject.fontExportMode = "binary";
             }
@@ -480,6 +492,7 @@ export class Build extends EezObject {
             fileSystemPath: observable,
             lvglInclude: observable,
             screensLifetimeSupport: observable,
+            useDockerDesktop: observable,
             generateSourceCodeForEezFramework: observable,
             compressFlowDefinition: observable,
             executionQueueSize: observable,
@@ -611,7 +624,7 @@ export const ExtensionDirectiveCustomUI = observer((props: PropertyProps) => {
         <Button
             color="primary"
             size="small"
-            onClick={() => { }}
+            onClick={() => {}}
             style={{ marginTop: 10 }}
         >
             Install
@@ -896,7 +909,7 @@ export class General extends EezObject {
                     { id: "8.4.0", label: "8.4.0" },
                     { id: "9.2.2", label: "9.2.2" },
                     { id: "9.3.0", label: "9.3.0" },
-                    { id: "9.4.0", label: "9.4.0" },
+                    { id: "9.4.0", label: "9.4.0" }
                 ],
                 enumDisallowUndefined: true,
                 disabled: (general: General) =>
@@ -1202,7 +1215,7 @@ export class General extends EezObject {
                     jsObject.lvglVersion = "8.4.0";
                 }
                 if (jsObject.lvglVersion == "8.3") {
-                    jsObject.lvglVersion = "8.4.0"
+                    jsObject.lvglVersion = "8.4.0";
                 } else if (jsObject.lvglVersion == "9.0") {
                     jsObject.lvglVersion = "9.2.2";
                 }
@@ -1340,9 +1353,10 @@ export class Settings extends EezObject {
                 ) => {
                     const projectStore = getProjectStore(object);
                     return (
-                        !projectStore.projectTypeTraits.isDashboard &&
-                        !projectStore.masterProjectEnabled
-                        || projectStore.project.settings.general.projectType == ProjectType.FIRMWARE
+                        (!projectStore.projectTypeTraits.isDashboard &&
+                            !projectStore.masterProjectEnabled) ||
+                        projectStore.project.settings.general.projectType ==
+                            ProjectType.FIRMWARE
                     );
                 }
             }
@@ -1865,7 +1879,8 @@ export class Project extends EezObject {
 
         if (this.masterProject) {
             if (this.masterProject.variables) {
-                for (const variable of this.masterProject.variables.globalVariables) {
+                for (const variable of this.masterProject.variables
+                    .globalVariables) {
                     if (variable.id != undefined) {
                         allVariables.push(variable);
                     }
@@ -1889,7 +1904,8 @@ export class Project extends EezObject {
         }
         if (this.masterProject) {
             if (this.masterProject.variables) {
-                for (const variable of this.masterProject.variables.globalVariables) {
+                for (const variable of this.masterProject.variables
+                    .globalVariables) {
                     if (variable.id != undefined) {
                         allVariables.push(variable);
                     }

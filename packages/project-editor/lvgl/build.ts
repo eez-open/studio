@@ -14,11 +14,8 @@ import { Project, findAction } from "project-editor/project/project";
 import { Section, getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
-import {
-    isDev,
-    writeBinaryData,
-    writeTextFile
-} from "eez-studio-shared/util-electron";
+import { isDev } from "eez-studio-shared/util-electron";
+import { writeTextFile, writeBinaryData } from "project-editor/build/build";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import {
     isEnumType,
@@ -1781,8 +1778,8 @@ export class LVGLBuild extends Build {
             }
 
             build.line("");
-        } 
-        
+        }
+
         {
             let anyFontWithFreeType = false;
 
@@ -1794,7 +1791,7 @@ export class LVGLBuild extends Build {
             }
 
             if (anyFontWithFreeType) {
-                build.line("");                
+                build.line("");
             }
         }
 
@@ -1852,51 +1849,83 @@ export class LVGLBuild extends Build {
 
             for (const font of this.fonts) {
                 if (font.lvglUseFreeType) {
+                    if (this.isV9) {
+                        build.blockStart("{");
 
-                if (this.isV9) {
-                    build.blockStart("{");
+                        build.line(
+                            `${this.getFontVariableName(
+                                font
+                            )} = lv_freetype_font_create(${escapeCString(
+                                font.lvglFreeTypeFilePath
+                            )}, LV_FREETYPE_FONT_RENDER_MODE_BITMAP, ${
+                                font.source!.size
+                            }, ${
+                                font.lvglFreeTypeStyle == "BOLD"
+                                    ? "LV_FREETYPE_FONT_STYLE_BOLD"
+                                    : font.lvglFreeTypeStyle == "ITALIC"
+                                    ? "LV_FREETYPE_FONT_STYLE_ITALIC"
+                                    : "LV_FREETYPE_FONT_STYLE_NORMAL"
+                            });`
+                        );
 
-                    build.line(
-                        `${this.getFontVariableName(font)} = lv_freetype_font_create(${escapeCString(
-                            font.lvglFreeTypeFilePath
-                        )}, LV_FREETYPE_FONT_RENDER_MODE_BITMAP, ${font.source!.size}, ${font.lvglFreeTypeStyle == "BOLD" ? "LV_FREETYPE_FONT_STYLE_BOLD" : font.lvglFreeTypeStyle == "ITALIC" ? "LV_FREETYPE_FONT_STYLE_ITALIC" : "LV_FREETYPE_FONT_STYLE_NORMAL"});`
-                    );
+                        build.blockStart(
+                            `if (!${this.getFontVariableName(font)}) {`
+                        );
+                        build.line(
+                            `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(
+                                font
+                            )}");`
+                        );
+                        build.blockEnd("}");
 
-                    build.blockStart(`if (!${this.getFontVariableName(font)}) {`);
-                        build.line(`LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`);
-                    build.blockEnd("}");
+                        build.blockEnd("}");
+                    } else {
+                        build.blockStart("{");
 
-                    build.blockEnd("}");
-                } else {
-                    build.blockStart("{");
+                        build.line(`lv_ft_info_t info;`);
 
-                    build.line(`lv_ft_info_t info;`);
+                        build.line(
+                            `info.name = ${escapeCString(
+                                font.lvglFreeTypeFilePath
+                            )};`
+                        );
+                        build.line(`info.weight = ${font.source!.size};`);
+                        build.line(
+                            `info.style = ${
+                                font.lvglFreeTypeStyle == "BOLD"
+                                    ? "FT_FONT_STYLE_BOLD"
+                                    : font.lvglFreeTypeStyle == "ITALIC"
+                                    ? "FT_FONT_STYLE_ITALIC"
+                                    : "FT_FONT_STYLE_NORMAL"
+                            };`
+                        );
+                        build.line(`info.mem = 0;`);
 
-                    build.line(`info.name = ${escapeCString(font.lvglFreeTypeFilePath)};`);
-                    build.line(`info.weight = ${font.source!.size};`);
-                    build.line(`info.style = ${font.lvglFreeTypeStyle == "BOLD" ? "FT_FONT_STYLE_BOLD" : font.lvglFreeTypeStyle == "ITALIC" ? "FT_FONT_STYLE_ITALIC" : "FT_FONT_STYLE_NORMAL"};`);
-                    build.line(`info.mem = 0;`);
+                        build.blockStart(`if (!lv_ft_font_init(&info)) {`);
+                        build.line(
+                            `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(
+                                font
+                            )}");`
+                        );
+                        build.unindent();
+                        build.line("} else {");
+                        build.indent();
+                        build.line(
+                            `${this.getFontVariableName(font)} = info.font;`
+                        );
+                        build.blockEnd("}");
 
-                    build.blockStart(`if (!lv_ft_font_init(&info)) {`);
-                        build.line(`LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`);
-                    build.unindent();
-                    build.line("} else {");
-                    build.indent();
-                        build.line(`${this.getFontVariableName(font)} = info.font;`);
-                    build.blockEnd("}");
+                        //return info->font;
 
-                    //return info->font;
+                        build.blockEnd("}");
+                    }
 
-                    build.blockEnd("}");
-                }
-
-
-                anyFontWithFreeType = true;
+                    anyFontWithFreeType = true;
                 }
             }
 
             if (anyFontWithFreeType) {
-                build.line("");                
+                build.line("");
             }
         }
 
@@ -2033,7 +2062,10 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
         const build = this;
 
         for (const font of this.fonts) {
-            if (this.project.settings.build.fontExportMode == "binary" || font.lvglUseFreeType) {
+            if (
+                this.project.settings.build.fontExportMode == "binary" ||
+                font.lvglUseFreeType
+            ) {
                 build.line(
                     `extern lv_font_t *${this.getFontVariableName(font)};`
                 );
@@ -2573,7 +2605,9 @@ ${source}`;
             this.fonts.map(font =>
                 (async () => {
                     if (
-                        this.project.settings.build.fontExportMode == "binary" && !font.lvglUseFreeType
+                        this.project.settings.build.fontExportMode ==
+                            "binary" &&
+                        !font.lvglUseFreeType
                     ) {
                         const lvglBinaryFileBase64 = font.lvglBinFile;
                         const lvglBinaryFile = lvglBinaryFileBase64
@@ -2692,11 +2726,7 @@ export async function generateSourceCodeForEezFramework(
             "utf-8"
         );
         structs_H = structs_H.replace(`#include <eez/flow/flow.h>\n`, "");
-        await fs.promises.writeFile(
-            destinationFolderPath + "/structs.h",
-            structs_H,
-            "utf-8"
-        );
+        await writeTextFile(destinationFolderPath + "/structs.h", structs_H);
     } catch (err) {}
 
     // post fix ui.h
@@ -2709,26 +2739,26 @@ export async function generateSourceCodeForEezFramework(
             `#if defined(EEZ_FOR_LVGL)\n#include <eez/flow/lvgl_api.h>\n#endif\n`,
             ""
         );
-        await fs.promises.writeFile(
-            destinationFolderPath + "/ui.h",
-            ui_H,
-            "utf-8"
-        );
+        await writeTextFile(destinationFolderPath + "/ui.h", ui_H);
     } catch (err) {}
 
     const eezframeworkAmalgamationPath = isDev
         ? resolve(`${sourceRootDir()}/../resources/eez-framework-amalgamation`)
         : process.resourcesPath! + "/eez-framework-amalgamation";
 
-    await fs.promises.cp(
+    // Copy eez-flow.cpp
+    const eezFlowCpp = await fs.promises.readFile(
         eezframeworkAmalgamationPath + "/eez-flow.cpp",
-        destinationFolderPath + "/eez-flow.cpp"
+        "utf-8"
     );
+    await writeTextFile(destinationFolderPath + "/eez-flow.cpp", eezFlowCpp);
 
-    await fs.promises.cp(
+    // Copy eez-flow.h (will be modified below)
+    const eezFlowH = await fs.promises.readFile(
         eezframeworkAmalgamationPath + "/eez-flow.h",
-        destinationFolderPath + "/eez-flow.h"
+        "utf-8"
     );
+    await writeTextFile(destinationFolderPath + "/eez-flow.h", eezFlowH);
 
     let eezH = await fs.promises.readFile(
         destinationFolderPath + "/eez-flow.h",
@@ -2736,15 +2766,17 @@ export async function generateSourceCodeForEezFramework(
     );
 
     if (project.settings.build.compressFlowDefinition) {
-        await fs.promises.cp(
+        const lz4C = await fs.promises.readFile(
             eezframeworkAmalgamationPath + "/eez-flow-lz4.c",
-            destinationFolderPath + "/eez-flow-lz4.c"
+            "utf-8"
         );
+        await writeTextFile(destinationFolderPath + "/eez-flow-lz4.c", lz4C);
 
-        await fs.promises.cp(
+        const lz4H = await fs.promises.readFile(
             eezframeworkAmalgamationPath + "/eez-flow-lz4.h",
-            destinationFolderPath + "/eez-flow-lz4.h"
+            "utf-8"
         );
+        await writeTextFile(destinationFolderPath + "/eez-flow-lz4.h", lz4H);
     } else {
         eezH = eezH.replace(
             "#define EEZ_FOR_LVGL_LZ4_OPTION 1",
@@ -2753,14 +2785,22 @@ export async function generateSourceCodeForEezFramework(
     }
 
     if (isUsingCrypyoSha256) {
-        await fs.promises.cp(
+        const sha256C = await fs.promises.readFile(
             eezframeworkAmalgamationPath + "/eez-flow-sha256.c",
-            destinationFolderPath + "/eez-flow-sha256.c"
+            "utf-8"
+        );
+        await writeTextFile(
+            destinationFolderPath + "/eez-flow-sha256.c",
+            sha256C
         );
 
-        await fs.promises.cp(
+        const sha256H = await fs.promises.readFile(
             eezframeworkAmalgamationPath + "/eez-flow-sha256.h",
-            destinationFolderPath + "/eez-flow-sha256.h"
+            "utf-8"
+        );
+        await writeTextFile(
+            destinationFolderPath + "/eez-flow-sha256.h",
+            sha256H
         );
     } else {
         eezH = eezH.replace(
@@ -2801,11 +2841,7 @@ export async function generateSourceCodeForEezFramework(
         );
     }
 
-    await fs.promises.writeFile(
-        destinationFolderPath + "/eez-flow.h",
-        eezH,
-        "utf-8"
-    );
+    await writeTextFile(destinationFolderPath + "/eez-flow.h", eezH);
 
     project._store.outputSectionsStore.write(
         Section.OUTPUT,

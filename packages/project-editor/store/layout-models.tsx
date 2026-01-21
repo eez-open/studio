@@ -60,6 +60,10 @@ export class LayoutModels extends AbstractLayoutModels {
     static MICRO_PYTHON_TAB_ID = "micro-python";
     static README_TAB_ID = "readme";
     static LVGL_GROUPS_TAB_ID = "lvgl-groups";
+    static DOCKER_SIMULATOR_PREVIEW_TAB_ID = "DOCKER_SIMULATOR_PREVIEW";
+    static DOCKER_SIMULATOR_LOGS_TAB_ID = "DOCKER_SIMULATOR_LOGS";
+    static DOCKER_SIMULATOR_PREVIEW_LOGS_TAB_ID =
+        "DOCKER_SIMULATOR_PREVIEW_LOGS";
 
     static PAGES_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
@@ -205,10 +209,17 @@ export class LayoutModels extends AbstractLayoutModels {
     rootEditor: FlexLayout.Model;
     rootEditorForIEXT: FlexLayout.Model;
     rootRuntime: FlexLayout.Model;
+    rootDockerSimulator: FlexLayout.Model;
+
+    // Track if docker simulator mode is active
+    isDockerSimulatorMode: boolean = false;
 
     get root() {
         if (this.projectStore.projectTypeTraits.isIEXT) {
             return this.rootEditorForIEXT;
+        }
+        if (this.isDockerSimulatorMode) {
+            return this.rootDockerSimulator;
         }
         return this.projectStore.runtime ? this.rootRuntime : this.rootEditor;
     }
@@ -228,6 +239,8 @@ export class LayoutModels extends AbstractLayoutModels {
         makeObservable(this, {
             rootEditor: observable,
             rootRuntime: observable,
+            rootDockerSimulator: observable,
+            isDockerSimulatorMode: observable,
             root: computed,
 
             styles: observable,
@@ -642,6 +655,81 @@ export class LayoutModels extends AbstractLayoutModels {
                 },
                 get: () => this.rootRuntime,
                 set: action(model => (this.rootRuntime = model))
+            },
+            {
+                name: "rootDockerSimulator",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "tabset",
+                                weight: 70,
+                                enableTabStrip: true,
+                                enableDrag: false,
+                                enableDrop: false,
+                                enableClose: false,
+                                children: [
+                                    {
+                                        type: "tab",
+                                        enableClose: false,
+                                        name: "Preview",
+                                        id: LayoutModels.DOCKER_SIMULATOR_PREVIEW_TAB_ID,
+                                        icon: "material:computer",
+                                        component: "dockerSimulatorPreview"
+                                    }
+                                ]
+                            },
+                            {
+                                type: "row",
+                                weight: 30,
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        weight: 50,
+                                        enableTabStrip: true,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Build Logs",
+                                                id: LayoutModels.DOCKER_SIMULATOR_LOGS_TAB_ID,
+                                                icon: "svg:log",
+                                                component: "dockerSimulatorLogs"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 50,
+                                        enableTabStrip: true,
+                                        enableDrag: false,
+                                        enableDrop: false,
+                                        enableClose: false,
+                                        children: [
+                                            {
+                                                type: "tab",
+                                                enableClose: false,
+                                                name: "Preview Logs",
+                                                id: LayoutModels.DOCKER_SIMULATOR_PREVIEW_LOGS_TAB_ID,
+                                                icon: "svg:log",
+                                                component:
+                                                    "dockerSimulatorPreviewLogs"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                get: () => this.rootDockerSimulator,
+                set: action(model => (this.rootDockerSimulator = model))
             },
             {
                 name: "bitmaps",
