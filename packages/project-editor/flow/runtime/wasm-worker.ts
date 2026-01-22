@@ -947,8 +947,6 @@ export function createWasmWorker(
         }
 
         if (rendererToWorkerMessage.init) {
-            console.log(rendererToWorkerMessage.init);
-
             WasmFlowRuntime.assetsMap = rendererToWorkerMessage.init.assetsMap;
 
             //

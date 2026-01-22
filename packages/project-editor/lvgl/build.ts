@@ -52,14 +52,11 @@ export class LVGLBuild extends Build {
     fontNames = new Map<string, string>();
     bitmapNames = new Map<string, string>();
 
-    updateColorCallbacks: {
-        object: IEezObject;
-        callback: () => void;
-    }[] = [];
-
     isFirstPass: boolean;
 
-    buildObjectsAccessibleFromSourceCode: {
+    currentPage: Page;
+
+    lvglObjectsAccessibleFromSourceCode: {
         fromPage: LVGLWidget[];
         fromUserWidgets: Map<Page, LVGLWidget[]>;
     } = {
@@ -80,6 +77,11 @@ export class LVGLBuild extends Build {
         fromUserWidgets: new Map()
     };
 
+    updateColorCallbacks: {
+        object: IEezObject;
+        callback: () => void;
+    }[] = [];
+
     fileStaticVars: {
         id: string;
         decl: string;
@@ -88,7 +90,6 @@ export class LVGLBuild extends Build {
     }[] = [];
 
     objectAccessors: string[] | undefined;
-    currentPage: Page;
 
     tickCallbacks: (() => void)[];
     eventHandlers = new Map<LVGLWidget, (() => void)[]>();
@@ -117,6 +118,26 @@ export class LVGLBuild extends Build {
 
     async firstPassFinish() {
         await this.buildScreensDef();
+
+        const fileStaticVars = this.fileStaticVars.slice();
+        const objectAccessors = this.objectAccessors?.slice();
+        const tickCallbacks = this.tickCallbacks.slice();
+        
+        const eventHandlers = new Map(this.eventHandlers);
+        for (const [key, value] of eventHandlers) {
+            eventHandlers.set(key, value.slice());
+        }
+        
+        const postBuildCallbacks = this.postBuildCallbacks.slice();
+
+        await this.buildScreensDef();
+
+        this.fileStaticVars = fileStaticVars;
+        this.objectAccessors = objectAccessors;
+        this.tickCallbacks = tickCallbacks;
+        this.eventHandlers = eventHandlers;
+        this.postBuildCallbacks = postBuildCallbacks;
+
         await this.buildStylesDef();
 
         this.finalizeObjectAccessibleFromSourceCodeTable();
@@ -132,13 +153,13 @@ export class LVGLBuild extends Build {
 
         if (page.isUsedAsUserWidget) {
             let widgets =
-                this.buildObjectsAccessibleFromSourceCode.fromUserWidgets.get(
+                this.lvglObjectsAccessibleFromSourceCode.fromUserWidgets.get(
                     page
                 );
 
             if (!widgets) {
                 widgets = [];
-                this.buildObjectsAccessibleFromSourceCode.fromUserWidgets.set(
+                this.lvglObjectsAccessibleFromSourceCode.fromUserWidgets.set(
                     page,
                     widgets
                 );
@@ -149,11 +170,11 @@ export class LVGLBuild extends Build {
             }
         } else {
             if (
-                !this.buildObjectsAccessibleFromSourceCode.fromPage.includes(
+                !this.lvglObjectsAccessibleFromSourceCode.fromPage.includes(
                     widget
                 )
             ) {
-                this.buildObjectsAccessibleFromSourceCode.fromPage.push(widget);
+                this.lvglObjectsAccessibleFromSourceCode.fromPage.push(widget);
             }
         }
     }
@@ -244,7 +265,7 @@ export class LVGLBuild extends Build {
             genIndex = 0;
 
             const widgets =
-                this.buildObjectsAccessibleFromSourceCode.fromUserWidgets.get(
+                this.lvglObjectsAccessibleFromSourceCode.fromUserWidgets.get(
                     page
                 );
             if (widgets) {
@@ -282,7 +303,7 @@ export class LVGLBuild extends Build {
                 );
             } else {
                 const widgets =
-                    this.buildObjectsAccessibleFromSourceCode.fromUserWidgets.get(
+                    this.lvglObjectsAccessibleFromSourceCode.fromUserWidgets.get(
                         page
                     ) ?? [];
 
@@ -305,7 +326,7 @@ export class LVGLBuild extends Build {
         genIndex = 0;
 
         const widgets =
-            this.buildObjectsAccessibleFromSourceCode.fromPage.filter(
+            this.lvglObjectsAccessibleFromSourceCode.fromPage.filter(
                 widget =>
                     !this.lvglObjectIdentifiers.fromPage.widgetToIdentifier.get(
                         widget
@@ -332,13 +353,13 @@ export class LVGLBuild extends Build {
 
         if (page.isUsedAsUserWidget) {
             return (
-                this.buildObjectsAccessibleFromSourceCode.fromUserWidgets
+                this.lvglObjectsAccessibleFromSourceCode.fromUserWidgets
                     .get(page)
                     ?.includes(widget) ?? false
             );
         }
 
-        return this.buildObjectsAccessibleFromSourceCode.fromPage.includes(
+        return this.lvglObjectsAccessibleFromSourceCode.fromPage.includes(
             widget
         );
     }
