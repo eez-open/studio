@@ -66,9 +66,8 @@ export class PreviewServer {
             this.server.listen(0, "127.0.0.1", () => {
                 const address = this.server!.address() as AddressInfo;
                 this.port = address.port;
-                const url = `http://127.0.0.1:${this.port}`;
-                console.log(`Preview server started at ${url}`);
-                resolve(url);
+                console.log(`Preview server started at ${this.url}`);
+                resolve(this.url);
             });
         });
     }

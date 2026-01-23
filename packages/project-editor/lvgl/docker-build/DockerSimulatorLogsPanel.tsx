@@ -9,11 +9,6 @@ import { dockerBuildState } from "./docker-build-state";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Re-export types for backward compatibility
-export type { LogEntry, LogType } from "./docker-build-state";
-
-////////////////////////////////////////////////////////////////////////////////
-
 export const DockerSimulatorLogsPanel = observer(
     class DockerSimulatorLogsPanel extends React.Component {
         static contextType = ProjectContext;

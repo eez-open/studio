@@ -7,11 +7,6 @@ import { dockerBuildState, PreviewLogType } from "./docker-build-state";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Re-export types for backward compatibility
-export type { PreviewLogType, PreviewLogEntry } from "./docker-build-state";
-
-////////////////////////////////////////////////////////////////////////////////
-
 export const PreviewLogsPanel = observer(
     class PreviewLogsPanel extends React.Component {
         static contextType = ProjectContext;

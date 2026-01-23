@@ -355,9 +355,23 @@ export class DockerBuildManager {
      * Leave Full Simulator UI mode without stopping the build.
      * Call this when user exits Full Sim mode but build should continue.
      */
-    leaveFullSimulatorUI(projectPath?: string): void {
-        // Nothing to do - the build will continue in the background
+    async leaveFullSimulatorUI(projectPath?: string) {
+        if (!projectPath) {
+            return;
+        }
+        const logFn = createLogFunction(projectPath);
+        const projectState = dockerBuildState.getProjectState(projectPath);
+                // Nothing to do - the build will continue in the background
         // and the project state remains valid
+        if (previewServer.isRunning) {
+            logFn("Stopping preview server...", "info");
+            await previewServer.stop();
+            logFn("Preview server stopped", "success");
+        }
+
+        runInAction(() => {
+            projectState.setIdle();
+        });        
     }
 
     /**
