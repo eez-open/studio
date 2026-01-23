@@ -534,15 +534,13 @@ export class FlowDocument implements IDocument {
 
         this.projectStore.undoManager.setCombineCommands(false);
 
-        // Select the newly created group
-        runInAction(() => {
-            const groupAdapter = this.flowContext.document.findObjectById(
-                getId(group)
-            );
-            if (groupAdapter) {
-                this.flow.selectItem(groupAdapter);
-            }
-        });
+        const groupAdapter = this.flowContext.document.findObjectById(
+            getId(group)
+        );
+        if (groupAdapter) {
+            this.flowContext.viewState.deselectAllObjects();
+            this.flowContext.viewState.selectObject(groupAdapter);
+        }
     }
 
     ungroupComponent(componentId: string) {
