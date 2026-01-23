@@ -118,21 +118,20 @@ export const OBJECT_VARIABLE_STATUS_STRUCT_NAME = "$ObjectVariableStatus";
 class SystemStructure implements IStructure {
     name: string;
     fields: IStructureField[];
+    _fieldsMap: Map<string, IStructureField>;
 
     constructor(structure: Omit<IStructure, "fieldsMap">) {
         Object.assign(this, structure);
-
-        makeObservable(this, {
-            name: observable,
-            fields: observable,
-            fieldsMap: computed
-        });
     }
 
     get fieldsMap() {
-        return new Map<string, IStructureField>(
-            this.fields.map(field => [field.name, field])
-        );
+        if (!this._fieldsMap) {
+            this._fieldsMap =  new Map<string, IStructureField>(
+                this.fields.map(field => [field.name, field])
+            );
+        }
+
+        return this._fieldsMap;
     }
 }
 

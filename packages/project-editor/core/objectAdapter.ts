@@ -86,7 +86,7 @@ export class TreeObjectAdapter {
         makeObservable(this, {
             selected: observable,
             expanded: observable,
-            children: computed({ keepAlive: true }),
+            children: computed,
             rect: computed,
             selectedItems: computed,
             selectedObject: computed,

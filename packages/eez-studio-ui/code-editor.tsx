@@ -255,12 +255,19 @@ export class CodeEditor extends React.Component<CodeEditorProps> {
         }
     }
 
+    resizeTimeout: any;
+
+    onResizeEvent = () => {
+        if (this.resizeTimeout) {
+            clearTimeout(this.resizeTimeout);
+        }
+        this.resizeTimeout = setTimeout(this.resize, 100);
+    };
+
     componentDidMount() {
         this.createEditor(this.props);
 
-        window.addEventListener("resize", () => {
-            setTimeout(() => this.resize(), 100);
-        });
+        window.addEventListener("resize", this.onResizeEvent);
     }
 
     componentDidUpdate(prevProps: any) {
@@ -278,7 +285,11 @@ export class CodeEditor extends React.Component<CodeEditorProps> {
     componentWillUnmount() {
         this.destroyEditor(this.props);
 
-        window.removeEventListener("resize", this.resize);
+        if (this.resizeTimeout) {
+            clearTimeout(this.resizeTimeout);
+        }
+
+        window.removeEventListener("resize", this.onResizeEvent);
     }
 
     render() {

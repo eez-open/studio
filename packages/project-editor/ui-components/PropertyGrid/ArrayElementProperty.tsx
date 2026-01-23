@@ -50,10 +50,6 @@ import { Point, pointDistance } from "eez-studio-shared/geometry";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let objectCollapsedStore = observable.box<
-    { object: IEezObject; collapsed: Set<IEezObject> }[]
->([]);
-
 const MAX_OBJECTS_IN_COLLAPSED_STORE = 100;
 
 export const ArrayProperty = observer(
@@ -73,7 +69,7 @@ export const ArrayProperty = observer(
         get collapsed() {
             const object = this.props.objects[0];
 
-            let objectCollapsed = objectCollapsedStore
+            let objectCollapsed = this.context.objectCollapsedStore
                 .get()
                 .find(collapsed => collapsed.object == object);
 
@@ -98,13 +94,13 @@ export const ArrayProperty = observer(
 
                 setTimeout(action(() => {
                     if (
-                        objectCollapsedStore.get().length ==
+                        this.context.objectCollapsedStore.get().length ==
                         MAX_OBJECTS_IN_COLLAPSED_STORE
                     ) {
-                        objectCollapsedStore.get().unshift();
+                        this.context.objectCollapsedStore.get().unshift();
                     }
 
-                    objectCollapsedStore.get().push(objectCollapsed!);
+                    this.context.objectCollapsedStore.get().push(objectCollapsed!);
                 }), 0);
             }
 

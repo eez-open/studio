@@ -199,6 +199,10 @@ export class ProjectStore {
     objectVariableTypes = new Map<string, IObjectVariableType>();
     importedActionComponentClasses = new Map<string, typeof ActionComponent>();
 
+    objectCollapsedStore = observable.box<
+        { object: IEezObject; collapsed: Set<IEezObject> }[]
+    >([]);
+
     get editorsStore() {
         return this.runtime
             ? this.runtimeModeEditorsStore
