@@ -1362,7 +1362,7 @@ export class ProjectStore {
 
         // Only change UI state - do not stop the build
         // Build continues in the background and user can re-enter Full Sim mode
-        dockerBuildManager.leaveFullSimulatorUI(this.filePath);
+        await dockerBuildManager.leaveFullSimulatorUI(this.filePath);
 
         runInAction(() => {
             this.layoutModels.isDockerSimulatorMode = false;

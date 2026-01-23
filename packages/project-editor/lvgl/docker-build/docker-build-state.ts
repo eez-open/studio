@@ -115,6 +115,7 @@ export class DockerBuildProjectState {
     // Preview state methods
     setBuilding(phase: string) {
         this.state = "building";
+        this.previewUrl = undefined;
         this.buildPhase = phase;
         this.errorMessage = undefined;
     }
@@ -128,6 +129,7 @@ export class DockerBuildProjectState {
 
     setError(message: string) {
         this.state = "error";
+        this.previewUrl = undefined;
         this.errorMessage = message;
         this.buildPhase = "";
     }
