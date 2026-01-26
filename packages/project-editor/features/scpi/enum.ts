@@ -126,7 +126,9 @@ export class ScpiEnum extends EezObject {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const scpiEnumProperties: Partial<ScpiEnum> = {

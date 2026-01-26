@@ -114,7 +114,9 @@ export class LVGLMeterIndicator extends EezObject {
                 values: {
                     action: "CHANGE_SCREEN"
                 },
-                dialogContext: project
+                dialogContext: project,
+                modal: true,
+                backdrop: "static"
             });
 
             const indicatorTypeProperties = {

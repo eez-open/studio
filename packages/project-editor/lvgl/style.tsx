@@ -263,7 +263,9 @@ export class LVGLStyle extends EezObject {
                 },
                 values: {
                     forWidgetType: "LVGLPanelWidget"
-                }
+                },
+                modal: true,
+                backdrop: "static"
             });
 
             const styleProperties: Partial<LVGLStyle> = {

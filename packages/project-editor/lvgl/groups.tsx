@@ -254,7 +254,9 @@ export class LVGLGroup extends EezObject {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const projectStore = getProjectStore(parent);

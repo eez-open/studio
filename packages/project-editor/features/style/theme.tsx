@@ -443,7 +443,9 @@ export class Color extends EezObject {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const colorProperties: Partial<Color> = {
@@ -591,7 +593,9 @@ export class Theme extends EezObject implements ITheme {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const themeProperties: Partial<Theme> = {

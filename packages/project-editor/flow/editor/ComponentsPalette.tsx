@@ -100,6 +100,7 @@ const SelectComponentDialog = observer(
                         className="EezStudio_ProjectEditor_SelectComponentDialog"
                         open={this.open}
                         modal={true}
+                        backdrop="static"
                         title={`Add ${
                             this.props.type == "actions" ? "Action" : "Widget"
                         }`}

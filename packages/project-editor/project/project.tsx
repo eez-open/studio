@@ -136,7 +136,9 @@ export class BuildConfiguration extends EezObject {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const buildConfigurationProperties: Partial<BuildConfiguration> = {

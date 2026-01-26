@@ -871,6 +871,7 @@ const NewLVGLActionDialog = observer(
                 <Dialog
                     open={this.open}
                     modal={true}
+                    backdrop="static"
                     title={"Add a New LVGL Action"}
                     okEnabled={this.onOkEnabled}
                     onOk={this.onOk}

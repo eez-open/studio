@@ -184,6 +184,7 @@ interface GenericDialogProps {
     values: any;
     embedded?: boolean;
     modal?: boolean;
+    backdrop?: "static" | boolean;
     opts?: IDialogOptions;
     okButtonText?: string;
     cancelButtonText?: string;
@@ -667,6 +668,7 @@ export const GenericDialog = observer(
                 return (
                     <Dialog
                         modal={this.modal}
+                        backdrop={this.props.backdrop}
                         title={this.props.dialogDefinition.title}
                         size={this.props.dialogDefinition.size}
                         okButtonText={this.props.okButtonText}
@@ -746,6 +748,8 @@ export function showGenericDialog(conf: {
     setOnChangeCallback?: (
         onChange: (fieldProperties: any, value: any) => void
     ) => void;
+    modal?: boolean;
+    backdrop?: "static" | boolean;
 }) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
         const [modalDialog] = showDialog(
@@ -785,6 +789,8 @@ export function showGenericDialog(conf: {
                     reject();
                 }}
                 setOnChangeCallback={conf.setOnChangeCallback}
+                modal={conf.modal}
+                backdrop={conf.backdrop}
             />,
             conf.opts
         );

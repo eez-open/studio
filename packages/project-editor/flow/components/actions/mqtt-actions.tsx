@@ -589,7 +589,9 @@ class EventHandler extends EezObject {
                         ? "flow"
                         : "action"
                 },
-                dialogContext: project
+                dialogContext: project,
+                modal: true,
+                backdrop: "static"
             });
 
             const properties: Partial<EventHandler> = {

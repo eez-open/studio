@@ -781,7 +781,9 @@ export class CustomInput extends EezObject implements ComponentInput {
                     ]
                 },
                 values: {},
-                dialogContext: ProjectEditor.getProject(parent)
+                dialogContext: ProjectEditor.getProject(parent),
+                modal: true,
+                backdrop: "static"
             });
 
             const customInputProperties: Partial<CustomInput> = {
@@ -908,7 +910,9 @@ export class CustomOutput extends EezObject implements ComponentOutput {
                     ]
                 },
                 values: {},
-                dialogContext: ProjectEditor.getProject(parent)
+                dialogContext: ProjectEditor.getProject(parent),
+                modal: true,
+                backdrop: "static"
             });
 
             const customOutputProperties: Partial<CustomOutput> = {
@@ -2696,7 +2700,9 @@ export class EventHandler extends EezObject {
                 dialogContext: project,
                 setOnChangeCallback: callback => {
                     onChangeCallback = callback;
-                }
+                },
+                modal: true,
+                backdrop: "static"
             });
 
             const properties: Partial<EventHandler> = {

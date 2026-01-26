@@ -185,7 +185,9 @@ export class UserProperty extends EezObject {
                 values: {
                     assignable: false
                 },
-                dialogContext: project
+                dialogContext: project,
+                modal: true,
+                backdrop: "static"
             });
 
             const properties: Partial<UserProperty> = {

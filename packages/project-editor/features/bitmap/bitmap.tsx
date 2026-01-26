@@ -339,7 +339,9 @@ export class Bitmap extends EezObject {
                     bpp: projectStore.projectTypeTraits.isLVGL
                         ? CF_TRUE_COLOR_ALPHA
                         : 32
-                }
+                },
+                modal: true,
+                backdrop: "static"
             });
 
             const bpp: number = result.values.bpp;

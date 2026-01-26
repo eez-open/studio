@@ -54,7 +54,9 @@ export class InstrumentCommand extends EezObject {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const scpiSubsystemProperties: Partial<InstrumentCommand> = {

@@ -576,7 +576,9 @@ export class Variable extends EezObject {
                     ]
                 },
                 values: {},
-                dialogContext: ProjectEditor.getProject(parent)
+                dialogContext: ProjectEditor.getProject(parent),
+                modal: true,
+                backdrop: "static"
             });
 
             let persistent =
@@ -1177,7 +1179,9 @@ export class StructureField extends EezObject implements IStructureField {
                     ]
                 },
                 values: {},
-                dialogContext: ProjectEditor.getProject(parent)
+                dialogContext: ProjectEditor.getProject(parent),
+                modal: true,
+                backdrop: "static"
             });
 
             const structureFieldProperties: Partial<StructureField> = {
@@ -1253,7 +1257,9 @@ export class Structure extends EezObject implements IStructure {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const structureProperties: Partial<Structure> = {
@@ -1392,7 +1398,9 @@ export class EnumMember extends EezObject implements IEnumMember {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const enumMemberProperties: Partial<EnumMember> = {
@@ -1507,7 +1515,9 @@ export class Enum extends EezObject implements IEnum {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const enumProperties: Partial<Enum> = {

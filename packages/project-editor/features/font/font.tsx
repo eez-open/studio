@@ -1601,7 +1601,9 @@ export class Font extends EezObject {
                                     }
                                 ]
                             },
-                            values
+                            values,
+                            modal: true,
+                            backdrop: "static"
                         });
 
                         result.values.renderingEngine = "LVGL";
@@ -1712,7 +1714,9 @@ export class Font extends EezObject {
                                 ],
                                 className: "EezStudio_NewFontDialog"
                             },
-                            values
+                            values,
+                            modal: true,
+                            backdrop: "static"
                         });
                     }
 

@@ -338,7 +338,9 @@ export class Action extends Flow {
                 },
                 values: {
                     implementationType: "flow"
-                }
+                },
+                modal: true,
+                backdrop: "static"
             });
 
             const actionProperties: Partial<Action> = Object.assign(

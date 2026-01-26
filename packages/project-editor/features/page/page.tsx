@@ -591,7 +591,9 @@ export class Page extends Flow {
                             project.userPages.length == 0
                             ? "Main"
                             : ""
-                }
+                },
+                modal: true,
+                backdrop: "static"
             });
 
             const pageProperties: Partial<Page> = {

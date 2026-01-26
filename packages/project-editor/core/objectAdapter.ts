@@ -762,6 +762,8 @@ export class TreeObjectAdapter {
             menuItems = menuItems.concat(additionalMenuItems);
         }
 
+        // Add Action
+        // Add Widget
         if (
             editable &&
             getAncestorOfType(

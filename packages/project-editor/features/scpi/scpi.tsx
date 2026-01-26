@@ -774,7 +774,9 @@ export class ScpiCommand extends EezObject {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const scpiCommandProperties: Partial<ScpiCommand> = {
@@ -851,7 +853,9 @@ export class ScpiSubsystem extends EezObject {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const scpiSubsystemProperties: Partial<ScpiSubsystem> = {

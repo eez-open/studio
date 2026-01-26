@@ -77,7 +77,9 @@ export class Language extends EezObject {
                     ]
                 },
                 values: {},
-                dialogContext: ProjectEditor.getProject(parent)
+                dialogContext: ProjectEditor.getProject(parent),
+                modal: true,
+                backdrop: "static"
             });
 
             const languageProperties: Partial<Language> = {
@@ -321,7 +323,9 @@ export class TextResource extends EezObject {
                     ]
                 },
                 values: {},
-                dialogContext: ProjectEditor.getProject(parent)
+                dialogContext: ProjectEditor.getProject(parent),
+                modal: true,
+                backdrop: "static"
             });
 
             const project = ProjectEditor.getProject(parent);

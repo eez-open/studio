@@ -1147,7 +1147,9 @@ export class Style extends EezObject {
                         }
                     ]
                 },
-                values: {}
+                values: {},
+                modal: true,
+                backdrop: "static"
             });
 
             const styleProperties: Partial<Style> = {

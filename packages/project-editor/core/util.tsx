@@ -56,6 +56,8 @@ export function showGenericDialog(
         okEnabled?: (result: GenericDialogResult) => boolean;
         showOkButton?: boolean;
         opts?: IDialogOptions;
+        modal?: true;
+        backdrop?: "static";
     }
 ) {
     return new Promise<GenericDialogResult>((resolve, reject) => {
@@ -84,6 +86,8 @@ export function showGenericDialog(
                         }
                         reject();
                     }}
+                    modal={conf.modal}
+                    backdrop={conf.backdrop}
                 />
             </ProjectContext.Provider>,
             conf.opts
