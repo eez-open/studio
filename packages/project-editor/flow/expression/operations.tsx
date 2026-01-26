@@ -546,6 +546,22 @@ export const builtInFunctions: {
             return "array:string";
         }
     },
+    "Flow.getThemeColor": {
+        operationIndex: 90,
+        arity: 1,
+        args: ["colorName"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => {
+            // TODO implement
+            return 0;
+        },
+        getValueType: (...args: ValueType[]) => {
+            return "integer";
+        },
+        enabled: projectStore => projectStore.projectTypeTraits.isLVGL
+    },
     "Flow.parseInteger": {
         operationIndex: 31,
         arity: 1,

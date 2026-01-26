@@ -54,6 +54,13 @@ export class PreviewServer {
         this.servingPath = buildOutputPath;
 
         return new Promise((resolve, reject) => {
+            let timeouted = false;
+
+            let timeout: any = setTimeout(() => {
+                timeouted = true;
+                reject(new Error("Failed to start preview server"));
+            }, 5000);            
+
             this.server = http.createServer((req, res) => {
                 this.handleRequest(req, res);
             });
@@ -64,6 +71,14 @@ export class PreviewServer {
 
             // Listen on a random available port
             this.server.listen(0, "127.0.0.1", () => {
+                if (timeouted) {
+                    return;
+                }
+                if (timeout != undefined) {
+                    clearTimeout(timeout);
+                    timeout = undefined;
+                }
+
                 const address = this.server!.address() as AddressInfo;
                 this.port = address.port;
                 console.log(`Preview server started at ${this.url}`);

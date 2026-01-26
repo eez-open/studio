@@ -430,6 +430,14 @@ export class WasmRuntime extends RemoteRuntime {
             );
         }
         
+        if (workerToRenderMessage.getLvglFontByName) {
+            return (
+                this.lgvlPageRuntime?.getFontPtrByName(
+                    workerToRenderMessage.getLvglFontByName.name
+                ) ?? 0
+            );
+        }
+
         if (workerToRenderMessage.getLvglObjectNameFromIndex) {
             return this.lgvlPageRuntime?.getLvglObjectNameFromIndex(
                 workerToRenderMessage.getLvglObjectNameFromIndex.index

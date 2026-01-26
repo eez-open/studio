@@ -3,6 +3,7 @@ import { IActionPropertyDefinition, registerAction } from "./actions";
 import {
     LV_BUTTONMATRIX_CTRL_ENUM_NAME,
     LV_OBJ_FLAG_ENUM_NAME,
+    LV_PART_ENUM_NAME,
     LV_SCR_LOAD_ANIM_ENUM_NAME,
     LV_STATE_ENUM_NAME
 } from "./lvgl-constants";
@@ -408,6 +409,52 @@ registerAction({
         </>
     ),
     helpText: "Get the height of the object"
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerAction({
+    id: 59,
+    name: "objStyleSetProperty",
+    displayName: "Set Obj Style Prop",
+    group: "Widget - Styles",
+    properties: [
+        {
+            name: "object",
+            type: "widget",
+            helpText: "Widget"
+        },
+        {
+            name: "property",
+            type: "style-property",
+            helpText: "The style property to set"
+        },
+        {
+            name: "value",
+            type: "style-value",
+            helpText: "The value to set for the property"
+        },
+        {
+            name: "part",
+            type: `enum:${LV_PART_ENUM_NAME}`,
+            helpText: "The part of the object to set the property"
+        },
+        {
+            name: "state",
+            type: `enum:${LV_STATE_ENUM_NAME}`,
+            helpText: "The state of the object to set the property"
+        }
+    ],
+    defaults: {
+        part: "MAIN",
+        state: "DEFAULT"
+    },
+    label: ([object, property, value, part, state]) => (
+        <>
+            {object} "{property}" {value ?? "?"}{part != "MAIN" ? ` ${part}` : ""}{state != "DEFAULT" ? ` ${state}` : ""}
+        </>
+    ),
+    helpText: "Set the value of property in a style."
 });
 
 ////////////////////////////////////////////////////////////////////////////////

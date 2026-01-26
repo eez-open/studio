@@ -1,5 +1,6 @@
 import React from "react";
 import { computed, makeObservable, observable, runInAction } from "mobx";
+import tinycolor from "tinycolor2";
 
 import {
     registerClass,
@@ -13,7 +14,8 @@ import {
     IMessage,
     PropertyInfo,
     EnumItem,
-    getClassByName
+    getClassByName,
+    getObjectPropertyDisplayName
 } from "project-editor/core/object";
 
 import {
@@ -63,6 +65,8 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { observer } from "mobx-react";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
+import { getThemedColor } from "project-editor/features/style/theme";
+import { lvglProperties } from "project-editor/lvgl/style-catalog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +80,9 @@ type LvglActionPropertyType =
     | `widget:${string}`
     | "group"
     | "style"
-    | "image";
+    | "image"
+    | "style-property"
+    | "style-value";
 
 export interface IActionPropertyDefinition {
     name: string;
@@ -106,6 +112,14 @@ function getValueTypeFromActionPropertyType(
 
     if (actionPropertyType == "image") {
         return "string";
+    }
+
+    if (actionPropertyType == "style-property") {
+        return "integer";
+    }
+
+    if (actionPropertyType == "style-value") {
+        return "integer";
     }
 
     return actionPropertyType as ValueType;
@@ -142,6 +156,48 @@ function getActionDisplayName(actionDefinition: IActionDefinition) {
         .join(" ");
 }
 
+function getStyleProperties(actionType: LVGLActionType): EnumItem[] {
+    const lvglVersion = ProjectEditor.getProject(actionType).settings.general.lvglVersion;
+
+    const styleProperties: EnumItem[] = [];
+
+    for (const propertiesGroup of lvglProperties) {
+        for (const styleProperty of propertiesGroup.properties) {
+            const code = styleProperty.lvglStyleProp.code[lvglVersion];
+            if (code === undefined) {
+                continue;
+            }
+
+            const propertyName = getObjectPropertyDisplayName(
+                actionType,
+                styleProperty
+            );
+
+            styleProperties.push({
+                id: code,
+                label: `${propertiesGroup.groupName} / ${propertyName}`
+            });
+        }
+    }
+
+    return styleProperties;
+}
+
+function getStyleProperty(actionType: LVGLActionType) {
+    const lvglVersion = ProjectEditor.getProject(actionType).settings.general.lvglVersion;
+
+    for (const propertiesGroup of lvglProperties) {
+        for (const styleProperty of propertiesGroup.properties) {
+            const code = styleProperty.lvglStyleProp.code[lvglVersion];
+            if (code == (actionType as any).property) {
+                return styleProperty;
+            }
+        }
+    }
+
+    return undefined;
+}
+
 export function registerAction(actionDefinition: IActionDefinition) {
     actionDefinitions.push(actionDefinition);
 
@@ -157,7 +213,7 @@ export function registerAction(actionDefinition: IActionDefinition) {
 
     const properties: PropertyInfo[] = [];
 
-    for (const actionProperty of actionDefinition.properties) {
+    actionDefinition.properties.forEach(actionProperty => {
         const expressionType = getValueTypeFromActionPropertyType(
             actionProperty.type
         );
@@ -178,6 +234,7 @@ export function registerAction(actionDefinition: IActionDefinition) {
                 | ((actionType: LVGLActionType) => EnumItem[])
                 | undefined;
             let enumDisallowUndefined = true;
+            let enumGroupSeparator: string | undefined = undefined;
 
             let referencedObjectCollectionPath: string | undefined;
 
@@ -256,6 +313,25 @@ export function registerAction(actionDefinition: IActionDefinition) {
                 referencedObjectCollectionPath = "bitmaps";
             } else if (actionProperty.type == "group") {
                 referencedObjectCollectionPath = "lvglGroups/groups";
+            } else if (actionProperty.type == "style-property") {
+                enumDisallowUndefined = false;
+                enumGroupSeparator = " / ";
+                enumItems = (actionType: LVGLActionType) => {
+                    return getStyleProperties(actionType);
+                };
+            } else if (actionProperty.type == "style-value") {
+                enumItems = (actionType: LVGLActionType) => {
+                    const styleProperty = getStyleProperty(actionType);
+                    if (styleProperty && styleProperty.type == PropertyType.Enum) {
+                        if (styleProperty.enumItems) {
+                            if (typeof styleProperty.enumItems == "function") {
+                                return styleProperty.enumItems(actionType);
+                            }
+                            return styleProperty.enumItems;
+                        }
+                    }
+                    return [];
+                };
             }
 
             const lvglExpressionProperty = makeLvglExpressionProperty(
@@ -264,9 +340,22 @@ export function registerAction(actionDefinition: IActionDefinition) {
                 "input",
                 ["literal", "expression"],
                 {
-                    dynamicType: () => {
+                    dynamicType: (actionType: LVGLActionType) => {
                         if (referencedObjectCollectionPath != undefined) {
                             return PropertyType.ObjectReference;
+                        }
+
+                        if (actionProperty.type == "style-value") {
+                            const styleProperty = getStyleProperty(actionType);
+                            if (styleProperty) {
+                                if (styleProperty.name == "text_font") {
+                                    return PropertyType.Enum;
+                                }
+                                if (styleProperty.type == PropertyType.ThemedColor || styleProperty.type == PropertyType.ObjectReference || styleProperty.type == PropertyType.Enum) {
+                                    return styleProperty.type;
+                                }
+                                return PropertyType.Number;
+                            }
                         }
 
                         if (enumItems != undefined) {
@@ -283,15 +372,25 @@ export function registerAction(actionDefinition: IActionDefinition) {
                     },
                     enumItems,
                     enumDisallowUndefined,
+                    enumGroupSeparator,
                     checkboxStyleSwitch: true,
                     referencedObjectCollectionPath,
+                    dynamicTypeReferencedObjectCollectionPath: (actionType: LVGLActionType) => {
+                        if (actionProperty.type == "style-value") {
+                            const styleProperty = getStyleProperty(actionType);
+                            if (styleProperty) {
+                                return styleProperty.referencedObjectCollectionPath;
+                            }
+                        }
+                        return referencedObjectCollectionPath;
+                    },
                     lvglActionPropertyType: actionProperty.type
                 }
             );
 
             properties.push(...lvglExpressionProperty);
         }
-    }
+    });
 
     const defaultValue = Object.assign({}, actionDefinition.defaults);
 
@@ -313,52 +412,46 @@ export function registerAction(actionDefinition: IActionDefinition) {
                     return actionDisplayName;
                 }
 
-                const propertyNames = actionDefinition.properties.map(
-                    actionProperty => humanize(actionProperty.name)
-                );
-                const propertyValues = actionDefinition.properties.map(
-                    actionProperty => {
-                        let value = (action as any)[actionProperty.name];
+                const propertyNames = actionDefinition.properties.map(actionProperty => humanize(actionProperty.name));
+                const propertyValues = actionDefinition.properties.map(actionProperty => {
+                    let value = (action as any)[actionProperty.name];
 
-                        if (typeof value == "boolean") {
-                            value = value ? "ON" : "OFF";
-                        } else if (
-                            actionProperty.isAssignable ||
-                            (action as any)[actionProperty.name + "Type"] ==
-                                "expression"
-                        ) {
-                            value = `{${value}}`;
+                    if (typeof value == "boolean") {
+                        value = value ? "ON" : "OFF";
+                    } else if (
+                        actionProperty.isAssignable ||
+                        (action as any)[actionProperty.name + "Type"] == "expression"
+                    ) {
+                        value = `{${value}}`;
+                    } else if (actionProperty.type == "style-property") {
+                        const enumItems = getStyleProperties(action);
+
+                        const enumItem = enumItems.find(item => item.id == value);
+
+                        if (enumItem) {
+                            value = `${enumItem.label!.split(" / ")[1]}`;
+                        } else {
+                            value = `<unknown>`;
                         }
-
-                        return value;
                     }
-                );
+
+                    return value;
+                });
 
                 let propertiesDescription: React.ReactNode;
                 if (actionDefinition.label) {
-                    propertiesDescription = actionDefinition.label(
-                        propertyValues,
-                        propertyNames
-                    );
+                    propertiesDescription = actionDefinition.label(propertyValues, propertyNames);
                 } else {
-                    propertiesDescription = actionDefinition.properties.map(
-                        (actionProperty, i) => {
-                            return (
-                                <>
-                                    <i>{propertyNames[i]}</i>
-                                    {actionProperty.isAssignable ? (
-                                        <RightArrow />
-                                    ) : (
-                                        "="
-                                    )}
-                                    {propertyValues[i]}
-                                    {i <
-                                        actionDefinition.properties.length -
-                                            1 && ", "}
-                                </>
-                            );
-                        }
-                    );
+                    propertiesDescription = actionDefinition.properties.map((actionProperty, i) => {
+                        return (
+                            <>
+                                <i>{propertyNames[i]}</i>
+                                {actionProperty.isAssignable ? <RightArrow /> : "="}
+                                {propertyValues[i]}
+                                {i < actionDefinition.properties.length - 1 && ", "}
+                            </>
+                        );
+                    });
                 }
 
                 return (
@@ -369,58 +462,40 @@ export function registerAction(actionDefinition: IActionDefinition) {
                 );
             },
 
-            updateObjectValueHook(object, values) {
+            updateObjectValueHook(object: LVGLActionType, values) {
                 const projectStore = ProjectEditor.getProjectStore(object);
 
                 for (const key of Object.keys(values)) {
                     if (key.endsWith("Type")) {
                         const propertyName = key.slice(0, -"Type".length);
-                        const propertyDefinition =
-                            actionDefinition.properties.find(
-                                propertyDefinition =>
-                                    propertyDefinition.name == propertyName
-                            );
+                        const propertyDefinition = actionDefinition.properties.find(
+                            propertyDefinition => propertyDefinition.name == propertyName
+                        );
                         if (propertyDefinition) {
-                            if (propertyDefinition.type.startsWith("enum:")) {
-                                const enumName = propertyDefinition.type.slice(
-                                    "enum:".length
-                                );
+                            let type: string = propertyDefinition.type;
 
-                                if (
-                                    values[key] == "expression" &&
-                                    (object as any)[key] == "literal"
-                                ) {
+                            if (propertyDefinition.type == "style-value") {
+                                const styleProperty = getStyleProperty(object);
+                                if (styleProperty && styleProperty.type == PropertyType.Enum && styleProperty.lvglStyleProp.buildPrefix) {
+                                    type = `enum:${styleProperty.lvglStyleProp.buildPrefix.slice(0, -1)}`;
+                                }
+                            }
+
+                            if (type.startsWith("enum:")) {
+                                const enumName = type.slice("enum:".length);
+
+                                if (values[key] == "expression" && (object as any)[key] == "literal") {
                                     projectStore.updateObject(object, {
-                                        [propertyName]: `${enumName}.${
-                                            (object as any)[propertyName]
-                                        }`
+                                        [propertyName]: `${enumName}.${(object as any)[propertyName]}`
                                     });
-                                } else if (
-                                    values[key] == "literal" &&
-                                    (object as any)[key] == "expression"
-                                ) {
-                                    if (
-                                        (object as any)[
-                                            propertyName
-                                        ].startsWith(enumName + ".")
-                                    ) {
-                                        let value = (object as any)[
-                                            propertyName
-                                        ].slice((enumName + ".").length);
+                                } else if (values[key] == "literal" && (object as any)[key] == "expression") {
+                                    if ((object as any)[propertyName].startsWith(enumName + ".")) {
+                                        let value = (object as any)[propertyName].slice((enumName + ".").length);
 
-                                        const enumType = getEnumFromType(
-                                            projectStore.project,
-                                            `enum:${enumName}`
-                                        );
+                                        const enumType = getEnumFromType(projectStore.project, `enum:${enumName}`);
                                         if (enumType) {
-                                            if (
-                                                !enumType.members.find(
-                                                    member =>
-                                                        member.name == value
-                                                )
-                                            ) {
-                                                value =
-                                                    enumType.members[0].name;
+                                            if (!enumType.members.find(member => member.name == value)) {
+                                                value = enumType.members[0].name;
                                             }
                                         } else {
                                             value = "";
@@ -441,21 +516,14 @@ export function registerAction(actionDefinition: IActionDefinition) {
                 const projectStore = ProjectEditor.getProjectStore(object);
 
                 if (actionDefinition.disabled) {
-                    const errorMessage = actionDefinition.disabled(
-                        projectStore.project
-                    );
+                    const errorMessage = actionDefinition.disabled(projectStore.project);
                     if (errorMessage !== false) {
-                        messages.push(
-                            new Message(MessageType.ERROR, errorMessage, object)
-                        );
+                        messages.push(new Message(MessageType.ERROR, errorMessage, object));
                         return;
                     }
                 }
 
-                const component = getAncestorOfType<LVGLActionComponent>(
-                    object,
-                    LVGLActionComponent.classInfo
-                );
+                const component = getAncestorOfType<LVGLActionComponent>(object, LVGLActionComponent.classInfo);
                 if (component) {
                     for (const propertyInfo of properties) {
                         if (propertyInfo.expressionType == undefined) {
@@ -463,229 +531,103 @@ export function registerAction(actionDefinition: IActionDefinition) {
                         }
 
                         if (
-                            (object as any)[propertyInfo.name + "Type"] ==
-                                "expression" ||
+                            (object as any)[propertyInfo.name + "Type"] == "expression" ||
                             isFlowProperty(object, propertyInfo, ["assignable"])
                         ) {
-                            ProjectEditor.checkProperty(
-                                projectStore,
-                                component,
-                                messages,
-                                object,
-                                propertyInfo
-                            );
+                            ProjectEditor.checkProperty(projectStore, component, messages, object, propertyInfo);
                         } else {
                             const project = ProjectEditor.getProject(object);
                             const value = (object as any)[propertyInfo.name];
 
-                            if (
-                                propertyInfo.lvglActionPropertyType == "screen"
-                            ) {
+                            if (propertyInfo.lvglActionPropertyType == "screen") {
                                 if (!value) {
-                                    messages.push(
-                                        propertyNotSetMessage(
-                                            object,
-                                            propertyInfo.name
-                                        )
-                                    );
+                                    messages.push(propertyNotSetMessage(object, propertyInfo.name));
                                 } else {
                                     let page = findPage(project, value);
                                     if (!page) {
-                                        messages.push(
-                                            propertyNotFoundMessage(
-                                                object,
-                                                propertyInfo.name
-                                            )
-                                        );
+                                        messages.push(propertyNotFoundMessage(object, propertyInfo.name));
                                     }
                                 }
-                            } else if (
-                                propertyInfo.lvglActionPropertyType?.startsWith(
-                                    "widget"
-                                )
-                            ) {
+                            } else if (propertyInfo.lvglActionPropertyType?.startsWith("widget")) {
                                 if (!value) {
-                                    messages.push(
-                                        propertyNotSetMessage(
-                                            object,
-                                            propertyInfo.name
-                                        )
-                                    );
+                                    messages.push(propertyNotSetMessage(object, propertyInfo.name));
                                 } else {
-                                    const lvglIdentifier =
-                                        ProjectEditor.getProjectStore(
-                                            object
-                                        ).lvglIdentifiers.getIdentifierByName(
-                                            ProjectEditor.getFlow(object),
-                                            value
-                                        );
+                                    const lvglIdentifier = ProjectEditor.getProjectStore(
+                                        object
+                                    ).lvglIdentifiers.getIdentifierByName(ProjectEditor.getFlow(object), value);
 
                                     if (lvglIdentifier == undefined) {
-                                        messages.push(
-                                            propertyNotFoundMessage(
-                                                object,
-                                                propertyInfo.name
-                                            )
-                                        );
-                                    } else if (
-                                        lvglIdentifier.widgets.length > 1
-                                    ) {
+                                        messages.push(propertyNotFoundMessage(object, propertyInfo.name));
+                                    } else if (lvglIdentifier.widgets.length > 1) {
                                         messages.push(
                                             new Message(
                                                 MessageType.ERROR,
                                                 `Multiple widgets with the same name`,
-                                                getChildOfObject(
-                                                    object,
-                                                    propertyInfo.name
-                                                )
+                                                getChildOfObject(object, propertyInfo.name)
                                             )
                                         );
                                     } else {
-                                        const widget =
-                                            lvglIdentifier.widgets[0];
+                                        const widget = lvglIdentifier.widgets[0];
 
-                                        const widgetType =
-                                            propertyInfo.lvglActionPropertyType.slice(
-                                                "widget:".length
-                                            );
+                                        const widgetType = propertyInfo.lvglActionPropertyType.slice("widget:".length);
                                         if (widgetType) {
-                                            const classInfo =
-                                                getClassInfo(widget);
-                                            const expectedClassInfo =
-                                                getClassByName(
-                                                    project._store,
-                                                    `LVGL${widgetType}Widget`
-                                                )?.classInfo;
+                                            const classInfo = getClassInfo(widget);
+                                            const expectedClassInfo = getClassByName(
+                                                project._store,
+                                                `LVGL${widgetType}Widget`
+                                            )?.classInfo;
 
-                                            if (
-                                                classInfo != expectedClassInfo
-                                            ) {
+                                            if (classInfo != expectedClassInfo) {
                                                 messages.push(
                                                     new Message(
                                                         MessageType.ERROR,
                                                         `Invalid widget type`,
-                                                        getChildOfObject(
-                                                            widget,
-                                                            propertyInfo.name
-                                                        )
+                                                        getChildOfObject(widget, propertyInfo.name)
                                                     )
                                                 );
                                             }
                                         }
                                     }
                                 }
-                            } else if (
-                                propertyInfo.lvglActionPropertyType == "group"
-                            ) {
+                            } else if (propertyInfo.lvglActionPropertyType == "group") {
                                 if (value) {
-                                    if (
-                                        !projectStore.project.lvglGroups.groups.some(
-                                            group => group.name == value
-                                        )
-                                    ) {
-                                        messages.push(
-                                            propertyNotFoundMessage(
-                                                object,
-                                                propertyInfo.name
-                                            )
-                                        );
+                                    if (!projectStore.project.lvglGroups.groups.some(group => group.name == value)) {
+                                        messages.push(propertyNotFoundMessage(object, propertyInfo.name));
                                     }
                                 } else {
-                                    messages.push(
-                                        propertyNotSetMessage(
-                                            object,
-                                            propertyInfo.name
-                                        )
-                                    );
+                                    messages.push(propertyNotSetMessage(object, propertyInfo.name));
                                 }
-                            } else if (
-                                propertyInfo.lvglActionPropertyType == "style"
-                            ) {
+                            } else if (propertyInfo.lvglActionPropertyType == "style") {
                                 if (value) {
-                                    const lvglStyle = findLvglStyle(
-                                        projectStore.project,
-                                        value
-                                    );
+                                    const lvglStyle = findLvglStyle(projectStore.project, value);
 
                                     if (!lvglStyle) {
-                                        messages.push(
-                                            propertyNotFoundMessage(
-                                                object,
-                                                propertyInfo.name
-                                            )
-                                        );
+                                        messages.push(propertyNotFoundMessage(object, propertyInfo.name));
                                     }
                                 } else {
-                                    messages.push(
-                                        propertyNotSetMessage(
-                                            object,
-                                            propertyInfo.name
-                                        )
-                                    );
+                                    messages.push(propertyNotSetMessage(object, propertyInfo.name));
                                 }
-                            } else if (
-                                propertyInfo.lvglActionPropertyType == "image"
-                            ) {
+                            } else if (propertyInfo.lvglActionPropertyType == "image") {
                                 if (value) {
-                                    const bitmap = findBitmap(
-                                        ProjectEditor.getProject(object),
-                                        value
-                                    );
+                                    const bitmap = findBitmap(ProjectEditor.getProject(object), value);
 
                                     if (!bitmap) {
-                                        messages.push(
-                                            propertyNotFoundMessage(
-                                                object,
-                                                propertyInfo.name
-                                            )
-                                        );
+                                        messages.push(propertyNotFoundMessage(object, propertyInfo.name));
                                     }
                                 } else {
-                                    messages.push(
-                                        propertyNotSetMessage(
-                                            object,
-                                            propertyInfo.name
-                                        )
-                                    );
+                                    messages.push(propertyNotSetMessage(object, propertyInfo.name));
                                 }
-                            } else if (
-                                propertyInfo.lvglActionPropertyType?.startsWith(
-                                    "enum:"
-                                )
-                            ) {
+                            } else if (propertyInfo.lvglActionPropertyType?.startsWith("enum:")) {
                                 if (value) {
-                                    const enumType = getEnumFromType(
-                                        project,
-                                        propertyInfo.lvglActionPropertyType
-                                    );
-                                    if (
-                                        !enumType ||
-                                        !enumType.members.find(
-                                            member => member.name == value
-                                        )
-                                    ) {
-                                        messages.push(
-                                            propertyNotFoundMessage(
-                                                object,
-                                                propertyInfo.name
-                                            )
-                                        );
+                                    const enumType = getEnumFromType(project, propertyInfo.lvglActionPropertyType);
+                                    if (!enumType || !enumType.members.find(member => member.name == value)) {
+                                        messages.push(propertyNotFoundMessage(object, propertyInfo.name));
                                     }
                                 } else {
-                                    messages.push(
-                                        propertyNotSetMessage(
-                                            object,
-                                            propertyInfo.name
-                                        )
-                                    );
+                                    messages.push(propertyNotSetMessage(object, propertyInfo.name));
                                 }
                             } else if (value == undefined) {
-                                messages.push(
-                                    propertyNotSetMessage(
-                                        object,
-                                        propertyInfo.name
-                                    )
-                                );
+                                messages.push(propertyNotSetMessage(object, propertyInfo.name));
                             }
                         }
                     }
@@ -1091,6 +1033,45 @@ export class LVGLActionType extends EezObject {
                 return value;
             } else if (propertyInfo.lvglActionPropertyType == "string") {
                 return escapeCString(value ?? "");
+            } else if (propertyInfo.lvglActionPropertyType == "style-value") {
+                const styleProperty = getStyleProperty(this);
+                if (!styleProperty) {
+                    return 0;
+                }
+                
+                if (styleProperty.lvglStyleProp.valueToNum) {
+                    return styleProperty.lvglStyleProp.valueToNum(value);
+                }
+
+                if (styleProperty.type == PropertyType.ThemedColor) {
+                    const projectStore = ProjectEditor.getProjectStore(this);
+
+                    const themedColor = getThemedColor(
+                        projectStore,
+                        value
+                    );
+
+                    if (themedColor.isFromTheme) {
+                        const colorIndex = projectStore.project.colorToIndexMap.get(value);
+                        return `Flow.getThemeColor(${colorIndex})`;
+                    } else {
+                        const rgb = tinycolor(themedColor.colorValue).toRgb();
+
+                        // result is in BGR format
+                        let result = (rgb.b << 0) | (rgb.g << 8) | (rgb.r << 16) | (255 << 24);
+
+                        // signed to unsigned
+                        result = result >>> 0;
+
+                        return `${result}`;
+                    }
+                }
+
+                if (styleProperty.name == "text_font" || styleProperty.type == PropertyType.ObjectReference) {
+                    return escapeCString(value ?? "");
+                }
+
+                return value;
             } else if (
                 propertyInfo.lvglActionPropertyType?.startsWith("enum:")
             ) {

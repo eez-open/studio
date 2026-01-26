@@ -45,7 +45,7 @@
         "madge-graph-circular": "madge --circular --image source-graph-circular.svg packages/home/main.tsx"
     },
     "prettier": {
-        "printWidth": 80,
+        "printWidth": 120,
         "tabWidth": 4,
         "trailingComma": "none",
         "arrowParens": "avoid"

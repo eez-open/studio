@@ -686,16 +686,77 @@ export const Property = observer(
                         />
                     );
                 } else {
-                    let options: JSX.Element[];
+                    let options: JSX.Element[] = [];
 
-                    options = enumItems.map(enumItem => {
-                        const id = enumItem.id.toString();
-                        return (
-                            <option key={id} value={id}>
-                                {enumItem.label || humanize(id)}
-                            </option>
-                        );
-                    });
+                    const addEnumItemsToOptions = (enumItems: EnumItem[], options: JSX.Element[], enumGroupSeparator?: string) => {
+                        enumItems.forEach(enumItem => {
+                            const id = enumItem.id.toString();
+                            let label;
+                            
+                            if (enumItem.label) {
+                                label = enumItem.label;
+                                if (enumGroupSeparator) {
+                                    const parts = label.split(
+                                        propertyInfo.enumGroupSeparator!
+                                    );
+                                    label = parts[1];
+                                }
+                            } else {
+                                label = humanize(id);
+                            }
+                            
+                            options.push(
+                                <option key={id} value={id}>
+                                    {label}
+                                </option>
+                            );
+                        });
+                    };
+
+                    if (propertyInfo.enumGroupSeparator) {
+                        // Group enum items
+                        const groups: {
+                            label: string;
+                            items: EnumItem[];
+                        }[] = [];
+
+                        enumItems.forEach(enumItem => {
+                            const label = enumItem.label || humanize(enumItem.id);
+                            const parts = label.split(
+                                propertyInfo.enumGroupSeparator!
+                            );
+
+                            let group = groups.find(g => g.label == parts[0]);
+                            if (!group) {
+                                group = { label: parts[0], items: [] };
+                                if (parts[0] !== "") {
+                                    groups.push(group);
+                                } else {
+                                    groups.unshift(group);
+                                }
+                            }
+
+                            group.items.push(enumItem);
+                        });
+
+
+                        // Add groups to options
+                        groups.forEach(group => {
+                            if (group.label !== "") {
+                                let groupOptions: JSX.Element[] = [];
+                                addEnumItemsToOptions(group.items, groupOptions, propertyInfo.enumGroupSeparator)
+                                options.push(
+                                    <optgroup key={group.label} label={group.label}>
+                                        {groupOptions}
+                                    </optgroup>
+                                );
+                            } else {
+                                addEnumItemsToOptions(group.items, options);
+                            }
+                        });
+                    } else {
+                        addEnumItemsToOptions(enumItems, options);
+                    }
 
                     const value = this._value !== undefined ? this._value : "";
 

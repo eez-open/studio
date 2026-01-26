@@ -35,6 +35,7 @@ import type { Flow } from "project-editor/flow/flow";
 import { escapeCString, isGeometryControlledByParent } from "./widget-common";
 import { BuildLVGLCode } from "project-editor/lvgl/to-lvgl-code";
 import { cleanupSourceFile } from "project-editor/build/cleanup-c-source-files";
+import { BUILT_IN_FONTS } from "project-editor/lvgl/style-catalog";
 
 interface Identifiers {
     identifiers: string[];
@@ -1136,6 +1137,40 @@ export class LVGLBuild extends Build {
 
         Object.values(this.functions).forEach(callback => callback());
 
+        // fonts
+        {
+            let anyFontWithFreeType = false;
+
+            for (const font of this.fonts) {
+                if (font.lvglUseFreeType) {
+                    build.line(`lv_font_t *${this.getFontVariableName(font)};`);
+                    anyFontWithFreeType = true;
+                }
+            }
+
+            if (anyFontWithFreeType) {
+                build.line("");
+            }
+        }
+        
+        build.blockStart(
+            `ext_font_desc_t fonts[] = {`
+        );
+        for (const font of this.fonts) {
+            build.line(
+                `{ "${font.name}", ${font.lvglUseFreeType ? "NULL" : this.getFontAccessor(font)} },`
+            );
+        }
+        for (const font of BUILT_IN_FONTS) {
+            build.text(`#if LV_FONT_${font}\n`);
+            build.line(
+                `{ "${font}", &lv_font_${font.toLowerCase()} },`
+            );
+            build.text(`#endif\n`);
+        }
+        build.blockEnd(`};`);
+        build.line("");
+
         if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
             for (const page of this.pages) {
                 page._lvglWidgets.forEach(widget => {
@@ -1802,21 +1837,6 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
-        {
-            let anyFontWithFreeType = false;
-
-            for (const font of this.fonts) {
-                if (font.lvglUseFreeType) {
-                    build.line(`lv_font_t *${this.getFontVariableName(font)};`);
-                    anyFontWithFreeType = true;
-                }
-            }
-
-            if (anyFontWithFreeType) {
-                build.line("");
-            }
-        }
-
         //
         build.blockStart("void create_screens() {");
 
@@ -1869,7 +1889,9 @@ export class LVGLBuild extends Build {
         {
             let anyFontWithFreeType = false;
 
-            for (const font of this.fonts) {
+            
+            for (let fontIndex = 0; fontIndex < this.fonts.length; fontIndex++) {
+                const font = this.fonts[fontIndex];
                 if (font.lvglUseFreeType) {
                     if (this.isV9) {
                         build.blockStart("{");
@@ -1889,6 +1911,8 @@ export class LVGLBuild extends Build {
                                     : "LV_FREETYPE_FONT_STYLE_NORMAL"
                             });`
                         );
+
+                        build.line(`fonts[${fontIndex}].font_ptr = ${this.getFontVariableName(font)};`);
 
                         build.blockStart(
                             `if (!${this.getFontVariableName(font)}) {`
@@ -1985,9 +2009,12 @@ export class LVGLBuild extends Build {
                     `eez_flow_init_style_names(style_names, sizeof(style_names) / sizeof(const char *));`
                 );
             }
+            build.line(
+                `eez_flow_init_fonts(fonts, sizeof(fonts) / sizeof(ext_font_desc_t));`
+            );
             if (this.updateColorCallbacks.length > 0) {
                 build.line(
-                    `eez_flow_init_themes(theme_names, sizeof(theme_names) / sizeof(const char *), change_color_theme);`
+                    `eez_flow_init_themes(theme_names, sizeof(theme_names) / sizeof(const char *), change_color_theme, &theme_colors[0][0], sizeof(theme_colors[0]) / sizeof(uint32_t));`
                 );
             }
             build.line("");
@@ -2098,6 +2125,17 @@ extern const ext_img_desc_t images[${this.bitmaps.length || 1}];
             }
         }
 
+        build.text(`
+#ifndef EXT_FONT_DESC_T
+#define EXT_FONT_DESC_T
+typedef struct _ext_font_desc_t {
+    const char *name;
+    const void *font_ptr;
+} ext_font_desc_t;
+#endif
+
+extern ext_font_desc_t fonts[];
+`);
         return this.result;
     }
 

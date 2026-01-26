@@ -154,7 +154,9 @@ export type LvglActionPropertyType =
     | `widget:${string}`
     | "group"
     | "style"
-    | "image";
+    | "image"
+    | "style-property"
+    | "style-value";
 
 export interface PropertyInfo {
     name: string;
@@ -170,6 +172,7 @@ export interface PropertyInfo {
     displayValue?: (object: IEezObject) => any;
     enumItems?: EnumItem[] | ((object: IEezObject) => EnumItem[]);
     enumDisallowUndefined?: boolean;
+    enumGroupSeparator?: string;
     typeClass?: EezClass;
     referencedObjectCollectionPath?: string;
     filterReferencedObjectCollection?: (

@@ -299,6 +299,18 @@ export const LVGL_STATE_CODES = {
     PRESSED: 0x0020
 };
 
+export const LVGL_STATE_CODES_MORE = {
+    DEFAULT: 0x0000,
+    EDITED: 0x0008,
+    HOVERED: 0x0010,
+    SCROLLED: 0x0040,
+    USER1: 0x1000,
+    USER2: 0x2000,
+    USER3: 0x4000,
+    USER4: 0x8000,
+    ALL: 0xFFFF,
+};
+
 export const LVGL_REACTIVE_STATES: (keyof typeof LVGL_STATE_CODES)[] = [
     "CHECKED",
     "DISABLED"
@@ -371,6 +383,8 @@ export const LVGL_PARTS_9: { [key: string]: number } = {
 
     ANY: 0x0f0000 // LV_PART_ANY          Special value can be used in some functions to target all parts
 };
+
+export const LV_PART_ENUM_NAME = "LV_PART";
 
 ////////////////////////////////////////////////////////////////////////////////
 

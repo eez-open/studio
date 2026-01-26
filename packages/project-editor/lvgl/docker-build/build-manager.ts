@@ -166,7 +166,13 @@ export class DockerBuildManager {
         if (hasOutput && !forceRebuild) {
             logFn("=== Starting Full Simulator ===", "info");
             logFn("Starting preview server...", "info");
-            const previewUrl = await previewServer.start(outputPath);
+            let previewUrl
+            try {
+                previewUrl = await previewServer.start(outputPath);
+            } catch (error) {
+                projectState.setError(`Error starting preview server: ${error}`);
+                return;
+            }
             logFn(`Preview server running at ${previewUrl}`, "success");
 
             // Clear preview logs for new session
@@ -324,7 +330,13 @@ export class DockerBuildManager {
             });
 
             logFn("Starting preview server...", "info");
-            const previewUrl = await previewServer.start(outputPath);
+            let previewUrl;
+            try {
+                previewUrl = await previewServer.start(outputPath);
+            } catch (error) {
+                projectState.setError(`Error starting preview server: ${error}`);
+                return;
+            }
             logFn(`Preview server running at ${previewUrl}`, "success");
 
             // Clear preview logs for new session

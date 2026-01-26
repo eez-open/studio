@@ -837,7 +837,7 @@ const SelectItemDialog = observer(
                                 };
                             }),
                             selected: false,
-                            expanded: true,
+                            expanded: false,
                             data: undefined
                         })),
                         selected: false,

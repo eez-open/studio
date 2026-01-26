@@ -1435,6 +1435,12 @@ export class ProjectStore {
                                         `${extension.name}/${actionComponentDefinition.name}`
                                     );
 
+                                if (!className || !actionComponentClass) {
+                                    throw new Error(
+                                        `Failed to create action component class for "${extension.name}/${actionComponentDefinition.name}"`
+                                    );
+                                }
+
                                 extensionContent.actionComponentClasses.push({
                                     className,
                                     actionComponentClass

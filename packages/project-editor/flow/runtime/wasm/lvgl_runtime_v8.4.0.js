@@ -5470,31 +5470,32 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1160336: ($0) => { startToDebuggerMessage($0); },  
- 1160368: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1160443: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1160518: ($0) => { finishToDebuggerMessage($0); },  
- 1160551: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1160581: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1160611: ($0) => { lvglScreenTick($0); },  
- 1160635: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1160675: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1160729: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1160783: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1160836: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1160889: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1160942: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1160989: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1161022: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1161058: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1161103: ($0, $1) => { js_dispatch_event($0, $1); },  
- 1161134: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1161240: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1161276: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1161313: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1161353: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1161410: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1161469: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1160664: ($0) => { startToDebuggerMessage($0); },  
+ 1160696: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1160771: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1160846: ($0) => { finishToDebuggerMessage($0); },  
+ 1160879: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1160909: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1160939: ($0) => { lvglScreenTick($0); },  
+ 1160963: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1161003: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1161057: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1161111: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1161164: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1161217: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1161270: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1161322: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1161369: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1161402: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1161438: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1161483: ($0, $1) => { js_dispatch_event($0, $1); },  
+ 1161514: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1161620: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1161656: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1161693: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1161733: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1161790: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1161849: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5712,6 +5713,8 @@ var _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = makeInvalidEar
 var _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropColor');
 var _lvglObjSetLocalStylePropNum = Module['_lvglObjSetLocalStylePropNum'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropNum');
 var _lvglObjSetLocalStylePropPtr = Module['_lvglObjSetLocalStylePropPtr'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropPtr');
+var _lvglGetBuiltinFontPtr = Module['_lvglGetBuiltinFontPtr'] = makeInvalidEarlyAccess('_lvglGetBuiltinFontPtr');
+var _strcmp = Module['_strcmp'] = makeInvalidEarlyAccess('_strcmp');
 var _lvglObjGetStylePropBuiltInFont = Module['_lvglObjGetStylePropBuiltInFont'] = makeInvalidEarlyAccess('_lvglObjGetStylePropBuiltInFont');
 var _lvglObjGetStylePropFontAddr = Module['_lvglObjGetStylePropFontAddr'] = makeInvalidEarlyAccess('_lvglObjGetStylePropFontAddr');
 var _lvglObjSetLocalStylePropBuiltInFont = Module['_lvglObjSetLocalStylePropBuiltInFont'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropBuiltInFont');
@@ -6157,7 +6160,6 @@ var _lv_img_decoder_built_in_info = Module['_lv_img_decoder_built_in_info'] = ma
 var _lv_img_decoder_create = Module['_lv_img_decoder_create'] = makeInvalidEarlyAccess('_lv_img_decoder_create');
 var _lv_img_decoder_set_info_cb = Module['_lv_img_decoder_set_info_cb'] = makeInvalidEarlyAccess('_lv_img_decoder_set_info_cb');
 var _lv_fs_get_ext = Module['_lv_fs_get_ext'] = makeInvalidEarlyAccess('_lv_fs_get_ext');
-var _strcmp = Module['_strcmp'] = makeInvalidEarlyAccess('_strcmp');
 var _lv_fs_open = Module['_lv_fs_open'] = makeInvalidEarlyAccess('_lv_fs_open');
 var _lv_fs_read = Module['_lv_fs_read'] = makeInvalidEarlyAccess('_lv_fs_read');
 var _lv_fs_close = Module['_lv_fs_close'] = makeInvalidEarlyAccess('_lv_fs_close');
@@ -6754,6 +6756,7 @@ var _lv_textarea_text_is_selected = Module['_lv_textarea_text_is_selected'] = ma
 var _lv_textarea_get_text_selection = Module['_lv_textarea_get_text_selection'] = makeInvalidEarlyAccess('_lv_textarea_get_text_selection');
 var _lv_textarea_get_password_show_time = Module['_lv_textarea_get_password_show_time'] = makeInvalidEarlyAccess('_lv_textarea_get_password_show_time');
 var _onMqttEvent = Module['_onMqttEvent'] = makeInvalidEarlyAccess('_onMqttEvent');
+var _eez_flow_init_themes = Module['_eez_flow_init_themes'] = makeInvalidEarlyAccess('_eez_flow_init_themes');
 var __evalIntegerProperty = Module['__evalIntegerProperty'] = makeInvalidEarlyAccess('__evalIntegerProperty');
 var __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = makeInvalidEarlyAccess('__evalUnsignedIntegerProperty');
 var __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = makeInvalidEarlyAccess('__evalStringArrayPropertyAndJoin');
@@ -6991,6 +6994,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglObjSetLocalStylePropColor'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropColor');
   assert(typeof wasmExports['lvglObjSetLocalStylePropNum'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropNum');
   assert(typeof wasmExports['lvglObjSetLocalStylePropPtr'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropPtr');
+  assert(typeof wasmExports['lvglGetBuiltinFontPtr'] != 'undefined', 'missing Wasm export: lvglGetBuiltinFontPtr');
+  assert(typeof wasmExports['strcmp'] != 'undefined', 'missing Wasm export: strcmp');
   assert(typeof wasmExports['lvglObjGetStylePropBuiltInFont'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropBuiltInFont');
   assert(typeof wasmExports['lvglObjGetStylePropFontAddr'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropFontAddr');
   assert(typeof wasmExports['lvglObjSetLocalStylePropBuiltInFont'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropBuiltInFont');
@@ -7436,7 +7441,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_img_decoder_create'] != 'undefined', 'missing Wasm export: lv_img_decoder_create');
   assert(typeof wasmExports['lv_img_decoder_set_info_cb'] != 'undefined', 'missing Wasm export: lv_img_decoder_set_info_cb');
   assert(typeof wasmExports['lv_fs_get_ext'] != 'undefined', 'missing Wasm export: lv_fs_get_ext');
-  assert(typeof wasmExports['strcmp'] != 'undefined', 'missing Wasm export: strcmp');
   assert(typeof wasmExports['lv_fs_open'] != 'undefined', 'missing Wasm export: lv_fs_open');
   assert(typeof wasmExports['lv_fs_read'] != 'undefined', 'missing Wasm export: lv_fs_read');
   assert(typeof wasmExports['lv_fs_close'] != 'undefined', 'missing Wasm export: lv_fs_close');
@@ -8033,6 +8037,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_textarea_get_text_selection'] != 'undefined', 'missing Wasm export: lv_textarea_get_text_selection');
   assert(typeof wasmExports['lv_textarea_get_password_show_time'] != 'undefined', 'missing Wasm export: lv_textarea_get_password_show_time');
   assert(typeof wasmExports['onMqttEvent'] != 'undefined', 'missing Wasm export: onMqttEvent');
+  assert(typeof wasmExports['eez_flow_init_themes'] != 'undefined', 'missing Wasm export: eez_flow_init_themes');
   assert(typeof wasmExports['_evalIntegerProperty'] != 'undefined', 'missing Wasm export: _evalIntegerProperty');
   assert(typeof wasmExports['_evalUnsignedIntegerProperty'] != 'undefined', 'missing Wasm export: _evalUnsignedIntegerProperty');
   assert(typeof wasmExports['_evalStringArrayPropertyAndJoin'] != 'undefined', 'missing Wasm export: _evalStringArrayPropertyAndJoin');
@@ -8266,6 +8271,8 @@ function assignWasmExports(wasmExports) {
   _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = createExportWrapper('lvglObjSetLocalStylePropColor', 4);
   _lvglObjSetLocalStylePropNum = Module['_lvglObjSetLocalStylePropNum'] = createExportWrapper('lvglObjSetLocalStylePropNum', 4);
   _lvglObjSetLocalStylePropPtr = Module['_lvglObjSetLocalStylePropPtr'] = createExportWrapper('lvglObjSetLocalStylePropPtr', 4);
+  _lvglGetBuiltinFontPtr = Module['_lvglGetBuiltinFontPtr'] = createExportWrapper('lvglGetBuiltinFontPtr', 1);
+  _strcmp = Module['_strcmp'] = createExportWrapper('strcmp', 2);
   _lvglObjGetStylePropBuiltInFont = Module['_lvglObjGetStylePropBuiltInFont'] = createExportWrapper('lvglObjGetStylePropBuiltInFont', 4);
   _lvglObjGetStylePropFontAddr = Module['_lvglObjGetStylePropFontAddr'] = createExportWrapper('lvglObjGetStylePropFontAddr', 4);
   _lvglObjSetLocalStylePropBuiltInFont = Module['_lvglObjSetLocalStylePropBuiltInFont'] = createExportWrapper('lvglObjSetLocalStylePropBuiltInFont', 4);
@@ -8711,7 +8718,6 @@ function assignWasmExports(wasmExports) {
   _lv_img_decoder_create = Module['_lv_img_decoder_create'] = createExportWrapper('lv_img_decoder_create', 0);
   _lv_img_decoder_set_info_cb = Module['_lv_img_decoder_set_info_cb'] = createExportWrapper('lv_img_decoder_set_info_cb', 2);
   _lv_fs_get_ext = Module['_lv_fs_get_ext'] = createExportWrapper('lv_fs_get_ext', 1);
-  _strcmp = Module['_strcmp'] = createExportWrapper('strcmp', 2);
   _lv_fs_open = Module['_lv_fs_open'] = createExportWrapper('lv_fs_open', 3);
   _lv_fs_read = Module['_lv_fs_read'] = createExportWrapper('lv_fs_read', 4);
   _lv_fs_close = Module['_lv_fs_close'] = createExportWrapper('lv_fs_close', 1);
@@ -9308,6 +9314,7 @@ function assignWasmExports(wasmExports) {
   _lv_textarea_get_text_selection = Module['_lv_textarea_get_text_selection'] = createExportWrapper('lv_textarea_get_text_selection', 1);
   _lv_textarea_get_password_show_time = Module['_lv_textarea_get_password_show_time'] = createExportWrapper('lv_textarea_get_password_show_time', 1);
   _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent', 4);
+  _eez_flow_init_themes = Module['_eez_flow_init_themes'] = createExportWrapper('eez_flow_init_themes', 5);
   __evalIntegerProperty = Module['__evalIntegerProperty'] = createExportWrapper('_evalIntegerProperty', 6);
   __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = createExportWrapper('_evalUnsignedIntegerProperty', 6);
   __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = createExportWrapper('_evalStringArrayPropertyAndJoin', 7);

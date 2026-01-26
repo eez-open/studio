@@ -173,7 +173,7 @@ enum SaveOptionsFlags {
     View
 }
 
-class WizardModel {
+export class WizardModel {
     section: "templates" | "examples" = "templates";
     folder: string | undefined = "_allTemplates";
     type: string | undefined = "dashboard";
@@ -1258,7 +1258,8 @@ class WizardModel {
 
     createProject = async (
         modalDialog: IObservableValue<any>,
-        runMode: boolean
+        runMode: boolean,
+        openProjectWhenDone: boolean = true
     ) => {
         if (this.createProjectInProgress) {
             return false;
@@ -1762,7 +1763,9 @@ class WizardModel {
 
                 this.saveOptions(SaveOptionsFlags.All);
 
-                openProject(projectFilePath, runMode);
+                if (openProjectWhenDone) {
+                    openProject(projectFilePath, runMode);
+                }
 
                 runInAction(() => {
                     this.name = undefined;

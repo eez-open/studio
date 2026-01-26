@@ -55,8 +55,6 @@ const DEFAULT_SCRAPBOOK_FILE_PATH = getUserDataPath(
     `scrapbooks${path.sep}Default.eez-scrapbook`
 );
 
-console.log(DEFAULT_SCRAPBOOK_FILE_PATH);
-
 const DB_VERSION = 1;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -614,8 +612,6 @@ class ScrapbookManagerModel {
     }
 
     async openScrapbookFile(filePath: string) {
-        console.log(filePath);
-
         await this.store.load(filePath);
 
         if (

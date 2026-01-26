@@ -563,6 +563,17 @@ function getLvglImageByName(wasmModuleId: number, name: string) {
     });
 }
 
+function getLvglFontByName(wasmModuleId: number, name: string) {
+    const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
+    if (!WasmFlowRuntime) {
+        return;
+    }
+
+    return WasmFlowRuntime.postWorkerToRendererMessage({
+        getLvglFontByName: { name }
+    });
+}
+
 function getLvglObjectNameFromIndex(wasmModuleId: number, index: number) {
     const WasmFlowRuntime = getWasmFlowRuntime(wasmModuleId);
     if (!WasmFlowRuntime) {
@@ -700,6 +711,7 @@ function lvglOnEventHandler(
 (global as any).getLvglGroupByName = getLvglGroupByName;
 (global as any).getLvglStyleByName = getLvglStyleByName;
 (global as any).getLvglImageByName = getLvglImageByName;
+(global as any).getLvglFontByName = getLvglFontByName;
 (global as any).getLvglObjectNameFromIndex = getLvglObjectNameFromIndex;
 (global as any).lvglObjAddStyle = lvglObjAddStyle;
 (global as any).lvglObjRemoveStyle = lvglObjRemoveStyle;

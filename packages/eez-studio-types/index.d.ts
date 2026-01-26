@@ -376,6 +376,10 @@ export interface WorkerToRenderMessage {
         name: string;
     };
 
+    getLvglFontByName?: {
+        name: string;
+    };
+
     getLvglObjectNameFromIndex?: {
         index: number;
     };
@@ -740,7 +744,11 @@ export interface IWasmFlowRuntime {
 
     _lvglAddEventHandler(obj: number, eventCode: number): void;
 
-    _lvglCreateFreeTypeFont(filePath: number, size: number, style: number): number
+    _lvglCreateFreeTypeFont(filePath: number, size: number, style: number): number;
+
+    _lvglGetBuiltinFontPtr(fontName: number): number;
+
+    _eez_flow_init_themes(themeNames: number, numThemes: number, changeColorTheme: number, themeColors: number, numColorsPerTheme: number);
 }
 
 export interface IDashboardComponentContext {

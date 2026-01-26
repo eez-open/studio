@@ -33,6 +33,7 @@ import {
     Project,
     ProjectType,
     findBitmap,
+    findFont,
     findFontByVarName
 } from "project-editor/project/project";
 import {
@@ -259,6 +260,23 @@ export abstract class LVGLPageRuntime {
         }
 
         return cachedBitmap.bitmapPtr;
+    }
+
+    getFontPtrByName(fontName: string) {
+        if (fontName.startsWith("MONTSERRAT_")) {
+            const fontNamePtr = this.wasm.stringToNewUTF8(fontName);
+            const fontPtr = this.wasm._lvglGetBuiltinFontPtr(fontNamePtr);
+            this.wasm._free(fontNamePtr);
+            return fontPtr;
+        }
+
+        const font = findFont(this.project, fontName);
+        
+        if (!font) {
+            return 0;
+        }
+        
+        return this.getFontPtr(font);
     }
 
     getFontPtr(font: Font) {
@@ -1132,6 +1150,38 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
 
     async mount() {
         this.lvglGroupObjects = [];
+
+        // init themes
+        {
+            let themeNamesPtr = this.wasm._malloc(this.project.themes.length * 4);
+
+            let themeColorsPtr = this.wasm._malloc(
+                this.project.colors.length * this.project.themes.length * 4
+            );
+
+            for (let i = 0; i < this.project.themes.length; i++) {
+                const theme = this.project.themes[i];
+
+                const themeNamePtr = this.wasm.stringToNewUTF8(theme.name);
+                this.wasm.HEAP32[themeNamesPtr / 4 + i] = themeNamePtr;
+
+                for (let j = 0; j < this.project.colors.length; j++) {
+                    const colorValue = theme.colors[j];
+                    const rgb = tinycolor(colorValue).toRgb();
+
+                    // result is in BGR format
+                    let colorNum =
+                        (rgb.b << 0) | (rgb.g << 8) | (rgb.r << 16) | (255 << 24);
+
+                    // signed to unsigned
+                    colorNum = colorNum >>> 0;
+
+                    this.wasm.HEAP32[themeColorsPtr / 4 + i * this.project.colors.length + j] = colorNum;
+                }
+            }
+
+            this.wasm._eez_flow_init_themes(themeNamesPtr, this.project.themes.length, 0, themeColorsPtr, this.project.colors.length);
+        }
 
         // create groups
         for (const group of this.project.lvglGroups.groups) {

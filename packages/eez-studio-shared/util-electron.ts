@@ -12,7 +12,7 @@ if (isRenderer()) {
 
 export const isDev = /[\\/]node_modules[\\/]electron[\\/]/.test(
     process.execPath
-);
+) || process.env.EEZ_STUDIO_CLI_MODE === "1";
 
 export function isRenderer() {
     // running in a web browser

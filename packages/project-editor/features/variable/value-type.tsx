@@ -7,8 +7,7 @@ import {
     autorun,
     runInAction,
     makeObservable,
-    IReactionDisposer,
-    computed
+    IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -303,8 +302,10 @@ export function registerSystemStructure(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class SystemEnum implements IEnum {
+export class SystemEnum implements IEnum {
     static SYSTEM_ENUMS: SystemEnum[] = [];
+
+    _membersMap: Map<string, IEnumMember> | undefined;
 
     static getSystemEnums(projectStore: ProjectStore) {
         return this.SYSTEM_ENUMS.filter(systemEnum => {
@@ -339,17 +340,62 @@ class SystemEnum implements IEnum {
         private projectTypes: ProjectType[] | undefined,
         private lvglVersions?: LVGLVersion[]
     ) {
-        makeObservable(this, {
-            membersMap: computed
-        });
     }
 
     get membersMap() {
-        const map = new Map<string, IEnumMember>();
-        for (const member of this.members) {
-            map.set(member.name, member);
+        if (!this._membersMap) {
+            this._membersMap = new Map<string, IEnumMember>();
+            for (const member of this.members) {
+                this._membersMap.set(member.name, member);
+            }
         }
-        return map;
+        return this._membersMap;
+    }
+
+    compareTo(
+        name: string,
+        projectTypes: ProjectType[] | undefined,
+        lvglVersions?: LVGLVersion[]
+    ) {
+        if (name != this.name) {
+            return false;
+        }
+
+        // Deep compare projectTypes
+        if (projectTypes === this.projectTypes) {
+            // Both are the same reference or both undefined
+        } else if (!projectTypes || !this.projectTypes) {
+            // One is undefined/null and the other isn't
+            return false;
+        } else if (projectTypes.length !== this.projectTypes.length) {
+            return false;
+        } else {
+            // Compare array contents
+            for (let i = 0; i < projectTypes.length; i++) {
+                if (projectTypes[i] !== this.projectTypes[i]) {
+                    return false;
+                }
+            }
+        }
+
+        if (lvglVersions === this.lvglVersions) {
+            // Both are the same reference or both undefined
+        } else if (!lvglVersions || !this.lvglVersions) {
+            // One is undefined/null and the other isn't
+            return false;
+        } else if (lvglVersions.length !== this.lvglVersions.length) {
+            // Different lengths
+            return false;
+        } else {
+            // Compare array contents
+            for (let i = 0; i < lvglVersions.length; i++) {
+                if (lvglVersions[i] !== this.lvglVersions[i]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }
 
@@ -364,9 +410,18 @@ export function registerSystemEnum({
     projectTypes: ProjectType[] | undefined;
     lvglVersions?: LVGLVersion[];
 }) {
-    SystemEnum.SYSTEM_ENUMS.push(
-        new SystemEnum(name, members, projectTypes, lvglVersions)
+    const existingSystemEnum = SystemEnum.SYSTEM_ENUMS.find(
+        systemEnum => systemEnum.compareTo(name, projectTypes, lvglVersions)
     );
+    
+    if (existingSystemEnum) {
+        existingSystemEnum.members = members;
+        existingSystemEnum._membersMap = undefined;
+    } else {
+        SystemEnum.SYSTEM_ENUMS.push(
+            new SystemEnum(name, members, projectTypes, lvglVersions)
+        );
+    }
 }
 
 export function getSystemEnums(projectStore: ProjectStore) {

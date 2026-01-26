@@ -883,4 +883,5 @@ export function backgroundCheck(projectStore: ProjectStore) {
     }, 100);
 
     // console.timeEnd("backgroundCheck");
+    return messages;
 }
