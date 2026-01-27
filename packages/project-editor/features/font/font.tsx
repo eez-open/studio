@@ -1157,6 +1157,7 @@ export class Font extends EezObject {
     lvglBinFile?: string;
     lvglFallbackFont: string;
     lvglUseFreeType: boolean;
+    lvglFreeTypeRenderMode: string;
     lvglFreeTypeStyle: string;
     lvglFreeTypeFilePath: string;
 
@@ -1191,6 +1192,7 @@ export class Font extends EezObject {
             lvglBinFile: observable,
             lvglFallbackFont: observable,
             lvglUseFreeType: observable,
+            lvglFreeTypeRenderMode: observable,
             lvglFreeTypeStyle: observable,
             lvglFreeTypeFilePath: observable
         });
@@ -1366,6 +1368,23 @@ export class Font extends EezObject {
                 disabled: (font: Font) => !isLVGLProject(font) || !font.lvglUseFreeType
             },
             {
+                name: "lvglFreeTypeRenderMode",
+                displayName: "Render Mode",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "BITMAP",
+                        label: "Bitmap"
+                    },
+                    {
+                        id: "OUTLINE",
+                        label: "Outline"
+                    }
+                ],
+                // Disabled until LVGL FreeType integration is fixed
+                disabled: (font: Font) => true || !isLVGLProject(font) || !font.lvglUseFreeType || ProjectEditor.getProjectStore(font).project.settings.general.lvglVersion.startsWith("8.")
+            },
+            {
                 name: "lvglFreeTypeStyle",
                 displayName: "Style",
                 type: PropertyType.Enum,
@@ -1381,6 +1400,10 @@ export class Font extends EezObject {
                     {
                         id: "BOLD",
                         label: "Bold"
+                    },
+                    {
+                        id: "BOLD_ITALIC",
+                        label: "Bold Italic"
                     }
                 ],
                 disabled: (font: Font) => !isLVGLProject(font) || !font.lvglUseFreeType
@@ -1465,6 +1488,12 @@ export class Font extends EezObject {
                 const projectStore = project._store;
                 fontJs.source.filePath = projectStore.getFilePathRelativeToProjectPath(fontJs.source.filePath);
             }
+
+            if (fontJs.lvglUseFreeType) {
+                if (fontJs.lvglFreeTypeRenderMode == undefined) {
+                    fontJs.lvglFreeTypeRenderMode = "BITMAP";
+                }
+            }
         },
         afterLoadHook: (font: Font, project) => {
             try {
@@ -1494,7 +1523,8 @@ export class Font extends EezObject {
                       ranges: "32-127",
                       symbols: "",
                       useFreeType: false,
-                      style: "NORMAL"
+                      lvglFreeTypeRenderMode: "BITMAP",
+                      lvglFreeTypeStyle: "NORMAL",
                   }
                 : {
                       renderingEngine: "opentype",
@@ -1584,10 +1614,44 @@ export class Font extends EezObject {
                                         checkboxStyleSwitch: true
                                     },
                                     {
+                                        name: "lvglFreeTypeRenderMode",
+                                        displayName: "Render Mode",
+                                        type: "enum",
+                                        enumItems: [
+                                            {
+                                                id: "BITMAP",
+                                                label: "Bitmap"
+                                            },
+                                            {
+                                                id: "OUTLINE",
+                                                label: "Outline"
+                                            }
+                                        ],
+                                        // Disabled until LVGL FreeType integration is fixed
+                                        visible: values => false && values.useFreeType === true && !projectStore.project.settings.general.lvglVersion.startsWith("8.")
+                                    },
+                                    {
                                         name: "lvglFreeTypeStyle",
                                         displayName: "Style",
                                         type: "enum",
-                                        enumItems: ["NORMAL", "ITALIC", "BOLD"],
+                                        enumItems: [
+                                            {
+                                                id: "NORMAL",
+                                                label: "Normal"
+                                            },
+                                            {
+                                                id: "ITALIC",
+                                                label: "Italic"
+                                            },
+                                            {
+                                                id: "BOLD",
+                                                label: "Bold"
+                                            },
+                                            {
+                                                id: "BOLD_ITALIC",
+                                                label: "Bold Italic"
+                                            }
+                                        ],
                                         visible: values => values.useFreeType === true
                                     },
                                     {
@@ -1741,6 +1805,7 @@ export class Font extends EezObject {
                                     } as any,
                                     glyphs: [],
                                     lvglUseFreeType: true,
+                                    lvglFreeTypeRenderMode: result.values.lvglFreeTypeRenderMode,
                                     lvglFreeTypeStyle: result.values.lvglFreeTypeStyle,
                                     lvglFreeTypeFilePath: result.values.lvglFreeTypeFilePath
                                 },

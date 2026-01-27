@@ -1901,13 +1901,15 @@ export class LVGLBuild extends Build {
                                 font
                             )} = lv_freetype_font_create(${escapeCString(
                                 font.lvglFreeTypeFilePath
-                            )}, LV_FREETYPE_FONT_RENDER_MODE_BITMAP, ${
+                            )}, ${font.lvglFreeTypeRenderMode == "OUTLINE" ? "LV_FREETYPE_FONT_RENDER_MODE_OUTLINE" : "LV_FREETYPE_FONT_RENDER_MODE_BITMAP"}, ${
                                 font.source!.size
                             }, ${
                                 font.lvglFreeTypeStyle == "BOLD"
                                     ? "LV_FREETYPE_FONT_STYLE_BOLD"
                                     : font.lvglFreeTypeStyle == "ITALIC"
                                     ? "LV_FREETYPE_FONT_STYLE_ITALIC"
+                                    : font.lvglFreeTypeStyle == "BOLD_ITALIC"
+                                    ? "LV_FREETYPE_FONT_STYLE_BOLD | LV_FREETYPE_FONT_STYLE_ITALIC"
                                     : "LV_FREETYPE_FONT_STYLE_NORMAL"
                             });`
                         );
@@ -1942,6 +1944,8 @@ export class LVGLBuild extends Build {
                                     ? "FT_FONT_STYLE_BOLD"
                                     : font.lvglFreeTypeStyle == "ITALIC"
                                     ? "FT_FONT_STYLE_ITALIC"
+                                    : font.lvglFreeTypeStyle == "BOLD_ITALIC"
+                                    ? "FT_FONT_STYLE_BOLD | FT_FONT_STYLE_ITALIC"
                                     : "FT_FONT_STYLE_NORMAL"
                             };`
                         );

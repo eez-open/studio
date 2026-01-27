@@ -8337,7 +8337,7 @@ function assignWasmExports(wasmExports) {
   _v8_lv_slider_get_left_value = Module['_v8_lv_slider_get_left_value'] = createExportWrapper('v8_lv_slider_get_left_value', 1);
   _global_event_dispatcher = Module['_global_event_dispatcher'] = createExportWrapper('global_event_dispatcher', 1);
   _get_global_dispatcher_ptr = Module['_get_global_dispatcher_ptr'] = createExportWrapper('get_global_dispatcher_ptr', 0);
-  _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = createExportWrapper('lvglCreateFreeTypeFont', 3);
+  _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = createExportWrapper('lvglCreateFreeTypeFont', 4);
   _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = createExportWrapper('lv_disp_get_scr_prev', 1);
   _lv_obj_get_disp = Module['_lv_obj_get_disp'] = createExportWrapper('lv_obj_get_disp', 1);
   _lv_anim_del = Module['_lv_anim_del'] = createExportWrapper('lv_anim_del', 2);

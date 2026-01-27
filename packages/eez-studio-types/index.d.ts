@@ -744,7 +744,7 @@ export interface IWasmFlowRuntime {
 
     _lvglAddEventHandler(obj: number, eventCode: number): void;
 
-    _lvglCreateFreeTypeFont(filePath: number, size: number, style: number): number;
+    _lvglCreateFreeTypeFont(filePath: number, size: number, renderMode: number, style: number): number;
 
     _lvglGetBuiltinFontPtr(fontName: number): number;
 

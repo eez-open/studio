@@ -54,30 +54,30 @@ export class PreviewServer {
         this.servingPath = buildOutputPath;
 
         return new Promise((resolve, reject) => {
-            let timeouted = false;
-
             let timeout: any = setTimeout(() => {
-                timeouted = true;
+                timeout = undefined;
                 reject(new Error("Failed to start preview server"));
-            }, 5000);            
+            }, 5000);  // 5 second timeout           
 
             this.server = http.createServer((req, res) => {
                 this.handleRequest(req, res);
             });
 
             this.server.on("error", err => {
+                if (!timeout) {
+                    return;
+                }
+                clearTimeout(timeout);
+
                 reject(err);
             });
 
             // Listen on a random available port
             this.server.listen(0, "127.0.0.1", () => {
-                if (timeouted) {
+                if (!timeout) {
                     return;
                 }
-                if (timeout != undefined) {
-                    clearTimeout(timeout);
-                    timeout = undefined;
-                }
+                clearTimeout(timeout);
 
                 const address = this.server!.address() as AddressInfo;
                 this.port = address.port;
@@ -93,7 +93,20 @@ export class PreviewServer {
     async stop(): Promise<void> {
         return new Promise(resolve => {
             if (this.server) {
+                let timeout: any = setTimeout(() => {
+                    timeout = undefined;
+                    console.log("Preview server stop timeout, forcing close");
+                    this.server = null;
+                    this.port = 0;
+                    resolve();
+                }, 5000); // 5 second timeout
+
                 this.server.close(() => {
+                    if (!timeout) {
+                        return;
+                    }
+                    clearTimeout(timeout);
+
                     console.log("Preview server stopped");
                     this.server = null;
                     this.port = 0;

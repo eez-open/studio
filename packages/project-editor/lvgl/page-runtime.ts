@@ -350,7 +350,7 @@ export abstract class LVGLPageRuntime {
                 cashedFont = this.fontsCache.get(font);
 
                 let fontSize = font.source!.size || 16;
-                let lvglBinFile = `fontSize=${fontSize};style=${font.lvglFreeTypeStyle}`;
+                let lvglBinFile = `fontSize=${fontSize};renderMode=${font.lvglFreeTypeRenderMode};style=${font.lvglFreeTypeStyle}`;
 
                 if (!cashedFont || cashedFont.lvglBinFile != lvglBinFile) {
                     // read font file from font.source.filePath to Uint8Array variable using fs.readFileSync code
@@ -360,14 +360,19 @@ export abstract class LVGLPageRuntime {
                     const fsFilePath = `/runtime_font_${font.name}_${fontSize}.ttf`;
 
                     this.wasm.FS.writeFile(fsFilePath, fontFileUint8Array);
+
+                    const renderMode: number =
+                        font.lvglFreeTypeRenderMode == "OUTLINE" ? 1 : 0;
                     
                     const style: number = 
                         font.lvglFreeTypeStyle == "BOLD" ? 1 << 1 : 
-                        font.lvglFreeTypeStyle == "ITALIC" ? 1 << 0 : 0;
+                        font.lvglFreeTypeStyle == "ITALIC" ? 1 << 0 :
+                        font.lvglFreeTypeStyle == "BOLD_ITALIC" ? (1 << 1) | (1 << 0) : 0;
 
                     const fontPtr = this.wasm._lvglCreateFreeTypeFont(
                         this.wasm.stringToNewUTF8(fsFilePath), 
-                        fontSize, 
+                        fontSize,
+                        renderMode,
                         style
                     );
 
