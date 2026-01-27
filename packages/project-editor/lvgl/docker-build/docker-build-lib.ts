@@ -135,11 +135,11 @@ export async function stopRunningContainers(
     log: LogFunction
 ): Promise<void> {
     try {
-        // Stop containers managed by docker-compose
+        // Stop containers managed by docker compose
         log("Stopping any running containers...");
         const result = spawnSync(
-            "docker-compose",
-            ["down", "--remove-orphans"],
+            "docker",
+            ["compose", "down", "--remove-orphans"],
             {
                 cwd: config.dockerBuildPath,
                 shell: true,
@@ -564,8 +564,8 @@ async function createTempContainer(
     log: LogFunction
 ): Promise<string> {
     const result = await runCommandSilent(
-        "docker-compose",
-        ["run", "-d", "emscripten-build", "sleep", "infinity"],
+        "docker",
+        ["compose", "run", "-d", "emscripten-build", "sleep", "infinity"],
         config.dockerBuildPath,
         env
     );
@@ -631,8 +631,8 @@ export async function setupProject(
     // Step 1: Build Docker image
     log("Building Docker image...");
     let result = await runCommand(
-        "docker-compose",
-        ["build"],
+        "docker",
+        ["compose", "build"],
         config.dockerBuildPath,
         env,
         log,
@@ -649,8 +649,8 @@ export async function setupProject(
     // Step 1.5: Clean src directory first to remove any leftover files
     log("Cleaning src directory...");
     result = await runCommandSilent(
-        "docker-compose",
-        ["run", "--rm", "emscripten-build", "rm", "-rf", "/project/src"],
+        "docker",
+        ["compose", "run", "--rm", "emscripten-build", "rm", "-rf", "/project/src"],
         config.dockerBuildPath,
         env
     );
@@ -659,8 +659,8 @@ export async function setupProject(
     // Step 2: Check if volume exists and has content
     log("Checking if project is already set up...");
     result = await runCommandSilent(
-        "docker-compose",
-        ["run", "--rm", "emscripten-build", "test", "-f", "/project/build.sh"],
+        "docker",
+        ["compose", "run", "--rm", "emscripten-build", "test", "-f", "/project/build.sh"],
         config.dockerBuildPath,
         env
     );
@@ -708,8 +708,9 @@ export async function setupProject(
         log("Pulling latest changes from GitHub...");
 
         result = await runCommand(
-            "docker-compose",
+            "docker",
             [
+                "compose",
                 "run",
                 "--rm",
                 "emscripten-build",
@@ -1149,8 +1150,8 @@ export async function buildProject(
     buildCommand += '"';
 
     const result = await runCommand(
-        "docker-compose",
-        ["run", "--rm", "emscripten-build", "sh", "-c", buildCommand],
+        "docker",
+        ["compose", "run", "--rm", "emscripten-build", "sh", "-c", buildCommand],
         config.dockerBuildPath,
         env,
         log
@@ -1277,8 +1278,8 @@ export async function cleanBuild(
     log("Removing build directory...");
 
     const result = await runCommand(
-        "docker-compose",
-        ["run", "--rm", "emscripten-build", "rm", "-rf", "/project/build"],
+        "docker",
+        ["compose", "run", "--rm", "emscripten-build", "rm", "-rf", "/project/build"],
         config.dockerBuildPath,
         env,
         log
@@ -1310,8 +1311,9 @@ export async function cleanAll(
     log("Removing all contents from /project directory...");
 
     const result = await runCommand(
-        "docker-compose",
+        "docker",
         [
+            "compose",
             "run",
             "--rm",
             "emscripten-build",
