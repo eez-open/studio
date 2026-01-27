@@ -807,7 +807,7 @@ export async function setupProject(
             containerId,
             "sh",
             "-c",
-            'find /project/src -type f \\( -name "*.c" -o -name "*.h" \\) -exec touch {} +'
+            'find /project/src -type f \\( -name "*.cpp" -o -name "*.c" -o -name "*.h" \\) -exec touch {} +'
         ],
         config.dockerBuildPath,
         env,
