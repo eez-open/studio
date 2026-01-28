@@ -201,6 +201,12 @@ export class DockerBuildManager {
         // Reset abort state from any previous build
         resetAbort();
 
+        if (previewServer.isRunning) {
+            logFn("Stopping preview server...", "info");
+            await previewServer.stop();
+            logFn("Preview server stopped", "success");
+        }        
+
         const startTime = Date.now();
 
         try {
@@ -373,17 +379,16 @@ export class DockerBuildManager {
         }
         const logFn = createLogFunction(projectPath);
         const projectState = dockerBuildState.getProjectState(projectPath);
-                // Nothing to do - the build will continue in the background
-        // and the project state remains valid
+        
         if (previewServer.isRunning) {
             logFn("Stopping preview server...", "info");
             await previewServer.stop();
             logFn("Preview server stopped", "success");
-        }
 
-        runInAction(() => {
-            projectState.setIdle();
-        });        
+            runInAction(() => {
+                projectState.setIdle();
+            });        
+        }
     }
 
     /**
