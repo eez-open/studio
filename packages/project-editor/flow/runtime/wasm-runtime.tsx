@@ -219,6 +219,7 @@ export class WasmRuntime extends RemoteRuntime {
             this.projectStore.setEditorMode();
             return;
         }
+        console.log("Assets map:", this.assetsMap);
 
         runInAction(() => {
             this.displayWidth = this.assetsMap.displayWidth;

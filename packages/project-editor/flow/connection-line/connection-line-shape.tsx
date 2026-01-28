@@ -66,7 +66,7 @@ export function getConnectionLineShape(
         }
         // Check if the object is a component inside a selected group
         if (object instanceof ProjectEditor.ComponentClass) {
-            const objectId = getId(object);
+            const objectId = object.objID;
             for (const selectedObject of context.viewState.selectedObjects) {
                 const classInfo = getClassInfo(selectedObject.object);
                 if (classInfo === ComponentGroup.classInfo) {

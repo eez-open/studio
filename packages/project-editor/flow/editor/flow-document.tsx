@@ -10,7 +10,7 @@ import {
     getObjectIdsInsideRect,
     getSelectedObjectsBoundingRect
 } from "project-editor/flow/editor/bounding-rects";
-import { IEezObject, getId, getParent } from "project-editor/core/object";
+import { EezObject, IEezObject, getId, getParent } from "project-editor/core/object";
 import {
     createObject,
     updateObject,
@@ -183,28 +183,24 @@ export class FlowDocument implements IDocument {
         if (selectedActionComponents.length + selectedGroups.length == objects.length) {
             // Filter out components that are already in a group
             const componentsNotInGroup = selectedActionComponents.filter(obj => {
-                const componentId = getId(obj.object);
-                return !this.findGroupForComponent(componentId);
+                return !this.findGroupForComponent((obj.object as EezObject).objID);
             });
 
             // Find components that are in a group
             const componentsInGroup = selectedActionComponents.filter(obj => {
-                const componentId = getId(obj.object);
-                return !!this.findGroupForComponent(componentId);
+                return !!this.findGroupForComponent((obj.object as EezObject).objID);
             });
 
             // Check if all components in groups belong to the same group
             let commonGroup: ComponentGroup | undefined;
             if (componentsInGroup.length > 0) {
-                const firstComponentId = getId(componentsInGroup[0].object);
                 commonGroup = this.findGroupForComponent(
-                    firstComponentId
+                    (componentsInGroup[0].object as EezObject).objID
                 );
 
                 // Verify all other components are in the same group
                 for (let i = 1; i < componentsInGroup.length; i++) {
-                    const componentId = getId(componentsInGroup[i].object);
-                    const group = this.findGroupForComponent(componentId);
+                    const group = this.findGroupForComponent((componentsInGroup[i].object as EezObject).objID);
                     if (group !== commonGroup) {
                         commonGroup = undefined;
                         break;
@@ -268,8 +264,7 @@ export class FlowDocument implements IDocument {
                         click: async () => {
                             this.projectStore.undoManager.setCombineCommands(true);
                             for (const obj of componentsInGroup) {
-                                const componentId = getId(obj.object);
-                                this.ungroupComponent(componentId);
+                                this.ungroupComponent((obj.object as EezObject).objID);
                             }
                             this.projectStore.undoManager.setCombineCommands(false);
                         }
@@ -517,7 +512,7 @@ export class FlowDocument implements IDocument {
 
     groupSelectedComponents(selectedComponents: TreeObjectAdapter[]) {
         const flow = this.flow.object as Flow;
-        const componentIds = selectedComponents.map(obj => getId(obj.object));
+        const componentIds = selectedComponents.map(obj => (obj.object as EezObject).objID);
 
         this.projectStore.undoManager.setCombineCommands(true);
 
@@ -562,7 +557,7 @@ export class FlowDocument implements IDocument {
         group: ComponentGroup,
         componentsToAdd: TreeObjectAdapter[]
     ) {
-        const newComponentIds = componentsToAdd.map(obj => getId(obj.object));
+        const newComponentIds = componentsToAdd.map(obj => (obj.object as EezObject).objID);
         const updatedComponents = [...group.components, ...newComponentIds];
 
         updateObject(group, { components: updatedComponents });

@@ -5,8 +5,7 @@ import {
     EezObject,
     PropertyType,
     registerClass,
-    getParent,
-    getId
+    getParent
 } from "project-editor/core/object";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import type { Flow } from "project-editor/flow/flow";
@@ -106,7 +105,7 @@ export class ComponentGroup extends EezObject {
         return this.components
             .map(componentId => {
                 return flow.components.find(
-                    component => getId(component) === componentId
+                    component => component.objID === componentId
                 );
             })
             .filter(component => component != null) as Component[];

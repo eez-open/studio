@@ -510,6 +510,26 @@ export const Canvas = observer(
                 }
 
                 scale = 1;
+            } else if (runMode && this.props.flowContext.projectStore.runtime instanceof
+                    ProjectEditor.WasmRuntimeClass) {
+                xt = Math.round(
+                    (transform.clientRect.width -
+                        this.props.flowContext.projectStore.runtime
+                            .displayWidth) /
+                        2
+                );
+
+                yt = Math.round(
+                    (transform.clientRect.height -
+                        this.props.flowContext.projectStore.runtime
+                            .displayHeight) /
+                        2
+                );
+                if (yt < 0) {
+                    yt = 0;
+                }
+
+                scale = transform.scale;
             } else {
                 xt = Math.round(
                     transform.translate.x + transform.clientRect.width / 2
