@@ -805,7 +805,9 @@ export async function setupProject(
         [
             "exec",
             containerId,
-            "find",
+            "sh",
+            "-c",
+            "\"find",
             "/project/src",
             "-type",
             "f",
@@ -822,7 +824,7 @@ export async function setupProject(
             "-exec",
             "touch",
             "{}",
-            "+"
+            "+\""
         ],
         config.dockerBuildPath,
         env,
