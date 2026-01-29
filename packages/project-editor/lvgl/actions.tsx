@@ -66,7 +66,7 @@ import { observer } from "mobx-react";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
 import { getThemedColor } from "project-editor/features/style/theme";
-import { lvglProperties } from "project-editor/lvgl/style-catalog";
+import { lvglProperties, LVGLPropertiesGroup, LVGLPropertyInfo } from "project-editor/lvgl/style-catalog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -174,7 +174,7 @@ function getStyleProperties(actionType: LVGLActionType): EnumItem[] {
             );
 
             styleProperties.push({
-                id: code,
+                id: styleProperty.name,
                 label: `${propertiesGroup.groupName} / ${propertyName}`
             });
         }
@@ -183,13 +183,25 @@ function getStyleProperties(actionType: LVGLActionType): EnumItem[] {
     return styleProperties;
 }
 
-function getStyleProperty(actionType: LVGLActionType) {
+function findStyleProperty(actionType: LVGLActionType, name: string): {propertiesGroup: LVGLPropertiesGroup | undefined, styleProperty: LVGLPropertyInfo | undefined, code: number| undefined} {
     const lvglVersion = ProjectEditor.getProject(actionType).settings.general.lvglVersion;
 
     for (const propertiesGroup of lvglProperties) {
         for (const styleProperty of propertiesGroup.properties) {
-            const code = styleProperty.lvglStyleProp.code[lvglVersion];
-            if (code == (actionType as any).property) {
+            if (styleProperty.name == name) {
+                const code = styleProperty.lvglStyleProp.code[lvglVersion];
+                return {propertiesGroup, styleProperty, code};
+            }
+        }
+    }
+
+    return {propertiesGroup: undefined, styleProperty: undefined, code: undefined};
+}
+
+function getStyleProperty(actionType: LVGLActionType) {
+    for (const propertiesGroup of lvglProperties) {
+        for (const styleProperty of propertiesGroup.properties) {
+            if (styleProperty.name == (actionType as any).property) {
                 return styleProperty;
             }
         }
@@ -539,7 +551,30 @@ export function registerAction(actionDefinition: IActionDefinition) {
                             const project = ProjectEditor.getProject(object);
                             const value = (object as any)[propertyInfo.name];
 
-                            if (propertyInfo.lvglActionPropertyType == "screen") {
+                            if (propertyInfo.lvglActionPropertyType == "style-property") {
+                                const { propertiesGroup, styleProperty, code } = findStyleProperty(object, value);
+                                if (!propertiesGroup || !styleProperty) {
+                                    messages.push(
+                                        new Message(
+                                            MessageType.ERROR,
+                                            `Unknown style property "${value}"`,
+                                            getChildOfObject(object, propertyInfo.name)
+                                        )
+                                    );
+                                } else if (code == undefined) {
+                                    const propertyName = getObjectPropertyDisplayName(
+                                        object,
+                                        styleProperty
+                                    );                                    
+                                    messages.push(
+                                        new Message(
+                                            MessageType.ERROR,
+                                            `Style property "${propertiesGroup.groupName} / ${propertyName}" doesn't exists in LVGL version ${project.settings.general.lvglVersion}`,
+                                            getChildOfObject(object, propertyInfo.name)
+                                        )
+                                    );
+                                }
+                            } else if (propertyInfo.lvglActionPropertyType == "screen") {
                                 if (!value) {
                                     messages.push(propertyNotSetMessage(object, propertyInfo.name));
                                 } else {
@@ -1028,7 +1063,14 @@ export class LVGLActionType extends EezObject {
         }
 
         if (valueType == "literal") {
-            if (propertyInfo.lvglActionPropertyType == "boolean") {
+            if (propertyInfo.lvglActionPropertyType == "style-property") {
+                const { code } = findStyleProperty(this, value);
+                if (code != undefined) {
+                    return code;
+                } else {
+                    return 0;
+                }
+            } else if (propertyInfo.lvglActionPropertyType == "boolean") {
                 return value ? "true" : "false";
             } else if (propertyInfo.lvglActionPropertyType == "integer") {
                 return value;
