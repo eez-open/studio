@@ -2033,7 +2033,11 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
-        build.line("lv_disp_t *dispp = lv_disp_get_default();");
+        if (this.isV9) {
+            build.line("lv_display_t *dispp = lv_display_get_default();");
+        } else {
+            build.line("lv_disp_t *dispp = lv_disp_get_default();");
+        }
         build.line(
             `lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), ${
                 this.project.settings.general.darkTheme ? "true" : "false"
