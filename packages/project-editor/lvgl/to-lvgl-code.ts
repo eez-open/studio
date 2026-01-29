@@ -50,6 +50,7 @@ export interface LVGLCode {
     //
     createScreen(): any;
     createObject(createObjectFunction: string, ...args: any[]): any;
+    createObjectWithoutPosAndSize(createObjectFunction: string, ...args: any[]): any;
     getObject(getObjectFunction: string, ...args: any[]): any;
     getParentObject(getObjectFunction: string, ...args: any[]): any;
 
@@ -58,6 +59,12 @@ export interface LVGLCode {
     callObjectFunctionWithAssignment(
         declType: string,
         declName: string,
+        func: string,
+        ...args: any[]
+    ): any;
+    callObjectFunctionWithAssignmentToFileStaticVar(
+        declType: string,
+        declNamePrefix: string,
         func: string,
         ...args: any[]
     ): any;
@@ -113,6 +120,13 @@ export interface LVGLCode {
 
     //
     addToTick(propertyName: string, callback: () => void): void;
+    addToTickMulti(
+        properties: {
+            propertyName: string;
+            callback: () => any;
+        }[], 
+        finalCallback: (...args: any) => void
+    ) : void;
     tickChangeStart(): void;
     tickChangeEnd(): void;
 
@@ -303,7 +317,7 @@ export class SimulatorLVGLCode implements LVGLCode {
     }
 
     get objectAccessor() {
-        return undefined;
+        return this.obj;
     }
 
     createScreen() {
@@ -336,6 +350,14 @@ export class SimulatorLVGLCode implements LVGLCode {
     }
 
     createObject(createObjectFunction: string, ...args: any[]) {
+        this.createObjectWithoutPosAndSize(createObjectFunction, ...args);
+
+        const rect = this.widget.getLvglCreateRect();
+        this.callObjectFunction("lv_obj_set_pos", rect.left, rect.top);
+        this.callObjectFunction("lv_obj_set_size", rect.width, rect.height);
+    }
+
+    createObjectWithoutPosAndSize(createObjectFunction: string, ...args: any[]) {
         this.obj = this.callFreeFunction(
             createObjectFunction,
             this.parentObj,
@@ -346,10 +368,6 @@ export class SimulatorLVGLCode implements LVGLCode {
             "setObjectIndex",
             this.runtime.getCreateWidgetIndex(this.widget)
         );
-
-        const rect = this.widget.getLvglCreateRect();
-        this.callObjectFunction("lv_obj_set_pos", rect.left, rect.top);
-        this.callObjectFunction("lv_obj_set_size", rect.width, rect.height);
     }
 
     getObject(getObjectFunction: string, ...args: any[]) {
@@ -394,6 +412,15 @@ export class SimulatorLVGLCode implements LVGLCode {
     }
 
     callObjectFunctionWithAssignment(
+        declType: string,
+        declName: string,
+        func: string,
+        ...args: any[]
+    ): any {
+        return this.callObjectFunction(func, ...args);
+    }
+
+    callObjectFunctionWithAssignmentToFileStaticVar(
         declType: string,
         declName: string,
         func: string,
@@ -560,13 +587,52 @@ export class SimulatorLVGLCode implements LVGLCode {
         const obj = this.obj;
         const flowState = this.runtime.lvglCreateContext.flowState;
         if (propExpr) {
-            this.runtime.addTickCallback((flowState1: number) => {
+            this.runtime.addTickCallback((_flowState: number) => {
                 this.widget = widget;
                 this.obj = obj;
                 this.flowState = flowState;
                 this.componentIndex = propExpr.componentIndex;
                 this.propertyIndex = propExpr.propertyIndex;
                 callback();
+            });
+        }
+    }
+
+    addToTickMulti(
+        properties: {
+            propertyName: string;
+            callback: () => any;
+        }[],
+        finalCallback: (...args: any) => void
+    ) {
+        const widget = this.widget;
+        const obj = this.obj;
+        const flowState = this.runtime.lvglCreateContext.flowState;
+
+        const propExprs = properties.map(property => {
+            const propExpr = getExpressionPropertyData(
+                this.runtime,
+                this.widget,
+                property.propertyName
+            );
+
+            return propExpr;
+        });
+
+        const allResultsHavePropExpr = propExprs.find(propExpr => propExpr == undefined) == undefined;
+        if (allResultsHavePropExpr) {
+            this.runtime.addTickCallback((_flowState: number) => {
+                this.widget = widget;
+                this.obj = obj;
+                this.flowState = flowState;
+
+                const args = properties.map((property, i) => {
+                    this.componentIndex = propExprs[i]!.componentIndex;
+                    this.propertyIndex = propExprs[i]!.propertyIndex;
+                    return property.callback();
+                });
+
+                finalCallback(...args);
             });
         }
     }
@@ -825,6 +891,14 @@ export class BuildLVGLCode implements LVGLCode {
     }
 
     createObject(createObjectFunction: string, ...args: any[]) {
+        this.createObjectWithoutPosAndSize(createObjectFunction, ...args);
+        
+        this.build.buildWidgetSetPosAndSize(this.widget);
+
+        return "obj";
+    }
+
+    createObjectWithoutPosAndSize(createObjectFunction: string, ...args: any[]) {
         this.build.line(
             `lv_obj_t *obj = ${createObjectFunction}(${[
                 "parent_obj",
@@ -833,7 +907,6 @@ export class BuildLVGLCode implements LVGLCode {
         );
 
         this.build.buildWidgetAssign(this.widget);
-        this.build.buildWidgetSetPosAndSize(this.widget);
 
         return "obj";
     }
@@ -889,6 +962,23 @@ export class BuildLVGLCode implements LVGLCode {
             ].join(", ")});`
         );
         return declName;
+    }
+
+    callObjectFunctionWithAssignmentToFileStaticVar(
+        declType: string,
+        declNamePrefix: string,
+        func: string,
+        ...args: any[]
+    ): any {
+        const staticVar = this.genFileStaticVar(this.widget.objID, declType, declNamePrefix);
+
+        this.build.line(
+            `${staticVar} = ${func}(${[
+                this.isTick ? this.objectAccessor : "obj",
+                ...args
+            ].join(", ")});`
+        );
+        return staticVar;
     }
 
     callObjectFunctionInline(func: string, ...args: any[]): any {
@@ -1119,6 +1209,47 @@ export class BuildLVGLCode implements LVGLCode {
             this.isTick = true;
 
             callback();
+
+            this.isTick = false;
+
+            build.blockEnd(`}`);
+        });
+    }
+
+    addToTickMulti(
+        properties: {
+            propertyName: string;
+            callback: () => any;
+        }[],
+        finalCallback: (...args: any) => void
+    ) {
+        const build = this.build;
+
+        const widget = this.widget;
+
+        build.addTickCallback(() => {
+            this.widget = widget;
+
+            build.blockStart(`{`);
+
+            this.isTick = true;
+
+            const args = properties.map(property => {
+                if (this.hasFlowSupport) {
+                    this.componentIndex = this.build.assets.getComponentIndex(
+                        this.widget
+                    );
+                    this.propertyIndex =
+                        this.build.assets.getComponentPropertyIndex(
+                            this.widget,
+                            property.propertyName
+                        );
+                }
+
+                return property.callback();
+            });
+
+            finalCallback(...args);
 
             this.isTick = false;
 

@@ -1275,7 +1275,7 @@ const ArrayElementProperty = observer(
             if (isArrayElementPropertyVisible(propertyInfo, object)) {
                 if (
                     propertyInfo.type == PropertyType.Array &&
-                    !propertyInfo.onSelect
+                    !propertyInfo.onSelect || propertyInfo.propertyGridRowComponent
                 ) {
                     return (
                         <div className={className}>

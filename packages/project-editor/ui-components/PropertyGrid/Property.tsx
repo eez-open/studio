@@ -521,9 +521,8 @@ export const Property = observer(
                     />
                 );
             } else if (propertyInfo.type === PropertyType.MultilineText) {
+                const formText = getFormText(this.props);
                 if (!readOnly && isOnSelectAvailable) {
-                    const formText = getFormText(this.props);
-
                     return (
                         <div style={{ width: "100%" }}>
                             <div
@@ -562,16 +561,21 @@ export const Property = observer(
                     );
                 } else {
                     return (
-                        <textarea
-                            ref={(ref: any) => (this.textarea = ref)}
-                            className={classNames("form-control", {
-                                pre: propertyInfo.monospaceFont
-                            })}
-                            value={this._value || ""}
-                            onChange={this.onChange}
-                            style={{ resize: "none", overflowY: "hidden" }}
-                            readOnly={readOnly || propertyInfo.computed}
-                        />
+                        <div style={{ width: "100%" }}>
+                            <textarea
+                                ref={(ref: any) => (this.textarea = ref)}
+                                className={classNames("form-control", {
+                                    pre: propertyInfo.monospaceFont
+                                })}
+                                value={this._value || ""}
+                                onChange={this.onChange}
+                                style={{ resize: "none", overflowY: "hidden" }}
+                                readOnly={readOnly || propertyInfo.computed}
+                            />
+                            {formText && (
+                                    <div className="form-text">{formText}</div>
+                                )}
+                        </div>
                     );
                 }
             } else if (propertyInfo.type === PropertyType.JSON) {

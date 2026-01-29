@@ -5,6 +5,7 @@ import {
     EezObject,
     findPropertyByNameInClassInfo,
     FlowPropertyType,
+    getProperty,
     IEezObject,
     IOnSelectParams,
     PropertyInfo,
@@ -182,15 +183,8 @@ export function makeLvglExpressionProperty(
                         ? flowProperty
                         : undefined;
                 },
-                isFlowPropertyBuildable: (widget: LVGLWidget) => {
-                    if (
-                        !getClassInfo(widget).properties.find(
-                            p => p.name == name + "Type"
-                        )
-                    ) {
-                        return true;
-                    }
-                    return (widget as any)[name + "Type"] == "expression";
+                isFlowPropertyBuildable: (widget: LVGLWidget, propertyInfo) => {
+                    return getProperty(widget, propertyInfo.name + "Type") == "expression";
                 },
                 expressionType,
                 disableSpellcheck: true
