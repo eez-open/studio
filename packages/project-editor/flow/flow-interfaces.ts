@@ -126,6 +126,8 @@ export interface IDocument {
 
     flow: TreeObjectAdapter;
 
+    flowContext: IFlowContext;
+
     selectedConnectionLines: TreeObjectAdapter[];
     nonSelectedConnectionLines: TreeObjectAdapter[];
 

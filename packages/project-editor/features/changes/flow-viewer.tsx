@@ -700,7 +700,7 @@ class FlowTreeObjectAdapter extends TreeObjectAdapter {
 class FlowDocument implements IDocument {
     constructor(
         public flow: TreeObjectAdapter,
-        private flowContext: FlowContext
+        public flowContext: FlowContext
     ) {
         makeObservable(this, {
             connectionLines: computed,

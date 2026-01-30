@@ -14,7 +14,7 @@ import { getObjectIdFromPoint } from "project-editor/flow/editor/bounding-rects"
 export class FlowDocument implements IDocument {
     constructor(
         public flow: TreeObjectAdapter,
-        private flowContext: RuntimeFlowContext
+        public flowContext: RuntimeFlowContext
     ) {
         makeObservable(this, {
             connectionLines: computed,
