@@ -3,7 +3,7 @@ import { computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { ProjectContext } from "project-editor/project/context";
-import { getParent, IEezObject } from "project-editor/core/object";
+import { EezObject, getParent, IEezObject } from "project-editor/core/object";
 import {
     EezValueObject,
     getAncestorOfType,
@@ -22,6 +22,9 @@ export const PropertiesPanel = observer(
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
+        bodyRef = React.createRef<HTMLDivElement>();
+        lastObjectsKey: string | undefined;
+
         constructor(props: { readOnly?: boolean }) {
             super(props);
 
@@ -31,7 +34,67 @@ export const PropertiesPanel = observer(
         }
 
         get objects() {
-            return this.context.navigationStore.propertyGridObjects;
+            return this.context.navigationStore.propertyGridObjects
+                .filter(
+                    object =>
+                        object != undefined &&
+                        !getAncestorOfType(object, Settings.classInfo)
+                )
+                .filter(object => isObjectExists(object));
+        }
+
+        getObjectsKey(objects: IEezObject[]): string | undefined {
+            if (objects.length === 0) {
+                return undefined;
+            }
+            return objects
+                .map(obj => {
+                    let object = obj;
+                    if (object instanceof EezValueObject) {
+                        object = getParent(object);
+                    }
+                    return (object as EezObject).objID;
+                })
+                .join(",");
+        }
+
+        onScroll = () => {
+            if (this.lastObjectsKey && this.bodyRef.current) {
+                this.context.uiStateStore.setPropertiesPanelScrollPosition(
+                    this.lastObjectsKey,
+                    this.bodyRef.current.scrollTop
+                );
+            }
+        };
+
+        restoreScrollPosition() {
+            const objects = this.objects;
+            const currentObjID = this.getObjectsKey(objects);
+
+            if (currentObjID !== this.lastObjectsKey) {
+                this.lastObjectsKey = currentObjID;
+
+                // Restore scroll position for the new object
+                if (currentObjID && this.bodyRef.current) {
+                    const savedScrollTop =
+                        this.context.uiStateStore.getPropertiesPanelScrollPosition(
+                            currentObjID
+                        );
+                    if (savedScrollTop !== undefined) {
+                        this.bodyRef.current.scrollTop = savedScrollTop;
+                    } else {
+                        this.bodyRef.current.scrollTop = 0;
+                    }
+                }
+            }
+        }
+
+        componentDidMount() {
+            this.restoreScrollPosition();
+        }
+
+        componentDidUpdate() {
+            this.restoreScrollPosition();
         }
 
         render() {
@@ -39,13 +102,7 @@ export const PropertiesPanel = observer(
 
             let title;
 
-            const objects = this.objects
-                .filter(
-                    object =>
-                        object != undefined &&
-                        !getAncestorOfType(object, Settings.classInfo)
-                )
-                .filter(object => isObjectExists(object));
+            const objects = this.objects;
 
             let icon = null;
 
@@ -79,7 +136,11 @@ export const PropertiesPanel = observer(
                         {typeof icon === "string" ? <Icon icon={icon} /> : icon}
                         {title}
                     </div>
-                    <div className="EezStudio_PropertiesPanel_Body">
+                    <div
+                        className="EezStudio_PropertiesPanel_Body"
+                        ref={this.bodyRef}
+                        onScroll={this.onScroll}
+                    >
                         <PropertyGrid
                             objects={objects}
                             readOnly={!!this.context.runtime}
