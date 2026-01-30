@@ -1231,6 +1231,33 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 32,
+    name: "keyboardSetTextarea",
+    group: "Keyboard",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Keyboard",
+            helpText: "The keyboard to set the textarea"
+        },
+        {
+            name: "textarea",
+            type: "widget:Textarea",
+            helpText: "The textarea to set"
+        }
+    ],
+    defaults: {},
+    label: ([object, textarea]) => (
+        <>
+            {object} {textarea}
+        </>
+    ),
+    helpText: "Set the textarea for the keyboard"
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerAction({
     id: 29,
     name: "labelSetText",
     group: "Label",
@@ -1416,28 +1443,65 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
-    id: 32,
-    name: "keyboardSetTextarea",
-    group: "Keyboard",
+    id: 60,
+    name: "tabviewSetActiveTab",
+    group: "Tabview",
     properties: [
         {
             name: "object",
-            type: "widget:Keyboard",
-            helpText: "The keyboard to set the textarea"
+            type: "widget:Tabview",
+            helpText: "The tabview to set the active tab"
         },
         {
-            name: "textarea",
-            type: "widget:Textarea",
-            helpText: "The textarea to set"
+            name: "tab",
+            type: "integer",
+            helpText: "The index of the tab to activate (0-based)"
+        },
+        {
+            name: "animated",
+            type: "boolean",
+            helpText: "Use animation when switching tabs"
+        }
+    ],
+    defaults: {
+        animated: true
+    },
+    label: ([object, tab, animated], [_1, _2, animatedLabel]) => (
+        <>
+            {object} {tab} <i>{animatedLabel}</i>={animated}
+        </>
+    ),
+    helpText: "Set the active tab of the tabview"
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerAction({
+    id: 61,
+    name: "tabviewGetActiveTab",
+    group: "Tabview",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Tabview",
+            helpText: "The tabview to get the active tab"
+        },
+        {
+            name: "result",
+            type: "integer",
+            isAssignable: true,
+            helpText: "The variable to store the active tab index"
         }
     ],
     defaults: {},
-    label: ([object, textarea]) => (
+    label: ([object, result]) => (
         <>
-            {object} {textarea}
+            {object}
+            <RightArrow />
+            {result}
         </>
     ),
-    helpText: "Set the textarea for the keyboard"
+    helpText: "Get the active tab index of the tabview"
 });
 
 ////////////////////////////////////////////////////////////////////////////////

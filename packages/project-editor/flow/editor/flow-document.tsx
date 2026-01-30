@@ -732,10 +732,11 @@ export class FlowDocument implements IDocument {
                         targetObject instanceof LogActionComponent
                     ) {
                         if (connectionInput.isSequenceInput) {
+                            this.projectStore.deleteObject(targetObject.customInputs[0]);
+
                             this.projectStore.updateObject(targetObject, {
-                                value: "",
-                                customInputs: []
-                            });
+                                value: ""
+                            });                            
                         }
                     }
 

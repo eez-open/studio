@@ -8,7 +8,7 @@ import {
     IMessage
 } from "project-editor/core/object";
 
-import { Message } from "project-editor/store";
+import { getChildOfObject, Message } from "project-editor/store";
 
 import { ProjectType } from "project-editor/project/project";
 
@@ -22,6 +22,10 @@ import {
 } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget, LVGLTabWidget, LVGLContainerWidget } from "./internal";
+import {
+    LVGLPropertyType,
+    makeLvglExpressionProperty
+} from "../expression-property";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,7 +61,17 @@ export class LVGLTabviewWidget extends LVGLWidget {
                 displayName: "Size",
                 type: PropertyType.Number,
                 propertyGridGroup: specificGroup
-            }
+            },
+            ...makeLvglExpressionProperty(
+                "selectedTab",
+                "integer",
+                "assignable",
+                ["literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup,
+                    displayName: "Active tab"
+                }
+            )
         ],
 
         defaultValue: {
@@ -67,9 +81,20 @@ export class LVGLTabviewWidget extends LVGLWidget {
             height: 100,
             clickableFlag: true,
             tabviewPosition: "TOP",
-            tabviewSize: 32
+            tabviewSize: 32,
+            selectedTab: 0,
+            selectedTabType: "literal"
         },
 
+        beforeLoadHook: (
+            object: LVGLTabviewWidget,
+            jsObject: Partial<LVGLTabviewWidget>
+        ) => {
+            if (jsObject.selectedTabType == undefined) {
+                jsObject.selectedTabType = "literal";
+            }
+        },
+        
         check: (widget: LVGLTabviewWidget, messages: IMessage[]) => {
             let tabBar = false;
             let tabContent = false;
@@ -120,6 +145,22 @@ export class LVGLTabviewWidget extends LVGLWidget {
                     );
                 }
             }
+
+        if (widget.selectedTabType == "literal") {
+                if (
+                    widget.selectedTab == undefined ||
+                    widget.selectedTab == null ||
+                    !Number.isInteger(Number(widget.selectedTab))
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Min value must be an integer`,
+                            getChildOfObject(widget, "selectedTab")
+                        )
+                    );
+                }
+            }            
         },
 
         icon: (
@@ -151,6 +192,8 @@ export class LVGLTabviewWidget extends LVGLWidget {
 
     tabviewPosition: keyof typeof TABVIEW_POSITION;
     tabviewSize: number;
+    selectedTab: number | string;
+    selectedTabType: LVGLPropertyType;
 
     _selectedTabIndex: number = 0;
 
@@ -185,6 +228,8 @@ export class LVGLTabviewWidget extends LVGLWidget {
         makeObservable(this, {
             tabviewPosition: observable,
             tabviewSize: observable,
+            selectedTab: observable,
+            selectedTabType: observable,
             _selectedTabIndex: observable
         });
     }
@@ -226,6 +271,91 @@ export class LVGLTabviewWidget extends LVGLWidget {
                     );
                 }
             });
+        } else {
+            if (this.selectedTabType == "literal") {
+                if (this.selectedTab != 0) {
+                    if (code.isV9) {
+                        code.callObjectFunction(
+                            "lv_tabview_set_active",
+                            this.selectedTab,
+                            code.constant("LV_ANIM_OFF")
+                        );
+                    } else {
+                        code.callObjectFunction(
+                            "lv_tabview_set_act",
+                            this.selectedTab,
+                            code.constant("LV_ANIM_OFF")
+                        );
+                    }
+                }
+            } else {
+                code.addToTick("selectedTab", () => {
+                    const new_val = code.evalIntegerProperty(
+                        "int32_t",
+                        "new_val",
+                        this.selectedTab as string,
+                        "Failed to evaluate Active tab in Tabview widget"
+                    );
+
+                    const cur_val = code.callObjectFunctionWithAssignment(
+                        "int32_t",
+                        "cur_val",
+                        code.isV9
+                            ? "lv_tabview_get_tab_active"
+                            : "lv_tabview_get_tab_act"
+                    );
+
+                    code.ifIntegerNotEqual(new_val, cur_val, () => {
+                        code.tickChangeStart();
+
+                        if (code.isV9) {
+                            code.callObjectFunction(
+                                "lv_tabview_set_active",
+                                new_val,
+                                code.constant("LV_ANIM_OFF")
+                            );
+                        } else {
+                            code.callObjectFunction(
+                                "lv_tabview_set_act",
+                                new_val,
+                                code.constant("LV_ANIM_OFF")
+                            );
+                        }
+
+                        code.tickChangeEnd();
+                    });
+                });
+
+                code.addEventHandler(
+                    "VALUE_CHANGED",
+                    (event, tick_value_change_obj) => {
+                        const ta = code.callFreeFunctionWithAssignment(
+                            "lv_obj_t *",
+                            "ta",
+                            "lv_event_get_target",
+                            event
+                        );
+
+                        code.ifIntegerNotEqual(tick_value_change_obj, ta, () => {
+                            const value = code.callFreeFunctionWithAssignment(
+                                "int32_t",
+                                "value",
+                                code.isV9
+                                    ? "lv_tabview_get_tab_active"
+                                    : "lv_tabview_get_tab_act",
+                                ta
+                            );
+
+                            code.assignIntegerProperty(
+                                "selectedTab",
+                                this.selectedTab as string,
+                                value,
+                                "Failed to assign Active tab in Tabview widget"
+                            );
+                        });
+                    }
+                );
+            }
         }
     }
 }
