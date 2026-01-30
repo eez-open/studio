@@ -2,13 +2,14 @@ import { computed, makeObservable, runInAction } from "mobx";
 import { intersection } from "lodash";
 import { MenuItem } from "@electron/remote";
 
-import type { Point, Rect } from "eez-studio-shared/geometry";
+import { type Point, type Rect } from "eez-studio-shared/geometry";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
 import type { EditorFlowContext } from "project-editor/flow/editor/context";
 import {
     getObjectIdFromPoint,
     getObjectIdsInsideRect,
-    getSelectedObjectsBoundingRect
+    getSelectedObjectsBoundingRect,
+    isLVGLWidgetOutsideOfItsPageBounds
 } from "project-editor/flow/editor/bounding-rects";
 import { EezObject, IEezObject, getId, getParent } from "project-editor/core/object";
 import {
@@ -159,7 +160,20 @@ export class FlowDocument implements IDocument {
             }
         });
 
-        return maxLengthGroup ? maxLengthGroup : [];
+        if (!maxLengthGroup) {
+            return [];
+        }
+
+        // if single LVGLWidget is selected and this widget is not with its page bounds, exclude it from selection
+        const lvglWidgets = maxLengthGroup.filter(editorObject => editorObject.object instanceof ProjectEditor.LVGLWidgetClass);
+        if (
+            lvglWidgets.length == 1 &&
+            isLVGLWidgetOutsideOfItsPageBounds(lvglWidgets[0], this, this.flowContext.viewState)
+        ) {
+            return maxLengthGroup.filter(editorObject => editorObject != lvglWidgets[0]);
+        }
+
+        return maxLengthGroup;
     }
 
     createContextMenu(

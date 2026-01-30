@@ -5,7 +5,7 @@ import { each } from "lodash";
 
 import { Point, Rect } from "eez-studio-shared/geometry";
 
-import { IEezObject, getParent, isAncestor } from "project-editor/core/object";
+import { EezObject, IEezObject, getParent, isAncestor } from "project-editor/core/object";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
@@ -77,6 +77,14 @@ export function findSnapLines(
         objectAdapter => objectAdapter.object
     );
 
+    const anyWidgetComponentSelected = selectedObjects.find(
+        object => object instanceof ProjectEditor.WidgetClass
+    );
+
+    const anyActionComponentSelected = selectedObjects.find(
+        object => object instanceof ProjectEditor.ActionComponentClass
+    );
+
     const isSelectedObject = (object: IEezObject) => {
         return selectedObjects.find(
             selectedObject =>
@@ -112,6 +120,18 @@ export function findSnapLines(
             childObject = parent;
         }
 
+        return false;
+    };
+
+    const hasConnectionLineToSelected = (object: IEezObject) => {
+        for (const line of (flowContext.document.flow.object as Flow).connectionLines) {
+            if (
+                isSelectedObject(line.sourceComponent) && line.targetComponent == object ||
+                isSelectedObject(line.targetComponent) && line.sourceComponent == object
+            ) {
+                return true;
+            }
+        }
         return false;
     };
 
@@ -189,9 +209,18 @@ export function findSnapLines(
     }
 
     function findSnapLinesInNode(node: TreeObjectAdapter) {
+        if (!node.object) {
+            return;
+        }
+
+        if (isSelectedObject(node.object)) {
+            return;
+        }
+
         // Handle ComponentGroups
-        if (node.object && node.object instanceof ComponentGroup) {
-            if (!isSelectedObject(node.object)) {
+        if (node.object instanceof ComponentGroup) {
+            const group = node.object as ComponentGroup;
+            if (!selectedObjects.find(obj => group.components.indexOf((obj as EezObject).objID) >= 0)) {
                 const rect1 = getObjectBoundingRect(
                     flowContext.viewState,
                     node
@@ -207,43 +236,58 @@ export function findSnapLines(
             return;
         }
 
-        if (
-            node.object &&
-            (node.object instanceof ProjectEditor.PageClass ||
-                node.object instanceof ProjectEditor.ComponentClass) &&
-            !isSelectedObject(node.object) &&
-            !(
-                node.object instanceof ProjectEditor.WidgetClass &&
-                (node.object.hiddenInEditor ||
-                    isHiddenBySelectWidget(flowContext, node.object))
-            )
-        ) {
-            const rect1 = getObjectBoundingRect(flowContext.viewState, node);
-            addLines(rect1, false);
+        if (!(node.object instanceof ProjectEditor.PageClass || node.object instanceof ProjectEditor.ComponentClass)) {
+            return;
+        }
 
-            if (ADD_MARGIN_RECT) {
-                const marginRect = Object.assign({}, rect1);
+        if (node.object instanceof ProjectEditor.WidgetClass) {
+            if (node.object.hiddenInEditor) {
+                return;
+            }
 
-                if (
-                    node.object instanceof ProjectEditor.PageClass ||
-                    node.object instanceof ProjectEditor.ContainerWidgetClass
-                ) {
-                    // add inner margin for page and container
-                    marginRect.left += 10;
-                    marginRect.top += 10;
-                    marginRect.width -= 20;
-                    marginRect.height -= 20;
-                    if (marginRect.width > 0 && marginRect.height > 0) {
-                        addLines(marginRect, true);
-                    }
-                } else {
-                    // add outer margin for all other widgets
-                    marginRect.left -= 10;
-                    marginRect.top -= 10;
-                    marginRect.width += 20;
-                    marginRect.height += 20;
+            if (isHiddenBySelectWidget(flowContext, node.object)) {
+                return;
+            }
+
+            if (!anyWidgetComponentSelected) {
+                if (!hasConnectionLineToSelected(node.object)) {
+                    each(node.children, (item: any) => findSnapLinesInNode(item));
+                    return;
+                }
+            }
+        }
+
+        if (node.object instanceof ProjectEditor.ActionComponentClass) {
+            if (!anyActionComponentSelected) {
+                return;
+            }
+        }
+
+        const rect1 = getObjectBoundingRect(flowContext.viewState, node);
+        addLines(rect1, false);
+
+        if (ADD_MARGIN_RECT) {
+            const marginRect = Object.assign({}, rect1);
+
+            if (
+                node.object instanceof ProjectEditor.PageClass ||
+                node.object instanceof ProjectEditor.ContainerWidgetClass
+            ) {
+                // add inner margin for page and container
+                marginRect.left += 10;
+                marginRect.top += 10;
+                marginRect.width -= 20;
+                marginRect.height -= 20;
+                if (marginRect.width > 0 && marginRect.height > 0) {
                     addLines(marginRect, true);
                 }
+            } else {
+                // add outer margin for all other widgets
+                marginRect.left -= 10;
+                marginRect.top -= 10;
+                marginRect.width += 20;
+                marginRect.height += 20;
+                addLines(marginRect, true);
             }
         }
 

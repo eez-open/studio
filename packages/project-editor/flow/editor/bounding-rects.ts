@@ -2,7 +2,9 @@ import {
     BoundingRectBuilder,
     Point,
     Rect,
-    isRectInsideRect
+    isRectInsideRect,
+    rectContains,
+    rectOverlap
 } from "eez-studio-shared/geometry";
 
 import { DRAGGABLE_OVERLAY_ELEMENT_ID } from "eez-studio-ui/draggable";
@@ -16,6 +18,9 @@ import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getId } from "project-editor/core/object";
 import { ComponentGroup } from "project-editor/flow/component-group";
+import { getAncestorOfType } from "project-editor/store";
+import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type { Page } from "project-editor/features/page/page";
 
 export function getObjectBoundingRect(
     viewState: IViewState,
@@ -131,7 +136,13 @@ export function getObjectIdFromPoint(
             const id = node.getAttribute("data-eez-flow-object-id");
             if (id) {
                 const object = flowDocument.findObjectById(id);
+
                 if (object) {
+                    // ignore LVGLWidget if it's outside of its page bounds
+                    if (isLVGLWidgetOutsideOfItsPageBounds(object, flowDocument, viewState)) {
+                        continue
+                    }
+
                     const connectionInputNode = elementAtPoint.closest(
                         "[data-connection-input-id]"
                     );
@@ -203,4 +214,26 @@ export function getObjectIdsInsideRect(viewState: IViewState, rect: Rect) {
         }
     });
     return ids;
+}
+
+export function isLVGLWidgetOutsideOfItsPageBounds(object: TreeObjectAdapter, flowDocument: IDocument, viewState: IViewState) {
+    if (!(object.object instanceof ProjectEditor.LVGLWidgetClass)) {
+        return false;
+    }
+    const lvglWidget = object.object as LVGLWidget;
+    const page = getAncestorOfType<Page>(
+        lvglWidget,
+        ProjectEditor.PageClass.classInfo
+    );
+    if (page) {
+        const pageObject = flowDocument.findObjectById(getId(page));
+        if (pageObject) {
+            const rectPage = getObjectBoundingRect(viewState, pageObject);
+            const rectWidget = getObjectBoundingRect(viewState, object);
+            if (!rectContains(rectPage, rectWidget) && !rectOverlap(rectPage, rectWidget)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }

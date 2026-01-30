@@ -204,8 +204,12 @@ export class PageTabState extends FlowTabState {
             return;
         }
 
-        if (state.selection) {
-            this.widgetContainer.loadState(state.selection);
+        if (state.selectionFront) {
+            this.widgetContainerFrontFace.loadState(state.selectionFront);
+        }
+
+        if (state.selectionBack) {
+            this.widgetContainerBackFace.loadState(state.selectionBack);
         }
 
         if (state.transform && state.transform.translate) {
@@ -231,7 +235,8 @@ export class PageTabState extends FlowTabState {
         }
 
         const state = {
-            selection: this.widgetContainer.saveState(),
+            selectionFront: this.widgetContainerFrontFace.saveState(),
+            selectionBack: this.widgetContainerBackFace.saveState(),
             transform: {
                 translate: {
                     x: this.transform.translate.x,
