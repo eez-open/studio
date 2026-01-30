@@ -140,7 +140,19 @@ export function getObjectIdFromPoint(
                 if (object) {
                     // ignore LVGLWidget if it's outside of its page bounds
                     if (isLVGLWidgetOutsideOfItsPageBounds(object, flowDocument, viewState)) {
-                        continue
+
+                        let isSelected = false;
+
+                        for (let x: TreeObjectAdapter | undefined = object; x; x = x.getParent(x)) {
+                            if (flowDocument.flowContext.viewState.isObjectIdSelected(x.id)) {
+                                isSelected = true;
+                                break;
+                            }
+                        }
+
+                        if (!isSelected) {
+                            continue;
+                        }
                     }
 
                     const connectionInputNode = elementAtPoint.closest(

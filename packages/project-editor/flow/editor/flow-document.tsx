@@ -37,7 +37,7 @@ import {
 export class FlowDocument implements IDocument {
     constructor(
         public flow: TreeObjectAdapter,
-        private flowContext: EditorFlowContext
+        public flowContext: EditorFlowContext
     ) {
         makeObservable(this, {
             connectionLines: computed,
