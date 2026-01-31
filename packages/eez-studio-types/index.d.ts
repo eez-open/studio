@@ -667,11 +667,7 @@ export interface IWasmFlowRuntime {
     _lvglDeleteObject(obj: number): void;
     _lvglDeleteObjectIndex(index: number): void;
     _lvglDeletePageFlowState(index: number): void;
-    _lvglObjAddFlag(obj: number, f: number): void;
-    _lvglObjClearFlag(obj: number, f: number): void;
-    _lvglObjHasFlag(obj: number, f: number): boolean;
-    _lvglObjAddState(obj: number, s: number): void;
-    _lvglObjClearState(obj: number, s: number): void;
+
     _lvglObjGetStylePropColor(obj: number, part: number, state: number, prop: number): number;
     _lvglObjGetStylePropNum(obj: number, part: number, state: number, prop: number): number;
     _lvglObjSetLocalStylePropColor(obj: number, prop: number, color: number, selector: number): void;

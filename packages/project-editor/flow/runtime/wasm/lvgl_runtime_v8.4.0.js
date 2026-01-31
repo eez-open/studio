@@ -5470,32 +5470,31 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1160696: ($0) => { startToDebuggerMessage($0); },  
- 1160728: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1160803: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1160878: ($0) => { finishToDebuggerMessage($0); },  
- 1160911: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1160941: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1160971: ($0) => { lvglScreenTick($0); },  
- 1160995: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1161035: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1161089: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1161143: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1161196: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1161249: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1161302: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
- 1161354: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1161401: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1161434: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1161470: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1161515: ($0, $1) => { js_dispatch_event($0, $1); },  
- 1161546: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1161652: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1161688: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1161725: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1161765: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1161822: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1161881: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1160520: ($0) => { startToDebuggerMessage($0); },  
+ 1160552: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1160627: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1160702: ($0) => { finishToDebuggerMessage($0); },  
+ 1160735: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1160765: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1160795: ($0) => { lvglScreenTick($0); },  
+ 1160819: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1160859: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1160913: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1160967: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1161020: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1161073: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1161126: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1161178: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1161225: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1161258: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1161294: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1161339: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1161445: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1161481: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1161518: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1161558: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1161615: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1161674: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5676,7 +5675,6 @@ var _lv_dropdown_get_list = Module['_lv_dropdown_get_list'] = makeInvalidEarlyAc
 var _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = makeInvalidEarlyAccess('_lv_tabview_add_tab');
 var _lv_switch_create = Module['_lv_switch_create'] = makeInvalidEarlyAccess('_lv_switch_create');
 var _lv_textarea_create = Module['_lv_textarea_create'] = makeInvalidEarlyAccess('_lv_textarea_create');
-var __evalBooleanProperty = Module['__evalBooleanProperty'] = makeInvalidEarlyAccess('__evalBooleanProperty');
 var _stopScript = Module['_stopScript'] = makeInvalidEarlyAccess('_stopScript');
 var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = makeInvalidEarlyAccess('_onMessageFromDebugger');
 var _lvglGetFlowState = Module['_lvglGetFlowState'] = makeInvalidEarlyAccess('_lvglGetFlowState');
@@ -5691,6 +5689,7 @@ var _lvglAddScreenLoadedEventHandler = Module['_lvglAddScreenLoadedEventHandler'
 var _lvglGroupAddObject = Module['_lvglGroupAddObject'] = makeInvalidEarlyAccess('_lvglGroupAddObject');
 var _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'] = makeInvalidEarlyAccess('_lvglGroupRemoveObjectsForScreen');
 var _lvglAddEventHandler = Module['_lvglAddEventHandler'] = makeInvalidEarlyAccess('_lvglAddEventHandler');
+var _lvglSetEventUserData = Module['_lvglSetEventUserData'] = makeInvalidEarlyAccess('_lvglSetEventUserData');
 var _lvglCreateScreen = Module['_lvglCreateScreen'] = makeInvalidEarlyAccess('_lvglCreateScreen');
 var _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = makeInvalidEarlyAccess('_lvglCreateUserWidget');
 var _lvglScreenLoad = Module['_lvglScreenLoad'] = makeInvalidEarlyAccess('_lvglScreenLoad');
@@ -5700,11 +5699,6 @@ var _lv_disp_get_scr_act = Module['_lv_disp_get_scr_act'] = makeInvalidEarlyAcce
 var _lv_disp_load_scr = Module['_lv_disp_load_scr'] = makeInvalidEarlyAccess('_lv_disp_load_scr');
 var _lvglDeleteObjectIndex = Module['_lvglDeleteObjectIndex'] = makeInvalidEarlyAccess('_lvglDeleteObjectIndex');
 var _lvglDeletePageFlowState = Module['_lvglDeletePageFlowState'] = makeInvalidEarlyAccess('_lvglDeletePageFlowState');
-var _lvglObjAddFlag = Module['_lvglObjAddFlag'] = makeInvalidEarlyAccess('_lvglObjAddFlag');
-var _lvglObjClearFlag = Module['_lvglObjClearFlag'] = makeInvalidEarlyAccess('_lvglObjClearFlag');
-var _lvglObjHasFlag = Module['_lvglObjHasFlag'] = makeInvalidEarlyAccess('_lvglObjHasFlag');
-var _lvglObjAddState = Module['_lvglObjAddState'] = makeInvalidEarlyAccess('_lvglObjAddState');
-var _lvglObjClearState = Module['_lvglObjClearState'] = makeInvalidEarlyAccess('_lvglObjClearState');
 var _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = makeInvalidEarlyAccess('_lvglObjGetStylePropColor');
 var _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = makeInvalidEarlyAccess('_lvglObjGetStylePropNum');
 var _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropColor');
@@ -5747,8 +5741,6 @@ var _lvglMeterScaleSetMinorTickColor = Module['_lvglMeterScaleSetMinorTickColor'
 var _lvglMeterScaleSetMajorTickColor = Module['_lvglMeterScaleSetMajorTickColor'] = makeInvalidEarlyAccess('_lvglMeterScaleSetMajorTickColor');
 var _lvglGetIndicator_start_value = Module['_lvglGetIndicator_start_value'] = makeInvalidEarlyAccess('_lvglGetIndicator_start_value');
 var _lvglGetIndicator_end_value = Module['_lvglGetIndicator_end_value'] = makeInvalidEarlyAccess('_lvglGetIndicator_end_value');
-var _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = makeInvalidEarlyAccess('_lvglUpdateCheckedState');
-var _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = makeInvalidEarlyAccess('_lvglUpdateDisabledState');
 var _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = makeInvalidEarlyAccess('_lvglAddTimelineKeyframe');
 var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = makeInvalidEarlyAccess('_lvglSetTimelinePosition');
 var _lvglClearTimeline = Module['_lvglClearTimeline'] = makeInvalidEarlyAccess('_lvglClearTimeline');
@@ -5770,8 +5762,6 @@ var _v8_lv_slider_set_value = Module['_v8_lv_slider_set_value'] = makeInvalidEar
 var _v8_lv_slider_get_value = Module['_v8_lv_slider_get_value'] = makeInvalidEarlyAccess('_v8_lv_slider_get_value');
 var _v8_lv_slider_set_left_value = Module['_v8_lv_slider_set_left_value'] = makeInvalidEarlyAccess('_v8_lv_slider_set_left_value');
 var _v8_lv_slider_get_left_value = Module['_v8_lv_slider_get_left_value'] = makeInvalidEarlyAccess('_v8_lv_slider_get_left_value');
-var _global_event_dispatcher = Module['_global_event_dispatcher'] = makeInvalidEarlyAccess('_global_event_dispatcher');
-var _get_global_dispatcher_ptr = Module['_get_global_dispatcher_ptr'] = makeInvalidEarlyAccess('_get_global_dispatcher_ptr');
 var _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = makeInvalidEarlyAccess('_lvglCreateFreeTypeFont');
 var _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = makeInvalidEarlyAccess('_lv_disp_get_scr_prev');
 var _lv_obj_get_disp = Module['_lv_obj_get_disp'] = makeInvalidEarlyAccess('_lv_obj_get_disp');
@@ -6753,6 +6743,7 @@ var _eez_flow_init_themes = Module['_eez_flow_init_themes'] = makeInvalidEarlyAc
 var _flowPropagateValueLVGLEvent = Module['_flowPropagateValueLVGLEvent'] = makeInvalidEarlyAccess('_flowPropagateValueLVGLEvent');
 var __evalIntegerProperty = Module['__evalIntegerProperty'] = makeInvalidEarlyAccess('__evalIntegerProperty');
 var __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = makeInvalidEarlyAccess('__evalUnsignedIntegerProperty');
+var __evalBooleanProperty = Module['__evalBooleanProperty'] = makeInvalidEarlyAccess('__evalBooleanProperty');
 var __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = makeInvalidEarlyAccess('__evalStringArrayPropertyAndJoin');
 var __assignStringProperty = Module['__assignStringProperty'] = makeInvalidEarlyAccess('__assignStringProperty');
 var __assignIntegerProperty = Module['__assignIntegerProperty'] = makeInvalidEarlyAccess('__assignIntegerProperty');
@@ -6952,7 +6943,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_tabview_add_tab'] != 'undefined', 'missing Wasm export: lv_tabview_add_tab');
   assert(typeof wasmExports['lv_switch_create'] != 'undefined', 'missing Wasm export: lv_switch_create');
   assert(typeof wasmExports['lv_textarea_create'] != 'undefined', 'missing Wasm export: lv_textarea_create');
-  assert(typeof wasmExports['_evalBooleanProperty'] != 'undefined', 'missing Wasm export: _evalBooleanProperty');
   assert(typeof wasmExports['stopScript'] != 'undefined', 'missing Wasm export: stopScript');
   assert(typeof wasmExports['onMessageFromDebugger'] != 'undefined', 'missing Wasm export: onMessageFromDebugger');
   assert(typeof wasmExports['lvglGetFlowState'] != 'undefined', 'missing Wasm export: lvglGetFlowState');
@@ -6967,6 +6957,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglGroupAddObject'] != 'undefined', 'missing Wasm export: lvglGroupAddObject');
   assert(typeof wasmExports['lvglGroupRemoveObjectsForScreen'] != 'undefined', 'missing Wasm export: lvglGroupRemoveObjectsForScreen');
   assert(typeof wasmExports['lvglAddEventHandler'] != 'undefined', 'missing Wasm export: lvglAddEventHandler');
+  assert(typeof wasmExports['lvglSetEventUserData'] != 'undefined', 'missing Wasm export: lvglSetEventUserData');
   assert(typeof wasmExports['lvglCreateScreen'] != 'undefined', 'missing Wasm export: lvglCreateScreen');
   assert(typeof wasmExports['lvglCreateUserWidget'] != 'undefined', 'missing Wasm export: lvglCreateUserWidget');
   assert(typeof wasmExports['lvglScreenLoad'] != 'undefined', 'missing Wasm export: lvglScreenLoad');
@@ -6976,11 +6967,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_disp_load_scr'] != 'undefined', 'missing Wasm export: lv_disp_load_scr');
   assert(typeof wasmExports['lvglDeleteObjectIndex'] != 'undefined', 'missing Wasm export: lvglDeleteObjectIndex');
   assert(typeof wasmExports['lvglDeletePageFlowState'] != 'undefined', 'missing Wasm export: lvglDeletePageFlowState');
-  assert(typeof wasmExports['lvglObjAddFlag'] != 'undefined', 'missing Wasm export: lvglObjAddFlag');
-  assert(typeof wasmExports['lvglObjClearFlag'] != 'undefined', 'missing Wasm export: lvglObjClearFlag');
-  assert(typeof wasmExports['lvglObjHasFlag'] != 'undefined', 'missing Wasm export: lvglObjHasFlag');
-  assert(typeof wasmExports['lvglObjAddState'] != 'undefined', 'missing Wasm export: lvglObjAddState');
-  assert(typeof wasmExports['lvglObjClearState'] != 'undefined', 'missing Wasm export: lvglObjClearState');
   assert(typeof wasmExports['lvglObjGetStylePropColor'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropColor');
   assert(typeof wasmExports['lvglObjGetStylePropNum'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropNum');
   assert(typeof wasmExports['lvglObjSetLocalStylePropColor'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropColor');
@@ -7023,8 +7009,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglMeterScaleSetMajorTickColor'] != 'undefined', 'missing Wasm export: lvglMeterScaleSetMajorTickColor');
   assert(typeof wasmExports['lvglGetIndicator_start_value'] != 'undefined', 'missing Wasm export: lvglGetIndicator_start_value');
   assert(typeof wasmExports['lvglGetIndicator_end_value'] != 'undefined', 'missing Wasm export: lvglGetIndicator_end_value');
-  assert(typeof wasmExports['lvglUpdateCheckedState'] != 'undefined', 'missing Wasm export: lvglUpdateCheckedState');
-  assert(typeof wasmExports['lvglUpdateDisabledState'] != 'undefined', 'missing Wasm export: lvglUpdateDisabledState');
   assert(typeof wasmExports['lvglAddTimelineKeyframe'] != 'undefined', 'missing Wasm export: lvglAddTimelineKeyframe');
   assert(typeof wasmExports['lvglSetTimelinePosition'] != 'undefined', 'missing Wasm export: lvglSetTimelinePosition');
   assert(typeof wasmExports['lvglClearTimeline'] != 'undefined', 'missing Wasm export: lvglClearTimeline');
@@ -7046,8 +7030,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['v8_lv_slider_get_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_get_value');
   assert(typeof wasmExports['v8_lv_slider_set_left_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_set_left_value');
   assert(typeof wasmExports['v8_lv_slider_get_left_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_get_left_value');
-  assert(typeof wasmExports['global_event_dispatcher'] != 'undefined', 'missing Wasm export: global_event_dispatcher');
-  assert(typeof wasmExports['get_global_dispatcher_ptr'] != 'undefined', 'missing Wasm export: get_global_dispatcher_ptr');
   assert(typeof wasmExports['lvglCreateFreeTypeFont'] != 'undefined', 'missing Wasm export: lvglCreateFreeTypeFont');
   assert(typeof wasmExports['lv_disp_get_scr_prev'] != 'undefined', 'missing Wasm export: lv_disp_get_scr_prev');
   assert(typeof wasmExports['lv_obj_get_disp'] != 'undefined', 'missing Wasm export: lv_obj_get_disp');
@@ -8029,6 +8011,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['flowPropagateValueLVGLEvent'] != 'undefined', 'missing Wasm export: flowPropagateValueLVGLEvent');
   assert(typeof wasmExports['_evalIntegerProperty'] != 'undefined', 'missing Wasm export: _evalIntegerProperty');
   assert(typeof wasmExports['_evalUnsignedIntegerProperty'] != 'undefined', 'missing Wasm export: _evalUnsignedIntegerProperty');
+  assert(typeof wasmExports['_evalBooleanProperty'] != 'undefined', 'missing Wasm export: _evalBooleanProperty');
   assert(typeof wasmExports['_evalStringArrayPropertyAndJoin'] != 'undefined', 'missing Wasm export: _evalStringArrayPropertyAndJoin');
   assert(typeof wasmExports['_assignStringProperty'] != 'undefined', 'missing Wasm export: _assignStringProperty');
   assert(typeof wasmExports['_assignIntegerProperty'] != 'undefined', 'missing Wasm export: _assignIntegerProperty');
@@ -8224,7 +8207,6 @@ function assignWasmExports(wasmExports) {
   _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = createExportWrapper('lv_tabview_add_tab', 2);
   _lv_switch_create = Module['_lv_switch_create'] = createExportWrapper('lv_switch_create', 1);
   _lv_textarea_create = Module['_lv_textarea_create'] = createExportWrapper('lv_textarea_create', 1);
-  __evalBooleanProperty = Module['__evalBooleanProperty'] = createExportWrapper('_evalBooleanProperty', 6);
   _stopScript = Module['_stopScript'] = createExportWrapper('stopScript', 0);
   _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger', 2);
   _lvglGetFlowState = Module['_lvglGetFlowState'] = createExportWrapper('lvglGetFlowState', 2);
@@ -8239,6 +8221,7 @@ function assignWasmExports(wasmExports) {
   _lvglGroupAddObject = Module['_lvglGroupAddObject'] = createExportWrapper('lvglGroupAddObject', 3);
   _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'] = createExportWrapper('lvglGroupRemoveObjectsForScreen', 1);
   _lvglAddEventHandler = Module['_lvglAddEventHandler'] = createExportWrapper('lvglAddEventHandler', 1);
+  _lvglSetEventUserData = Module['_lvglSetEventUserData'] = createExportWrapper('lvglSetEventUserData', 2);
   _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen', 6);
   _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = createExportWrapper('lvglCreateUserWidget', 6);
   _lvglScreenLoad = Module['_lvglScreenLoad'] = createExportWrapper('lvglScreenLoad', 2);
@@ -8248,11 +8231,6 @@ function assignWasmExports(wasmExports) {
   _lv_disp_load_scr = Module['_lv_disp_load_scr'] = createExportWrapper('lv_disp_load_scr', 1);
   _lvglDeleteObjectIndex = Module['_lvglDeleteObjectIndex'] = createExportWrapper('lvglDeleteObjectIndex', 1);
   _lvglDeletePageFlowState = Module['_lvglDeletePageFlowState'] = createExportWrapper('lvglDeletePageFlowState', 1);
-  _lvglObjAddFlag = Module['_lvglObjAddFlag'] = createExportWrapper('lvglObjAddFlag', 2);
-  _lvglObjClearFlag = Module['_lvglObjClearFlag'] = createExportWrapper('lvglObjClearFlag', 2);
-  _lvglObjHasFlag = Module['_lvglObjHasFlag'] = createExportWrapper('lvglObjHasFlag', 2);
-  _lvglObjAddState = Module['_lvglObjAddState'] = createExportWrapper('lvglObjAddState', 2);
-  _lvglObjClearState = Module['_lvglObjClearState'] = createExportWrapper('lvglObjClearState', 2);
   _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = createExportWrapper('lvglObjGetStylePropColor', 4);
   _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = createExportWrapper('lvglObjGetStylePropNum', 4);
   _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = createExportWrapper('lvglObjSetLocalStylePropColor', 4);
@@ -8295,8 +8273,6 @@ function assignWasmExports(wasmExports) {
   _lvglMeterScaleSetMajorTickColor = Module['_lvglMeterScaleSetMajorTickColor'] = createExportWrapper('lvglMeterScaleSetMajorTickColor', 3);
   _lvglGetIndicator_start_value = Module['_lvglGetIndicator_start_value'] = createExportWrapper('lvglGetIndicator_start_value', 1);
   _lvglGetIndicator_end_value = Module['_lvglGetIndicator_end_value'] = createExportWrapper('lvglGetIndicator_end_value', 1);
-  _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = createExportWrapper('lvglUpdateCheckedState', 4);
-  _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = createExportWrapper('lvglUpdateDisabledState', 4);
   _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = createExportWrapper('lvglAddTimelineKeyframe', 23);
   _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExportWrapper('lvglSetTimelinePosition', 1);
   _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline', 0);
@@ -8318,8 +8294,6 @@ function assignWasmExports(wasmExports) {
   _v8_lv_slider_get_value = Module['_v8_lv_slider_get_value'] = createExportWrapper('v8_lv_slider_get_value', 1);
   _v8_lv_slider_set_left_value = Module['_v8_lv_slider_set_left_value'] = createExportWrapper('v8_lv_slider_set_left_value', 3);
   _v8_lv_slider_get_left_value = Module['_v8_lv_slider_get_left_value'] = createExportWrapper('v8_lv_slider_get_left_value', 1);
-  _global_event_dispatcher = Module['_global_event_dispatcher'] = createExportWrapper('global_event_dispatcher', 1);
-  _get_global_dispatcher_ptr = Module['_get_global_dispatcher_ptr'] = createExportWrapper('get_global_dispatcher_ptr', 0);
   _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = createExportWrapper('lvglCreateFreeTypeFont', 4);
   _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = createExportWrapper('lv_disp_get_scr_prev', 1);
   _lv_obj_get_disp = Module['_lv_obj_get_disp'] = createExportWrapper('lv_obj_get_disp', 1);
@@ -9301,6 +9275,7 @@ function assignWasmExports(wasmExports) {
   _flowPropagateValueLVGLEvent = Module['_flowPropagateValueLVGLEvent'] = createExportWrapper('flowPropagateValueLVGLEvent', 4);
   __evalIntegerProperty = Module['__evalIntegerProperty'] = createExportWrapper('_evalIntegerProperty', 6);
   __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = createExportWrapper('_evalUnsignedIntegerProperty', 6);
+  __evalBooleanProperty = Module['__evalBooleanProperty'] = createExportWrapper('_evalBooleanProperty', 6);
   __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = createExportWrapper('_evalStringArrayPropertyAndJoin', 7);
   __assignStringProperty = Module['__assignStringProperty'] = createExportWrapper('_assignStringProperty', 7);
   __assignIntegerProperty = Module['__assignIntegerProperty'] = createExportWrapper('_assignIntegerProperty', 7);

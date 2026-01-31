@@ -5470,32 +5470,31 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1175768: ($0) => { startToDebuggerMessage($0); },  
- 1175800: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1175875: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1175950: ($0) => { finishToDebuggerMessage($0); },  
- 1175983: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1176013: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1176043: ($0) => { lvglScreenTick($0); },  
- 1176067: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1176107: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1176161: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1176215: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1176268: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1176321: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1176374: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
- 1176426: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1176473: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1176506: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1176542: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1176587: ($0, $1) => { js_dispatch_event($0, $1); },  
- 1176618: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1176724: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1176760: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1176797: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1176837: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1176894: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1176953: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1175576: ($0) => { startToDebuggerMessage($0); },  
+ 1175608: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1175683: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1175758: ($0) => { finishToDebuggerMessage($0); },  
+ 1175791: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1175821: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1175851: ($0) => { lvglScreenTick($0); },  
+ 1175875: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1175915: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1175969: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1176023: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1176076: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1176129: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1176182: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1176234: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1176281: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1176314: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1176350: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1176395: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1176501: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1176537: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1176574: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1176614: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1176671: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1176730: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5685,14 +5684,12 @@ var _lv_dropdown_get_list = Module['_lv_dropdown_get_list'] = makeInvalidEarlyAc
 var _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = makeInvalidEarlyAccess('_lv_tabview_add_tab');
 var _lv_switch_create = Module['_lv_switch_create'] = makeInvalidEarlyAccess('_lv_switch_create');
 var _lv_textarea_create = Module['_lv_textarea_create'] = makeInvalidEarlyAccess('_lv_textarea_create');
-var __evalBooleanProperty = Module['__evalBooleanProperty'] = makeInvalidEarlyAccess('__evalBooleanProperty');
 var _stopScript = Module['_stopScript'] = makeInvalidEarlyAccess('_stopScript');
 var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = makeInvalidEarlyAccess('_onMessageFromDebugger');
 var _lvglGetFlowState = Module['_lvglGetFlowState'] = makeInvalidEarlyAccess('_lvglGetFlowState');
 var _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = makeInvalidEarlyAccess('_setDebuggerMessageSubsciptionFilter');
 var _setObjectIndex = Module['_setObjectIndex'] = makeInvalidEarlyAccess('_setObjectIndex');
 var _getLvglObjectFromIndex = Module['_getLvglObjectFromIndex'] = makeInvalidEarlyAccess('_getLvglObjectFromIndex');
-var _lv_event_get_target_obj = Module['_lv_event_get_target_obj'] = makeInvalidEarlyAccess('_lv_event_get_target_obj');
 var _lv_group_remove_all_objs = Module['_lv_group_remove_all_objs'] = makeInvalidEarlyAccess('_lv_group_remove_all_objs');
 var _lv_group_add_obj = Module['_lv_group_add_obj'] = makeInvalidEarlyAccess('_lv_group_add_obj');
 var _lvglCreateGroup = Module['_lvglCreateGroup'] = makeInvalidEarlyAccess('_lvglCreateGroup');
@@ -5701,6 +5698,7 @@ var _lvglAddScreenLoadedEventHandler = Module['_lvglAddScreenLoadedEventHandler'
 var _lvglGroupAddObject = Module['_lvglGroupAddObject'] = makeInvalidEarlyAccess('_lvglGroupAddObject');
 var _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'] = makeInvalidEarlyAccess('_lvglGroupRemoveObjectsForScreen');
 var _lvglAddEventHandler = Module['_lvglAddEventHandler'] = makeInvalidEarlyAccess('_lvglAddEventHandler');
+var _lvglSetEventUserData = Module['_lvglSetEventUserData'] = makeInvalidEarlyAccess('_lvglSetEventUserData');
 var _lvglCreateScreen = Module['_lvglCreateScreen'] = makeInvalidEarlyAccess('_lvglCreateScreen');
 var _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = makeInvalidEarlyAccess('_lvglCreateUserWidget');
 var _lvglScreenLoad = Module['_lvglScreenLoad'] = makeInvalidEarlyAccess('_lvglScreenLoad');
@@ -5710,11 +5708,6 @@ var _lv_screen_active = Module['_lv_screen_active'] = makeInvalidEarlyAccess('_l
 var _lv_screen_load = Module['_lv_screen_load'] = makeInvalidEarlyAccess('_lv_screen_load');
 var _lvglDeleteObjectIndex = Module['_lvglDeleteObjectIndex'] = makeInvalidEarlyAccess('_lvglDeleteObjectIndex');
 var _lvglDeletePageFlowState = Module['_lvglDeletePageFlowState'] = makeInvalidEarlyAccess('_lvglDeletePageFlowState');
-var _lvglObjAddFlag = Module['_lvglObjAddFlag'] = makeInvalidEarlyAccess('_lvglObjAddFlag');
-var _lvglObjClearFlag = Module['_lvglObjClearFlag'] = makeInvalidEarlyAccess('_lvglObjClearFlag');
-var _lvglObjHasFlag = Module['_lvglObjHasFlag'] = makeInvalidEarlyAccess('_lvglObjHasFlag');
-var _lvglObjAddState = Module['_lvglObjAddState'] = makeInvalidEarlyAccess('_lvglObjAddState');
-var _lvglObjClearState = Module['_lvglObjClearState'] = makeInvalidEarlyAccess('_lvglObjClearState');
 var _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = makeInvalidEarlyAccess('_lvglObjGetStylePropColor');
 var _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = makeInvalidEarlyAccess('_lvglObjGetStylePropNum');
 var _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = makeInvalidEarlyAccess('_lvglObjSetLocalStylePropColor');
@@ -5754,8 +5747,6 @@ var _lvglMeterScaleSetMinorTickColor = Module['_lvglMeterScaleSetMinorTickColor'
 var _lvglMeterScaleSetMajorTickColor = Module['_lvglMeterScaleSetMajorTickColor'] = makeInvalidEarlyAccess('_lvglMeterScaleSetMajorTickColor');
 var _lvglGetIndicator_start_value = Module['_lvglGetIndicator_start_value'] = makeInvalidEarlyAccess('_lvglGetIndicator_start_value');
 var _lvglGetIndicator_end_value = Module['_lvglGetIndicator_end_value'] = makeInvalidEarlyAccess('_lvglGetIndicator_end_value');
-var _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = makeInvalidEarlyAccess('_lvglUpdateCheckedState');
-var _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = makeInvalidEarlyAccess('_lvglUpdateDisabledState');
 var _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = makeInvalidEarlyAccess('_lvglAddTimelineKeyframe');
 var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = makeInvalidEarlyAccess('_lvglSetTimelinePosition');
 var _lvglClearTimeline = Module['_lvglClearTimeline'] = makeInvalidEarlyAccess('_lvglClearTimeline');
@@ -5772,8 +5763,6 @@ var _lvglDeleteScreenOnUnload = Module['_lvglDeleteScreenOnUnload'] = makeInvali
 var _lvglGetTabName = Module['_lvglGetTabName'] = makeInvalidEarlyAccess('_lvglGetTabName');
 var _lv_tabview_get_tab_bar = Module['_lv_tabview_get_tab_bar'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_bar');
 var _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = makeInvalidEarlyAccess('_lv_obj_get_child_by_type');
-var _global_event_dispatcher = Module['_global_event_dispatcher'] = makeInvalidEarlyAccess('_global_event_dispatcher');
-var _get_global_dispatcher_ptr = Module['_get_global_dispatcher_ptr'] = makeInvalidEarlyAccess('_get_global_dispatcher_ptr');
 var _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = makeInvalidEarlyAccess('_lvglCreateFreeTypeFont');
 var _lv_log_add = Module['_lv_log_add'] = makeInvalidEarlyAccess('_lv_log_add');
 var _lv_group_init = Module['_lv_group_init'] = makeInvalidEarlyAccess('_lv_group_init');
@@ -5910,6 +5899,7 @@ var _lv_event_remove_dsc = Module['_lv_event_remove_dsc'] = makeInvalidEarlyAcce
 var _lv_obj_remove_event_cb = Module['_lv_obj_remove_event_cb'] = makeInvalidEarlyAccess('_lv_obj_remove_event_cb');
 var _lv_obj_remove_event_cb_with_user_data = Module['_lv_obj_remove_event_cb_with_user_data'] = makeInvalidEarlyAccess('_lv_obj_remove_event_cb_with_user_data');
 var _lv_event_get_current_target_obj = Module['_lv_event_get_current_target_obj'] = makeInvalidEarlyAccess('_lv_event_get_current_target_obj');
+var _lv_event_get_target_obj = Module['_lv_event_get_target_obj'] = makeInvalidEarlyAccess('_lv_event_get_target_obj');
 var _lv_event_get_old_size = Module['_lv_event_get_old_size'] = makeInvalidEarlyAccess('_lv_event_get_old_size');
 var _lv_event_get_rotary_diff = Module['_lv_event_get_rotary_diff'] = makeInvalidEarlyAccess('_lv_event_get_rotary_diff');
 var _lv_event_get_scroll_anim = Module['_lv_event_get_scroll_anim'] = makeInvalidEarlyAccess('_lv_event_get_scroll_anim');
@@ -7347,6 +7337,7 @@ var _flowPropagateValueLVGLEvent = Module['_flowPropagateValueLVGLEvent'] = make
 var __evalTextProperty = Module['__evalTextProperty'] = makeInvalidEarlyAccess('__evalTextProperty');
 var __evalIntegerProperty = Module['__evalIntegerProperty'] = makeInvalidEarlyAccess('__evalIntegerProperty');
 var __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = makeInvalidEarlyAccess('__evalUnsignedIntegerProperty');
+var __evalBooleanProperty = Module['__evalBooleanProperty'] = makeInvalidEarlyAccess('__evalBooleanProperty');
 var __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = makeInvalidEarlyAccess('__evalStringArrayPropertyAndJoin');
 var __assignStringProperty = Module['__assignStringProperty'] = makeInvalidEarlyAccess('__assignStringProperty');
 var __assignIntegerProperty = Module['__assignIntegerProperty'] = makeInvalidEarlyAccess('__assignIntegerProperty');
@@ -7554,14 +7545,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_tabview_add_tab'] != 'undefined', 'missing Wasm export: lv_tabview_add_tab');
   assert(typeof wasmExports['lv_switch_create'] != 'undefined', 'missing Wasm export: lv_switch_create');
   assert(typeof wasmExports['lv_textarea_create'] != 'undefined', 'missing Wasm export: lv_textarea_create');
-  assert(typeof wasmExports['_evalBooleanProperty'] != 'undefined', 'missing Wasm export: _evalBooleanProperty');
   assert(typeof wasmExports['stopScript'] != 'undefined', 'missing Wasm export: stopScript');
   assert(typeof wasmExports['onMessageFromDebugger'] != 'undefined', 'missing Wasm export: onMessageFromDebugger');
   assert(typeof wasmExports['lvglGetFlowState'] != 'undefined', 'missing Wasm export: lvglGetFlowState');
   assert(typeof wasmExports['setDebuggerMessageSubsciptionFilter'] != 'undefined', 'missing Wasm export: setDebuggerMessageSubsciptionFilter');
   assert(typeof wasmExports['setObjectIndex'] != 'undefined', 'missing Wasm export: setObjectIndex');
   assert(typeof wasmExports['getLvglObjectFromIndex'] != 'undefined', 'missing Wasm export: getLvglObjectFromIndex');
-  assert(typeof wasmExports['lv_event_get_target_obj'] != 'undefined', 'missing Wasm export: lv_event_get_target_obj');
   assert(typeof wasmExports['lv_group_remove_all_objs'] != 'undefined', 'missing Wasm export: lv_group_remove_all_objs');
   assert(typeof wasmExports['lv_group_add_obj'] != 'undefined', 'missing Wasm export: lv_group_add_obj');
   assert(typeof wasmExports['lvglCreateGroup'] != 'undefined', 'missing Wasm export: lvglCreateGroup');
@@ -7570,6 +7559,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglGroupAddObject'] != 'undefined', 'missing Wasm export: lvglGroupAddObject');
   assert(typeof wasmExports['lvglGroupRemoveObjectsForScreen'] != 'undefined', 'missing Wasm export: lvglGroupRemoveObjectsForScreen');
   assert(typeof wasmExports['lvglAddEventHandler'] != 'undefined', 'missing Wasm export: lvglAddEventHandler');
+  assert(typeof wasmExports['lvglSetEventUserData'] != 'undefined', 'missing Wasm export: lvglSetEventUserData');
   assert(typeof wasmExports['lvglCreateScreen'] != 'undefined', 'missing Wasm export: lvglCreateScreen');
   assert(typeof wasmExports['lvglCreateUserWidget'] != 'undefined', 'missing Wasm export: lvglCreateUserWidget');
   assert(typeof wasmExports['lvglScreenLoad'] != 'undefined', 'missing Wasm export: lvglScreenLoad');
@@ -7579,11 +7569,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_screen_load'] != 'undefined', 'missing Wasm export: lv_screen_load');
   assert(typeof wasmExports['lvglDeleteObjectIndex'] != 'undefined', 'missing Wasm export: lvglDeleteObjectIndex');
   assert(typeof wasmExports['lvglDeletePageFlowState'] != 'undefined', 'missing Wasm export: lvglDeletePageFlowState');
-  assert(typeof wasmExports['lvglObjAddFlag'] != 'undefined', 'missing Wasm export: lvglObjAddFlag');
-  assert(typeof wasmExports['lvglObjClearFlag'] != 'undefined', 'missing Wasm export: lvglObjClearFlag');
-  assert(typeof wasmExports['lvglObjHasFlag'] != 'undefined', 'missing Wasm export: lvglObjHasFlag');
-  assert(typeof wasmExports['lvglObjAddState'] != 'undefined', 'missing Wasm export: lvglObjAddState');
-  assert(typeof wasmExports['lvglObjClearState'] != 'undefined', 'missing Wasm export: lvglObjClearState');
   assert(typeof wasmExports['lvglObjGetStylePropColor'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropColor');
   assert(typeof wasmExports['lvglObjGetStylePropNum'] != 'undefined', 'missing Wasm export: lvglObjGetStylePropNum');
   assert(typeof wasmExports['lvglObjSetLocalStylePropColor'] != 'undefined', 'missing Wasm export: lvglObjSetLocalStylePropColor');
@@ -7623,8 +7608,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglMeterScaleSetMajorTickColor'] != 'undefined', 'missing Wasm export: lvglMeterScaleSetMajorTickColor');
   assert(typeof wasmExports['lvglGetIndicator_start_value'] != 'undefined', 'missing Wasm export: lvglGetIndicator_start_value');
   assert(typeof wasmExports['lvglGetIndicator_end_value'] != 'undefined', 'missing Wasm export: lvglGetIndicator_end_value');
-  assert(typeof wasmExports['lvglUpdateCheckedState'] != 'undefined', 'missing Wasm export: lvglUpdateCheckedState');
-  assert(typeof wasmExports['lvglUpdateDisabledState'] != 'undefined', 'missing Wasm export: lvglUpdateDisabledState');
   assert(typeof wasmExports['lvglAddTimelineKeyframe'] != 'undefined', 'missing Wasm export: lvglAddTimelineKeyframe');
   assert(typeof wasmExports['lvglSetTimelinePosition'] != 'undefined', 'missing Wasm export: lvglSetTimelinePosition');
   assert(typeof wasmExports['lvglClearTimeline'] != 'undefined', 'missing Wasm export: lvglClearTimeline');
@@ -7641,8 +7624,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglGetTabName'] != 'undefined', 'missing Wasm export: lvglGetTabName');
   assert(typeof wasmExports['lv_tabview_get_tab_bar'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_bar');
   assert(typeof wasmExports['lv_obj_get_child_by_type'] != 'undefined', 'missing Wasm export: lv_obj_get_child_by_type');
-  assert(typeof wasmExports['global_event_dispatcher'] != 'undefined', 'missing Wasm export: global_event_dispatcher');
-  assert(typeof wasmExports['get_global_dispatcher_ptr'] != 'undefined', 'missing Wasm export: get_global_dispatcher_ptr');
   assert(typeof wasmExports['lvglCreateFreeTypeFont'] != 'undefined', 'missing Wasm export: lvglCreateFreeTypeFont');
   assert(typeof wasmExports['lv_log_add'] != 'undefined', 'missing Wasm export: lv_log_add');
   assert(typeof wasmExports['lv_group_init'] != 'undefined', 'missing Wasm export: lv_group_init');
@@ -7779,6 +7760,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_remove_event_cb'] != 'undefined', 'missing Wasm export: lv_obj_remove_event_cb');
   assert(typeof wasmExports['lv_obj_remove_event_cb_with_user_data'] != 'undefined', 'missing Wasm export: lv_obj_remove_event_cb_with_user_data');
   assert(typeof wasmExports['lv_event_get_current_target_obj'] != 'undefined', 'missing Wasm export: lv_event_get_current_target_obj');
+  assert(typeof wasmExports['lv_event_get_target_obj'] != 'undefined', 'missing Wasm export: lv_event_get_target_obj');
   assert(typeof wasmExports['lv_event_get_old_size'] != 'undefined', 'missing Wasm export: lv_event_get_old_size');
   assert(typeof wasmExports['lv_event_get_rotary_diff'] != 'undefined', 'missing Wasm export: lv_event_get_rotary_diff');
   assert(typeof wasmExports['lv_event_get_scroll_anim'] != 'undefined', 'missing Wasm export: lv_event_get_scroll_anim');
@@ -9216,6 +9198,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['_evalTextProperty'] != 'undefined', 'missing Wasm export: _evalTextProperty');
   assert(typeof wasmExports['_evalIntegerProperty'] != 'undefined', 'missing Wasm export: _evalIntegerProperty');
   assert(typeof wasmExports['_evalUnsignedIntegerProperty'] != 'undefined', 'missing Wasm export: _evalUnsignedIntegerProperty');
+  assert(typeof wasmExports['_evalBooleanProperty'] != 'undefined', 'missing Wasm export: _evalBooleanProperty');
   assert(typeof wasmExports['_evalStringArrayPropertyAndJoin'] != 'undefined', 'missing Wasm export: _evalStringArrayPropertyAndJoin');
   assert(typeof wasmExports['_assignStringProperty'] != 'undefined', 'missing Wasm export: _assignStringProperty');
   assert(typeof wasmExports['_assignIntegerProperty'] != 'undefined', 'missing Wasm export: _assignIntegerProperty');
@@ -9419,14 +9402,12 @@ function assignWasmExports(wasmExports) {
   _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = createExportWrapper('lv_tabview_add_tab', 2);
   _lv_switch_create = Module['_lv_switch_create'] = createExportWrapper('lv_switch_create', 1);
   _lv_textarea_create = Module['_lv_textarea_create'] = createExportWrapper('lv_textarea_create', 1);
-  __evalBooleanProperty = Module['__evalBooleanProperty'] = createExportWrapper('_evalBooleanProperty', 6);
   _stopScript = Module['_stopScript'] = createExportWrapper('stopScript', 0);
   _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger', 2);
   _lvglGetFlowState = Module['_lvglGetFlowState'] = createExportWrapper('lvglGetFlowState', 2);
   _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = createExportWrapper('setDebuggerMessageSubsciptionFilter', 1);
   _setObjectIndex = Module['_setObjectIndex'] = createExportWrapper('setObjectIndex', 2);
   _getLvglObjectFromIndex = Module['_getLvglObjectFromIndex'] = createExportWrapper('getLvglObjectFromIndex', 1);
-  _lv_event_get_target_obj = Module['_lv_event_get_target_obj'] = createExportWrapper('lv_event_get_target_obj', 1);
   _lv_group_remove_all_objs = Module['_lv_group_remove_all_objs'] = createExportWrapper('lv_group_remove_all_objs', 1);
   _lv_group_add_obj = Module['_lv_group_add_obj'] = createExportWrapper('lv_group_add_obj', 2);
   _lvglCreateGroup = Module['_lvglCreateGroup'] = createExportWrapper('lvglCreateGroup', 0);
@@ -9435,6 +9416,7 @@ function assignWasmExports(wasmExports) {
   _lvglGroupAddObject = Module['_lvglGroupAddObject'] = createExportWrapper('lvglGroupAddObject', 3);
   _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'] = createExportWrapper('lvglGroupRemoveObjectsForScreen', 1);
   _lvglAddEventHandler = Module['_lvglAddEventHandler'] = createExportWrapper('lvglAddEventHandler', 1);
+  _lvglSetEventUserData = Module['_lvglSetEventUserData'] = createExportWrapper('lvglSetEventUserData', 2);
   _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen', 6);
   _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = createExportWrapper('lvglCreateUserWidget', 6);
   _lvglScreenLoad = Module['_lvglScreenLoad'] = createExportWrapper('lvglScreenLoad', 2);
@@ -9444,11 +9426,6 @@ function assignWasmExports(wasmExports) {
   _lv_screen_load = Module['_lv_screen_load'] = createExportWrapper('lv_screen_load', 1);
   _lvglDeleteObjectIndex = Module['_lvglDeleteObjectIndex'] = createExportWrapper('lvglDeleteObjectIndex', 1);
   _lvglDeletePageFlowState = Module['_lvglDeletePageFlowState'] = createExportWrapper('lvglDeletePageFlowState', 1);
-  _lvglObjAddFlag = Module['_lvglObjAddFlag'] = createExportWrapper('lvglObjAddFlag', 2);
-  _lvglObjClearFlag = Module['_lvglObjClearFlag'] = createExportWrapper('lvglObjClearFlag', 2);
-  _lvglObjHasFlag = Module['_lvglObjHasFlag'] = createExportWrapper('lvglObjHasFlag', 2);
-  _lvglObjAddState = Module['_lvglObjAddState'] = createExportWrapper('lvglObjAddState', 2);
-  _lvglObjClearState = Module['_lvglObjClearState'] = createExportWrapper('lvglObjClearState', 2);
   _lvglObjGetStylePropColor = Module['_lvglObjGetStylePropColor'] = createExportWrapper('lvglObjGetStylePropColor', 4);
   _lvglObjGetStylePropNum = Module['_lvglObjGetStylePropNum'] = createExportWrapper('lvglObjGetStylePropNum', 4);
   _lvglObjSetLocalStylePropColor = Module['_lvglObjSetLocalStylePropColor'] = createExportWrapper('lvglObjSetLocalStylePropColor', 4);
@@ -9488,8 +9465,6 @@ function assignWasmExports(wasmExports) {
   _lvglMeterScaleSetMajorTickColor = Module['_lvglMeterScaleSetMajorTickColor'] = createExportWrapper('lvglMeterScaleSetMajorTickColor', 3);
   _lvglGetIndicator_start_value = Module['_lvglGetIndicator_start_value'] = createExportWrapper('lvglGetIndicator_start_value', 1);
   _lvglGetIndicator_end_value = Module['_lvglGetIndicator_end_value'] = createExportWrapper('lvglGetIndicator_end_value', 1);
-  _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = createExportWrapper('lvglUpdateCheckedState', 4);
-  _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = createExportWrapper('lvglUpdateDisabledState', 4);
   _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = createExportWrapper('lvglAddTimelineKeyframe', 23);
   _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExportWrapper('lvglSetTimelinePosition', 1);
   _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline', 0);
@@ -9506,8 +9481,6 @@ function assignWasmExports(wasmExports) {
   _lvglGetTabName = Module['_lvglGetTabName'] = createExportWrapper('lvglGetTabName', 3);
   _lv_tabview_get_tab_bar = Module['_lv_tabview_get_tab_bar'] = createExportWrapper('lv_tabview_get_tab_bar', 1);
   _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = createExportWrapper('lv_obj_get_child_by_type', 3);
-  _global_event_dispatcher = Module['_global_event_dispatcher'] = createExportWrapper('global_event_dispatcher', 1);
-  _get_global_dispatcher_ptr = Module['_get_global_dispatcher_ptr'] = createExportWrapper('get_global_dispatcher_ptr', 0);
   _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = createExportWrapper('lvglCreateFreeTypeFont', 4);
   _lv_log_add = Module['_lv_log_add'] = createExportWrapper('lv_log_add', 6);
   _lv_group_init = Module['_lv_group_init'] = createExportWrapper('lv_group_init', 0);
@@ -9644,6 +9617,7 @@ function assignWasmExports(wasmExports) {
   _lv_obj_remove_event_cb = Module['_lv_obj_remove_event_cb'] = createExportWrapper('lv_obj_remove_event_cb', 2);
   _lv_obj_remove_event_cb_with_user_data = Module['_lv_obj_remove_event_cb_with_user_data'] = createExportWrapper('lv_obj_remove_event_cb_with_user_data', 3);
   _lv_event_get_current_target_obj = Module['_lv_event_get_current_target_obj'] = createExportWrapper('lv_event_get_current_target_obj', 1);
+  _lv_event_get_target_obj = Module['_lv_event_get_target_obj'] = createExportWrapper('lv_event_get_target_obj', 1);
   _lv_event_get_old_size = Module['_lv_event_get_old_size'] = createExportWrapper('lv_event_get_old_size', 1);
   _lv_event_get_rotary_diff = Module['_lv_event_get_rotary_diff'] = createExportWrapper('lv_event_get_rotary_diff', 1);
   _lv_event_get_scroll_anim = Module['_lv_event_get_scroll_anim'] = createExportWrapper('lv_event_get_scroll_anim', 1);
@@ -11081,6 +11055,7 @@ function assignWasmExports(wasmExports) {
   __evalTextProperty = Module['__evalTextProperty'] = createExportWrapper('_evalTextProperty', 6);
   __evalIntegerProperty = Module['__evalIntegerProperty'] = createExportWrapper('_evalIntegerProperty', 6);
   __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = createExportWrapper('_evalUnsignedIntegerProperty', 6);
+  __evalBooleanProperty = Module['__evalBooleanProperty'] = createExportWrapper('_evalBooleanProperty', 6);
   __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = createExportWrapper('_evalStringArrayPropertyAndJoin', 7);
   __assignStringProperty = Module['__assignStringProperty'] = createExportWrapper('_assignStringProperty', 7);
   __assignIntegerProperty = Module['__assignIntegerProperty'] = createExportWrapper('_assignIntegerProperty', 7);

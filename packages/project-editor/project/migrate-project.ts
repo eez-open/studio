@@ -175,6 +175,22 @@ function removeFlowSupport(project: Project) {
     }
 }
 
+function addFlowSupport(project: Project) {
+    const projectStore = project._store;
+
+    // set all actions as native
+    project.actions.forEach(action => {
+        action.implementationType = "native"
+    });
+
+    // set all globalVariables as native
+    project.variables.globalVariables.forEach(globalVariable => {
+        projectStore.updateObject(globalVariable, {
+            native: true
+        });
+    });
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function migrateProjectType(
@@ -187,6 +203,8 @@ export function migrateProjectType(
     if (newFlowSupport != undefined) {
         if (project.settings.general.flowSupport && !newFlowSupport) {
             removeFlowSupport(project);
+        } else if (!project.settings.general.flowSupport && newFlowSupport) {
+            addFlowSupport(project)
         }
     }
 }

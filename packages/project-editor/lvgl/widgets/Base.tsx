@@ -1633,6 +1633,8 @@ export class LVGLWidget extends Widget {
                             if (componentIndex != undefined && outputIndex != undefined) {
                                 if (code.lvglBuild) {
                                     code.lvglBuild.line(`e->user_data = (void *)${eventHandler.userData};`);
+                                } else {
+                                    code.callFreeFunction("lvglSetEventUserData", event, eventHandler.userData);
                                 }
                                 code.callFreeFunction(
                                     "flowPropagateValueLVGLEvent",
@@ -1670,6 +1672,8 @@ export class LVGLWidget extends Widget {
                                     if (actionFlowIndex != undefined) {
                                         if (code.lvglBuild) {
                                             code.lvglBuild.line(`e->user_data = (void *)${eventHandler.userData};`);
+                                        } else {
+                                            code.callFreeFunction("lvglSetEventUserData", event, eventHandler.userData);
                                         }
                                         code.callFreeFunction(
                                             "flowPropagateValueLVGLEvent",

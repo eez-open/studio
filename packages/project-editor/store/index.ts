@@ -101,7 +101,6 @@ import {
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { isValidUrl } from "project-editor/core/util";
-import { reflectLvglVersion } from "project-editor/lvgl/page-runtime";
 import {
     canPasteWithDependencies,
     pasteWithDependencies
@@ -766,10 +765,6 @@ export class ProjectStore {
         await this.setProject(project, filePath);
 
         this.openProjectsManager.mount();
-
-        if (this.projectTypeTraits.isLVGL) {
-            reflectLvglVersion(this.project);
-        }
     }
 
     async saveModified() {
