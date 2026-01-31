@@ -1543,14 +1543,16 @@ export class LVGLPageViewerRuntime extends LVGLPageRuntime {
     ) {
         const eventCode = getLvglEvents(this.project)[eventName].code;
 
+        if (!this.eventHandlers.find(eventHandler => eventHandler.obj == obj)) {
+            this.wasm._lvglAddEventHandler(obj);
+        }
+
         this.eventHandlers.push({
             page: this.page,
             obj,
             eventCode,
             callback
         });
-
-        this.wasm._lvglAddEventHandler(obj, eventCode);
     }
 
     override lvglOnEventHandler(obj: number, eventCode: number, event: number) {

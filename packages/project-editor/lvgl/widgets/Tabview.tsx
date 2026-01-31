@@ -305,7 +305,7 @@ export class LVGLTabviewWidget extends LVGLWidget {
                             : "lv_tabview_get_tab_act"
                     );
 
-                    code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.ifNotEqual(new_val, cur_val, () => {
                         code.tickChangeStart();
 
                         if (code.isV9) {
@@ -332,11 +332,11 @@ export class LVGLTabviewWidget extends LVGLWidget {
                         const ta = code.callFreeFunctionWithAssignment(
                             "lv_obj_t *",
                             "ta",
-                            "lv_event_get_target",
+                            code.lv_event_get_target,
                             event
                         );
 
-                        code.ifIntegerNotEqual(tick_value_change_obj, ta, () => {
+                        code.ifNotEqual(tick_value_change_obj, ta, () => {
                             const value = code.callFreeFunctionWithAssignment(
                                 "int32_t",
                                 "value",

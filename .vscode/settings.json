@@ -111,5 +111,6 @@
     "workbench.editor.enablePreview": false,
     "editor.formatOnSave": false,
     "C_Cpp.formatting": "disabled",
-    "cortex-debug.variableUseNaturalFormat": false
+    "cortex-debug.variableUseNaturalFormat": false,
+    "C_Cpp.intelliSenseEngine":"Tag Parser"
 }

@@ -968,7 +968,7 @@ export class LVGLScaleWidget extends LVGLWidget {
                     "lv_scale_get_range_min_value"
                 );
 
-                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                code.ifNotEqual(new_val, cur_val, () => {
                     code.tickChangeStart();
 
                     const min = code.assign("int32_t", "min", new_val);
@@ -997,7 +997,7 @@ export class LVGLScaleWidget extends LVGLWidget {
                     "lv_scale_get_range_max_value"
                 );
 
-                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                code.ifNotEqual(new_val, cur_val, () => {
                     code.tickChangeStart();
 
                     const min = code.callObjectFunctionWithAssignment("int32_t", "min", "lv_scale_get_range_min_value");

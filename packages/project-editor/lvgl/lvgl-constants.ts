@@ -162,18 +162,6 @@ export const LV_GRID_ALIGN_SPACE_EVENLY = 4;
 export const LV_GRID_ALIGN_SPACE_AROUND = 5;
 export const LV_GRID_ALIGN_SPACE_BETWEEN = 6;
 
-const LV_SCROLLBAR_MODE_OFF = 0;
-const LV_SCROLLBAR_MODE_ON = 1;
-const LV_SCROLLBAR_MODE_ACTIVE = 2;
-const LV_SCROLLBAR_MODE_AUTO = 3;
-
-export const LVGL_SCROLL_BAR_MODES: { [key: string]: number } = {
-    off: LV_SCROLLBAR_MODE_OFF,
-    on: LV_SCROLLBAR_MODE_ON,
-    active: LV_SCROLLBAR_MODE_ACTIVE,
-    auto: LV_SCROLLBAR_MODE_AUTO
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export const LV_DIR_NONE = 0x00;
@@ -206,33 +194,8 @@ export const LVGL_KEY_ENUM_NAME = "$LVGLKey";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const LVGL_SCROLL_DIRECTION: { [key: string]: number } = {
-    none: LV_DIR_NONE,
-    left: LV_DIR_LEFT,
-    right: LV_DIR_RIGHT,
-    top: LV_DIR_TOP,
-    bottom: LV_DIR_BOTTOM,
-    hor: LV_DIR_HOR,
-    ver: LV_DIR_VER,
-    all: LV_DIR_ALL
-};
-
 export const LV_ANIM_OFF = 0;
 export const LV_ANIM_ON = 1;
-
-////////////////////////////////////////////////////////////////////////////////
-
-const LV_SCROLL_SNAP_NONE = 0;
-const LV_SCROLL_SNAP_START = 1;
-const LV_SCROLL_SNAP_END = 2;
-const LV_SCROLL_SNAP_CENTER = 3;
-
-export const LVGL_SCROLL_SNAP: { [key: string]: number } = {
-    none: LV_SCROLL_SNAP_NONE,
-    start: LV_SCROLL_SNAP_START,
-    end: LV_SCROLL_SNAP_END,
-    center: LV_SCROLL_SNAP_CENTER
-};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -388,8 +351,8 @@ export const LV_PART_ENUM_NAME = "LV_PART";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const LV_EVENT_CHECKED = 0x7e;
-export const LV_EVENT_UNCHECKED = 0x7f;
+const LV_EVENT_CHECKED = 0x7E;
+const LV_EVENT_UNCHECKED = 0x7F;
 
 export const LVGL_EVENTS_V8 = {
     PRESSED: { code: 1, paramExpressionType: "event" },
@@ -597,17 +560,6 @@ export const LVGL_EVENTS_V9_3_0 = {
     CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "event" },
     UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "event" }
 } as WidgetEvents;
-
-export const LV_EVENT_METER_TICK_LABEL_EVENT = 0x74;
-export const LV_EVENT_DROPDOWN_SELECTED_CHANGED = 0x75;
-export const LV_EVENT_ROLLER_SELECTED_CHANGED = 0x76;
-export const LV_EVENT_TEXTAREA_TEXT_CHANGED = 0x77;
-export const LV_EVENT_CHECKED_STATE_CHANGED = 0x78;
-export const LV_EVENT_ARC_VALUE_CHANGED = 0x79;
-export const LV_EVENT_SLIDER_VALUE_CHANGED = 0x7a;
-export const LV_EVENT_SLIDER_VALUE_LEFT_CHANGED = 0x7b;
-export const LV_EVENT_SPINBOX_VALUE_CHANGED = 0x7c;
-export const LV_EVENT_SPINBOX_STEP_CHANGED = 0x7d;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -857,4 +809,23 @@ export const LVGL_CONSTANTS_ALL = {
     LV_PART_MAIN: 0x000000,
     LV_PART_INDICATOR: 0x020000,
     LV_PART_ITEMS: 0x050000,
+
+    LV_STATE_CHECKED: 0x0001,
+    LV_STATE_DISABLED: 0x0080,
+    LV_STATE_FOCUSED: 0x0002,
+    LV_STATE_FOCUS_KEY: 0x0004,
+    LV_STATE_PRESSED: 0x0020,
+
+    LV_OBJ_FLAG_HIDDEN: 1 << 0,
+    LV_OBJ_FLAG_CLICKABLE: 1 << 1,
+
+    LV_SCROLLBAR_MODE_OFF: 0,
+    LV_SCROLLBAR_MODE_ON: 1,
+    LV_SCROLLBAR_MODE_ACTIVE: 2,
+    LV_SCROLLBAR_MODE_AUTO: 3,
+
+    LV_SCROLL_SNAP_NONE: 0,
+    LV_SCROLL_SNAP_START: 1,
+    LV_SCROLL_SNAP_END: 2,
+    LV_SCROLL_SNAP_CENTER: 3,
 };

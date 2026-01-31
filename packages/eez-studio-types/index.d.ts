@@ -697,12 +697,7 @@ export interface IWasmFlowRuntime {
     _lvglGetObjHeight(obj: number): number;
     _lvglLoadFont(font_file_path: number, fallback_user_font: number, fallback_builtin_font: number): number;
     _lvglFreeFont(font_ptr: number): void;
-    _lvglAddObjectFlowCallback(obj: number, filter: number, flow_state: number, component_index: number, output_or_property_index: number, userDataValuePtr: number): void;
-    
-    _lvglUpdateCheckedState(obj: number, flow_state: number, component_index: number, property_index: number): void;
-    _lvglUpdateDisabledState(obj: number, flow_state: number, component_index: number, property_index: number): void;
-    _lvglUpdateHiddenFlag(obj: number, flow_state: number, component_index: number, property_index: number): void;
-    _lvglUpdateClickableFlag(obj: number, flow_state: number, component_index: number, property_index: number): void;
+
     _lvglAddTimelineKeyframe(
         obj: number,
         page_index: number,
@@ -721,11 +716,6 @@ export interface IWasmFlowRuntime {
     _lvglClearTimeline(): void;
     _lvglGetFlowState(flowState: number, userWidgetComponentIndexOrPageIndex: number): number;
 
-    _lvglSetScrollBarMode(obj: number, mode: number);
-    _lvglSetScrollDir(obj: number, dir: number);
-    _lvglSetScrollSnapX(obj: number, align: number);
-    _lvglSetScrollSnapY(obj: number, align: number);
-
     _lvglLineSetPoints(obj: number, point_values: number, point_num: number);
     _lvglScrollTo(obj: number, x: number, y: number, anim_en: boolean);
     _lvglGetScrollX(obj: number): number;
@@ -742,7 +732,7 @@ export interface IWasmFlowRuntime {
 
     _lvglDeleteScreenOnUnload(screenIndex: number);
 
-    _lvglAddEventHandler(obj: number, eventCode: number): void;
+    _lvglAddEventHandler(obj: number): void;
 
     _lvglCreateFreeTypeFont(filePath: number, size: number, renderMode: number, style: number): number;
 

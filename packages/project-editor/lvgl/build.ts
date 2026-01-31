@@ -10,7 +10,7 @@ import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import type { Font } from "project-editor/features/font/font";
 import { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { Project, findAction } from "project-editor/project/project";
+import { Project } from "project-editor/project/project";
 import { Section, getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
@@ -93,7 +93,10 @@ export class LVGLBuild extends Build {
     objectAccessors: string[] | undefined;
 
     tickCallbacks: (() => void)[];
-    eventHandlers = new Map<LVGLWidget, (() => void)[]>();
+    eventHandlers = new Map<
+        LVGLWidget,
+        { eventName: string; callback: () => void }[]
+    >();
     postBuildCallbacks: (() => void)[] = [];
 
     constructor(public assets: Assets) {
@@ -123,12 +126,12 @@ export class LVGLBuild extends Build {
         const fileStaticVars = this.fileStaticVars.slice();
         const objectAccessors = this.objectAccessors?.slice();
         const tickCallbacks = this.tickCallbacks.slice();
-        
+
         const eventHandlers = new Map(this.eventHandlers);
         for (const [key, value] of eventHandlers) {
             eventHandlers.set(key, value.slice());
         }
-        
+
         const postBuildCallbacks = this.postBuildCallbacks.slice();
 
         await this.buildScreensDef();
@@ -656,9 +659,7 @@ export class LVGLBuild extends Build {
             widget,
             ProjectEditor.PageClass.classInfo
         ) as Page;
-        return `event_handler_cb_${this.getScreenIdentifier(
-            page
-        )}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
+        return `event_handler_cb_${this.getScreenIdentifier(page)}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
     }
 
     getCheckedEventHandlerCallbackName(widget: LVGLWidget) {
@@ -928,13 +929,17 @@ export class LVGLBuild extends Build {
         this.tickCallbacks.push(callback);
     }
 
-    addEventHandler(widget: LVGLWidget, callback: () => void) {
+    addEventHandler(
+        widget: LVGLWidget,
+        eventName: string,
+        callback: () => void
+    ) {
         let eventHandlers = this.eventHandlers.get(widget);
         if (!eventHandlers) {
             eventHandlers = [];
             this.eventHandlers.set(widget, eventHandlers);
         }
-        eventHandlers.push(callback);
+        eventHandlers.push({ eventName, callback });
     }
 
     buildWidgetAssign(widget: LVGLWidget) {
@@ -957,12 +962,9 @@ export class LVGLBuild extends Build {
         } else if (isGeometryControlledByParent(widget)) {
             // skip
         } else {
-            build.line(
-                `lv_obj_set_pos(obj, ${widget.lvglBuildLeft}, ${widget.lvglBuildTop});`
-            );
-            build.line(
-                `lv_obj_set_size(obj, ${widget.lvglBuildWidth}, ${widget.lvglBuildHeight});`
-            );
+            let rect = widget.getLvglBuildRect();
+            build.line(`lv_obj_set_pos(obj, ${rect.left}, ${rect.top});`);
+            build.line(`lv_obj_set_size(obj, ${rect.width}, ${rect.height});`);
         }
     }
 
@@ -1027,9 +1029,7 @@ export class LVGLBuild extends Build {
         const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
         for (let i = 0; i < pages.length; i++) {
             build.line(
-                `SCREEN_ID_${this.getScreenIdentifier(
-                    pages[i]
-                ).toUpperCase()} = ${i + 1},`
+                `SCREEN_ID_${this.getScreenIdentifier(pages[i]).toUpperCase()} = ${i + 1},`
             );
         }
         build.blockEnd(`};`);
@@ -1044,20 +1044,14 @@ export class LVGLBuild extends Build {
                         )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);`
                     );
                     build.line(
-                        `void ${this.getScreenTickFunctionName(
-                            page
-                        )}(void *flowState, int startWidgetIndex);`
+                        `void ${this.getScreenTickFunctionName(page)}(void *flowState, int startWidgetIndex);`
                     );
                 } else {
                     build.line(
-                        `void ${this.getScreenCreateFunctionName(
-                            page
-                        )}(lv_obj_t *parent_obj, int startWidgetIndex);`
+                        `void ${this.getScreenCreateFunctionName(page)}(lv_obj_t *parent_obj, int startWidgetIndex);`
                     );
                     build.line(
-                        `void ${this.getScreenTickFunctionName(
-                            page
-                        )}(int startWidgetIndex);`
+                        `void ${this.getScreenTickFunctionName(page)}(int startWidgetIndex);`
                     );
                 }
             } else {
@@ -1076,22 +1070,14 @@ export class LVGLBuild extends Build {
             build.blockStart(`enum Themes {`);
             this.project.themes.forEach(theme => {
                 build.line(
-                    `THEME_ID_${getName(
-                        "",
-                        theme.name,
-                        NamingConvention.UnderscoreUpperCase
-                    )},`
+                    `THEME_ID_${getName("", theme.name, NamingConvention.UnderscoreUpperCase)},`
                 );
             });
             build.blockEnd(`};`);
             build.blockStart(`enum Colors {`);
             this.project.colors.forEach(color => {
                 build.line(
-                    `COLOR_ID_${getName(
-                        "",
-                        color.name,
-                        NamingConvention.UnderscoreUpperCase
-                    )},`
+                    `COLOR_ID_${getName("", color.name, NamingConvention.UnderscoreUpperCase)},`
                 );
             });
             build.blockEnd(`};`);
@@ -1152,10 +1138,8 @@ export class LVGLBuild extends Build {
                 build.line("");
             }
         }
-        
-        build.blockStart(
-            `ext_font_desc_t fonts[] = {`
-        );
+
+        build.blockStart(`ext_font_desc_t fonts[] = {`);
         for (const font of this.fonts) {
             build.line(
                 `{ "${font.name}", ${font.lvglUseFreeType ? "NULL" : this.getFontAccessor(font)} },`
@@ -1163,223 +1147,90 @@ export class LVGLBuild extends Build {
         }
         for (const font of BUILT_IN_FONTS) {
             build.text(`#if LV_FONT_${font}\n`);
-            build.line(
-                `{ "${font}", &lv_font_${font.toLowerCase()} },`
-            );
+            build.line(`{ "${font}", &lv_font_${font.toLowerCase()} },`);
             build.text(`#endif\n`);
         }
         build.blockEnd(`};`);
         build.line("");
 
-        if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            for (const page of this.pages) {
-                page._lvglWidgets.forEach(widget => {
-                    const widgetEventHandlers = this.eventHandlers.get(widget);
+        // event handlers
+        for (const page of this.pages) {
+            page._lvglWidgets.forEach(widget => {
+                const widgetEventHandlers = this.eventHandlers.get(widget);
+                if (widgetEventHandlers) {
                     if (
-                        widget.eventHandlers.length > 0 ||
-                        widget.hasEventHandler ||
-                        widgetEventHandlers
+                        !build.assets.projectStore.projectTypeTraits
+                            .hasFlowSupport
                     ) {
-                        build.blockStart(
-                            `static void ${build.getEventHandlerCallbackName(
-                                widget
-                            )}(lv_event_t *e) {`
+                        const checkedEventHandler = widgetEventHandlers.find(
+                            widgetEventHandler =>
+                                widgetEventHandler.eventName == "CHECKED"
                         );
+                        if (checkedEventHandler) {
+                            build.blockStart(
+                                `static void ${build.getCheckedEventHandlerCallbackName(widget)}(lv_event_t *e) {`
+                            );
+                            checkedEventHandler.callback();
+                            build.blockEnd("}");
+                            build.line("");
+                        }
+                    }
 
+                    if (
+                        !build.assets.projectStore.projectTypeTraits
+                            .hasFlowSupport
+                    ) {
+                        const uncheckedEventHandler = widgetEventHandlers.find(
+                            widgetEventHandler =>
+                                widgetEventHandler.eventName == "UNCHECKED"
+                        );
+                        if (uncheckedEventHandler) {
+                            build.blockStart(
+                                `static void ${build.getUncheckedEventHandlerCallbackName(widget)}(lv_event_t *e) {`
+                            );
+                            uncheckedEventHandler.callback();
+                            build.blockEnd("}");
+                            build.line("");
+                        }
+                    }
+
+                    const otherEventHandlers = build.assets.projectStore
+                        .projectTypeTraits.hasFlowSupport
+                        ? widgetEventHandlers
+                        : widgetEventHandlers.filter(
+                              widgetEventHandler =>
+                                  widgetEventHandler.eventName != "CHECKED" &&
+                                  widgetEventHandler.eventName != "UNCHECKED"
+                          );
+                    if (otherEventHandlers.length > 0) {
+                        build.blockStart(
+                            `static void ${build.getEventHandlerCallbackName(widget)}(lv_event_t *e) {`
+                        );
                         build.line(
                             `lv_event_code_t event = lv_event_get_code(e);`
                         );
-
-                        build.line(
-                            `void *flowState = lv_event_get_user_data(e);`
-                        );
-                        build.line(`(void)flowState;`);
-
-                        build.line("");
-
-                        if (widget.hasEventHandler) {
-                            widget.buildEventHandler(build);
-                        }
-
-                        if (widgetEventHandlers) {
-                            for (const eventHandler of widgetEventHandlers) {
-                                eventHandler();
-                            }
-                        }
-
                         if (
-                            widget.eventHandlers.length > 0 &&
-                            (widget.hasEventHandler || widgetEventHandlers)
+                            build.assets.projectStore.projectTypeTraits
+                                .hasFlowSupport
                         ) {
+                            build.line(
+                                `void *flowState = lv_event_get_user_data(e);`
+                            );
+                            build.line(`(void)flowState;`);
                             build.line("");
                         }
-
-                        for (const eventHandler of widget.eventHandlers) {
-                            if (
-                                eventHandler.eventName == "CHECKED" ||
-                                eventHandler.eventName == "UNCHECKED"
-                            ) {
-                                build.line(
-                                    `lv_obj_t *ta = lv_event_get_target(e);`
-                                );
-                                break;
-                            }
-                        }
-
-                        for (const eventHandler of widget.eventHandlers) {
-                            if (eventHandler.eventName == "CHECKED") {
-                                build.blockStart(
-                                    `if (event == LV_EVENT_VALUE_CHANGED && lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
-                                );
-                            } else if (eventHandler.eventName == "UNCHECKED") {
-                                build.blockStart(
-                                    `if (event == LV_EVENT_VALUE_CHANGED && !lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
-                                );
-                            } else {
-                                build.blockStart(
-                                    `if (event == LV_EVENT_${eventHandler.eventName}) {`
-                                );
-                            }
-
-                            build.line(
-                                `e->user_data = (void *)${eventHandler.userData};`
+                        for (const eventHandler of otherEventHandlers) {
+                            this.blockStart(
+                                `if (event == LV_EVENT_${eventHandler.eventName == "CHECKED" || eventHandler.eventName == "UNCHECKED" ? "VALUE_CHANGED" : eventHandler.eventName}) {`
                             );
-
-                            if (eventHandler.handlerType == "action") {
-                                const action = findAction(
-                                    this.project,
-                                    eventHandler.action
-                                );
-                                if (action) {
-                                    if (action.implementationType == "native") {
-                                        build.line(
-                                            `${this.getActionFunctionName(
-                                                eventHandler.action
-                                            )}(e);`
-                                        );
-                                    } else {
-                                        let actionFlowIndex =
-                                            build.assets.getFlowIndex(action);
-                                        build.line(
-                                            `flowPropagateValueLVGLEvent(flowState, -1, ${actionFlowIndex}, e);`
-                                        );
-                                    }
-                                }
-                            } else {
-                                let componentIndex =
-                                    build.assets.getComponentIndex(widget);
-                                const outputIndex =
-                                    build.assets.getComponentOutputIndex(
-                                        widget,
-                                        eventHandler.eventName
-                                    );
-
-                                build.line(
-                                    `flowPropagateValueLVGLEvent(flowState, ${componentIndex}, ${outputIndex}, e);`
-                                );
-                            }
-                            build.blockEnd("}");
+                            eventHandler.callback();
+                            this.blockEnd("}");
                         }
-
                         build.blockEnd("}");
                         build.line("");
                     }
-                });
-            }
-        } else {
-            for (const page of this.pages) {
-                page._lvglWidgets.forEach(widget => {
-                    for (const eventHandler of widget.eventHandlers) {
-                        if (eventHandler.eventName == "CHECKED") {
-                            build.blockStart(
-                                `static void ${build.getCheckedEventHandlerCallbackName(
-                                    widget
-                                )}(lv_event_t *e) {`
-                            );
-
-                            build.line(
-                                `lv_obj_t *ta = lv_event_get_target(e);`
-                            );
-
-                            build.blockStart(
-                                `if (lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
-                            );
-
-                            const action = findAction(
-                                this.project,
-                                eventHandler.action
-                            );
-                            if (action) {
-                                build.line(
-                                    `${this.getActionFunctionName(
-                                        eventHandler.action
-                                    )}(e);`
-                                );
-                            }
-
-                            build.blockEnd("}");
-
-                            build.blockEnd("}");
-                            build.line("");
-                        } else if (eventHandler.eventName == "UNCHECKED") {
-                            build.blockStart(
-                                `static void ${build.getUncheckedEventHandlerCallbackName(
-                                    widget
-                                )}(lv_event_t *e) {`
-                            );
-
-                            build.line(
-                                `lv_obj_t *ta = lv_event_get_target(e);`
-                            );
-
-                            build.blockStart(
-                                `if (!lv_obj_has_state(ta, LV_STATE_CHECKED)) {`
-                            );
-
-                            const action = findAction(
-                                this.project,
-                                eventHandler.action
-                            );
-                            if (action) {
-                                build.line(
-                                    `${this.getActionFunctionName(
-                                        eventHandler.action
-                                    )}(e);`
-                                );
-                            }
-
-                            build.blockEnd("}");
-
-                            build.blockEnd("}");
-                            build.line("");
-                        }
-                    }
-
-                    const widgetEventHandlers = this.eventHandlers.get(widget);
-                    if (widget.hasEventHandler || widgetEventHandlers) {
-                        build.blockStart(
-                            `static void ${build.getEventHandlerCallbackName(
-                                widget
-                            )}(lv_event_t *e) {`
-                        );
-
-                        build.line(
-                            `lv_event_code_t event = lv_event_get_code(e);`
-                        );
-
-                        widget.buildEventHandler(build);
-
-                        if (widgetEventHandlers) {
-                            for (const eventHandler of widgetEventHandlers) {
-                                eventHandler();
-                            }
-                        }
-
-                        build.blockEnd("}");
-                        build.line("");
-                    }
-                });
-            }
+                }
+            });
         }
 
         for (const page of this.pages) {
@@ -1394,9 +1245,7 @@ export class LVGLBuild extends Build {
                     build.line(`(void)startWidgetIndex;`);
                 } else {
                     build.blockStart(
-                        `void ${this.getScreenCreateFunctionName(
-                            page
-                        )}(lv_obj_t *parent_obj, int startWidgetIndex) {`
+                        `void ${this.getScreenCreateFunctionName(page)}(lv_obj_t *parent_obj, int startWidgetIndex) {`
                     );
                     build.line(`(void)startWidgetIndex;`);
                 }
@@ -1420,9 +1269,7 @@ export class LVGLBuild extends Build {
             ) {
                 build.line("");
                 build.line(
-                    `eez_flow_delete_screen_on_unload(SCREEN_ID_${this.getScreenIdentifier(
-                        page
-                    ).toUpperCase()} - 1);`
+                    `eez_flow_delete_screen_on_unload(SCREEN_ID_${this.getScreenIdentifier(page).toUpperCase()} - 1);`
                 );
             }
 
@@ -1444,15 +1291,11 @@ export class LVGLBuild extends Build {
 
                 if (this.isV9) {
                     build.line(
-                        `lv_obj_delete(${build.getLvglObjectAccessor(
-                            page.lvglScreenWidget!
-                        )});`
+                        `lv_obj_delete(${build.getLvglObjectAccessor(page.lvglScreenWidget!)});`
                     );
                 } else {
                     build.line(
-                        `lv_obj_del(${build.getLvglObjectAccessor(
-                            page.lvglScreenWidget!
-                        )});`
+                        `lv_obj_del(${build.getLvglObjectAccessor(page.lvglScreenWidget!)});`
                     );
                 }
 
@@ -1468,9 +1311,7 @@ export class LVGLBuild extends Build {
 
                 if (build.project.projectTypeTraits.hasFlowSupport) {
                     build.line(
-                        `deletePageFlowState(${build.assets.getFlowIndex(
-                            page
-                        )});`
+                        `deletePageFlowState(${build.assets.getFlowIndex(page)});`
                     );
                 }
 
@@ -1485,17 +1326,13 @@ export class LVGLBuild extends Build {
             if (page.isUsedAsUserWidget) {
                 if (build.project.projectTypeTraits.hasFlowSupport) {
                     build.blockStart(
-                        `void ${this.getScreenTickFunctionName(
-                            page
-                        )}(void *flowState, int startWidgetIndex) {`
+                        `void ${this.getScreenTickFunctionName(page)}(void *flowState, int startWidgetIndex) {`
                     );
                     build.line(`(void)flowState;`);
                     build.line(`(void)startWidgetIndex;`);
                 } else {
                     build.blockStart(
-                        `void ${this.getScreenTickFunctionName(
-                            page
-                        )}(int startWidgetIndex) {`
+                        `void ${this.getScreenTickFunctionName(page)}(int startWidgetIndex) {`
                     );
                     build.line(`(void)startWidgetIndex;`);
                 }
@@ -1612,15 +1449,11 @@ export class LVGLBuild extends Build {
 
             if (flag) {
                 build.line(
-                    `int startWidgetIndex = ${
-                        this.getWidgetObjectIndex(lvglWidget) + 1
-                    };`
+                    `int startWidgetIndex = ${this.getWidgetObjectIndex(lvglWidget) + 1};`
                 );
             } else {
                 build.line(
-                    `startWidgetIndex += ${
-                        this.getWidgetObjectIndex(lvglWidget) + 1
-                    };`
+                    `startWidgetIndex += ${this.getWidgetObjectIndex(lvglWidget) + 1};`
                 );
             }
 
@@ -1705,9 +1538,7 @@ export class LVGLBuild extends Build {
             const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
             if (pages.length > 0) {
                 build.line(
-                    `static const char *screen_names[] = { ${pages
-                        .map(page => `"${page.name}"`)
-                        .join(", ")} };`
+                    `static const char *screen_names[] = { ${pages.map(page => `"${page.name}"`).join(", ")} };`
                 );
             }
 
@@ -1727,9 +1558,7 @@ export class LVGLBuild extends Build {
             }
             if (this.styles.length > 0) {
                 build.line(
-                    `static const char *style_names[] = { ${this.styles
-                        .map(style => `"${style.name}"`)
-                        .join(", ")} };`
+                    `static const char *style_names[] = { ${this.styles.map(style => `"${style.name}"`).join(", ")} };`
                 );
             }
             if (this.updateColorCallbacks.length > 0) {
@@ -1859,26 +1688,18 @@ export class LVGLBuild extends Build {
 
                 if (this.isV9) {
                     build.line(
-                        `${this.getFontVariableName(
-                            font
-                        )} = lv_binfont_create(${escapeCString(
+                        `${this.getFontVariableName(font)} = lv_binfont_create(${escapeCString(
                             `${path}${output}.bin`
                         )});`
                     );
                 } else {
                     build.line(
-                        `${this.getFontVariableName(
-                            font
-                        )} = lv_font_load(${escapeCString(
-                            `${path}${output}.bin`
-                        )});`
+                        `${this.getFontVariableName(font)} = lv_font_load(${escapeCString(`${path}${output}.bin`)});`
                     );
                 }
                 if (font.lvglFallbackFont) {
                     build.line(
-                        `${this.getFontVariableName(font)}->fallback = &${
-                            font.lvglFallbackFont
-                        };`
+                        `${this.getFontVariableName(font)}->fallback = &${font.lvglFallbackFont};`
                     );
                 }
             }
@@ -1889,17 +1710,18 @@ export class LVGLBuild extends Build {
         {
             let anyFontWithFreeType = false;
 
-            
-            for (let fontIndex = 0; fontIndex < this.fonts.length; fontIndex++) {
+            for (
+                let fontIndex = 0;
+                fontIndex < this.fonts.length;
+                fontIndex++
+            ) {
                 const font = this.fonts[fontIndex];
                 if (font.lvglUseFreeType) {
                     if (this.isV9) {
                         build.blockStart("{");
 
                         build.line(
-                            `${this.getFontVariableName(
-                                font
-                            )} = lv_freetype_font_create(${escapeCString(
+                            `${this.getFontVariableName(font)} = lv_freetype_font_create(${escapeCString(
                                 font.lvglFreeTypeFilePath
                             )}, ${font.lvglFreeTypeRenderMode == "OUTLINE" ? "LV_FREETYPE_FONT_RENDER_MODE_OUTLINE" : "LV_FREETYPE_FONT_RENDER_MODE_BITMAP"}, ${
                                 font.source!.size
@@ -1907,22 +1729,22 @@ export class LVGLBuild extends Build {
                                 font.lvglFreeTypeStyle == "BOLD"
                                     ? "LV_FREETYPE_FONT_STYLE_BOLD"
                                     : font.lvglFreeTypeStyle == "ITALIC"
-                                    ? "LV_FREETYPE_FONT_STYLE_ITALIC"
-                                    : font.lvglFreeTypeStyle == "BOLD_ITALIC"
-                                    ? "LV_FREETYPE_FONT_STYLE_BOLD | LV_FREETYPE_FONT_STYLE_ITALIC"
-                                    : "LV_FREETYPE_FONT_STYLE_NORMAL"
+                                      ? "LV_FREETYPE_FONT_STYLE_ITALIC"
+                                      : font.lvglFreeTypeStyle == "BOLD_ITALIC"
+                                        ? "LV_FREETYPE_FONT_STYLE_BOLD | LV_FREETYPE_FONT_STYLE_ITALIC"
+                                        : "LV_FREETYPE_FONT_STYLE_NORMAL"
                             });`
                         );
 
-                        build.line(`fonts[${fontIndex}].font_ptr = ${this.getFontVariableName(font)};`);
+                        build.line(
+                            `fonts[${fontIndex}].font_ptr = ${this.getFontVariableName(font)};`
+                        );
 
                         build.blockStart(
                             `if (!${this.getFontVariableName(font)}) {`
                         );
                         build.line(
-                            `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(
-                                font
-                            )}");`
+                            `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`
                         );
                         build.blockEnd("}");
 
@@ -1933,9 +1755,7 @@ export class LVGLBuild extends Build {
                         build.line(`lv_ft_info_t info;`);
 
                         build.line(
-                            `info.name = ${escapeCString(
-                                font.lvglFreeTypeFilePath
-                            )};`
+                            `info.name = ${escapeCString(font.lvglFreeTypeFilePath)};`
                         );
                         build.line(`info.weight = ${font.source!.size};`);
                         build.line(
@@ -1943,19 +1763,17 @@ export class LVGLBuild extends Build {
                                 font.lvglFreeTypeStyle == "BOLD"
                                     ? "FT_FONT_STYLE_BOLD"
                                     : font.lvglFreeTypeStyle == "ITALIC"
-                                    ? "FT_FONT_STYLE_ITALIC"
-                                    : font.lvglFreeTypeStyle == "BOLD_ITALIC"
-                                    ? "FT_FONT_STYLE_BOLD | FT_FONT_STYLE_ITALIC"
-                                    : "FT_FONT_STYLE_NORMAL"
+                                      ? "FT_FONT_STYLE_ITALIC"
+                                      : font.lvglFreeTypeStyle == "BOLD_ITALIC"
+                                        ? "FT_FONT_STYLE_BOLD | FT_FONT_STYLE_ITALIC"
+                                        : "FT_FONT_STYLE_NORMAL"
                             };`
                         );
                         build.line(`info.mem = 0;`);
 
                         build.blockStart(`if (!lv_ft_font_init(&info)) {`);
                         build.line(
-                            `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(
-                                font
-                            )}");`
+                            `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`
                         );
                         build.unindent();
                         build.line("} else {");
@@ -2067,9 +1885,7 @@ export class LVGLBuild extends Build {
         if (this.project.settings.build.imageExportMode == "source") {
             for (const bitmap of this.bitmaps) {
                 build.line(
-                    `extern const lv_img_dsc_t ${this.getImageVariableName(
-                        bitmap
-                    )};`
+                    `extern const lv_img_dsc_t ${this.getImageVariableName(bitmap)};`
                 );
             }
         }
@@ -2079,11 +1895,7 @@ export class LVGLBuild extends Build {
 #define EXT_IMG_DESC_T
 typedef struct _ext_img_desc_t {
     const char *name;
-    const ${
-        this.project.settings.build.imageExportMode == "binary"
-            ? "void"
-            : "lv_img_dsc_t"
-    } *img_dsc;
+    const ${this.project.settings.build.imageExportMode == "binary" ? "void" : "lv_img_dsc_t"} *img_dsc;
 } ext_img_desc_t;
 #endif
 
@@ -2176,9 +1988,7 @@ extern ext_font_desc_t fonts[];
                 }
 
                 build.line(
-                    `extern void ${this.getActionFunctionName(
-                        action.name
-                    )}(lv_event_t * e);`
+                    `extern void ${this.getActionFunctionName(action.name)}(lv_event_t * e);`
                 );
 
                 if (action.userProperties.length > 0) {
@@ -2248,15 +2058,11 @@ extern ext_font_desc_t fonts[];
                 }
 
                 build.line(
-                    `extern ${nativeType}${this.getVariableGetterFunctionName(
-                        variable.name
-                    )}();`
+                    `extern ${nativeType}${this.getVariableGetterFunctionName(variable.name)}();`
                 );
 
                 build.line(
-                    `extern void ${this.getVariableSetterFunctionName(
-                        variable.name
-                    )}(${nativeType}value);`
+                    `extern void ${this.getVariableSetterFunctionName(variable.name)}(${nativeType}value);`
                 );
             }
         }
@@ -2286,9 +2092,7 @@ extern ext_font_desc_t fonts[];
                         isEnumType(variable.type)
                             ? "INTEGER"
                             : variable.type.toUpperCase()
-                    }, ${this.getVariableGetterFunctionName(
-                        variable.name
-                    )}, ${this.getVariableSetterFunctionName(
+                    }, ${this.getVariableGetterFunctionName(variable.name)}, ${this.getVariableSetterFunctionName(
                         variable.name
                     )} }, `
                 );
@@ -2313,25 +2117,17 @@ extern ext_font_desc_t fonts[];
                     Object.keys(definition[part]).forEach(state => {
                         // build style get function
                         build.line(
-                            `lv_style_t *${this.getGetStyleFunctionName(
-                                lvglStyle,
-                                part,
-                                state
-                            )}();`
+                            `lv_style_t *${this.getGetStyleFunctionName(lvglStyle, part, state)}();`
                         );
                     });
                 });
             }
 
             build.line(
-                `void ${this.getAddStyleFunctionName(
-                    lvglStyle
-                )}(lv_obj_t *obj);`
+                `void ${this.getAddStyleFunctionName(lvglStyle)}(lv_obj_t *obj);`
             );
             build.line(
-                `void ${this.getRemoveStyleFunctionName(
-                    lvglStyle
-                )}(lv_obj_t *obj);`
+                `void ${this.getRemoveStyleFunctionName(lvglStyle)}(lv_obj_t *obj);`
             );
 
             build.line("");
@@ -2361,11 +2157,7 @@ extern ext_font_desc_t fonts[];
                         Object.keys(definition[part]).forEach(state => {
                             // build style init function
                             build.blockStart(
-                                `void ${this.getInitStyleFunctionName(
-                                    lvglStyle,
-                                    part,
-                                    state
-                                )}(lv_style_t *style) {`
+                                `void ${this.getInitStyleFunctionName(lvglStyle, part, state)}(lv_style_t *style) {`
                             );
 
                             if (
@@ -2374,11 +2166,7 @@ extern ext_font_desc_t fonts[];
                                 ]
                             ) {
                                 build.line(
-                                    `${this.getInitStyleFunctionName(
-                                        lvglStyle.parentStyle,
-                                        part,
-                                        state
-                                    )}(style);`
+                                    `${this.getInitStyleFunctionName(lvglStyle.parentStyle, part, state)}(style);`
                                 );
                                 build.line("");
                             }
@@ -2397,11 +2185,7 @@ extern ext_font_desc_t fonts[];
 
                             // build style get function
                             build.blockStart(
-                                `lv_style_t *${this.getGetStyleFunctionName(
-                                    lvglStyle,
-                                    part,
-                                    state
-                                )}() {`
+                                `lv_style_t *${this.getGetStyleFunctionName(lvglStyle, part, state)}() {`
                             );
 
                             build.line("static lv_style_t *style;");
@@ -2421,11 +2205,7 @@ extern ext_font_desc_t fonts[];
                                 build.line(`lv_style_init(style);`);
 
                                 build.line(
-                                    `${this.getInitStyleFunctionName(
-                                        lvglStyle,
-                                        part,
-                                        state
-                                    )}(style);`
+                                    `${this.getInitStyleFunctionName(lvglStyle, part, state)}(style);`
                                 );
                             }
                             build.blockEnd("}");
@@ -2440,9 +2220,7 @@ extern ext_font_desc_t fonts[];
 
                 // build style add function
                 build.blockStart(
-                    `void ${this.getAddStyleFunctionName(
-                        lvglStyle
-                    )}(lv_obj_t *obj) {`
+                    `void ${this.getAddStyleFunctionName(lvglStyle)}(lv_obj_t *obj) {`
                 );
 
                 build.line(`(void)obj;`);
@@ -2470,9 +2248,7 @@ extern ext_font_desc_t fonts[];
 
                 // build style remove function
                 build.blockStart(
-                    `void ${this.getRemoveStyleFunctionName(
-                        lvglStyle
-                    )}(lv_obj_t *obj) {`
+                    `void ${this.getRemoveStyleFunctionName(lvglStyle)}(lv_obj_t *obj) {`
                 );
 
                 build.line(`(void)obj;`);
@@ -2563,9 +2339,7 @@ extern ext_font_desc_t fonts[];
 
         build.indent();
         build.line(
-            `loadScreen(SCREEN_ID_${this.getScreenIdentifier(
-                this.pages[0]
-            ).toUpperCase()});`
+            `loadScreen(SCREEN_ID_${this.getScreenIdentifier(this.pages[0]).toUpperCase()});`
         );
         build.unindent();
 
@@ -2845,7 +2619,7 @@ export async function generateSourceCodeForEezFramework(
             "#define EEZ_FOR_LVGL_LZ4_OPTION 1",
             "#define EEZ_FOR_LVGL_LZ4_OPTION 0"
         );
-        
+
         defines.push("EEZ_FOR_LVGL_LZ4_OPTION=0");
     }
 
@@ -2872,7 +2646,7 @@ export async function generateSourceCodeForEezFramework(
             "#define EEZ_FOR_LVGL_SHA256_OPTION 1",
             "#define EEZ_FOR_LVGL_SHA256_OPTION 0"
         );
-        
+
         defines.push("EEZ_FOR_LVGL_SHA256_OPTION=0");
     }
 

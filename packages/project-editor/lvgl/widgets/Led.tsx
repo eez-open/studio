@@ -201,7 +201,7 @@ export class LVGLLedWidget extends LVGLWidget {
                     cur_val = code.callObjectFunction("lvglLedGetColor");
                 }
 
-                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                code.ifNotEqual(new_val, cur_val, () => {
                     code.tickChangeStart();
 
                     console.log(new_val, cur_val);
@@ -249,7 +249,7 @@ export class LVGLLedWidget extends LVGLWidget {
                     "lv_led_get_brightness"
                 );
 
-                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                code.ifNotEqual(new_val, cur_val, () => {
                     code.tickChangeStart();
 
                     code.callObjectFunction("lv_led_set_brightness", new_val);

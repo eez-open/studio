@@ -31,7 +31,7 @@
       "lv_disp_t",
       "lv_event_code_t",
       "lv_event_get_code",
-      "lv_event_get_target",
+      code.lv_event_get_target,
       "lv_event_get_user_data",
       "lv_event_t",
       "lv_font_load",
@@ -132,7 +132,7 @@
       "lv_arc_set_range",
       "lv_arc_set_rotation",
       "lv_arc_set_value",
-      "lv_event_get_target",
+      code.lv_event_get_target,
       "lv_obj_t"
     ],
     "packages/project-editor/lvgl/widgets/Bar.tsx": [
@@ -145,7 +145,7 @@
       "lv_bar_set_value"
     ],
     "packages/project-editor/lvgl/widgets/Base.tsx": [
-      "lv_event_get_target",
+      code.lv_event_get_target,
       "lv_obj_add_event_cb",
       "lv_obj_add_flag",
       "lv_obj_add_state",
@@ -213,7 +213,7 @@
       "lv_dropdown_set_options",
       "lv_dropdown_set_selected",
       "lv_dropdown_set_symbol",
-      "lv_event_get_target",
+      code.lv_event_get_target,
       "lv_obj_get_state",
       "lv_obj_t"
     ],
@@ -315,7 +315,7 @@
       "lv_qrcode_update"
     ],
     "packages/project-editor/lvgl/widgets/Roller.tsx": [
-      "lv_event_get_target",
+      code.lv_event_get_target,
       "lv_obj_get_state",
       "lv_obj_t",
       "lv_roller_create",
@@ -343,7 +343,7 @@
       "lv_obj_create"
     ],
     "packages/project-editor/lvgl/widgets/Slider.tsx": [
-      "lv_event_get_target",
+      code.lv_event_get_target,
       "lv_obj_t",
       "lv_slider_create",
       "lv_slider_get_left_value",
@@ -359,7 +359,7 @@
       "lv_spangroup_create"
     ],
     "packages/project-editor/lvgl/widgets/Spinbox.tsx": [
-      "lv_event_get_target",
+      code.lv_event_get_target,
       "lv_obj_t",
       "lv_spinbox_create",
       "lv_spinbox_get_step",
@@ -401,7 +401,7 @@
       "lv_tabview_set_tab_bar_size"
     ],
     "packages/project-editor/lvgl/widgets/Textarea.tsx": [
-      "lv_event_get_target",
+      code.lv_event_get_target,
       "lv_obj_t",
       "lv_textarea_create",
       "lv_textarea_get_max_length",
@@ -495,7 +495,7 @@
     "lv_event_code_t",
     "lv_event_get_code",
     "lv_event_get_draw_part_dsc",
-    "lv_event_get_target",
+    code.lv_event_get_target,
     "lv_event_get_user_data",
     "lv_event_t",
     "lv_fallback",

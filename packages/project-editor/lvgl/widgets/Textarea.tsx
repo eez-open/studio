@@ -196,11 +196,11 @@ export class LVGLTextareaWidget extends LVGLWidget {
                         const ta = code.callFreeFunctionWithAssignment(
                             "lv_obj_t *",
                             "ta",
-                            "lv_event_get_target",
+                            code.lv_event_get_target,
                             event
                         );
 
-                        code.ifIntegerNotEqual(
+                        code.ifNotEqual(
                             tick_value_change_obj,
                             ta,
                             () => {

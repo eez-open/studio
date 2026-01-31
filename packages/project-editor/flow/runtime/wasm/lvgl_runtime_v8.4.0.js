@@ -5470,32 +5470,32 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1160728: ($0) => { startToDebuggerMessage($0); },  
- 1160760: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1160835: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1160910: ($0) => { finishToDebuggerMessage($0); },  
- 1160943: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1160973: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1161003: ($0) => { lvglScreenTick($0); },  
- 1161027: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1161067: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1161121: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1161175: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1161228: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1161281: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1161334: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
- 1161386: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1161433: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1161466: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1161502: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1161547: ($0, $1) => { js_dispatch_event($0, $1); },  
- 1161578: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1161684: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1161720: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1161757: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1161797: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1161854: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1161913: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1160696: ($0) => { startToDebuggerMessage($0); },  
+ 1160728: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1160803: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1160878: ($0) => { finishToDebuggerMessage($0); },  
+ 1160911: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1160941: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1160971: ($0) => { lvglScreenTick($0); },  
+ 1160995: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1161035: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1161089: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1161143: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1161196: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1161249: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1161302: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1161354: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1161401: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1161434: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1161470: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1161515: ($0, $1) => { js_dispatch_event($0, $1); },  
+ 1161546: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1161652: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1161688: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1161725: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1161765: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1161822: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1161881: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5676,9 +5676,6 @@ var _lv_dropdown_get_list = Module['_lv_dropdown_get_list'] = makeInvalidEarlyAc
 var _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = makeInvalidEarlyAccess('_lv_tabview_add_tab');
 var _lv_switch_create = Module['_lv_switch_create'] = makeInvalidEarlyAccess('_lv_switch_create');
 var _lv_textarea_create = Module['_lv_textarea_create'] = makeInvalidEarlyAccess('_lv_textarea_create');
-var __assignBooleanProperty = Module['__assignBooleanProperty'] = makeInvalidEarlyAccess('__assignBooleanProperty');
-var _lv_event_get_draw_part_dsc = Module['_lv_event_get_draw_part_dsc'] = makeInvalidEarlyAccess('_lv_event_get_draw_part_dsc');
-var __evalTextProperty = Module['__evalTextProperty'] = makeInvalidEarlyAccess('__evalTextProperty');
 var __evalBooleanProperty = Module['__evalBooleanProperty'] = makeInvalidEarlyAccess('__evalBooleanProperty');
 var _stopScript = Module['_stopScript'] = makeInvalidEarlyAccess('_stopScript');
 var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = makeInvalidEarlyAccess('_onMessageFromDebugger');
@@ -5737,7 +5734,9 @@ var _lvglLoadFont = Module['_lvglLoadFont'] = makeInvalidEarlyAccess('_lvglLoadF
 var _lv_font_load = Module['_lv_font_load'] = makeInvalidEarlyAccess('_lv_font_load');
 var _lvglFreeFont = Module['_lvglFreeFont'] = makeInvalidEarlyAccess('_lvglFreeFont');
 var _lv_font_free = Module['_lv_font_free'] = makeInvalidEarlyAccess('_lv_font_free');
-var _lvglAddObjectFlowCallback = Module['_lvglAddObjectFlowCallback'] = makeInvalidEarlyAccess('_lvglAddObjectFlowCallback');
+var _onMeterTickLabelEventCallback = Module['_onMeterTickLabelEventCallback'] = makeInvalidEarlyAccess('_onMeterTickLabelEventCallback');
+var _lv_event_get_draw_part_dsc = Module['_lv_event_get_draw_part_dsc'] = makeInvalidEarlyAccess('_lv_event_get_draw_part_dsc');
+var __evalTextProperty = Module['__evalTextProperty'] = makeInvalidEarlyAccess('__evalTextProperty');
 var _lvglLedGetColor = Module['_lvglLedGetColor'] = makeInvalidEarlyAccess('_lvglLedGetColor');
 var _lvglMeterIndicatorNeedleLineSetColor = Module['_lvglMeterIndicatorNeedleLineSetColor'] = makeInvalidEarlyAccess('_lvglMeterIndicatorNeedleLineSetColor');
 var _lv_obj_invalidate = Module['_lv_obj_invalidate'] = makeInvalidEarlyAccess('_lv_obj_invalidate');
@@ -5750,15 +5749,9 @@ var _lvglGetIndicator_start_value = Module['_lvglGetIndicator_start_value'] = ma
 var _lvglGetIndicator_end_value = Module['_lvglGetIndicator_end_value'] = makeInvalidEarlyAccess('_lvglGetIndicator_end_value');
 var _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = makeInvalidEarlyAccess('_lvglUpdateCheckedState');
 var _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = makeInvalidEarlyAccess('_lvglUpdateDisabledState');
-var _lvglUpdateHiddenFlag = Module['_lvglUpdateHiddenFlag'] = makeInvalidEarlyAccess('_lvglUpdateHiddenFlag');
-var _lvglUpdateClickableFlag = Module['_lvglUpdateClickableFlag'] = makeInvalidEarlyAccess('_lvglUpdateClickableFlag');
 var _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = makeInvalidEarlyAccess('_lvglAddTimelineKeyframe');
 var _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = makeInvalidEarlyAccess('_lvglSetTimelinePosition');
 var _lvglClearTimeline = Module['_lvglClearTimeline'] = makeInvalidEarlyAccess('_lvglClearTimeline');
-var _lvglSetScrollBarMode = Module['_lvglSetScrollBarMode'] = makeInvalidEarlyAccess('_lvglSetScrollBarMode');
-var _lvglSetScrollDir = Module['_lvglSetScrollDir'] = makeInvalidEarlyAccess('_lvglSetScrollDir');
-var _lvglSetScrollSnapX = Module['_lvglSetScrollSnapX'] = makeInvalidEarlyAccess('_lvglSetScrollSnapX');
-var _lvglSetScrollSnapY = Module['_lvglSetScrollSnapY'] = makeInvalidEarlyAccess('_lvglSetScrollSnapY');
 var _lvglLineSetPoints = Module['_lvglLineSetPoints'] = makeInvalidEarlyAccess('_lvglLineSetPoints');
 var _lvglScrollTo = Module['_lvglScrollTo'] = makeInvalidEarlyAccess('_lvglScrollTo');
 var _lv_obj_scroll_to = Module['_lv_obj_scroll_to'] = makeInvalidEarlyAccess('_lv_obj_scroll_to');
@@ -6757,11 +6750,13 @@ var _lv_textarea_get_text_selection = Module['_lv_textarea_get_text_selection'] 
 var _lv_textarea_get_password_show_time = Module['_lv_textarea_get_password_show_time'] = makeInvalidEarlyAccess('_lv_textarea_get_password_show_time');
 var _onMqttEvent = Module['_onMqttEvent'] = makeInvalidEarlyAccess('_onMqttEvent');
 var _eez_flow_init_themes = Module['_eez_flow_init_themes'] = makeInvalidEarlyAccess('_eez_flow_init_themes');
+var _flowPropagateValueLVGLEvent = Module['_flowPropagateValueLVGLEvent'] = makeInvalidEarlyAccess('_flowPropagateValueLVGLEvent');
 var __evalIntegerProperty = Module['__evalIntegerProperty'] = makeInvalidEarlyAccess('__evalIntegerProperty');
 var __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = makeInvalidEarlyAccess('__evalUnsignedIntegerProperty');
 var __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = makeInvalidEarlyAccess('__evalStringArrayPropertyAndJoin');
 var __assignStringProperty = Module['__assignStringProperty'] = makeInvalidEarlyAccess('__assignStringProperty');
 var __assignIntegerProperty = Module['__assignIntegerProperty'] = makeInvalidEarlyAccess('__assignIntegerProperty');
+var __assignBooleanProperty = Module['__assignBooleanProperty'] = makeInvalidEarlyAccess('__assignBooleanProperty');
 var _compareRollerOptions = Module['_compareRollerOptions'] = makeInvalidEarlyAccess('_compareRollerOptions');
 var _fflush = makeInvalidEarlyAccess('_fflush');
 var _emscripten_stack_get_end = makeInvalidEarlyAccess('_emscripten_stack_get_end');
@@ -6957,9 +6952,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_tabview_add_tab'] != 'undefined', 'missing Wasm export: lv_tabview_add_tab');
   assert(typeof wasmExports['lv_switch_create'] != 'undefined', 'missing Wasm export: lv_switch_create');
   assert(typeof wasmExports['lv_textarea_create'] != 'undefined', 'missing Wasm export: lv_textarea_create');
-  assert(typeof wasmExports['_assignBooleanProperty'] != 'undefined', 'missing Wasm export: _assignBooleanProperty');
-  assert(typeof wasmExports['lv_event_get_draw_part_dsc'] != 'undefined', 'missing Wasm export: lv_event_get_draw_part_dsc');
-  assert(typeof wasmExports['_evalTextProperty'] != 'undefined', 'missing Wasm export: _evalTextProperty');
   assert(typeof wasmExports['_evalBooleanProperty'] != 'undefined', 'missing Wasm export: _evalBooleanProperty');
   assert(typeof wasmExports['stopScript'] != 'undefined', 'missing Wasm export: stopScript');
   assert(typeof wasmExports['onMessageFromDebugger'] != 'undefined', 'missing Wasm export: onMessageFromDebugger');
@@ -7018,7 +7010,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_font_load'] != 'undefined', 'missing Wasm export: lv_font_load');
   assert(typeof wasmExports['lvglFreeFont'] != 'undefined', 'missing Wasm export: lvglFreeFont');
   assert(typeof wasmExports['lv_font_free'] != 'undefined', 'missing Wasm export: lv_font_free');
-  assert(typeof wasmExports['lvglAddObjectFlowCallback'] != 'undefined', 'missing Wasm export: lvglAddObjectFlowCallback');
+  assert(typeof wasmExports['onMeterTickLabelEventCallback'] != 'undefined', 'missing Wasm export: onMeterTickLabelEventCallback');
+  assert(typeof wasmExports['lv_event_get_draw_part_dsc'] != 'undefined', 'missing Wasm export: lv_event_get_draw_part_dsc');
+  assert(typeof wasmExports['_evalTextProperty'] != 'undefined', 'missing Wasm export: _evalTextProperty');
   assert(typeof wasmExports['lvglLedGetColor'] != 'undefined', 'missing Wasm export: lvglLedGetColor');
   assert(typeof wasmExports['lvglMeterIndicatorNeedleLineSetColor'] != 'undefined', 'missing Wasm export: lvglMeterIndicatorNeedleLineSetColor');
   assert(typeof wasmExports['lv_obj_invalidate'] != 'undefined', 'missing Wasm export: lv_obj_invalidate');
@@ -7031,15 +7025,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglGetIndicator_end_value'] != 'undefined', 'missing Wasm export: lvglGetIndicator_end_value');
   assert(typeof wasmExports['lvglUpdateCheckedState'] != 'undefined', 'missing Wasm export: lvglUpdateCheckedState');
   assert(typeof wasmExports['lvglUpdateDisabledState'] != 'undefined', 'missing Wasm export: lvglUpdateDisabledState');
-  assert(typeof wasmExports['lvglUpdateHiddenFlag'] != 'undefined', 'missing Wasm export: lvglUpdateHiddenFlag');
-  assert(typeof wasmExports['lvglUpdateClickableFlag'] != 'undefined', 'missing Wasm export: lvglUpdateClickableFlag');
   assert(typeof wasmExports['lvglAddTimelineKeyframe'] != 'undefined', 'missing Wasm export: lvglAddTimelineKeyframe');
   assert(typeof wasmExports['lvglSetTimelinePosition'] != 'undefined', 'missing Wasm export: lvglSetTimelinePosition');
   assert(typeof wasmExports['lvglClearTimeline'] != 'undefined', 'missing Wasm export: lvglClearTimeline');
-  assert(typeof wasmExports['lvglSetScrollBarMode'] != 'undefined', 'missing Wasm export: lvglSetScrollBarMode');
-  assert(typeof wasmExports['lvglSetScrollDir'] != 'undefined', 'missing Wasm export: lvglSetScrollDir');
-  assert(typeof wasmExports['lvglSetScrollSnapX'] != 'undefined', 'missing Wasm export: lvglSetScrollSnapX');
-  assert(typeof wasmExports['lvglSetScrollSnapY'] != 'undefined', 'missing Wasm export: lvglSetScrollSnapY');
   assert(typeof wasmExports['lvglLineSetPoints'] != 'undefined', 'missing Wasm export: lvglLineSetPoints');
   assert(typeof wasmExports['lvglScrollTo'] != 'undefined', 'missing Wasm export: lvglScrollTo');
   assert(typeof wasmExports['lv_obj_scroll_to'] != 'undefined', 'missing Wasm export: lv_obj_scroll_to');
@@ -8038,11 +8026,13 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_textarea_get_password_show_time'] != 'undefined', 'missing Wasm export: lv_textarea_get_password_show_time');
   assert(typeof wasmExports['onMqttEvent'] != 'undefined', 'missing Wasm export: onMqttEvent');
   assert(typeof wasmExports['eez_flow_init_themes'] != 'undefined', 'missing Wasm export: eez_flow_init_themes');
+  assert(typeof wasmExports['flowPropagateValueLVGLEvent'] != 'undefined', 'missing Wasm export: flowPropagateValueLVGLEvent');
   assert(typeof wasmExports['_evalIntegerProperty'] != 'undefined', 'missing Wasm export: _evalIntegerProperty');
   assert(typeof wasmExports['_evalUnsignedIntegerProperty'] != 'undefined', 'missing Wasm export: _evalUnsignedIntegerProperty');
   assert(typeof wasmExports['_evalStringArrayPropertyAndJoin'] != 'undefined', 'missing Wasm export: _evalStringArrayPropertyAndJoin');
   assert(typeof wasmExports['_assignStringProperty'] != 'undefined', 'missing Wasm export: _assignStringProperty');
   assert(typeof wasmExports['_assignIntegerProperty'] != 'undefined', 'missing Wasm export: _assignIntegerProperty');
+  assert(typeof wasmExports['_assignBooleanProperty'] != 'undefined', 'missing Wasm export: _assignBooleanProperty');
   assert(typeof wasmExports['compareRollerOptions'] != 'undefined', 'missing Wasm export: compareRollerOptions');
   assert(typeof wasmExports['fflush'] != 'undefined', 'missing Wasm export: fflush');
   assert(typeof wasmExports['emscripten_stack_get_end'] != 'undefined', 'missing Wasm export: emscripten_stack_get_end');
@@ -8234,9 +8224,6 @@ function assignWasmExports(wasmExports) {
   _lv_tabview_add_tab = Module['_lv_tabview_add_tab'] = createExportWrapper('lv_tabview_add_tab', 2);
   _lv_switch_create = Module['_lv_switch_create'] = createExportWrapper('lv_switch_create', 1);
   _lv_textarea_create = Module['_lv_textarea_create'] = createExportWrapper('lv_textarea_create', 1);
-  __assignBooleanProperty = Module['__assignBooleanProperty'] = createExportWrapper('_assignBooleanProperty', 7);
-  _lv_event_get_draw_part_dsc = Module['_lv_event_get_draw_part_dsc'] = createExportWrapper('lv_event_get_draw_part_dsc', 1);
-  __evalTextProperty = Module['__evalTextProperty'] = createExportWrapper('_evalTextProperty', 6);
   __evalBooleanProperty = Module['__evalBooleanProperty'] = createExportWrapper('_evalBooleanProperty', 6);
   _stopScript = Module['_stopScript'] = createExportWrapper('stopScript', 0);
   _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger', 2);
@@ -8251,7 +8238,7 @@ function assignWasmExports(wasmExports) {
   _lvglAddScreenLoadedEventHandler = Module['_lvglAddScreenLoadedEventHandler'] = createExportWrapper('lvglAddScreenLoadedEventHandler', 1);
   _lvglGroupAddObject = Module['_lvglGroupAddObject'] = createExportWrapper('lvglGroupAddObject', 3);
   _lvglGroupRemoveObjectsForScreen = Module['_lvglGroupRemoveObjectsForScreen'] = createExportWrapper('lvglGroupRemoveObjectsForScreen', 1);
-  _lvglAddEventHandler = Module['_lvglAddEventHandler'] = createExportWrapper('lvglAddEventHandler', 2);
+  _lvglAddEventHandler = Module['_lvglAddEventHandler'] = createExportWrapper('lvglAddEventHandler', 1);
   _lvglCreateScreen = Module['_lvglCreateScreen'] = createExportWrapper('lvglCreateScreen', 6);
   _lvglCreateUserWidget = Module['_lvglCreateUserWidget'] = createExportWrapper('lvglCreateUserWidget', 6);
   _lvglScreenLoad = Module['_lvglScreenLoad'] = createExportWrapper('lvglScreenLoad', 2);
@@ -8295,7 +8282,9 @@ function assignWasmExports(wasmExports) {
   _lv_font_load = Module['_lv_font_load'] = createExportWrapper('lv_font_load', 1);
   _lvglFreeFont = Module['_lvglFreeFont'] = createExportWrapper('lvglFreeFont', 1);
   _lv_font_free = Module['_lv_font_free'] = createExportWrapper('lv_font_free', 1);
-  _lvglAddObjectFlowCallback = Module['_lvglAddObjectFlowCallback'] = createExportWrapper('lvglAddObjectFlowCallback', 6);
+  _onMeterTickLabelEventCallback = Module['_onMeterTickLabelEventCallback'] = createExportWrapper('onMeterTickLabelEventCallback', 4);
+  _lv_event_get_draw_part_dsc = Module['_lv_event_get_draw_part_dsc'] = createExportWrapper('lv_event_get_draw_part_dsc', 1);
+  __evalTextProperty = Module['__evalTextProperty'] = createExportWrapper('_evalTextProperty', 6);
   _lvglLedGetColor = Module['_lvglLedGetColor'] = createExportWrapper('lvglLedGetColor', 1);
   _lvglMeterIndicatorNeedleLineSetColor = Module['_lvglMeterIndicatorNeedleLineSetColor'] = createExportWrapper('lvglMeterIndicatorNeedleLineSetColor', 3);
   _lv_obj_invalidate = Module['_lv_obj_invalidate'] = createExportWrapper('lv_obj_invalidate', 1);
@@ -8308,15 +8297,9 @@ function assignWasmExports(wasmExports) {
   _lvglGetIndicator_end_value = Module['_lvglGetIndicator_end_value'] = createExportWrapper('lvglGetIndicator_end_value', 1);
   _lvglUpdateCheckedState = Module['_lvglUpdateCheckedState'] = createExportWrapper('lvglUpdateCheckedState', 4);
   _lvglUpdateDisabledState = Module['_lvglUpdateDisabledState'] = createExportWrapper('lvglUpdateDisabledState', 4);
-  _lvglUpdateHiddenFlag = Module['_lvglUpdateHiddenFlag'] = createExportWrapper('lvglUpdateHiddenFlag', 4);
-  _lvglUpdateClickableFlag = Module['_lvglUpdateClickableFlag'] = createExportWrapper('lvglUpdateClickableFlag', 4);
   _lvglAddTimelineKeyframe = Module['_lvglAddTimelineKeyframe'] = createExportWrapper('lvglAddTimelineKeyframe', 23);
   _lvglSetTimelinePosition = Module['_lvglSetTimelinePosition'] = createExportWrapper('lvglSetTimelinePosition', 1);
   _lvglClearTimeline = Module['_lvglClearTimeline'] = createExportWrapper('lvglClearTimeline', 0);
-  _lvglSetScrollBarMode = Module['_lvglSetScrollBarMode'] = createExportWrapper('lvglSetScrollBarMode', 2);
-  _lvglSetScrollDir = Module['_lvglSetScrollDir'] = createExportWrapper('lvglSetScrollDir', 2);
-  _lvglSetScrollSnapX = Module['_lvglSetScrollSnapX'] = createExportWrapper('lvglSetScrollSnapX', 2);
-  _lvglSetScrollSnapY = Module['_lvglSetScrollSnapY'] = createExportWrapper('lvglSetScrollSnapY', 2);
   _lvglLineSetPoints = Module['_lvglLineSetPoints'] = createExportWrapper('lvglLineSetPoints', 3);
   _lvglScrollTo = Module['_lvglScrollTo'] = createExportWrapper('lvglScrollTo', 4);
   _lv_obj_scroll_to = Module['_lv_obj_scroll_to'] = createExportWrapper('lv_obj_scroll_to', 4);
@@ -9315,11 +9298,13 @@ function assignWasmExports(wasmExports) {
   _lv_textarea_get_password_show_time = Module['_lv_textarea_get_password_show_time'] = createExportWrapper('lv_textarea_get_password_show_time', 1);
   _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent', 4);
   _eez_flow_init_themes = Module['_eez_flow_init_themes'] = createExportWrapper('eez_flow_init_themes', 5);
+  _flowPropagateValueLVGLEvent = Module['_flowPropagateValueLVGLEvent'] = createExportWrapper('flowPropagateValueLVGLEvent', 4);
   __evalIntegerProperty = Module['__evalIntegerProperty'] = createExportWrapper('_evalIntegerProperty', 6);
   __evalUnsignedIntegerProperty = Module['__evalUnsignedIntegerProperty'] = createExportWrapper('_evalUnsignedIntegerProperty', 6);
   __evalStringArrayPropertyAndJoin = Module['__evalStringArrayPropertyAndJoin'] = createExportWrapper('_evalStringArrayPropertyAndJoin', 7);
   __assignStringProperty = Module['__assignStringProperty'] = createExportWrapper('_assignStringProperty', 7);
   __assignIntegerProperty = Module['__assignIntegerProperty'] = createExportWrapper('_assignIntegerProperty', 7);
+  __assignBooleanProperty = Module['__assignBooleanProperty'] = createExportWrapper('_assignBooleanProperty', 7);
   _compareRollerOptions = Module['_compareRollerOptions'] = createExportWrapper('compareRollerOptions', 4);
   _fflush = createExportWrapper('fflush', 1);
   _emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'];

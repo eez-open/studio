@@ -34,11 +34,11 @@ import {
 
 import {
     ProjectType,
-    findAction,
     findLvglStyle,
     Project,
     NamingConvention,
-    getName
+    getName,
+    findAction
 } from "project-editor/project/project";
 
 import type {
@@ -66,10 +66,7 @@ import { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import {
     getCode,
-    getExpressionPropertyData,
-    getFlowStateAddressIndex,
-    isGeometryControlledByParent,
-    lvglAddObjectFlowCallback
+    isGeometryControlledByParent
 } from "project-editor/lvgl/widget-common";
 
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
@@ -88,14 +85,10 @@ import {
     getLvglStylePropName
 } from "project-editor/lvgl/lvgl-versions";
 import {
-    LVGL_SCROLL_BAR_MODES,
-    LVGL_SCROLL_DIRECTION,
     LVGL_FLAG_CODES,
     LVGL_STATE_CODES,
     LVGL_REACTIVE_STATES,
-    LVGL_REACTIVE_FLAGS,
-    LV_EVENT_CHECKED_STATE_CHANGED,
-    LVGL_SCROLL_SNAP
+    LVGL_REACTIVE_FLAGS
 } from "project-editor/lvgl/lvgl-constants";
 import { LVGLPropertyInfo } from "project-editor/lvgl/style-catalog";
 
@@ -533,16 +526,14 @@ export class LVGLWidget extends Widget {
     _xScroll2: number = 0;
     _yScroll2: number = 0;
 
+    _relativePosition: { left: number; top: number } | undefined;
+
     get codeIdentifier() {
         if (!this.identifier) {
             return undefined;
         }
 
-        const codeIdentifier = getName(
-            "",
-            this.identifier,
-            NamingConvention.UnderscoreLowerCase
-        );
+        const codeIdentifier = getName("", this.identifier, NamingConvention.UnderscoreLowerCase);
 
         if (codeIdentifier == this.identifier) {
             return undefined;
@@ -552,8 +543,7 @@ export class LVGLWidget extends Widget {
     }
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType === ProjectType.LVGL,
+        enabledInComponentPalette: (projectType: ProjectType) => projectType === ProjectType.LVGL,
 
         label: (widget: LVGLWidget) => {
             let name = getComponentName(widget.type);
@@ -580,8 +570,7 @@ export class LVGLWidget extends Widget {
                 propertyGridGroup: generalGroup,
                 computed: true,
                 formText: `This identifier will be used in the generated source code in the "Objects" struct. It is different from the "Name" above because in the source code we are following "lowercase with underscore" naming convention.`,
-                disabled: (object: LVGLWidget) =>
-                    object.codeIdentifier == undefined
+                disabled: (object: LVGLWidget) => object.codeIdentifier == undefined
             },
             {
                 name: "left",
@@ -680,30 +669,16 @@ export class LVGLWidget extends Widget {
                 typeClass: LVGLWidget,
                 hideInPropertyGrid: true
             },
-            ...makeLvglExpressionProperty(
-                "hiddenFlag",
-                "boolean",
-                "input",
-                ["literal", "expression"],
-                {
-                    displayName: "Hidden",
-                    propertyGridGroup: flagsGroup,
-                    disabled: (widget: LVGLWidget) =>
-                        !flagEnabledInWidget(widget, "HIDDEN")
-                }
-            ),
-            ...makeLvglExpressionProperty(
-                "clickableFlag",
-                "boolean",
-                "input",
-                ["literal", "expression"],
-                {
-                    displayName: "Clickable",
-                    propertyGridGroup: flagsGroup,
-                    disabled: (widget: LVGLWidget) =>
-                        !flagEnabledInWidget(widget, "CLICKABLE")
-                }
-            ),
+            ...makeLvglExpressionProperty("hiddenFlag", "boolean", "input", ["literal", "expression"], {
+                displayName: "Hidden",
+                propertyGridGroup: flagsGroup,
+                disabled: (widget: LVGLWidget) => !flagEnabledInWidget(widget, "HIDDEN")
+            }),
+            ...makeLvglExpressionProperty("clickableFlag", "boolean", "input", ["literal", "expression"], {
+                displayName: "Clickable",
+                propertyGridGroup: flagsGroup,
+                disabled: (widget: LVGLWidget) => !flagEnabledInWidget(widget, "CLICKABLE")
+            }),
             {
                 name: "widgetFlags",
                 type: PropertyType.String,
@@ -828,26 +803,14 @@ export class LVGLWidget extends Widget {
                 enumDisallowUndefined: false,
                 propertyGridGroup: flagsGroup
             },
-            ...makeLvglExpressionProperty(
-                "checkedState",
-                "boolean",
-                "assignable",
-                ["literal", "expression"],
-                {
-                    displayName: "Checked",
-                    propertyGridGroup: statesGroup
-                }
-            ),
-            ...makeLvglExpressionProperty(
-                "disabledState",
-                "boolean",
-                "input",
-                ["literal", "expression"],
-                {
-                    displayName: "Disabled",
-                    propertyGridGroup: statesGroup
-                }
-            ),
+            ...makeLvglExpressionProperty("checkedState", "boolean", "assignable", ["literal", "expression"], {
+                displayName: "Checked",
+                propertyGridGroup: statesGroup
+            }),
+            ...makeLvglExpressionProperty("disabledState", "boolean", "input", ["literal", "expression"], {
+                displayName: "Disabled",
+                propertyGridGroup: statesGroup
+            }),
             {
                 name: "states",
                 type: PropertyType.String,
@@ -859,22 +822,15 @@ export class LVGLWidget extends Widget {
                 name: "useStyle",
                 type: PropertyType.ObjectReference,
                 referencedObjectCollectionPath: "allLvglStyles",
-                filterReferencedObjectCollection: (
-                    objects: IEezObject[],
-                    lvglStyle: LVGLStyle
-                ) =>
+                filterReferencedObjectCollection: (objects: IEezObject[], lvglStyle: LVGLStyle) =>
                     objects.length == 1 &&
                     objects[0] instanceof LVGLWidget &&
                     lvglStyle.forWidgetType == objects[0].type &&
-                    ProjectEditor.getProject(lvglStyle).lvglStyles
-                        .defaultStyles[lvglStyle.forWidgetType] !=
+                    ProjectEditor.getProject(lvglStyle).lvglStyles.defaultStyles[lvglStyle.forWidgetType] !=
                         lvglStyle.name,
                 propertyGridGroup: styleGroup,
                 inputPlaceholder: (widget: LVGLWidget) => {
-                    return (
-                        ProjectEditor.getProject(widget).lvglStyles
-                            .defaultStyles[widget.type] ?? undefined
-                    );
+                    return ProjectEditor.getProject(widget).lvglStyles.defaultStyles[widget.type] ?? undefined;
                 },
                 propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
                     let menuItems: Electron.MenuItem[] = [];
@@ -896,8 +852,7 @@ export class LVGLWidget extends Widget {
                                 new MenuItem({
                                     label: "Create New Style",
                                     click: async () => {
-                                        const projectStore =
-                                            getProjectStore(widget);
+                                        const projectStore = getProjectStore(widget);
 
                                         const result = await showGenericDialog({
                                             dialogDefinition: {
@@ -910,10 +865,7 @@ export class LVGLWidget extends Widget {
                                                             validators.required,
                                                             validators.unique(
                                                                 {},
-                                                                projectStore
-                                                                    .project
-                                                                    .lvglStyles
-                                                                    .allStyles
+                                                                projectStore.project.lvglStyles.allStyles
                                                             )
                                                         ]
                                                     }
@@ -922,27 +874,15 @@ export class LVGLWidget extends Widget {
                                             values: {}
                                         });
 
-                                        projectStore.undoManager.setCombineCommands(
-                                            true
-                                        );
+                                        projectStore.undoManager.setCombineCommands(true);
 
-                                        let styleParent =
-                                            projectStore.project.lvglStyles
-                                                .styles;
+                                        let styleParent = projectStore.project.lvglStyles.styles;
 
                                         if (widget.useStyle) {
-                                            const lvglStyle = findLvglStyle(
-                                                projectStore.project,
-                                                widget.useStyle
-                                            );
+                                            const lvglStyle = findLvglStyle(projectStore.project, widget.useStyle);
 
-                                            if (
-                                                lvglStyle &&
-                                                lvglStyle.forWidgetType ==
-                                                    widget.type
-                                            ) {
-                                                styleParent =
-                                                    lvglStyle.childStyles;
+                                            if (lvglStyle && lvglStyle.forWidgetType == widget.type) {
+                                                styleParent = lvglStyle.childStyles;
                                             }
                                         }
 
@@ -953,19 +893,13 @@ export class LVGLWidget extends Widget {
                                                 {
                                                     name: result.values.name,
                                                     forWidgetType: widget.type,
-                                                    definition:
-                                                        createObject<LVGLStylesDefinition>(
-                                                            projectStore,
-                                                            {
-                                                                definition:
-                                                                    toJS(
-                                                                        widget
-                                                                            .localStyles
-                                                                            .definition
-                                                                    )
-                                                            },
-                                                            LVGLStylesDefinition
-                                                        )
+                                                    definition: createObject<LVGLStylesDefinition>(
+                                                        projectStore,
+                                                        {
+                                                            definition: toJS(widget.localStyles.definition)
+                                                        },
+                                                        LVGLStylesDefinition
+                                                    )
                                                 },
                                                 LVGLStyle
                                             )
@@ -975,16 +909,11 @@ export class LVGLWidget extends Widget {
                                             useStyle: result.values.name
                                         });
 
-                                        projectStore.updateObject(
-                                            widget.localStyles,
-                                            {
-                                                definition: undefined
-                                            }
-                                        );
+                                        projectStore.updateObject(widget.localStyles, {
+                                            definition: undefined
+                                        });
 
-                                        projectStore.undoManager.setCombineCommands(
-                                            false
-                                        );
+                                        projectStore.undoManager.setCombineCommands(false);
                                     }
                                 })
                             );
@@ -994,44 +923,25 @@ export class LVGLWidget extends Widget {
                                     new MenuItem({
                                         label: "Update Style",
                                         click: async () => {
-                                            const projectStore =
-                                                getProjectStore(widget);
+                                            const projectStore = getProjectStore(widget);
 
-                                            const lvglStyle = findLvglStyle(
-                                                projectStore.project,
-                                                widget.useStyle
-                                            );
+                                            const lvglStyle = findLvglStyle(projectStore.project, widget.useStyle);
 
                                             if (lvglStyle) {
-                                                projectStore.undoManager.setCombineCommands(
-                                                    true
-                                                );
+                                                projectStore.undoManager.setCombineCommands(true);
 
-                                                projectStore.updateObject(
-                                                    lvglStyle.definition,
-                                                    {
-                                                        definition:
-                                                            LVGLStylesDefinition.combineDefinitions(
-                                                                lvglStyle
-                                                                    .definition
-                                                                    .definition,
-                                                                widget
-                                                                    .localStyles
-                                                                    .definition
-                                                            )
-                                                    }
-                                                );
+                                                projectStore.updateObject(lvglStyle.definition, {
+                                                    definition: LVGLStylesDefinition.combineDefinitions(
+                                                        lvglStyle.definition.definition,
+                                                        widget.localStyles.definition
+                                                    )
+                                                });
 
-                                                projectStore.updateObject(
-                                                    widget.localStyles,
-                                                    {
-                                                        definition: undefined
-                                                    }
-                                                );
+                                                projectStore.updateObject(widget.localStyles, {
+                                                    definition: undefined
+                                                });
 
-                                                projectStore.undoManager.setCombineCommands(
-                                                    false
-                                                );
+                                                projectStore.undoManager.setCombineCommands(false);
                                             }
                                         }
                                     })
@@ -1058,9 +968,7 @@ export class LVGLWidget extends Widget {
                 referencedObjectCollectionPath: "lvglGroups/groups",
                 propertyGridGroup: generalGroup,
                 hideInPropertyGrid: (widget: LVGLWidget) =>
-                    (ProjectEditor.getProject(widget).lvglGroups.groups
-                        .length == 0 &&
-                        !widget.group) ||
+                    (ProjectEditor.getProject(widget).lvglGroups.groups.length == 0 && !widget.group) ||
                     widget instanceof LVGLScreenWidget
             },
             {
@@ -1071,31 +979,23 @@ export class LVGLWidget extends Widget {
             }
         ],
 
-        beforeLoadHook: (
-            widget: LVGLWidget,
-            jsWidget: Partial<LVGLWidget>,
-            project: Project
-        ) => {
+        beforeLoadHook: (widget: LVGLWidget, jsWidget: Partial<LVGLWidget>, project: Project) => {
             // MIGRATION TO LOW RES
             if ((window as any).__eezProjectMigration) {
                 jsWidget.left = Math.floor(
-                    (jsWidget.left! *
-                        __eezProjectMigration.displayTargetWidth) /
+                    (jsWidget.left! * __eezProjectMigration.displayTargetWidth) /
                         __eezProjectMigration.displaySourceWidth
                 );
                 jsWidget.top = Math.floor(
-                    (jsWidget.top! *
-                        __eezProjectMigration.displayTargetHeight) /
+                    (jsWidget.top! * __eezProjectMigration.displayTargetHeight) /
                         __eezProjectMigration.displaySourceHeight
                 );
                 jsWidget.width = Math.floor(
-                    (jsWidget.width! *
-                        __eezProjectMigration.displayTargetWidth) /
+                    (jsWidget.width! * __eezProjectMigration.displayTargetWidth) /
                         __eezProjectMigration.displaySourceWidth
                 );
                 jsWidget.height = Math.floor(
-                    (jsWidget.height! *
-                        __eezProjectMigration.displayTargetHeight) /
+                    (jsWidget.height! * __eezProjectMigration.displayTargetHeight) /
                         __eezProjectMigration.displaySourceHeight
                 );
             }
@@ -1115,9 +1015,7 @@ export class LVGLWidget extends Widget {
 
             // migrate states
             if ((jsWidget as any).states != undefined) {
-                const states = (jsWidget as any).states.split(
-                    "|"
-                ) as (keyof typeof LVGL_STATE_CODES)[];
+                const states = (jsWidget as any).states.split("|") as (keyof typeof LVGL_STATE_CODES)[];
 
                 states.forEach(state => {
                     if (LVGL_REACTIVE_STATES.indexOf(state) != -1) {
@@ -1127,9 +1025,7 @@ export class LVGLWidget extends Widget {
                     }
                 });
 
-                (jsWidget as any).states = states
-                    .filter(state => LVGL_REACTIVE_STATES.indexOf(state) == -1)
-                    .join("|");
+                (jsWidget as any).states = states.filter(state => LVGL_REACTIVE_STATES.indexOf(state) == -1).join("|");
             } else {
                 (jsWidget as any).states = "";
             }
@@ -1143,9 +1039,7 @@ export class LVGLWidget extends Widget {
 
             // migrate flags
             if ((jsWidget as any).flags != undefined) {
-                const flags = (jsWidget as any).flags.split(
-                    "|"
-                ) as (keyof typeof LVGL_FLAG_CODES)[];
+                const flags = (jsWidget as any).flags.split("|") as (keyof typeof LVGL_FLAG_CODES)[];
 
                 flags.forEach(flag => {
                     if (LVGL_REACTIVE_FLAGS.indexOf(flag) != -1) {
@@ -1155,9 +1049,7 @@ export class LVGLWidget extends Widget {
                     }
                 });
 
-                (jsWidget as any).flags = flags
-                    .filter(flag => LVGL_REACTIVE_FLAGS.indexOf(flag) == -1)
-                    .join("|");
+                (jsWidget as any).flags = flags.filter(flag => LVGL_REACTIVE_FLAGS.indexOf(flag) == -1).join("|");
 
                 const classInfo = getClassInfo(widget);
 
@@ -1177,8 +1069,7 @@ export class LVGLWidget extends Widget {
                         //const beforeFlags = (jsWidget as any).flags;
 
                         const defaultFlagsArr = lvgl.defaultFlags.split("|");
-                        const oldDefaultFlagsArr =
-                            lvgl.oldDefaultFlags.split("|");
+                        const oldDefaultFlagsArr = lvgl.oldDefaultFlags.split("|");
 
                         const i = oldDefaultFlagsArr.indexOf("SCROLL_CHAIN");
                         if (i != -1) {
@@ -1188,17 +1079,11 @@ export class LVGLWidget extends Widget {
                         }
 
                         for (const flag of defaultFlagsArr) {
-                            if (
-                                flag != "CLICKABLE" &&
-                                oldDefaultFlagsArr.indexOf(flag) == -1
-                            ) {
+                            if (flag != "CLICKABLE" && oldDefaultFlagsArr.indexOf(flag) == -1) {
                                 if (!(jsWidget as any).flags) {
                                     (jsWidget as any).flags = flag;
                                 } else {
-                                    if (
-                                        (jsWidget as any).flags.indexOf(flag) ==
-                                        -1
-                                    ) {
+                                    if ((jsWidget as any).flags.indexOf(flag) == -1) {
                                         (jsWidget as any).flags += "|" + flag;
                                     }
                                 }
@@ -1275,19 +1160,13 @@ export class LVGLWidget extends Widget {
             const width = value.width ?? widget.rect.width;
             const height = value.height ?? widget.rect.height;
 
-            if (
-                widget.widthUnit == "px" &&
-                !(widget.autoSize == "width" || widget.autoSize == "both")
-            ) {
+            if (widget.widthUnit == "px" && !(widget.autoSize == "width" || widget.autoSize == "both")) {
                 if (width !== widget.width) {
                     props.width = width;
                 }
             }
 
-            if (
-                widget.heightUnit == "px" &&
-                !(widget.autoSize == "height" || widget.autoSize == "both")
-            ) {
+            if (widget.heightUnit == "px" && !(widget.autoSize == "height" || widget.autoSize == "both")) {
                 if (height !== widget.height) {
                     props.height = height;
                 }
@@ -1300,25 +1179,17 @@ export class LVGLWidget extends Widget {
             const projectStore = getProjectStore(widget);
 
             if (widget.identifier) {
-                const lvglIdentifier =
-                    projectStore.lvglIdentifiers.getIdentifier(widget);
+                const lvglIdentifier = projectStore.lvglIdentifiers.getIdentifier(widget);
 
                 if (lvglIdentifier && lvglIdentifier.widgets.length > 1) {
                     messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `Duplicate identifier`,
-                            getChildOfObject(widget, "identifier")
-                        )
+                        new Message(MessageType.ERROR, `Duplicate identifier`, getChildOfObject(widget, "identifier"))
                     );
                 }
             }
 
             if (widget.useStyle) {
-                const lvglStyle = findLvglStyle(
-                    projectStore.project,
-                    widget.useStyle
-                );
+                const lvglStyle = findLvglStyle(projectStore.project, widget.useStyle);
                 if (!lvglStyle) {
                     messages.push(propertyNotFoundMessage(widget, "useStyle"));
                 } else if (widget.type != lvglStyle.forWidgetType) {
@@ -1332,12 +1203,7 @@ export class LVGLWidget extends Widget {
                 }
             }
 
-            if (
-                widget.group &&
-                !projectStore.project.lvglGroups.groups.find(
-                    group => group.name == widget.group
-                )
-            ) {
+            if (widget.group && !projectStore.project.lvglGroups.groups.find(group => group.name == widget.group)) {
                 messages.push(propertyNotFoundMessage(widget, "group"));
             }
 
@@ -1404,25 +1270,16 @@ export class LVGLWidget extends Widget {
         };
     }
 
-    _relativePosition: { left: number; top: number } | undefined;
-
     override get relativePosition() {
         this._refreshRelativePosition;
 
         if (this._lvglObj) {
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
+            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 try {
                     this._relativePosition = {
-                        left: page._lvglRuntime.wasm._lvglGetObjRelX(
-                            this._lvglObj
-                        ),
-                        top: page._lvglRuntime.wasm._lvglGetObjRelY(
-                            this._lvglObj
-                        )
+                        left: page._lvglRuntime.wasm._lvglGetObjRelX(this._lvglObj),
+                        top: page._lvglRuntime.wasm._lvglGetObjRelY(this._lvglObj)
                     };
                 } catch (e) {}
             }
@@ -1433,15 +1290,10 @@ export class LVGLWidget extends Widget {
 
     override fromRelativePosition(left: number, top: number) {
         if (this._lvglObj) {
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
+            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return {
-                    left: Math.round(
-                        left - this.relativePosition.left + this.left
-                    ),
+                    left: Math.round(left - this.relativePosition.left + this.left),
                     top: Math.round(top - this.relativePosition.top + this.top)
                 };
             }
@@ -1465,10 +1317,7 @@ export class LVGLWidget extends Widget {
 
     override get componentWidth() {
         if (this._lvglObj) {
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
+            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return page._lvglRuntime.wasm._lvglGetObjWidth(this._lvglObj);
             }
@@ -1478,10 +1327,7 @@ export class LVGLWidget extends Widget {
 
     override get componentHeight() {
         if (this._lvglObj) {
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
+            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return page._lvglRuntime.wasm._lvglGetObjHeight(this._lvglObj);
             }
@@ -1531,10 +1377,12 @@ export class LVGLWidget extends Widget {
         return super.getResizeHandlers();
     }
 
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+
     get allStates() {
-        const states = this.states.split(
-            "|"
-        ) as (keyof typeof LVGL_STATE_CODES)[];
+        const states = this.states.split("|") as (keyof typeof LVGL_STATE_CODES)[];
 
         LVGL_REACTIVE_STATES.forEach(state => {
             const propName = state.toLowerCase() + "State";
@@ -1553,11 +1401,7 @@ export class LVGLWidget extends Widget {
 
     get allFlags() {
         const flags =
-            this.widgetFlags.trim() != ""
-                ? (this.widgetFlags.split(
-                      "|"
-                  ) as (keyof typeof LVGL_FLAG_CODES)[])
-                : [];
+            this.widgetFlags.trim() != "" ? (this.widgetFlags.split("|") as (keyof typeof LVGL_FLAG_CODES)[]) : [];
 
         LVGL_REACTIVE_FLAGS.forEach(flag => {
             const propName = flag.toLowerCase() + "Flag";
@@ -1569,12 +1413,8 @@ export class LVGLWidget extends Widget {
                     }
                 }
             } else {
-                const lvglClassInfoProperties =
-                    getClassInfoLvglProperties(this);
-                if (
-                    flag in
-                    (lvglClassInfoProperties.defaultFlags ?? "").split("|")
-                ) {
+                const lvglClassInfoProperties = getClassInfoLvglProperties(this);
+                if (flag in (lvglClassInfoProperties.defaultFlags ?? "").split("|")) {
                     if (flags.indexOf(flag) == -1) {
                         flags.push(flag);
                     }
@@ -1592,627 +1432,78 @@ export class LVGLWidget extends Widget {
         if (this.useStyle) {
             return this.useStyle;
         }
-        return ProjectEditor.getProject(this).lvglStyles.defaultStyles[
-            this.type
-        ];
+        return ProjectEditor.getProject(this).lvglStyles.defaultStyles[this.type];
     }
 
-    override lvglCreate(
-        runtime: LVGLPageRuntime,
-        parentObj: number,
-        customWidget?: ICustomWidgetCreateParams
-    ) {
-        const obj = this.lvglCreateObj(runtime, parentObj, customWidget);
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
 
+    override lvglCreate(runtime: LVGLPageRuntime, parentObj: number, customWidget?: ICustomWidgetCreateParams) {
+        const code = runtime.toLVGLCode;
+        code.startWidget(this, parentObj, customWidget);
+        this.toLVGLCode(code);
+
+        const obj = code.obj;
         if (!runtime.isInsideUserWidget) {
             runInAction(() => (this._lvglObj = obj));
         }
 
+        this.toLVGLCodeCommon(code);
+
+        // groups
         if (this.group) {
             runtime.registerGroupWidget(this.group, this.groupIndex, obj);
         }
 
-        const project = ProjectEditor.getProject(this);
-
-        if (runtime.wasm.assetsMap?.flows.length > 0) {
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-            const pagePath = getObjectPathAsString(page);
-
-            const flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
-            if (flowIndex != undefined) {
-                const flow = runtime.wasm.assetsMap.flows[flowIndex];
-
-                for (const eventHandler of this.eventHandlers) {
-                    if (eventHandler.handlerType == "flow") {
-                        const componentPath = getObjectPathAsString(this);
-                        const componentIndex =
-                            flow.componentIndexes[componentPath];
-                        if (componentIndex != undefined) {
-                            const component = flow.components[componentIndex];
-                            const outputIndex =
-                                component.outputIndexes[eventHandler.eventName];
-                            if (outputIndex != undefined) {
-                                lvglAddObjectFlowCallback(
-                                    runtime,
-                                    obj,
-                                    eventHandler.eventCode,
-                                    componentIndex,
-                                    outputIndex,
-                                    eventHandler.userData
-                                );
-                            }
-                        }
-                    } else if (eventHandler.action) {
-                        const action = findAction(project, eventHandler.action);
-                        if (action) {
-                            const actionPath = getObjectPathAsString(action);
-                            const actionFlowIndex =
-                                runtime.wasm.assetsMap.flowIndexes[actionPath];
-                            lvglAddObjectFlowCallback(
-                                runtime,
-                                obj,
-                                eventHandler.eventCode,
-                                -1,
-                                actionFlowIndex,
-                                eventHandler.userData
-                            );
-                        }
-                    }
-                }
-
-                if (this.hasEventHandler) {
-                    this.createEventHandler(runtime, obj);
-                }
-            }
-        }
-
-        const lvglClassInfoProperties = getClassInfoLvglProperties(this);
-
-        // add/clear flags
-        {
-            const { added, cleared } = changes(
-                lvglClassInfoProperties.defaultFlags.trim() != ""
-                    ? lvglClassInfoProperties.defaultFlags.split("|")
-                    : [],
-                this.allFlags.trim() != ""
-                    ? (this.allFlags.split(
-                          "|"
-                      ) as (keyof typeof LVGL_FLAG_CODES)[])
-                    : []
-            );
-
-            if (added.length > 0) {
-                runtime.wasm._lvglObjAddFlag(
-                    obj,
-                    getCode(added, getLvglFlagCodes(this))
-                );
-            }
-            if (cleared.length > 0) {
-                runtime.wasm._lvglObjClearFlag(
-                    obj,
-                    getCode(cleared, getLvglFlagCodes(this))
-                );
-            }
-
-            const hiddenFlagExpr = getExpressionPropertyData(
-                runtime,
-                this,
-                "hiddenFlag"
-            );
-            if (hiddenFlagExpr) {
-                runtime.wasm._lvglUpdateHiddenFlag(
-                    obj,
-                    getFlowStateAddressIndex(runtime),
-                    hiddenFlagExpr.componentIndex,
-                    hiddenFlagExpr.propertyIndex
-                );
-            }
-
-            const clickableFlagExpr = getExpressionPropertyData(
-                runtime,
-                this,
-                "clickableFlag"
-            );
-            if (clickableFlagExpr) {
-                runtime.wasm._lvglUpdateClickableFlag(
-                    obj,
-                    getFlowStateAddressIndex(runtime),
-                    clickableFlagExpr.componentIndex,
-                    clickableFlagExpr.propertyIndex
-                );
-            }
-
-            if (this.hiddenInEditor && runtime.isEditor) {
-                runtime.wasm._lvglObjAddFlag(
-                    obj,
-                    getCode(["HIDDEN"], getLvglFlagCodes(this))
-                );
-            }
-        }
-
-        if (this.flagScrollbarMode) {
-            runtime.wasm._lvglSetScrollBarMode(
-                obj,
-                LVGL_SCROLL_BAR_MODES[this.flagScrollbarMode]
-            );
-        }
-
-        if (this.flagScrollDirection) {
-            runtime.wasm._lvglSetScrollDir(
-                obj,
-                LVGL_SCROLL_DIRECTION[this.flagScrollDirection]
-            );
-        }
-
-        if (this.scrollSnapX) {
-            runtime.wasm._lvglSetScrollSnapX(
-                obj,
-                LVGL_SCROLL_SNAP[this.scrollSnapX]
-            );
-        }
-
-        if (this.scrollSnapY) {
-            runtime.wasm._lvglSetScrollSnapY(
-                obj,
-                LVGL_SCROLL_SNAP[this.scrollSnapY]
-            );
-        }
-
-        // add/clear states
-        {
-            const added =
-                this.allStates.trim() != ""
-                    ? (this.allStates.split(
-                          "|"
-                      ) as (keyof typeof LVGL_STATE_CODES)[])
-                    : [];
-
-            if (added.length > 0) {
-                runtime.wasm._lvglObjAddState(
-                    obj,
-                    getCode(added, LVGL_STATE_CODES)
-                );
-            }
-
-            const checkedStateExpr = getExpressionPropertyData(
-                runtime,
-                this,
-                "checkedState"
-            );
-            if (checkedStateExpr) {
-                runtime.wasm._lvglUpdateCheckedState(
-                    obj,
-                    getFlowStateAddressIndex(runtime),
-                    checkedStateExpr.componentIndex,
-                    checkedStateExpr.propertyIndex
-                );
-            }
-
-            const disabledStateExpr = getExpressionPropertyData(
-                runtime,
-                this,
-                "disabledState"
-            );
-            if (disabledStateExpr) {
-                runtime.wasm._lvglUpdateDisabledState(
-                    obj,
-                    getFlowStateAddressIndex(runtime),
-                    disabledStateExpr.componentIndex,
-                    disabledStateExpr.propertyIndex
-                );
-            }
-        }
-
+        // timeline
         for (const keyframe of this.timeline) {
-            keyframe.lvglCreate(
-                runtime,
-                obj,
-                runtime.lvglCreateContext.flowState
-            );
+            keyframe.lvglCreate(runtime, obj, runtime.lvglCreateContext.flowState);
         }
 
-        if (obj) {
-            const useStyle = this.styleTemplate;
-            if (useStyle) {
-                const lvglStyle = findLvglStyle(project, useStyle);
-                if (lvglStyle) {
-                    lvglStyle.lvglAddStyleToObject(runtime, obj);
-                }
-            }
-
-            if (this._useStyleForStylePreview) {
-                const lvglStyle = findLvglStyle(
-                    project,
-                    this._useStyleForStylePreview
-                );
-                if (lvglStyle) {
-                    lvglStyle.lvglCreateLocalStyles(runtime, this, obj);
-                }
-            }
-
-            this.localStyles.lvglCreate(runtime, this, obj);
-
-            this.children.map((widget: LVGLWidget) =>
-                widget.lvglCreate(runtime, obj)
-            );
-        }
+        // children
+        this.children.map((widget: LVGLWidget) => widget.lvglCreate(runtime, obj));
 
         if (runtime.isEditor) {
-            runtime.wasm._lvglScrollTo(
-                obj,
-                this._xScroll,
-                this._yScroll,
-                false
-            );
+            runtime.wasm._lvglScrollTo(obj, this._xScroll, this._yScroll, false);
 
             this._xScroll2 = runtime.wasm._lvglGetScrollX(obj);
             this._yScroll2 = runtime.wasm._lvglGetScrollY(obj);
         }
 
-        runtime.toLVGLCode.endWidget();
-
         return obj;
     }
 
-    toLVGLCode(code: LVGLCode) {
-        console.error("UNEXPECTED!");
-    }
-
-    lvglCreateObj(
-        runtime: LVGLPageRuntime,
-        parentObj: number,
-        customWidget?: ICustomWidgetCreateParams
-    ): number {
-        const code = runtime.toLVGLCode;
-        code.startWidget(this, parentObj, customWidget);
-        this.toLVGLCode(code);
-        return code.obj;
-    }
-
-    createEventHandler(runtime: LVGLPageRuntime, obj: number) {
-        const checkedStateExpr = getExpressionPropertyData(
-            runtime,
-            this,
-            "checkedState"
-        );
-        if (checkedStateExpr) {
-            lvglAddObjectFlowCallback(
-                runtime,
-                obj,
-                LV_EVENT_CHECKED_STATE_CHANGED,
-                checkedStateExpr.componentIndex,
-                checkedStateExpr.propertyIndex,
-                0
-            );
+    getLvglCreateRect() {
+        if (this instanceof LVGLScreenWidget) {
+            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
+            return page.rect;
         }
+
+        const { LV_SIZE_CONTENT, LV_PCT } = getLvglCoord(this);
+
+        let left = this.leftUnit == "%" ? LV_PCT(this.left) : this.left;
+        let top = this.topUnit == "%" ? LV_PCT(this.top) : this.top;
+        let width = this.widthUnit == "content" ? LV_SIZE_CONTENT : this.widthUnit == "%" ? LV_PCT(this.width) : this.width;
+        let height = this.heightUnit == "content" ? LV_SIZE_CONTENT : this.heightUnit == "%" ? LV_PCT(this.height) : this.height;
+
+        return { left, top, width, height };
     }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
 
     lvglBuild(build: LVGLBuild): void {
         if (this.identifier) {
             build.line(`// ${this.identifier}`);
         }
 
-        build.addTickCallback(() => {
-            if (this.checkedStateType == "expression") {
-                build.blockStart(`{`);
+        const code = build.toLVGLCode;
+        code.startWidget(this);
+        this.toLVGLCode(code);
 
-                if (
-                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
-                ) {
-                    let componentIndex = build.assets.getComponentIndex(this);
-                    const propertyIndex =
-                        build.assets.getComponentPropertyIndex(
-                            this,
-                            "checkedState"
-                        );
-
-                    build.line(
-                        `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Checked state");`
-                    );
-                } else {
-                    build.line(
-                        `bool new_val = ${build.getVariableGetterFunctionName(
-                            this.checkedState as string
-                        )}();`
-                    );
-                }
-
-                const objectAccessor = build.getLvglObjectAccessor(this);
-
-                build.line(
-                    `bool cur_val = lv_obj_has_state(${objectAccessor}, LV_STATE_CHECKED);`
-                );
-
-                build.blockStart(`if (new_val != cur_val) {`);
-                build.line(`tick_value_change_obj = ${objectAccessor};`);
-                build.line(
-                    `if (new_val) lv_obj_add_state(${objectAccessor}, LV_STATE_CHECKED);`
-                );
-                build.line(
-                    `else lv_obj_clear_state(${objectAccessor}, LV_STATE_CHECKED);`
-                );
-                build.line(`tick_value_change_obj = NULL;`);
-                build.blockEnd(`}`);
-
-                build.blockEnd(`}`);
-            }
-
-            if (this.disabledStateType == "expression") {
-                build.blockStart(`{`);
-
-                if (
-                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
-                ) {
-                    let componentIndex = build.assets.getComponentIndex(this);
-                    const propertyIndex =
-                        build.assets.getComponentPropertyIndex(
-                            this,
-                            "disabledState"
-                        );
-
-                    build.line(
-                        `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Disabled state");`
-                    );
-                } else {
-                    build.line(
-                        `bool new_val = ${build.getVariableGetterFunctionName(
-                            this.disabledState as string
-                        )}();`
-                    );
-                }
-                const objectAccessor = build.getLvglObjectAccessor(this);
-
-                build.line(
-                    `bool cur_val = lv_obj_has_state(${objectAccessor}, LV_STATE_DISABLED);`
-                );
-
-                build.blockStart(`if (new_val != cur_val) {`);
-                build.line(`tick_value_change_obj = ${objectAccessor};`);
-                build.line(
-                    `if (new_val) lv_obj_add_state(${objectAccessor}, LV_STATE_DISABLED);`
-                );
-                build.line(
-                    `else lv_obj_clear_state(${objectAccessor}, LV_STATE_DISABLED);`
-                );
-                build.line(`tick_value_change_obj = NULL;`);
-                build.blockEnd(`}`);
-
-                build.blockEnd(`}`);
-            }
-
-            if (this.hiddenFlagType == "expression") {
-                build.blockStart(`{`);
-
-                if (
-                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
-                ) {
-                    let componentIndex = build.assets.getComponentIndex(this);
-                    const propertyIndex =
-                        build.assets.getComponentPropertyIndex(
-                            this,
-                            "hiddenFlag"
-                        );
-
-                    build.line(
-                        `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
-                    );
-                } else {
-                    build.line(
-                        `bool new_val = ${build.getVariableGetterFunctionName(
-                            this.hiddenFlag as string
-                        )}();`
-                    );
-                }
-
-                const objectAccessor = build.getLvglObjectAccessor(this);
-
-                build.line(
-                    `bool cur_val = lv_obj_has_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
-                );
-
-                build.blockStart(`if (new_val != cur_val) {`);
-                build.line(`tick_value_change_obj = ${objectAccessor};`);
-                build.line(
-                    `if (new_val) lv_obj_add_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
-                );
-                build.line(
-                    `else lv_obj_clear_flag(${objectAccessor}, LV_OBJ_FLAG_HIDDEN);`
-                );
-                build.line(`tick_value_change_obj = NULL;`);
-                build.blockEnd(`}`);
-
-                build.blockEnd(`}`);
-            }
-
-            if (this.clickableFlagType == "expression") {
-                build.blockStart(`{`);
-
-                if (
-                    build.assets.projectStore.projectTypeTraits.hasFlowSupport
-                ) {
-                    let componentIndex = build.assets.getComponentIndex(this);
-                    const propertyIndex =
-                        build.assets.getComponentPropertyIndex(
-                            this,
-                            "clickableFlag"
-                        );
-
-                    build.line(
-                        `bool new_val = evalBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, "Failed to evaluate Hidden flag");`
-                    );
-                } else {
-                    build.line(
-                        `bool new_val = ${build.getVariableGetterFunctionName(
-                            this.clickableFlag as string
-                        )}();`
-                    );
-                }
-
-                const objectAccessor = build.getLvglObjectAccessor(this);
-
-                build.line(
-                    `bool cur_val = lv_obj_has_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
-                );
-
-                build.blockStart(`if (new_val != cur_val) {`);
-                build.line(`tick_value_change_obj = ${objectAccessor};`);
-                build.line(
-                    `if (new_val) lv_obj_add_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
-                );
-                build.line(
-                    `else lv_obj_clear_flag(${objectAccessor}, LV_OBJ_FLAG_CLICKABLE);`
-                );
-                build.line(`tick_value_change_obj = NULL;`);
-                build.blockEnd(`}`);
-
-                build.blockEnd(`}`);
-            }
-        });
-
-        this.lvglBuildObj(build);
-
-        // event handlers
-        if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            if (
-                this.eventHandlers.length > 0 ||
-                this.hasEventHandler ||
-                build.eventHandlers.get(this)
-            ) {
-                build.line(
-                    `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
-                        this
-                    )}, LV_EVENT_ALL, flowState);`
-                );
-            }
-        } else {
-            for (const eventHandler of this.eventHandlers) {
-                if (eventHandler.eventName == "CHECKED") {
-                    build.line(
-                        `lv_obj_add_event_cb(obj, ${build.getCheckedEventHandlerCallbackName(
-                            this
-                        )}, LV_EVENT_VALUE_CHANGED, (void *)${
-                            eventHandler.userData
-                        });`
-                    );
-                } else if (eventHandler.eventName == "UNCHECKED") {
-                    build.line(
-                        `lv_obj_add_event_cb(obj, ${build.getUncheckedEventHandlerCallbackName(
-                            this
-                        )}, LV_EVENT_VALUE_CHANGED, (void *)${
-                            eventHandler.userData
-                        });`
-                    );
-                } else {
-                    build.line(
-                        `lv_obj_add_event_cb(obj, ${build.getActionFunctionName(
-                            eventHandler.action
-                        )}, LV_EVENT_${eventHandler.eventName}, (void *)${
-                            eventHandler.userData
-                        });`
-                    );
-                }
-            }
-
-            if (this.hasEventHandler || build.eventHandlers.get(this)) {
-                build.line(
-                    `lv_obj_add_event_cb(obj, ${build.getEventHandlerCallbackName(
-                        this
-                    )}, LV_EVENT_ALL, 0);`
-                );
-            }
-        }
-
-        // add/clear flags
-        const lvglClassInfoProperties = getClassInfoLvglProperties(this);
-        {
-            const { added, cleared } = changes(
-                lvglClassInfoProperties.defaultFlags.trim() != ""
-                    ? lvglClassInfoProperties.defaultFlags.split("|")
-                    : [],
-                this.allFlags.trim() != ""
-                    ? (this.allFlags.split(
-                          "|"
-                      ) as (keyof typeof LVGL_FLAG_CODES)[])
-                    : []
-            );
-
-            if (added.length > 0) {
-                build.line(
-                    `lv_obj_add_flag(obj, ${added
-                        .map(flag => "LV_OBJ_FLAG_" + flag)
-                        .join("|")});`
-                );
-            }
-
-            if (cleared.length > 0) {
-                build.line(
-                    `lv_obj_clear_flag(obj, ${cleared
-                        .map(flag => "LV_OBJ_FLAG_" + flag)
-                        .join("|")});`
-                );
-            }
-        }
-
-        if (this.flagScrollbarMode) {
-            build.line(
-                `lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_${this.flagScrollbarMode.toUpperCase()});`
-            );
-        }
-
-        if (this.flagScrollDirection) {
-            build.line(
-                `lv_obj_set_scroll_dir(obj, LV_DIR_${this.flagScrollDirection.toUpperCase()});`
-            );
-        }
-
-        if (this.scrollSnapX) {
-            build.line(
-                `lv_obj_set_scroll_snap_x(obj, LV_SCROLL_SNAP_${this.scrollSnapX.toUpperCase()});`
-            );
-        }
-
-        if (this.scrollSnapY) {
-            build.line(
-                `lv_obj_set_scroll_snap_y(obj, LV_SCROLL_SNAP_${this.scrollSnapY.toUpperCase()});`
-            );
-        }
-
-        // add/clear states
-        {
-            const added =
-                this.allStates.trim() != ""
-                    ? (this.allStates.split(
-                          "|"
-                      ) as (keyof typeof LVGL_STATE_CODES)[])
-                    : [];
-
-            if (added.length > 0) {
-                build.line(
-                    `lv_obj_add_state(obj, ${added
-                        .map(state => "LV_STATE_" + state)
-                        .join("|")});`
-                );
-            }
-        }
-
-        // styles
-        const useStyle = this.styleTemplate;
-        if (useStyle) {
-            const style = findLvglStyle(
-                ProjectEditor.getProject(this),
-                useStyle
-            );
-            if (style) {
-                build.assets.markLvglStyleUsed(style);
-                build.line(`${build.getAddStyleFunctionName(style)}(obj);`);
-            }
-        }
-        this.localStyles.lvglBuild(build);
-
-        build.toLVGLCode.endWidget();
+        this.toLVGLCodeCommon(code);
 
         // children
         if (this.children.length > 0) {
@@ -2229,139 +1520,16 @@ export class LVGLWidget extends Widget {
         }
     }
 
-    getLvglCreateRect() {
-        if (this instanceof LVGLScreenWidget) {
-            const page = getAncestorOfType(
-                this,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-            return page.rect;
-        }
-
-        const { LV_SIZE_CONTENT, LV_PCT } = getLvglCoord(this);
-
-        let left;
-        if (this.leftUnit == "%") {
-            left = LV_PCT(this.left);
-        } else {
-            left = this.left;
-        }
-
-        let top;
-        if (this.topUnit == "%") {
-            top = LV_PCT(this.top);
-        } else {
-            top = this.top;
-        }
-
-        let width;
-        if (this.widthUnit == "content") {
-            width = LV_SIZE_CONTENT;
-        } else if (this.widthUnit == "%") {
-            width = LV_PCT(this.width);
-        } else {
-            width = this.width;
-        }
-
-        let height;
-        if (this.heightUnit == "content") {
-            height = LV_SIZE_CONTENT;
-        } else if (this.heightUnit == "%") {
-            height = LV_PCT(this.height);
-        } else {
-            height = this.height;
-        }
-
+    getLvglBuildRect() {
+        let left = this.leftUnit == "%" ? `LV_PCT(${Math.round(this.left)})` : Math.round(this.left);
+        let top = this.topUnit == "%" ? `LV_PCT(${Math.round(this.top)})` : Math.round(this.top);
+        let width = this.widthUnit == "content" ? "LV_SIZE_CONTENT" : this.widthUnit == "%" ? `LV_PCT(${Math.round(this.width)})` : Math.round(this.width);
+        let height = this.heightUnit == "content" ? "LV_SIZE_CONTENT" : this.heightUnit == "%" ? `LV_PCT(${Math.round(this.height)})` : Math.round(this.height);
         return { left, top, width, height };
     }
 
-    get lvglBuildLeft() {
-        if (this.leftUnit == "%") {
-            return `LV_PCT(${Math.round(this.left)})`;
-        }
-        return Math.round(this.left);
-    }
-
-    get lvglBuildTop() {
-        if (this.topUnit == "%") {
-            return `LV_PCT(${Math.round(this.top)})`;
-        }
-        return Math.round(this.top);
-    }
-
-    get lvglBuildWidth() {
-        if (this.widthUnit == "content") {
-            return "LV_SIZE_CONTENT";
-        } else if (this.widthUnit == "%") {
-            return `LV_PCT(${Math.round(this.width)})`;
-        }
-        return Math.round(this.width);
-    }
-
-    get lvglBuildHeight() {
-        if (this.heightUnit == "content") {
-            return "LV_SIZE_CONTENT";
-        } else if (this.heightUnit == "%") {
-            return `LV_PCT(${Math.round(this.height)})`;
-        }
-        return Math.round(this.height);
-    }
-
-    lvglBuildObj(build: LVGLBuild): void {
-        const code = build.toLVGLCode;
-        code.startWidget(this);
-        this.toLVGLCode(build.toLVGLCode);
-    }
-
-    get hasEventHandler() {
-        return (
-            this.checkedStateType == "expression" ||
-            this.disabledStateType == "expression"
-        );
-    }
-
-    buildEventHandler(build: LVGLBuild) {
-        if (this.checkedStateType == "expression") {
-            build.blockStart("if (event == LV_EVENT_VALUE_CHANGED) {");
-
-            build.line(`lv_obj_t *ta = lv_event_get_target(e);`);
-
-            build.blockStart(`if (tick_value_change_obj != ta) {`);
-
-            build.line(`bool value = lv_obj_has_state(ta, LV_STATE_CHECKED);`);
-
-            if (build.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-                let componentIndex = build.assets.getComponentIndex(this);
-                const propertyIndex = build.assets.getComponentPropertyIndex(
-                    this,
-                    "checkedState"
-                );
-
-                build.line(
-                    `assignBooleanProperty(flowState, ${componentIndex}, ${propertyIndex}, value, "Failed to assign Checked state");`
-                );
-            } else {
-                build.line(
-                    `${build.getVariableSetterFunctionName(
-                        this.checkedState as string
-                    )}(value);`
-                );
-            }
-
-            build.blockEnd("}");
-
-            build.blockEnd("}");
-        }
-    }
-
     buildStyleIfNotDefined(build: LVGLBuild, propertyInfo: LVGLPropertyInfo) {
-        if (
-            this.localStyles.getPropertyValue(
-                propertyInfo,
-                "MAIN",
-                "DEFAULT"
-            ) == undefined
-        ) {
+        if (this.localStyles.getPropertyValue(propertyInfo, "MAIN", "DEFAULT") == undefined) {
             build.line(
                 `lv_obj_set_style_${build.getStylePropName(
                     propertyInfo.name
@@ -2370,41 +1538,425 @@ export class LVGLWidget extends Widget {
         }
     }
 
-    buildStyleIfNotDefinedInCode(
-        code: LVGLCode,
-        propertyInfo: LVGLPropertyInfo
-    ) {
-        if (
-            this.localStyles.getPropertyValue(
-                propertyInfo,
-                "MAIN",
-                "DEFAULT"
-            ) == undefined
-        ) {
-            const stylePropName = getLvglStylePropName(
-                code.project,
-                propertyInfo.name
-            );
+    buildStyleIfNotDefinedInCode(code: LVGLCode, propertyInfo: LVGLPropertyInfo) {
+        if (this.localStyles.getPropertyValue(propertyInfo, "MAIN", "DEFAULT") == undefined) {
+            const stylePropName = getLvglStylePropName(code.project, propertyInfo.name);
 
             code.callObjectFunction(
                 `lv_obj_set_style_${stylePropName}`,
                 0,
-                code.or(
-                    code.constant("LV_PART_MAIN"),
-                    code.constant("LV_STATE_DEFAULT")
-                )
+                code.or(code.constant("LV_PART_MAIN"), code.constant("LV_STATE_DEFAULT"))
             );
         }
     }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+
+    toLVGLCode(code: LVGLCode) {
+        console.error("UNEXPECTED!");
+    }
+
+    toLVGLCodeCommon(code: LVGLCode) {
+        // event handlers
+        this.eventHandlersToLVGLCode(code);
+        // add/clear flags
+        this.flagsToCode(code);
+        // add/clear states
+        this.statesToCode(code);
+        // styles
+        this.stylesToCode(code);
+        //
+        code.endWidget();
+    }
+
+    eventHandlersToLVGLCode(code: LVGLCode) {
+        let addEventAllCallback = code.lvglBuild ? code.lvglBuild.eventHandlers.get(this) : false;
+
+        if (this.checkedStateType == "expression") {
+            code.addEventHandler("VALUE_CHANGED", (event, tick_value_change_obj) => {
+                const ta = code.callFreeFunctionWithAssignment("lv_obj_t *", "ta", code.lv_event_get_target, event);
+                code.ifNotEqual(tick_value_change_obj, ta, () => {
+                    const value = code.callFreeFunctionWithAssignment(
+                        "bool",
+                        "value",
+                        "lv_obj_has_state",
+                        ta,
+                        code.constant("LV_STATE_CHECKED")
+                    );
+                    code.assignBooleanProperty(
+                        "checkedState",
+                        this.checkedState as string,
+                        value,
+                        "Failed to assign Checked state"
+                    );
+                });
+            });
+
+            addEventAllCallback = true;
+        }
+
+        this.eventHandlers.forEach(eventHandler => {
+            const checkedOrUncheckedEvent =
+                eventHandler.eventName == "CHECKED" || eventHandler.eventName == "UNCHECKED";
+
+            if (code.hasFlowSupport || checkedOrUncheckedEvent) {
+                code.addEventHandler(eventHandler.eventName, (event, tick_value_change_obj) => {
+                    const callback = () => {
+                        if (eventHandler.handlerType == "flow") {
+                            let componentIndex;
+                            let outputIndex;
+
+                            // build specific
+                            if (code.lvglBuild) {
+                                componentIndex = code.lvglBuild.assets.getComponentIndex(this);
+                                outputIndex = code.lvglBuild.assets.getComponentOutputIndex(
+                                    this,
+                                    eventHandler.eventName
+                                );
+                            } else {
+                                const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
+                                const pagePath = getObjectPathAsString(page);
+                                const flowIndex = code.pageRuntime!.wasm.assetsMap.flowIndexes[pagePath];
+                                if (flowIndex != undefined) {
+                                    const flow = code.pageRuntime!.wasm.assetsMap.flows[flowIndex];
+                                    const componentPath = getObjectPathAsString(this);
+                                    componentIndex = flow.componentIndexes[componentPath];
+                                    if (componentIndex != undefined) {
+                                        const component = flow.components[componentIndex];
+                                        outputIndex = component.outputIndexes[eventHandler.eventName];
+                                    }
+                                }
+                            }
+
+                            if (componentIndex != undefined && outputIndex != undefined) {
+                                if (code.lvglBuild) {
+                                    code.lvglBuild.line(`e->user_data = (void *)${eventHandler.userData};`);
+                                }
+                                code.callFreeFunction(
+                                    "flowPropagateValueLVGLEvent",
+                                    code.flowState,
+                                    componentIndex,
+                                    outputIndex,
+                                    event
+                                );
+                            }
+                        } else {
+                            const action = findAction(code.project, eventHandler.action);
+                            if (action) {
+                                if (action.implementationType == "native" || !code.hasFlowSupport) {
+                                    // build specific
+                                    if (code.lvglBuild) {
+                                        if (code.lvglBuild && code.hasFlowSupport) {
+                                            code.lvglBuild.line(`e->user_data = (void *)${eventHandler.userData};`);
+                                        }
+                                        code.lvglBuild.line(
+                                            `${code.lvglBuild.getActionFunctionName(eventHandler.action)}(e);`
+                                        );
+                                    } else {
+                                        //
+                                    }
+                                } else {
+                                    let actionFlowIndex;
+
+                                    if (code.lvglBuild) {
+                                        actionFlowIndex = code.lvglBuild.assets.getFlowIndex(action);
+                                    } else {
+                                        const actionPath = getObjectPathAsString(action);
+                                        actionFlowIndex = code.pageRuntime!.wasm.assetsMap.flowIndexes[actionPath];
+                                    }
+
+                                    if (actionFlowIndex != undefined) {
+                                        if (code.lvglBuild) {
+                                            code.lvglBuild.line(`e->user_data = (void *)${eventHandler.userData};`);
+                                        }
+                                        code.callFreeFunction(
+                                            "flowPropagateValueLVGLEvent",
+                                            code.flowState,
+                                            -1,
+                                            actionFlowIndex,
+                                            event
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    if (eventHandler.eventName == "CHECKED") {
+                        code.if(
+                            code.callFreeFunctionInline(
+                                "lv_obj_has_state",
+                                code.callFreeFunctionInline(code.lv_event_get_target, event),
+                                code.constant("LV_STATE_CHECKED")
+                            ),
+                            callback
+                        );
+                    } else if (eventHandler.eventName == "UNCHECKED") {
+                        code.ifNot(
+                            code.callFreeFunctionInline(
+                                "lv_obj_has_state",
+                                code.callFreeFunctionInline(code.lv_event_get_target, event),
+                                code.constant("LV_STATE_CHECKED")
+                            ),
+                            callback
+                        );
+                    } else {
+                        callback();
+                    }
+                });
+            }
+
+            if (code.lvglBuild) {
+                if (!code.hasFlowSupport) {
+                    code.lvglBuild.line(
+                        `lv_obj_add_event_cb(obj, ${
+                            eventHandler.eventName == "CHECKED"
+                                ? code.lvglBuild.getCheckedEventHandlerCallbackName(this)
+                                : eventHandler.eventName == "UNCHECKED"
+                                  ? code.lvglBuild.getUncheckedEventHandlerCallbackName(this)
+                                  : code.lvglBuild.getActionFunctionName(eventHandler.action)
+                        }, LV_EVENT_${checkedOrUncheckedEvent ? "VALUE_CHANGED" : eventHandler.eventName}, (void *)${eventHandler.userData});`
+                    );
+                } else {
+                    addEventAllCallback = true;
+                }
+            }
+        });
+
+        if (code.lvglBuild && addEventAllCallback) {
+            code.lvglBuild.line(
+                `lv_obj_add_event_cb(obj, ${code.lvglBuild.getEventHandlerCallbackName(
+                    this
+                )}, LV_EVENT_ALL, ${code.hasFlowSupport ? "flowState" : "0"});`
+            );
+        }
+    }
+
+    flagsToCode(code: LVGLCode) {
+        const lvglClassInfoProperties = getClassInfoLvglProperties(this);
+
+        const { added, cleared } = changes(
+            lvglClassInfoProperties.defaultFlags.trim() != ""
+                ? lvglClassInfoProperties.defaultFlags.split("|")
+                : [],
+            this.allFlags.trim() != "" ? (this.allFlags.split("|") as (keyof typeof LVGL_FLAG_CODES)[]) : []
+        );
+     
+        if (added.length > 0) {
+            let flags;
+            if (code.lvglBuild) {
+                flags = added.map(flag => "LV_OBJ_FLAG_" + flag).join("|");
+            } else {
+                flags = getCode(added, getLvglFlagCodes(this));
+            }
+            code.callObjectFunction("lv_obj_add_flag", flags);
+        }
+        if (cleared.length > 0) {
+            let flags;
+            if (code.lvglBuild) {
+                flags = cleared.map(flag => "LV_OBJ_FLAG_" + flag).join("|");
+            } else {
+                flags = getCode(cleared, getLvglFlagCodes(this));
+            }            
+            code.callObjectFunction(code.isV9 ? "lv_obj_remove_flag" : "lv_obj_clear_flag", flags);
+        }
+
+        if (this.hiddenFlagType == "expression") {
+            code.addToTick("hiddenFlag", () => {
+
+                const new_val = code.evalBooleanProperty(
+                    "bool",
+                    "new_val",
+                    this.hiddenFlag as string,
+                    "Failed to evaluate Hidden flag"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "bool",
+                    "cur_val",
+                    "lv_obj_has_flag",
+                    code.constant("LV_OBJ_FLAG_HIDDEN")
+                );
+
+                code.ifNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.if(new_val, () => {
+                        code.callObjectFunction("lv_obj_add_flag", code.constant("LV_OBJ_FLAG_HIDDEN"));
+                    }, () => {
+                        code.callObjectFunction(code.isV9 ? "lv_obj_remove_flag" : "lv_obj_clear_flag", code.constant("LV_OBJ_FLAG_HIDDEN"));
+                    });
+
+                    code.tickChangeEnd();
+                });
+            });
+        }
+
+        if (this.clickableFlagType == "expression") {
+            code.addToTick("clickableFlag", () => {
+
+                const new_val = code.evalBooleanProperty(
+                    "bool",
+                    "new_val",
+                    this.clickableFlag as string,
+                    "Failed to evaluate Clickable flag"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "bool",
+                    "cur_val",
+                    "lv_obj_has_flag",
+                    code.constant("LV_OBJ_FLAG_CLICKABLE")
+                );
+
+                code.ifNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.if(new_val, () => {
+                        code.callObjectFunction("lv_obj_add_flag", code.constant("LV_OBJ_FLAG_CLICKABLE"));
+                    }, () => {
+                        code.callObjectFunction(code.isV9 ? "lv_obj_remove_flag" : "lv_obj_clear_flag", code.constant("LV_OBJ_FLAG_CLICKABLE"));
+                    });
+
+                    code.tickChangeEnd();
+                });
+            });
+        }
+
+        if (this.flagScrollbarMode) {
+            code.callObjectFunction("lv_obj_set_scrollbar_mode", code.constant(`LV_SCROLLBAR_MODE_${this.flagScrollbarMode.toUpperCase()}`));
+        }
+
+        if (this.flagScrollDirection) {
+            code.callObjectFunction("lv_obj_set_scroll_dir", code.constant(`LV_DIR_${this.flagScrollDirection.toUpperCase()}`));
+        }
+
+        if (this.scrollSnapX) {
+            code.callObjectFunction("lv_obj_set_scroll_snap_x", code.constant(`LV_SCROLL_SNAP_${this.scrollSnapX.toUpperCase()}`));
+        }
+
+        if (this.scrollSnapY) {
+            code.callObjectFunction("lv_obj_set_scroll_snap_y", code.constant(`LV_SCROLL_SNAP_${this.scrollSnapY.toUpperCase()}`));
+        }            
+
+        if (code.pageRuntime) {
+            if (this.hiddenInEditor && code.pageRuntime.isEditor) {
+                code.callObjectFunction("lv_obj_add_flag", code.constant("LV_OBJ_FLAG_HIDDEN"));
+            }
+        }
+    }
+
+    statesToCode(code: LVGLCode) {
+        const added =
+            this.allStates.trim() != "" ? (this.allStates.split("|") as (keyof typeof LVGL_STATE_CODES)[]) : [];
+
+        if (added.length > 0) {
+            let states;
+            if (code.lvglBuild) {
+                states = added.map(state => "LV_STATE_" + state).join("|");
+            } else {
+                states = getCode(added, LVGL_STATE_CODES);
+            }            
+            code.callObjectFunction("lv_obj_add_state", states);
+        }
+
+        if (this.checkedStateType == "expression") {
+            code.addToTick("checkedState", () => {
+
+                const new_val = code.evalBooleanProperty(
+                    "bool",
+                    "new_val",
+                    this.checkedState as string,
+                    "Failed to evaluate Checked state"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "bool",
+                    "cur_val",
+                    "lv_obj_has_state",
+                    code.constant("LV_STATE_CHECKED")
+                );
+
+                code.ifNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.if(new_val, () => {
+                        code.callObjectFunction("lv_obj_add_state", code.constant("LV_STATE_CHECKED"));
+                    }, () => {
+                        code.callObjectFunction(code.isV9 ? "lv_obj_remove_state" : "lv_obj_clear_state", code.constant("LV_STATE_CHECKED"));
+                    });
+
+                    code.tickChangeEnd();
+                });
+            });
+        }
+        
+        if (this.disabledStateType == "expression") {
+            code.addToTick("disabledState", () => {
+
+                const new_val = code.evalBooleanProperty(
+                    "bool",
+                    "new_val",
+                    this.disabledState as string,
+                    "Failed to evaluate Disabled state"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "bool",
+                    "cur_val",
+                    "lv_obj_has_state",
+                    code.constant("LV_STATE_DISABLED")
+                );
+
+                code.ifNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+
+                    code.if(new_val, () => {
+                        code.callObjectFunction("lv_obj_add_state", code.constant("LV_STATE_DISABLED"));
+                    }, () => {
+                        code.callObjectFunction(code.isV9 ? "lv_obj_remove_state" : "lv_obj_clear_state", code.constant("LV_STATE_DISABLED"));
+                    });
+
+                    code.tickChangeEnd();
+                });
+            });
+        }        
+    }
+
+    stylesToCode(code: LVGLCode) {
+        const useStyle = this.styleTemplate;
+        if (useStyle) {
+            const lvglStyle = findLvglStyle(ProjectEditor.getProject(this), useStyle);
+            if (lvglStyle) {
+                if (code.lvglBuild) {
+                    code.lvglBuild.assets.markLvglStyleUsed(lvglStyle);
+                    code.lvglBuild.line(`${code.lvglBuild.getAddStyleFunctionName(lvglStyle)}(obj);`);
+                } else {
+                    const runtime = code.pageRuntime!;
+                    lvglStyle.lvglCreateLocalStyles(runtime, this, code.objectAccessor);
+                }
+            }
+        }
+
+        if (code.lvglBuild) {
+            this.localStyles.lvglBuild(code.lvglBuild);
+        } else {
+            const runtime = code.pageRuntime!;
+            this.localStyles.lvglCreate(runtime, this, code.objectAccessor);
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////
 
     get childrenToRender() {
         // do not render Tab's that are not visible
         return this.children.filter(child => {
             if (child instanceof ProjectEditor.LVGLTabWidgetClass) {
-                if (
-                    child.tabview &&
-                    child.tabIndex != child.tabview.selectedTabIndex
-                ) {
+                if (child.tabview && child.tabIndex != child.tabview.selectedTabIndex) {
                     return false;
                 }
             }

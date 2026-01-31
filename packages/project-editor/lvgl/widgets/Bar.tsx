@@ -171,7 +171,7 @@ export class LVGLBarWidget extends LVGLWidget {
                     "lv_bar_get_value"
                 );
 
-                code.ifIntegerNotEqual(new_val, cur_val, () => {
+                code.ifNotEqual(new_val, cur_val, () => {
                     code.tickChangeStart();
 
                     code.callObjectFunction(
@@ -221,7 +221,7 @@ export class LVGLBarWidget extends LVGLWidget {
                         "lv_bar_get_start_value"
                     );
 
-                    code.ifIntegerNotEqual(new_val, cur_val, () => {
+                    code.ifNotEqual(new_val, cur_val, () => {
                         code.tickChangeStart();
 
                         code.callObjectFunction(

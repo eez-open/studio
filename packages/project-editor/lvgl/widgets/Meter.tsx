@@ -26,7 +26,7 @@ import {
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
-import { checkWidgetTypeLvglVersion } from "../widget-common";
+import { checkWidgetTypeLvglVersion, getExpressionPropertyData, getFlowStateAddressIndex } from "project-editor/lvgl/widget-common";
 import {
     createObject,
     getAncestorOfType,
@@ -47,7 +47,6 @@ import {
 } from "project-editor/flow/component";
 import { getThemedColor } from "project-editor/features/style/theme";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
-import { LV_EVENT_METER_TICK_LABEL_EVENT } from "project-editor/lvgl/lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -246,7 +245,7 @@ export class LVGLMeterIndicator extends EezObject {
                 );
             }
 
-            code.ifIntegerNotEqual(new_val, cur_val, () => {
+            code.ifNotEqual(new_val, cur_val, () => {
                 code.tickChangeStart();
                 code.callObjectFunction(setFunc, indicatorObj, new_val);
                 code.tickChangeEnd();
@@ -1235,7 +1234,9 @@ export class LVGLMeterWidget extends LVGLWidget {
         enabledInComponentPalette: (projectType: ProjectType, projectStore) =>
             projectType === ProjectType.LVGL &&
             (!projectStore ||
-                projectStore.project.settings.general.lvglVersion.startsWith("8.")),
+                projectStore.project.settings.general.lvglVersion.startsWith(
+                    "8."
+                )),
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -1475,8 +1476,8 @@ export class LVGLMeterWidget extends LVGLWidget {
             code.blockEnd("}");
 
             if (code.hasFlowSupport && scale.label) {
-                if (code.lvglBuild) {
-                    code.addEventHandler("DRAW_PART_BEGIN", () => {
+                code.addEventHandler("DRAW_PART_BEGIN", event => {
+                    if (code.lvglBuild) {
                         const build = code.lvglBuild!;
 
                         code.callFreeFunctionWithAssignment(
@@ -1519,15 +1520,20 @@ export class LVGLMeterWidget extends LVGLWidget {
                                 `draw_part_dsc->text_length = sizeof(label);`
                             );
                         });
-                    });
-                } else {
-                    // for the simulator,it would be too slow to implement
-                    // event handler in JavaScript, so we are using shortcut here
-                    code.lvglAddObjectFlowCallback(
-                        `scales[${scaleIndex}].label`,
-                        LV_EVENT_METER_TICK_LABEL_EVENT
-                    );
-                }
+                    } else {
+                        const pageRuntime = code.pageRuntime!;
+                        const propExpr = getExpressionPropertyData(pageRuntime, this, `scales[${scaleIndex}].label`);
+                        if (propExpr) {
+                            code.callFreeFunction(
+                                "onMeterTickLabelEventCallback",
+                                event,
+                                getFlowStateAddressIndex(pageRuntime),
+                                propExpr.componentIndex,
+                                propExpr.propertyIndex
+                            );
+                        }
+                    }
+                });
             }
         }
     }

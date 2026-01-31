@@ -11,7 +11,6 @@ import {
     escapeCString,
     getExpressionPropertyData,
     getExpressionPropertyInitalValue,
-    lvglAddObjectFlowCallback,
     unescapeCString
 } from "project-editor/lvgl/widget-common";
 
@@ -28,6 +27,13 @@ export interface LVGLCode {
     isLVGLVersion(prefixes: string[]): boolean;
     get hasFlowSupport(): boolean;
     get screensLifetimeSupport(): boolean;
+
+    get flowState(): any;
+
+    get lv_event_get_target(): string;
+
+    //
+    endWidget(): void;
 
     //
     constant(constant: string): any;
@@ -78,6 +84,7 @@ export interface LVGLCode {
         func: string,
         ...args: any[]
     ): any;
+    callFreeFunctionInline(func: string, ...args: any[]): any;
 
     //
     evalTextProperty(
@@ -87,6 +94,12 @@ export interface LVGLCode {
         errorMessage: any
     ): any;
     evalIntegerProperty(
+        declType: string,
+        declName: string,
+        propertyValue: string,
+        errorMessage: any
+    ): any;
+    evalBooleanProperty(
         declType: string,
         declName: string,
         propertyValue: string,
@@ -106,6 +119,12 @@ export interface LVGLCode {
     ): any;
 
     assignIntegerProperty(
+        propertyName: string,
+        propertyValue: string,
+        value: any,
+        errorMessage: any
+    ): void;
+    assignBooleanProperty(
         propertyName: string,
         propertyValue: string,
         value: any,
@@ -133,12 +152,13 @@ export interface LVGLCode {
     //
     assign(declType: string, declName: string, rhs: any): any;
 
-    if(a: any, callback: () => void): void;
+    if(a: any, callback: () => void, elseCallback?: () => void): void;
+    ifNot(a: any, callback: () => void): void;
     ifStringNotEqual(a: any, b: any, callback: () => void): void;
     ifStringNotEqualN(a: any, b: any, n: any, callback: () => void): void;
 
-    ifIntegerLess(a: any, b: any, callback: () => void): void;
-    ifIntegerNotEqual(a: any, b: any, callback: () => void): void;
+    ifLess(a: any, b: any, callback: () => void): void;
+    ifNotEqual(a: any, b: any, callback: () => void): void;
 
     //
     buildColor<T>(
@@ -168,7 +188,6 @@ export interface LVGLCode {
         eventName: string,
         callback: (event: any, tick_value_change_obj: any) => void
     ): void;
-    lvglAddObjectFlowCallback(propertyName: string, filter: number): void;
 
     //
     postWidgetExecute(callback: () => void): void;
@@ -251,6 +270,10 @@ export class SimulatorLVGLCode implements LVGLCode {
 
     get screensLifetimeSupport() {
         return this.runtime.project.settings.build.screensLifetimeSupport;
+    }
+
+    get lv_event_get_target() {
+        return this.isV9 ? "lv_event_get_target_obj" : "lv_event_get_target";
     }
 
     constant(constant: string) {
@@ -448,6 +471,10 @@ export class SimulatorLVGLCode implements LVGLCode {
         return this.callFreeFunction(func, ...args);
     }
 
+    callFreeFunctionInline(func: string, ...args: any[]): any {
+        return this.callFreeFunction(func, ...args);
+    }
+
     evalTextProperty(
         declType: string,
         declName: string,
@@ -477,6 +504,25 @@ export class SimulatorLVGLCode implements LVGLCode {
             declType,
             declName,
             "_evalIntegerProperty",
+            this.flowState,
+            this.componentIndex,
+            this.propertyIndex,
+            this.stringLiteral(errorMessage),
+            0,
+            0
+        );
+    }
+
+    evalBooleanProperty(
+        declType: string,
+        declName: string,
+        propertyValue: string,
+        errorMessage: any
+    ) {
+        return this.callFreeFunctionWithAssignment(
+            declType,
+            declName,
+            "_evalBooleanProperty",
             this.flowState,
             this.componentIndex,
             this.propertyIndex,
@@ -540,6 +586,32 @@ export class SimulatorLVGLCode implements LVGLCode {
         if (propExpr) {
             this.callFreeFunction(
                 "_assignIntegerProperty",
+                this.flowState,
+                propExpr.componentIndex,
+                propExpr.propertyIndex,
+                value,
+                this.stringLiteral(errorMessage),
+                0,
+                0
+            );
+        }
+    }
+
+    assignBooleanProperty(
+        propertyName: string,
+        propertyValue: string,
+        value: any,
+        errorMessage: any
+    ): void {
+        const propExpr = getExpressionPropertyData(
+            this.runtime,
+            this.widget,
+            propertyName
+        );
+
+        if (propExpr) {
+            this.callFreeFunction(
+                "_assignBooleanProperty",
                 this.flowState,
                 propExpr.componentIndex,
                 propExpr.propertyIndex,
@@ -648,8 +720,16 @@ export class SimulatorLVGLCode implements LVGLCode {
         return rhs;
     }
 
-    if(a: any, callback: () => void) {
+    if(a: any, callback: () => void, elseCallback?: () => void) {
         if (a) {
+            callback();
+        } else if (elseCallback) {
+            elseCallback();
+        }
+    }
+
+    ifNot(a: any, callback: () => void) {
+        if (!a) {
             callback();
         }
     }
@@ -666,13 +746,13 @@ export class SimulatorLVGLCode implements LVGLCode {
         }
     }
 
-    ifIntegerLess(a: any, b: any, callback: () => void) {
+    ifLess(a: any, b: any, callback: () => void) {
         if (a < b) {
             callback();
         }
     }
 
-    ifIntegerNotEqual(a: any, b: any, callback: () => void) {
+    ifNotEqual(a: any, b: any, callback: () => void) {
         if (a != b) {
             callback();
         }
@@ -745,7 +825,7 @@ export class SimulatorLVGLCode implements LVGLCode {
         const obj = this.obj;
         const flowState = this.runtime.lvglCreateContext.flowState;
 
-        this.pageRuntime.addEventHandler(this.obj, eventName, event => {
+        this.pageRuntime.addEventHandler(this.obj, eventName == "CHECKED" || eventName == "UNCHECKED" ? "VALUE_CHANGED" : eventName, event => {
             this.widget = widget;
             this.obj = obj;
             this.flowState = flowState;
@@ -753,23 +833,6 @@ export class SimulatorLVGLCode implements LVGLCode {
         });
     }
 
-    lvglAddObjectFlowCallback(propertyName: string, filter: number) {
-        const propExpr = getExpressionPropertyData(
-            this.runtime,
-            this.widget,
-            propertyName
-        );
-        if (propExpr) {
-            lvglAddObjectFlowCallback(
-                this.pageRuntime,
-                this.obj,
-                filter,
-                propExpr.componentIndex,
-                propExpr.propertyIndex,
-                0
-            );
-        }
-    }
 
     postPageExecute(callback: () => void) {
         const widget = this.widget;
@@ -834,6 +897,14 @@ export class BuildLVGLCode implements LVGLCode {
 
     get screensLifetimeSupport() {
         return this.build.project.settings.build.screensLifetimeSupport;
+    }
+
+    get flowState() {
+        return "flowState";
+    }
+
+    get lv_event_get_target() {
+        return this.isV9 ? "lv_event_get_target_obj" : "lv_event_get_target";
     }
 
     constant(constant: string) {
@@ -1007,6 +1078,10 @@ export class BuildLVGLCode implements LVGLCode {
         return declName;
     }
 
+    callFreeFunctionInline(func: string, ...args: any[]): any {
+        return `${func}(${args.join(", ")})`;
+    }
+
     getVariableWithAssignment(
         declType: string,
         declName: string,
@@ -1064,6 +1139,31 @@ export class BuildLVGLCode implements LVGLCode {
                 declType,
                 declName,
                 "evalIntegerProperty",
+                "flowState",
+                this.componentIndex,
+                this.propertyIndex,
+                this.stringLiteral(errorMessage)
+            );
+        } else {
+            return this.getVariableWithAssignment(
+                declType,
+                declName,
+                propertyValue
+            );
+        }
+    }
+
+    evalBooleanProperty(
+        declType: string,
+        declName: string,
+        propertyValue: string,
+        errorMessage: any
+    ) {
+        if (this.hasFlowSupport) {
+            return this.callFreeFunctionWithAssignment(
+                declType,
+                declName,
+                "evalBooleanProperty",
                 "flowState",
                 this.componentIndex,
                 this.propertyIndex,
@@ -1146,6 +1246,34 @@ export class BuildLVGLCode implements LVGLCode {
 
             return this.callFreeFunction(
                 "assignIntegerProperty",
+                "flowState",
+                componentIndex,
+                propertyIndex,
+                value,
+                this.stringLiteral(errorMessage)
+            );
+        } else {
+            return this.setVariable(propertyValue, value);
+        }
+    }
+
+    assignBooleanProperty(
+        propertyName: string,
+        propertyValue: string,
+        value: any,
+        errorMessage: any
+    ) {
+        if (this.hasFlowSupport) {
+            const componentIndex = this.build.assets.getComponentIndex(
+                this.widget
+            );
+            const propertyIndex = this.build.assets.getComponentPropertyIndex(
+                this.widget,
+                propertyName
+            );
+
+            return this.callFreeFunction(
+                "assignBooleanProperty",
                 "flowState",
                 componentIndex,
                 propertyIndex,
@@ -1274,10 +1402,24 @@ export class BuildLVGLCode implements LVGLCode {
         return declName;
     }
 
-    if(a: any, callback: () => void) {
+    if(a: any, callback: () => void, elseCallback?: () => void) {
         const build = this.build;
 
         build.blockStart(`if (${a}) {`);
+        callback();
+        if (elseCallback) {
+            build.unindent();
+            build.line("} else {");
+            build.indent();
+            elseCallback();
+        }
+        build.blockEnd(`}`);
+    }
+
+    ifNot(a: any, callback: () => void) {
+        const build = this.build;
+
+        build.blockStart(`if (!${a}) {`);
         callback();
         build.blockEnd(`}`);
     }
@@ -1298,7 +1440,7 @@ export class BuildLVGLCode implements LVGLCode {
         build.blockEnd(`}`);
     }
 
-    ifIntegerLess(a: any, b: any, callback: () => void) {
+    ifLess(a: any, b: any, callback: () => void) {
         const build = this.build;
 
         build.blockStart(`if (${a} < ${b}) {`);
@@ -1306,7 +1448,7 @@ export class BuildLVGLCode implements LVGLCode {
         build.blockEnd(`}`);
     }
 
-    ifIntegerNotEqual(a: any, b: any, callback: () => void) {
+    ifNotEqual(a: any, b: any, callback: () => void) {
         const build = this.build;
 
         build.blockStart(`if (${a} != ${b}) {`);
@@ -1372,21 +1514,13 @@ export class BuildLVGLCode implements LVGLCode {
         const componentIndex = this.componentIndex;
         const propertyIndex = this.propertyIndex;
 
-        this.build.addEventHandler(this.widget, () => {
-            this.build.blockStart(`if (event == LV_EVENT_${eventName}) {`);
-
+        this.build.addEventHandler(this.widget, eventName, () => {
             this.widget = widget;
             this.componentIndex = componentIndex;
             this.propertyIndex = propertyIndex;
 
             callback("e", "tick_value_change_obj");
-
-            this.build.blockEnd("}");
         });
-    }
-
-    lvglAddObjectFlowCallback(propertyName: string, filter: number) {
-        // this function is only used for the simulator
     }
 
     postPageExecute(callback: () => void) {
