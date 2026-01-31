@@ -36,6 +36,7 @@ import type {
 } from "project-editor/features/font/font";
 import type { Flow, FlowFragment } from "project-editor/flow/flow";
 import type { ConnectionLine } from "project-editor/flow/connection-line";
+import type { ComponentGroup } from "project-editor/flow/component-group";
 import type { Action } from "project-editor/features/action/action";
 import type {
     ScpiCommand,
@@ -136,6 +137,7 @@ export interface IProjectEditor {
     CommentActionComponentClass: typeof CommentActionComponent;
     WidgetClass: typeof Widget;
     ConnectionLineClass: typeof ConnectionLine;
+    ComponentGroupClass: typeof ComponentGroup;
     UserWidgetWidgetClass: typeof UserWidgetWidget;
     SelectWidgetClass: typeof SelectWidget;
     ContainerWidgetClass: typeof ContainerWidget;

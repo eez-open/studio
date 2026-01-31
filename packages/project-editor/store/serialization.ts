@@ -492,6 +492,17 @@ export function rewireEnd(object: IEezObject) {
         }
     }
 
+    for (const componentGroup of visitObjects(object)) {
+        if (componentGroup instanceof ProjectEditor.ComponentGroupClass) {
+            for (let i = 0; i < componentGroup.components.length; i++) {
+                const newID = oldObjID_to_newObjID.get(componentGroup.components[i]);
+                if (newID != undefined) {
+                    componentGroup.components[i] = newID;
+                }
+            }
+        }
+    }
+
     flowsWireIDToObjID.clear();
     wireIDToObjID.clear();
     oldObjID_to_newObjID.clear();

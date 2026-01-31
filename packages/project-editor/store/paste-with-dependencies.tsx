@@ -2073,6 +2073,14 @@ export function copyObjects(
                 setParent(connectionLine, flowFragment.connectionLines)
             );
 
+            if (object.componentGroups) {
+                flowFragment.componentGroups = object.componentGroups.slice();
+                setParent(flowFragment.componentGroups, flowFragment);
+                flowFragment.componentGroups.forEach(componentGroup =>
+                    setParent(componentGroup, flowFragment.componentGroups)
+                );
+            }
+
             return flowFragment;
         }
         return object;

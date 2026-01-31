@@ -39,6 +39,7 @@ import { Widget } from "project-editor/flow/component";
 import { Glyph, rebuildLvglFonts } from "project-editor/features/font/font";
 import { Flow, FlowFragment } from "project-editor/flow/flow";
 import { ConnectionLine } from "project-editor/flow/connection-line";
+import { ComponentGroup } from "project-editor/flow/component-group";
 import { Action } from "project-editor/features/action/action";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { getObjectVariableTypeFromType } from "project-editor/features/variable/value-type";
@@ -179,6 +180,7 @@ export async function createProjectEditor(
         CommentActionComponentClass: CommentActionComponent,
         WidgetClass: Widget,
         ConnectionLineClass: ConnectionLine,
+        ComponentGroupClass: ComponentGroup,
         UserWidgetWidgetClass: UserWidgetWidget,
         SelectWidgetClass: SelectWidget,
         ContainerWidgetClass: ContainerWidget,
