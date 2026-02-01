@@ -172,15 +172,20 @@ export const ThemedColorInput = observer(
         render() {
             const { value, readOnly } = this.props;
 
-            let color: string | undefined =
-                value == "transparent"
-                    ? settingsController.isDarkTheme
-                        ? "black"
-                        : "white"
-                    : getThemedColor(this.context, value).colorValue;
+            let color: string;
+            if (!value) {
+                color = "#00000000";
+            } else {
+                color =
+                    value == "transparent"
+                        ? settingsController.isDarkTheme
+                            ? "0x00000000"
+                            : "0xffffffff"
+                        : getThemedColor(this.context, value).colorValue;
 
-            if (!isValid(color)) {
-                color = settingsController.isDarkTheme ? "black" : "white";
+                if (!isValid(color)) {
+                    color = settingsController.isDarkTheme ? "0x00000000" : "0xffffffff";
+                }
             }
 
             const portal = ReactDOM.createPortal(
@@ -226,7 +231,7 @@ export const ThemedColorInput = observer(
                                 : isDark(tinycolor(color).toHexString())
                                 ? "#fff"
                                 : undefined,
-                            backgroundColor: tinycolor(color).toHexString()
+                            backgroundColor: !value ? "transparent" : tinycolor(color).toHexString()
                         }}
                         type="text"
                         value={value}
