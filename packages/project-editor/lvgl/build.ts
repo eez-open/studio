@@ -12,7 +12,7 @@ import { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Project } from "project-editor/project/project";
 import { Section, getAncestorOfType } from "project-editor/store";
-import type { LVGLWidget } from "./widgets";
+import type { LVGLUserWidgetWidget, LVGLWidget } from "./widgets";
 import type { Assets } from "project-editor/build/assets";
 import { isDev } from "eez-studio-shared/util-electron";
 import { writeTextFile, writeBinaryData } from "project-editor/build/build";
@@ -36,6 +36,7 @@ import { escapeCString, isGeometryControlledByParent } from "./widget-common";
 import { BuildLVGLCode } from "project-editor/lvgl/to-lvgl-code";
 import { cleanupSourceFile } from "project-editor/build/cleanup-c-source-files";
 import { BUILT_IN_FONTS } from "project-editor/lvgl/style-catalog";
+import { visitObjects } from "project-editor/core/search";
 
 interface Identifiers {
     identifiers: string[];
@@ -43,6 +44,13 @@ interface Identifiers {
     widgetToAccessor: Map<LVGLWidget, string>;
     widgetToIndex: Map<LVGLWidget, number>;
 }
+
+interface StateVar {
+    id: string;
+    varType: string;
+    varName: string;
+    userWidgetPage: Page|undefined;
+};
 
 export class LVGLBuild extends Build {
     project: Project;
@@ -83,12 +91,8 @@ export class LVGLBuild extends Build {
         callback: () => void;
     }[] = [];
 
-    fileStaticVars: {
-        id: string;
-        decl: string;
-        varName: string;
-        page: Page;
-    }[] = [];
+    stateVars: Map<Page, StateVar[]> = new Map();
+    pagesWithStateVars: Page[] = [];
 
     objectAccessors: string[] | undefined;
 
@@ -98,6 +102,10 @@ export class LVGLBuild extends Build {
         { eventName: string; callback: () => void }[]
     >();
     postBuildCallbacks: (() => void)[] = [];
+
+    functions: {
+        [key: string]: () => void;
+    } = {};
 
     constructor(public assets: Assets) {
         super();
@@ -123,7 +131,11 @@ export class LVGLBuild extends Build {
     async firstPassFinish() {
         await this.buildScreensDef();
 
-        const fileStaticVars = this.fileStaticVars.slice();
+        const stateVars = new Map(this.stateVars);
+        for (const [key, value] of stateVars) {
+            stateVars.set(key, value.slice() );
+        }
+
         const objectAccessors = this.objectAccessors?.slice();
         const tickCallbacks = this.tickCallbacks.slice();
 
@@ -134,13 +146,17 @@ export class LVGLBuild extends Build {
 
         const postBuildCallbacks = this.postBuildCallbacks.slice();
 
+        const functions = {...this.functions};
+
         await this.buildScreensDef();
 
-        this.fileStaticVars = fileStaticVars;
+        this.stateVars = stateVars;
+        this.finishStateVars();
         this.objectAccessors = objectAccessors;
         this.tickCallbacks = tickCallbacks;
         this.eventHandlers = eventHandlers;
         this.postBuildCallbacks = postBuildCallbacks;
+        this.functions = functions;
 
         await this.buildStylesDef();
 
@@ -904,26 +920,178 @@ export class LVGLBuild extends Build {
         }
     }
 
-    genFileStaticVar(id: string, type: string, prefixName: string) {
-        let staticVar = this.fileStaticVars.find(
-            fileStaticVar => fileStaticVar.id == id
-        );
-        if (!staticVar) {
-            const varName = prefixName + this.fileStaticVars.length;
-            staticVar = {
-                id,
-                decl: `static ${type} ${varName};`,
-                varName,
-                page: this.currentPage
-            };
-            this.fileStaticVars.push(staticVar);
+    genStateVar(id: string, type: string, prefixName: string) {
+        let pageStateVars = this.stateVars.get(this.currentPage);
+        if (!pageStateVars) {
+            pageStateVars = [];
+            this.stateVars.set(this.currentPage, pageStateVars);
         }
-        return staticVar.varName;
+
+
+        let stateVar = pageStateVars.find(
+            stateVar => stateVar.id == id
+        );
+        if (!stateVar) {
+            let varName: string;
+            if (prefixName.endsWith("!")) {
+                varName = prefixName.slice(0, -1);
+            } else {
+                varName = prefixName;
+                let suffix = 0;
+                while (pageStateVars.find(pageStateVar => pageStateVar.varName == varName)) {
+                    suffix += 1;
+                    varName = prefixName + suffix;
+                }
+            }
+
+            stateVar = {
+                id,
+                varType: type,
+                varName,
+                userWidgetPage: undefined
+            };
+
+            pageStateVars.push(stateVar);
+        }
+
+        return `state->${stateVar.varName}`;
     }
 
-    assingToFileStaticVar(varName: string, value: string) {
+    assingToStateVar(varName: string, value: string) {
         this.line(`${varName} = ${value};`);
     }
+
+    getStateStructName(page: Page) {
+        const userWidgetPageName = getName(
+            "",
+            page.name,
+            NamingConvention.UnderscoreLowerCase
+        );        
+        return `${page.isUsedAsUserWidget ? "user_widget" : "screen"}_${userWidgetPageName}_state_t`;
+    }
+
+    getScreenStateVarName(page: Page) {
+        const userWidgetPageName = getName(
+            "",
+            page.name,
+            NamingConvention.UnderscoreLowerCase
+        );        
+        return `screen_${userWidgetPageName}_state`;
+    }
+
+    getUserWidgetStateParam(userWidget: LVGLUserWidgetWidget) {
+        const pageStateVars = this.stateVars.get(this.currentPage);
+        if (!pageStateVars) {
+            return "";
+        }
+
+        const stateVar = pageStateVars.find(stateVar => stateVar.id == userWidget.objID);
+        if (!stateVar) {
+            return "";
+        }
+
+        return `, &state->${stateVar.varName}`;
+    }
+
+    // Ensure that state vars are created in correct order.
+    // A page that is used as user widget in another page
+    // comes before that page.
+    // This is needed to be able to pass state vars as parameters.
+    // Also ensures that state vars are created for all user widgets used in a page.
+    // If a page has state vars, it is added to pagesWithStateVars array.
+    finishStateVars() {
+        const pages: Page[] = [];
+
+        // ensure that pages are in correct order (a page that is used as user widget in another page
+        // comes before that page)
+        function insertPage(page: Page, usedInPage?: Page) {
+            // find page index
+            let pageIndex = pages.findIndex(p => p == page);
+            if (pageIndex == -1) {
+                // not found, insert at the end
+                pageIndex = pages.length;
+                pages.push(page);
+            }
+
+            if (!usedInPage) {
+                return;
+            }
+
+            // find usedInPage index
+            let usedInPageIndex = pages.findIndex(p => p == usedInPage);
+            if (pageIndex < usedInPageIndex) {
+                // already in correct order
+                return;
+            }
+
+            // remove page from current position
+            pages.splice(pageIndex, 1);
+
+            // insert before usedInPage
+            pages.splice(usedInPageIndex, 0, page);
+        }
+
+        let done = false;
+        while (!done) {
+            done = true;
+
+            for (const page of this.pages) {
+                let pageStateVars = this.stateVars.get(page);
+                if (pageStateVars) {
+                    insertPage(page);
+                }
+
+                for (const widget of visitObjects(page)) {
+                    if (widget instanceof ProjectEditor.LVGLUserWidgetWidgetClass) {
+                        if (widget.userWidgetPage && this.stateVars.get(widget.userWidgetPage)) {
+                            const userWidgetPageName = getName(
+                                "",
+                                widget.userWidgetPage.name,
+                                NamingConvention.UnderscoreLowerCase
+                            );
+
+                            if (!pageStateVars) {
+                                pageStateVars = [];
+                                this.stateVars.set(page, pageStateVars);
+                                insertPage(page);
+                                done = false;
+                            }
+
+                            let id = widget.objID;
+
+                            let stateVar = pageStateVars.find(stateVar => stateVar.id == id);
+                            if (!stateVar) {
+                                // create state var for user widget
+                                let varName: string;
+                                if (widget.identifier) {
+                                    varName = getName("", widget.identifier, NamingConvention.UnderscoreLowerCase);;
+                                } else {
+                                    let suffix = 1;
+                                    varName = `${userWidgetPageName}${suffix}_state`;
+                                    while (pageStateVars.find(pageStateVar => pageStateVar.varName == varName)) {
+                                        suffix += 1;
+                                        varName = `${userWidgetPageName}${suffix}_state`;
+                                    }
+                                }
+
+                                pageStateVars.push({
+                                    id,
+                                    varType: this.getStateStructName(widget.userWidgetPage) + " ",
+                                    varName,
+                                    userWidgetPage: widget.userWidgetPage
+                                });
+    
+                                insertPage(widget.userWidgetPage, page);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        this.pagesWithStateVars = pages;
+    }
+
 
     addTickCallback(callback: () => void) {
         this.tickCallbacks.push(callback);
@@ -983,10 +1151,6 @@ export class LVGLBuild extends Build {
         this.postBuildCallbacks = [];
     }
 
-    functions: {
-        [key: string]: () => void;
-    } = {};
-
     addFunction(name: string, callback: () => void) {
         this.functions[name] = callback;
     }
@@ -995,21 +1159,21 @@ export class LVGLBuild extends Build {
         this.startBuild();
         const build = this;
 
-        // groups
-        if (this.project.lvglGroups.groups.length > 0) {
-            build.blockStart(`typedef struct _groups_t {`);
+        // screens
+        build.line("");
+        build.line("// Screens");
+        build.line("");
 
-            this.project.lvglGroups.groups.forEach(group => {
-                build.line(`lv_group_t *${group.name};`);
-            });
-
-            build.blockEnd(`} groups_t;`);
-            build.line("");
-            build.line(`extern groups_t groups;`);
-            build.line("");
-            build.line(`void ui_create_groups();`);
-            build.line("");
+        // enum ScreensEnum
+        build.blockStart(`enum ScreensEnum {`);
+        const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
+        for (let i = 0; i < pages.length; i++) {
+            build.line(
+                `SCREEN_ID_${this.getScreenIdentifier(pages[i]).toUpperCase()} = ${i + 1},`
+            );
         }
+        build.blockEnd(`};`);
+        build.line("");
 
         // objects
         build.blockStart(`typedef struct _objects_t {`);
@@ -1024,15 +1188,33 @@ export class LVGLBuild extends Build {
         build.line("");
         build.line(`extern objects_t objects;`);
 
-        build.line("");
-        build.blockStart(`enum ScreensEnum {`);
-        const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
-        for (let i = 0; i < pages.length; i++) {
-            build.line(
-                `SCREEN_ID_${this.getScreenIdentifier(pages[i]).toUpperCase()} = ${i + 1},`
-            );
+        if (this.pagesWithStateVars.length > 0) {
+            build.line("");
+
+            for (const page of this.pagesWithStateVars) {
+                const stateVars = this.stateVars.get(page)!;
+                if (stateVars) {
+                    build.blockStart(`typedef struct {`);
+
+                    for (const stateVar of stateVars) {
+                        build.line(`${stateVar.varType}${stateVar.varName};`);
+                    }
+
+                    build.blockEnd(`} ${this.getStateStructName(page)};`);
+                    build.line("");
+                }
+            }
+
+            for (const page of this.pagesWithStateVars) {
+                if (!page.isUsedAsUserWidget) {
+                    if (this.stateVars.get(page)!) {
+                        build.line(`extern ${this.getStateStructName(page)} ${this.getScreenStateVarName(page)};`);
+                    }
+                }
+            }
+
+            build.line("");
         }
-        build.blockEnd(`};`);
 
         for (const page of this.pages) {
             build.line("");
@@ -1041,17 +1223,17 @@ export class LVGLBuild extends Build {
                     build.line(
                         `void ${this.getScreenCreateFunctionName(
                             page
-                        )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex);`
+                        )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex${this.stateVars.get(page) ? `, ${this.getStateStructName(page)} *state` : ""});`
                     );
                     build.line(
-                        `void ${this.getScreenTickFunctionName(page)}(void *flowState, int startWidgetIndex);`
+                        `void ${this.getScreenTickFunctionName(page)}(void *flowState, int startWidgetIndex${this.stateVars.get(page) ? `, ${this.getStateStructName(page)} *state` : ""});`
                     );
                 } else {
                     build.line(
-                        `void ${this.getScreenCreateFunctionName(page)}(lv_obj_t *parent_obj, int startWidgetIndex);`
+                        `void ${this.getScreenCreateFunctionName(page)}(lv_obj_t *parent_obj, int startWidgetIndex${this.stateVars.get(page) ? `, ${this.getStateStructName(page)} *state` : ""});`
                     );
                     build.line(
-                        `void ${this.getScreenTickFunctionName(page)}(int startWidgetIndex);`
+                        `void ${this.getScreenTickFunctionName(page)}(int startWidgetIndex${this.stateVars.get(page) ? `, ${this.getStateStructName(page)} *state` : ""});`
                     );
                 }
             } else {
@@ -1065,7 +1247,42 @@ export class LVGLBuild extends Build {
             }
         }
 
+        build.line("");
+
+        if (build.project.settings.build.screensLifetimeSupport) {
+            build.line("void create_screen_by_id(enum ScreensEnum screenId);");
+            build.line("void delete_screen_by_id(enum ScreensEnum screenId);");
+        }
+        build.line("void tick_screen_by_id(enum ScreensEnum screenId);");
+        build.line("void tick_screen(int screen_index);");
+
+        build.line("");
+
+        build.line("void create_screens();");
+
+        // groups
+        if (this.project.lvglGroups.groups.length > 0) {
+            build.line("");
+            build.line("// Groups");
+            build.line("");
+            build.blockStart(`typedef struct _groups_t {`);
+
+            this.project.lvglGroups.groups.forEach(group => {
+                build.line(`lv_group_t *${group.name};`);
+            });
+
+            build.blockEnd(`} groups_t;`);
+            build.line("");
+            build.line(`extern groups_t groups;`);
+            build.line("");
+            build.line(`void ui_create_groups();`);
+            build.line("");
+        }
+
+        // colors & themes
         if (this.updateColorCallbacks.length > 0) {
+            build.line("");
+            build.line("// Color themes");
             build.line("");
             build.blockStart(`enum Themes {`);
             this.project.themes.forEach(theme => {
@@ -1100,60 +1317,69 @@ export class LVGLBuild extends Build {
         build.line(`#include <string.h>`);
         build.line("");
 
-        if (this.project.lvglGroups.groups.length > 0) {
-            build.line(`groups_t groups;`);
-            build.line("static bool groups_created = false;");
-            build.line("");
-        }
-
         build.line(`objects_t objects;`);
-        build.line(`lv_obj_t *tick_value_change_obj;`);
-        if (!this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            build.line(`uint32_t active_theme_index = 0;`);
+
+        build.line("");
+
+        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
+            if (pages.length > 0) {
+                build.line(
+                    `static const char *screen_names[] = { ${pages.map(page => `"${page.name}"`).join(", ")} };`
+                );
+            }
+
+            if (this.lvglObjectIdentifiers.fromPage.identifiers.length > 0) {
+                build.line(
+                    `static const char *object_names[] = { ${this.lvglObjectIdentifiers.fromPage.identifiers
+                        .map(identifier => `"${identifier}"`)
+                        .join(", ")} };`
+                );
+            }
+            build.line("");
         }
 
         build.line("");
 
-        if (this.fileStaticVars.length > 0) {
-            this.fileStaticVars.forEach(fileStaticVar =>
-                build.line(fileStaticVar.decl)
-            );
-            build.line("");
-        }
-
-        Object.values(this.functions).forEach(callback => callback());
-
-        // fonts
-        {
-            let anyFontWithFreeType = false;
-
-            for (const font of this.fonts) {
-                if (font.lvglUseFreeType) {
-                    build.line(`lv_font_t *${this.getFontVariableName(font)};`);
-                    anyFontWithFreeType = true;
+        if (this.pagesWithStateVars.length > 0) {
+            for (const page of this.pagesWithStateVars) {
+                if (!page.isUsedAsUserWidget) {
+                    if (this.stateVars.get(page)) {
+                        build.line(`${this.getStateStructName(page)} ${this.getScreenStateVarName(page)};`);
+                    }
                 }
             }
 
-            if (anyFontWithFreeType) {
-                build.line("");
-            }
+            build.line("");
         }
 
-        build.blockStart(`ext_font_desc_t fonts[] = {`);
-        for (const font of this.fonts) {
-            build.line(
-                `{ "${font.name}", ${font.lvglUseFreeType ? "NULL" : this.getFontAccessor(font)} },`
-            );
+        //
+        // Helper functions
+        //
+
+        if (Object.values(this.functions).length > 0) {
+            build.line("");
+            build.line("//");            
+            build.line("// Helper functions");
+            build.line("//");
+            build.line("");
+
+            Object.values(this.functions).forEach(callback => callback());
         }
-        for (const font of BUILT_IN_FONTS) {
-            build.text(`#if LV_FONT_${font}\n`);
-            build.line(`{ "${font}", &lv_font_${font.toLowerCase()} },`);
-            build.text(`#endif\n`);
-        }
-        build.blockEnd(`};`);
+
+        //
+        // Event handlers
+        //
+
+        build.line("");
+        build.line("//");
+        build.line("// Event handlers");
+        build.line("//");
         build.line("");
 
-        // event handlers
+        build.line(`lv_obj_t *tick_value_change_obj;`);
+        build.line("");
+
         for (const page of this.pages) {
             page._lvglWidgets.forEach(widget => {
                 const widgetEventHandlers = this.eventHandlers.get(widget);
@@ -1233,26 +1459,45 @@ export class LVGLBuild extends Build {
             });
         }
 
+        //
+        // Screens
+        //
+
+        build.line("");
+        build.line("//");
+        build.line("// Screens");
+        build.line("//");
+        build.line("");
+
         for (const page of this.pages) {
             if (page.isUsedAsUserWidget) {
                 if (build.project.projectTypeTraits.hasFlowSupport) {
                     build.blockStart(
                         `void ${this.getScreenCreateFunctionName(
                             page
-                        )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex) {`
+                        )}(lv_obj_t *parent_obj, void *flowState, int startWidgetIndex${this.stateVars.get(page) ? `, ${this.getStateStructName(page)} *state` : ""}) {`
                     );
+
                     build.line(`(void)flowState;`);
-                    build.line(`(void)startWidgetIndex;`);
                 } else {
                     build.blockStart(
-                        `void ${this.getScreenCreateFunctionName(page)}(lv_obj_t *parent_obj, int startWidgetIndex) {`
+                        `void ${this.getScreenCreateFunctionName(page)}(lv_obj_t *parent_obj, int startWidgetIndex${this.stateVars.get(page) ? `, ${this.getStateStructName(page)} *state` : ""}) {`
                     );
-                    build.line(`(void)startWidgetIndex;`);
+                }
+
+                build.line(`(void)startWidgetIndex;`);
+
+                if (this.stateVars.get(page)) {
+                    build.line(`(void)state;`);
                 }
             } else {
                 build.blockStart(
                     `void ${this.getScreenCreateFunctionName(page)}() {`
                 );
+                if (this.stateVars.get(page)) {
+                    build.line(`${this.getStateStructName(page)} *state = &${this.getScreenStateVarName(page)};`);
+                    build.line(`(void)state;`);
+                }                
             }
 
             this.objectAccessors = [];
@@ -1289,6 +1534,7 @@ export class LVGLBuild extends Build {
                     `void ${this.getScreenDeleteFunctionName(page)}() {`
                 );
 
+                // delete screen object
                 if (this.isV9) {
                     build.line(
                         `lv_obj_delete(${build.getLvglObjectAccessor(page.lvglScreenWidget!)});`
@@ -1299,16 +1545,31 @@ export class LVGLBuild extends Build {
                     );
                 }
 
+                // clean object vars
                 for (const objectAccessor of this.objectAccessors) {
                     build.line(`${objectAccessor} = 0;`);
                 }
 
-                for (const fileStaticVar of this.fileStaticVars) {
-                    if (fileStaticVar.page == page) {
-                        build.line(`${fileStaticVar.varName} = 0;`);
+                // clean state vars
+                const stateVars = this.stateVars.get(page);
+                if (stateVars) {
+                    function cleanStateVars(page: Page, prefix: string) {
+                        const stateVars = build.stateVars.get(page);
+                        if (stateVars) {
+                            for (const stateVar of stateVars) {
+                                if (stateVar.userWidgetPage) {
+                                    cleanStateVars(stateVar.userWidgetPage, `${prefix}.${stateVar.varName}`);
+                                } else {
+                                    build.line(`${prefix}.${stateVar.varName} = 0;`);
+                                }
+                            }
+                        }
                     }
+
+                    cleanStateVars(page, build.getScreenStateVarName(page));
                 }
 
+                // delete flow state
                 if (build.project.projectTypeTraits.hasFlowSupport) {
                     build.line(
                         `deletePageFlowState(${build.assets.getFlowIndex(page)});`
@@ -1326,266 +1587,31 @@ export class LVGLBuild extends Build {
             if (page.isUsedAsUserWidget) {
                 if (build.project.projectTypeTraits.hasFlowSupport) {
                     build.blockStart(
-                        `void ${this.getScreenTickFunctionName(page)}(void *flowState, int startWidgetIndex) {`
+                        `void ${this.getScreenTickFunctionName(page)}(void *flowState, int startWidgetIndex${this.stateVars.get(page) ? `, ${this.getStateStructName(page)} *state` : ""}) {`
                     );
                     build.line(`(void)flowState;`);
-                    build.line(`(void)startWidgetIndex;`);
                 } else {
                     build.blockStart(
-                        `void ${this.getScreenTickFunctionName(page)}(int startWidgetIndex) {`
+                        `void ${this.getScreenTickFunctionName(page)}(int startWidgetIndex${this.stateVars.get(page) ? `, ${this.getStateStructName(page)} *state` : ""}) {`
                     );
-                    build.line(`(void)startWidgetIndex;`);
+                }
+                build.line(`(void)startWidgetIndex;`);
+                if (this.stateVars.get(page)) {
+                    build.line(`(void)state;`);
                 }
             } else {
                 build.blockStart(
                     `void ${this.getScreenTickFunctionName(page)}() {`
                 );
+                if (this.stateVars.get(page)) {
+                    build.line(`${this.getStateStructName(page)} *state = &${this.getScreenStateVarName(page)};`);
+                    build.line(`(void)state;`);
+                }                
             }
             for (const tickCallback of this.tickCallbacks) {
                 tickCallback();
             }
             build.blockEnd("}");
-            build.line("");
-        }
-
-        this.buildChangeColorTheme();
-
-        return this.result;
-    }
-
-    buildChangeColorTheme() {
-        if (this.updateColorCallbacks.length == 0) {
-            return;
-        }
-
-        const build = this;
-
-        build.blockStart(`void change_color_theme(uint32_t theme_index) {`);
-
-        if (!this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            build.line("active_theme_index = theme_index;");
-            build.line("");
-        }
-
-        this.updateColorCallbacks.forEach(updateColorCallback => {
-            const flow = getAncestorOfType<Flow>(
-                updateColorCallback.object,
-                ProjectEditor.FlowClass.classInfo
-            );
-
-            if (
-                flow instanceof ProjectEditor.PageClass &&
-                flow.isUsedAsUserWidget
-            ) {
-                return;
-            }
-
-            updateColorCallback.callback();
-
-            build.line("");
-        });
-
-        this.pages.forEach(page => {
-            if (page.isUsedAsUserWidget) {
-                return;
-            }
-
-            if (this.buildChangeColorThemeForUserWidget(page, true)) {
-                build.line("");
-            }
-        });
-
-        build.pages
-            .filter(page => !page.isUsedAsUserWidget)
-            .forEach(page => {
-                const screenIdentifier =
-                    "objects." + this.getScreenIdentifier(page);
-                if (this.project.settings.build.screensLifetimeSupport) {
-                    build.line(
-                        `if (${screenIdentifier}) lv_obj_invalidate(${screenIdentifier});`
-                    );
-                } else {
-                    build.line(`lv_obj_invalidate(${screenIdentifier});`);
-                }
-            });
-
-        build.blockEnd("}");
-    }
-
-    buildChangeColorThemeForUserWidget(page: Page, flag: boolean) {
-        const build = this;
-
-        let first = true;
-
-        page._lvglWidgets.forEach(lvglWidget => {
-            if (
-                !(lvglWidget instanceof ProjectEditor.LVGLUserWidgetWidgetClass)
-            ) {
-                return;
-            }
-
-            const updateColorCallbacks = this.updateColorCallbacks.filter(
-                (updateColorCallback, i) => {
-                    const flow = getAncestorOfType<Flow>(
-                        updateColorCallback.object,
-                        ProjectEditor.FlowClass.classInfo
-                    );
-
-                    return flow == lvglWidget.userWidgetPage;
-                }
-            );
-
-            if (updateColorCallbacks.length == 0) {
-                return;
-            }
-
-            if (first) {
-                first = false;
-            } else {
-                build.line("");
-            }
-
-            build.blockStart("{");
-
-            if (flag) {
-                build.line(
-                    `int startWidgetIndex = ${this.getWidgetObjectIndex(lvglWidget) + 1};`
-                );
-            } else {
-                build.line(
-                    `startWidgetIndex += ${this.getWidgetObjectIndex(lvglWidget) + 1};`
-                );
-            }
-
-            updateColorCallbacks.forEach(updateColorCallback =>
-                updateColorCallback.callback()
-            );
-
-            this.buildChangeColorThemeForUserWidget(
-                lvglWidget.userWidgetPage!,
-                false
-            );
-
-            build.blockEnd("}");
-        });
-
-        return !first;
-    }
-
-    async buildScreensDeclExt() {
-        this.startBuild();
-        const build = this;
-
-        if (build.project.settings.build.screensLifetimeSupport) {
-            build.line("void create_screen_by_id(enum ScreensEnum screenId);");
-            build.line("void delete_screen_by_id(enum ScreensEnum screenId);");
-        }
-        build.line("void tick_screen_by_id(enum ScreensEnum screenId);");
-        build.line("void tick_screen(int screen_index);");
-
-        build.line("");
-
-        build.line("void create_screens();");
-
-        return this.result;
-    }
-
-    async buildScreensDefExt() {
-        this.startBuild();
-        const build = this;
-
-        //
-        if (
-            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
-            this.styles.length > 0
-        ) {
-            build.line(
-                "extern void add_style(lv_obj_t *obj, int32_t styleIndex);"
-            );
-            build.line(
-                "extern void remove_style(lv_obj_t *obj, int32_t styleIndex);"
-            );
-            build.line("");
-        }
-
-        //
-        if (this.project.lvglGroups.groups.length > 0) {
-            build.blockStart("void ui_create_groups() {");
-
-            build.blockStart("if (!groups_created) {");
-
-            this.project.lvglGroups.groups.forEach(group => {
-                build.line(
-                    `${build.getGroupVariableName(group)} = lv_group_create();`
-                );
-            });
-            if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-                build.line(
-                    "eez_flow_init_groups((lv_group_t **)&groups, sizeof(groups) / sizeof(lv_group_t *));"
-                );
-            }
-
-            build.line("groups_created = true;");
-
-            build.blockEnd("}");
-
-            build.blockEnd("}");
-
-            build.line("");
-        }
-
-        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
-            if (pages.length > 0) {
-                build.line(
-                    `static const char *screen_names[] = { ${pages.map(page => `"${page.name}"`).join(", ")} };`
-                );
-            }
-
-            if (this.lvglObjectIdentifiers.fromPage.identifiers.length > 0) {
-                build.line(
-                    `static const char *object_names[] = { ${this.lvglObjectIdentifiers.fromPage.identifiers
-                        .map(identifier => `"${identifier}"`)
-                        .join(", ")} };`
-                );
-            }
-            if (this.project.lvglGroups.groups.length > 0) {
-                build.line(
-                    `static const char *group_names[] = { ${this.project.lvglGroups.groups
-                        .map(group => `"${group.name}"`)
-                        .join(", ")} };`
-                );
-            }
-            if (this.styles.length > 0) {
-                build.line(
-                    `static const char *style_names[] = { ${this.styles.map(style => `"${style.name}"`).join(", ")} };`
-                );
-            }
-            if (this.updateColorCallbacks.length > 0) {
-                build.line(
-                    `static const char *theme_names[] = { ${this.project.themes
-                        .map(theme => `"${theme.name}"`)
-                        .join(", ")} };`
-                );
-            }
-            build.line("");
-        }
-
-        //
-        if (this.updateColorCallbacks.length > 0) {
-            build.blockStart(
-                `uint32_t theme_colors[${this.project.themes.length}][${this.project.colors.length}] = {`
-            );
-            this.project.themes.map(theme => {
-                const colors = this.project.colors.map(color =>
-                    this.getColorHexStr(
-                        this.project.getThemeColor(theme.objID, color.objID)
-                    )
-                );
-
-                build.line(`{ ${colors.join(", ")} },`);
-            });
-            build.blockEnd("};");
             build.line("");
         }
 
@@ -1654,6 +1680,73 @@ export class LVGLBuild extends Build {
         build.line("");
 
         //
+        // Styles
+        //
+
+        if (
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+            this.styles.length > 0
+        ) {
+            build.line("");
+            build.line("//");
+            build.line("// Styles");
+            build.line("//");
+            build.line("");    
+
+            build.line(
+                `static const char *style_names[] = { ${this.styles.map(style => `"${style.name}"`).join(", ")} };`
+            );
+
+            build.line("");
+
+            build.line(
+                "extern void add_style(lv_obj_t *obj, int32_t styleIndex);"
+            );
+            build.line(
+                "extern void remove_style(lv_obj_t *obj, int32_t styleIndex);"
+            );
+
+            build.line("");
+        }
+
+                //
+        // fonts
+        //
+
+        build.line("");
+        build.line("//");
+        build.line("// Fonts");
+        build.line("//");
+        build.line("");
+
+        {
+            let anyFontWithFreeType = false;
+
+            for (const font of this.fonts) {
+                if (font.lvglUseFreeType) {
+                    build.line(`lv_font_t *${this.getFontVariableName(font)};`);
+                    anyFontWithFreeType = true;
+                }
+            }
+
+            if (anyFontWithFreeType) {
+                build.line("");
+            }
+        }
+
+        build.blockStart(`ext_font_desc_t fonts[] = {`);
+        for (const font of this.fonts) {
+            build.line(
+                `{ "${font.name}", ${font.lvglUseFreeType ? "NULL" : this.getFontAccessor(font)} },`
+            );
+        }
+        for (const font of BUILT_IN_FONTS) {
+            build.text(`#if LV_FONT_${font}\n`);
+            build.line(`{ "${font}", &lv_font_${font.toLowerCase()} },`);
+            build.text(`#endif\n`);
+        }
+        build.blockEnd(`};`);
+        build.line("");
 
         if (
             this.project.settings.build.fontExportMode == "binary" &&
@@ -1667,12 +1760,123 @@ export class LVGLBuild extends Build {
         }
 
         //
+        // Themes
+        //
+
+        if (
+            !this.assets.projectStore.projectTypeTraits.hasFlowSupport ||
+            this.updateColorCallbacks.length > 0
+        ) {
+            build.line("");
+            build.line("//");
+            build.line("// Color themes");
+            build.line("//");
+            build.line("");    
+        }
+
+        if (!this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            build.line(`uint32_t active_theme_index = 0;`);
+        }
+
+        this.buildChangeColorTheme();
+
+        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport && this.updateColorCallbacks.length > 0) {
+            build.line(
+                `static const char *theme_names[] = { ${this.project.themes
+                    .map(theme => `"${theme.name}"`)
+                    .join(", ")} };`
+            );
+        }
+
+        if (this.updateColorCallbacks.length > 0) {
+            build.blockStart(
+                `uint32_t theme_colors[${this.project.themes.length}][${this.project.colors.length}] = {`
+            );
+            this.project.themes.map(theme => {
+                const colors = this.project.colors.map(color =>
+                    this.getColorHexStr(
+                        this.project.getThemeColor(theme.objID, color.objID)
+                    )
+                );
+
+                build.line(`{ ${colors.join(", ")} },`);
+            });
+            build.blockEnd("};");
+            build.line("");
+        }
+
+        //
+        // Groups
+        // 
+
+        if (this.project.lvglGroups.groups.length > 0) {
+            build.line("");
+            build.line("//");
+            build.line("// Groups");
+            build.line("//");
+            build.line("");
+            build.line(`groups_t groups;`);
+            build.line("static bool groups_created = false;");
+
+            if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {            
+                build.line(
+                    `static const char *group_names[] = { ${this.project.lvglGroups.groups
+                        .map(group => `"${group.name}"`)
+                        .join(", ")} };`
+                );
+                build.line("");
+            }
+
+            build.blockStart("void ui_create_groups() {");
+
+            build.blockStart("if (!groups_created) {");
+
+            this.project.lvglGroups.groups.forEach(group => {
+                build.line(
+                    `${build.getGroupVariableName(group)} = lv_group_create();`
+                );
+            });
+            if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+                build.line(
+                    "eez_flow_init_groups((lv_group_t **)&groups, sizeof(groups) / sizeof(lv_group_t *));"
+                );
+            }
+
+            build.line("groups_created = true;");
+
+            build.blockEnd("}");
+
+            build.blockEnd("}");
+
+            build.line("");
+        }
+
+        //
+        // create_screens function
+        //
+
+        build.line("");
+        build.line("//");
+        build.line("//");
+        build.line("//");
+        build.line("");
+
         build.blockStart("void create_screens() {");
+
+        if (
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport && this.styles.length > 0
+        ) {
+            build.line("// Initialize styles");
+            build.line("eez_flow_init_styles(add_style, remove_style);");
+            build.line(`eez_flow_init_style_names(style_names, sizeof(style_names) / sizeof(const char *));`);
+            build.line("");
+        }
 
         if (
             this.project.settings.build.fontExportMode == "binary" &&
             this.fonts.length > 0
         ) {
+            build.line("// Load external fonts");
             let path = this.project.settings.build.fileSystemPath;
             if (!path.endsWith("/") && !path.endsWith("\\")) {
                 if (path.indexOf("\\") != -1) path += "\\";
@@ -1797,60 +2001,28 @@ export class LVGLBuild extends Build {
             }
         }
 
+        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            build.line(`eez_flow_init_fonts(fonts, sizeof(fonts) / sizeof(ext_font_desc_t));`);
+            if (this.updateColorCallbacks.length > 0) {
+                build.line("");
+                build.line(`eez_flow_init_themes(theme_names, sizeof(theme_names) / sizeof(const char *), change_color_theme, &theme_colors[0][0], sizeof(theme_colors[0]) / sizeof(uint32_t));`);
+            }
+            build.line("");
+        }
+
+        // groups
+        if (this.project.lvglGroups.groups.length > 0) {
+            build.line("// Initialize groups");
+        }
         if (this.project.lvglGroups.groups.length > 0) {
             build.line("ui_create_groups();");
-            build.line("");
+        }
+        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport && this.project.lvglGroups.groups.length > 0) {
+            build.line(`eez_flow_init_group_names(group_names, sizeof(group_names) / sizeof(const char *));`);
         }
 
-        if (
-            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
-            this.styles.length > 0
-        ) {
-            build.line("eez_flow_init_styles(add_style, remove_style);");
-            build.line("");
-        }
-
-        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            if (this.pages.length > 0) {
-                build.line(
-                    `eez_flow_init_screen_names(screen_names, sizeof(screen_names) / sizeof(const char *));`
-                );
-            }
-            if (this.lvglObjectIdentifiers.fromPage.identifiers.length > 0) {
-                build.line(
-                    `eez_flow_init_object_names(object_names, sizeof(object_names) / sizeof(const char *));`
-                );
-            }
-            if (this.project.lvglGroups.groups.length > 0) {
-                build.line(
-                    `eez_flow_init_group_names(group_names, sizeof(group_names) / sizeof(const char *));`
-                );
-            }
-            if (this.styles.length > 0) {
-                build.line(
-                    `eez_flow_init_style_names(style_names, sizeof(style_names) / sizeof(const char *));`
-                );
-            }
-            build.line(
-                `eez_flow_init_fonts(fonts, sizeof(fonts) / sizeof(ext_font_desc_t));`
-            );
-            if (this.updateColorCallbacks.length > 0) {
-                build.line(
-                    `eez_flow_init_themes(theme_names, sizeof(theme_names) / sizeof(const char *), change_color_theme, &theme_colors[0][0], sizeof(theme_colors[0]) / sizeof(uint32_t));`
-                );
-            }
-            build.line("");
-        }
-
-        if (
-            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
-            build.project.settings.build.screensLifetimeSupport
-        ) {
-            build.line("eez_flow_set_create_screen_func(create_screen);");
-            build.line("eez_flow_set_delete_screen_func(delete_screen);");
-            build.line("");
-        }
-
+        build.line("");
+        build.line("// Set default LVGL theme");
         if (this.isV9) {
             build.line("lv_display_t *dispp = lv_display_get_default();");
         } else {
@@ -1865,6 +2037,31 @@ export class LVGLBuild extends Build {
 
         build.line("");
 
+        build.line("// Initialize screens");
+        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            if (this.pages.length > 0) {
+                build.line(
+                    `eez_flow_init_screen_names(screen_names, sizeof(screen_names) / sizeof(const char *));`
+                );
+            }
+            if (this.lvglObjectIdentifiers.fromPage.identifiers.length > 0) {
+                build.line(
+                    `eez_flow_init_object_names(object_names, sizeof(object_names) / sizeof(const char *));`
+                );
+            }
+            build.line("");
+        }
+        
+        if (
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+            build.project.settings.build.screensLifetimeSupport
+        ) {
+            build.line("eez_flow_set_create_screen_func(create_screen);");
+            build.line("eez_flow_set_delete_screen_func(delete_screen);");
+            build.line("");
+        }
+
+        build.line("// Create screens");
         for (const page of this.userPages) {
             if (
                 !build.project.settings.build.screensLifetimeSupport ||
@@ -1876,6 +2073,131 @@ export class LVGLBuild extends Build {
         build.blockEnd("}");
 
         return this.result;
+    }
+
+    buildChangeColorTheme() {
+        if (this.updateColorCallbacks.length == 0) {
+            return;
+        }
+
+        const build = this;
+
+        build.blockStart(`void change_color_theme(uint32_t theme_index) {`);
+
+        if (!this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
+            build.line("active_theme_index = theme_index;");
+            build.line("");
+        }
+
+        this.updateColorCallbacks.forEach(updateColorCallback => {
+            const flow = getAncestorOfType<Flow>(
+                updateColorCallback.object,
+                ProjectEditor.FlowClass.classInfo
+            );
+
+            if (
+                flow instanceof ProjectEditor.PageClass &&
+                flow.isUsedAsUserWidget
+            ) {
+                return;
+            }
+
+            updateColorCallback.callback();
+        });
+
+        this.pages.forEach(page => {
+            if (page.isUsedAsUserWidget) {
+                return;
+            }
+
+            if (this.buildChangeColorThemeForUserWidget(page, true)) {
+                build.line("");
+            }
+        });
+
+        build.pages
+            .filter(page => !page.isUsedAsUserWidget)
+            .forEach(page => {
+                const screenIdentifier =
+                    "objects." + this.getScreenIdentifier(page);
+                if (this.project.settings.build.screensLifetimeSupport) {
+                    build.line(
+                        `if (${screenIdentifier}) lv_obj_invalidate(${screenIdentifier});`
+                    );
+                } else {
+                    build.line(`lv_obj_invalidate(${screenIdentifier});`);
+                }
+            });
+
+        build.blockEnd("}");
+    }
+
+    buildChangeColorThemeForUserWidget(page: Page, flag: boolean) {
+        const build = this;
+
+        let first = true;
+
+        page._lvglWidgets.forEach(lvglWidget => {
+            if (
+                !(lvglWidget instanceof ProjectEditor.LVGLUserWidgetWidgetClass)
+            ) {
+                return;
+            }
+
+            const updateColorCallbacks = this.updateColorCallbacks.filter(
+                (updateColorCallback, i) => {
+                    const flow = getAncestorOfType<Flow>(
+                        updateColorCallback.object,
+                        ProjectEditor.FlowClass.classInfo
+                    );
+
+                    return flow == lvglWidget.userWidgetPage;
+                }
+            );
+
+            if (updateColorCallbacks.length == 0) {
+                return;
+            }
+
+            if (first) {
+                first = false;
+            } else {
+                build.line("");
+            }
+
+            build.blockStart("{");
+
+            if (flag) {
+                build.line(
+                    `int startWidgetIndex = ${this.getWidgetObjectIndex(lvglWidget) + 1};`
+                );
+            } else {
+                build.line(
+                    `startWidgetIndex += ${this.getWidgetObjectIndex(lvglWidget) + 1};`
+                );
+            }
+
+            updateColorCallbacks.forEach(updateColorCallback =>
+                updateColorCallback.callback()
+            );
+
+            this.buildChangeColorThemeForUserWidget(
+                lvglWidget.userWidgetPage!,
+                false
+            );
+
+            build.blockEnd("}");
+        });
+
+        return !first;
+    }
+
+    async buildScreensDeclExt() {
+        return "";
+    }
+
+    async buildScreensDefExt() {
+        return "";
     }
 
     async buildImagesDecl() {

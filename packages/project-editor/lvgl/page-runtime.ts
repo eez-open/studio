@@ -849,6 +849,9 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                                 }
                             }
                         });
+
+                        this.ctx.fillStyle = "#FFFFFF";
+                        this.ctx.fillRect(0, 0, this.displayWidth, this.displayHeight);
                     } catch (e) {
                         console.error(e);
                         this.wasError = true;

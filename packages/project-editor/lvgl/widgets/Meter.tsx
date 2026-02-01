@@ -15,7 +15,7 @@ import {
     registerClass
 } from "project-editor/core/object";
 
-import { findBitmap, ProjectType } from "project-editor/project/project";
+import { findBitmap, getName, NamingConvention, ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
@@ -60,6 +60,7 @@ const LVGL_METER_INDICATOR_TYPES = {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLMeterIndicator extends EezObject {
+    identifier: string;
     type: keyof typeof LVGL_METER_INDICATOR_TYPES;
 
     static classInfo: ClassInfo = {
@@ -76,6 +77,19 @@ export class LVGLMeterIndicator extends EezObject {
         },
 
         properties: [
+            {
+                name: "identifier",
+                displayName: "Name",
+                type: PropertyType.String,
+                isOptional: true
+            },
+            {
+                name: "codeIdentifier",
+                type: PropertyType.String,
+                computed: true,
+                formText: `This identifier will be used in the generated source code. It is different from the "Name" above because in the source code we are following "lowercase with underscore" naming convention.`,
+                disabled: (object: LVGLWidget) => object.codeIdentifier == undefined
+            },            
             {
                 name: "type",
                 type: PropertyType.Enum,
@@ -172,8 +186,23 @@ export class LVGLMeterIndicator extends EezObject {
         super.makeEditable();
 
         makeObservable(this, {
+            identifier: observable,
             type: observable
         });
+    }
+
+    get codeIdentifier() {
+        if (!this.identifier) {
+            return undefined;
+        }
+
+        const codeIdentifier = getName("", this.identifier, NamingConvention.UnderscoreLowerCase);
+
+        if (codeIdentifier == this.identifier) {
+            return undefined;
+        }
+
+        return codeIdentifier;
     }
 
     lvglCreateObj(
@@ -365,9 +394,10 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
         scaleIndex: number,
         indicatorIndex: number
     ) {
-        const indicatorObj = code.callObjectFunctionWithAssignment(
+        const indicatorObj = code.callObjectFunctionWithAssignmentToStateVar(
+            this.objID,
             "lv_meter_indicator_t *",
-            "indicator",
+            this.identifier ? `${this.identifier}!` : "indicator",
             "lv_meter_add_needle_img",
             scaleObj,
             code.image(this.image),
@@ -500,15 +530,16 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
         scaleIndex: number,
         indicatorIndex: number
     ) {
+        const stateVar = code.genStateVar(
+            this.objID,
+            "lv_meter_indicator_t *",
+            this.identifier ? `${this.identifier}!` : "indicator"
+        );
+        
         code.buildColor(
             this,
             this.color,
-            () =>
-                code.genFileStaticVar(
-                    this.objID,
-                    "lv_meter_indicator_t *",
-                    "indicator"
-                ),
+            () => stateVar,
             (color, indicatorVar) => {
                 const indicatorObj = code.callObjectFunctionWithAssignment(
                     "lv_meter_indicator_t *",
@@ -520,7 +551,7 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
                     this.radiusModifier
                 );
 
-                code.assingToFileStaticVar(indicatorVar, indicatorObj);
+                code.assingToStateVar(indicatorVar, indicatorObj);
 
                 if (this.valueType == "literal") {
                     code.callObjectFunction(
@@ -725,16 +756,17 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
         scaleIndex: number,
         indicatorIndex: number
     ) {
+        const stateVar = code.genStateVar(
+            this.objID,
+            "lv_meter_indicator_t *",
+            this.identifier ? `${this.identifier}!` : "indicator"
+        );
+
         code.buildColor2(
             this,
             this.colorStart,
             this.colorEnd,
-            () =>
-                code.genFileStaticVar(
-                    this.objID,
-                    "lv_meter_indicator_t *",
-                    "indicator"
-                ),
+            () => stateVar,
             (colorStart, colorEnd, indicatorVar) => {
                 const indicatorObj = code.callObjectFunctionWithAssignment(
                     "lv_meter_indicator_t *",
@@ -747,7 +779,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
                     this.widthModifier
                 );
 
-                code.assingToFileStaticVar(indicatorVar, indicatorObj);
+                code.assingToStateVar(indicatorVar, indicatorObj);
 
                 if (this.startValueType == "literal") {
                     code.callObjectFunction(
@@ -958,15 +990,16 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
         scaleIndex: number,
         indicatorIndex: number
     ) {
+        const stateVar = code.genStateVar(
+            this.objID,
+            "lv_meter_indicator_t *",
+            this.identifier ? `${this.identifier}!` : "indicator"
+        );
+        
         code.buildColor(
             this,
             this.color,
-            () =>
-                code.genFileStaticVar(
-                    this.objID,
-                    "lv_meter_indicator_t *",
-                    "indicator"
-                ),
+            () => stateVar,
             (color, indicatorVar) => {
                 const indicatorObj = code.callObjectFunctionWithAssignment(
                     "lv_meter_indicator_t *",
@@ -978,7 +1011,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
                     this.radiusModifier
                 );
 
-                code.assingToFileStaticVar(indicatorVar, indicatorObj);
+                code.assingToStateVar(indicatorVar, indicatorObj);
 
                 if (this.startValueType == "literal") {
                     code.callObjectFunction(
@@ -1045,6 +1078,8 @@ registerClass("LVGLMeterIndicatorArc", LVGLMeterIndicatorArc);
 ////////////////////////////////////////////////////////////////////////////////
 
 class LVGLMeterScale extends EezObject {
+    identifier: string;
+
     minorTickCount: number;
     minorTickLineWidth: number;
     minorTickLength: number;
@@ -1067,6 +1102,20 @@ class LVGLMeterScale extends EezObject {
 
     static classInfo: ClassInfo = {
         properties: [
+            {
+                name: "identifier",
+                displayName: "Name",
+                type: PropertyType.String,
+                isOptional: true
+            },
+            {
+                name: "codeIdentifier",
+                type: PropertyType.String,
+                computed: true,
+                formText: `This identifier will be used in the generated source code. It is different from the "Name" above because in the source code we are following "lowercase with underscore" naming convention.`,
+                disabled: (object: LVGLWidget) => object.codeIdentifier == undefined
+            },            
+
             { name: "scaleMin", type: PropertyType.Number },
             { name: "scaleMax", type: PropertyType.Number },
             { name: "scaleAngleRange", type: PropertyType.Number },
@@ -1204,6 +1253,8 @@ class LVGLMeterScale extends EezObject {
         super.makeEditable();
 
         makeObservable(this, {
+            identifier: observable,
+
             minorTickCount: observable,
             minorTickLineWidth: observable,
             minorTickLength: observable,
@@ -1222,6 +1273,20 @@ class LVGLMeterScale extends EezObject {
             scaleAngleRange: observable,
             scaleRotation: observable
         });
+    }
+
+    get codeIdentifier() {
+        if (!this.identifier) {
+            return undefined;
+        }
+
+        const codeIdentifier = getName("", this.identifier, NamingConvention.UnderscoreLowerCase);
+
+        if (codeIdentifier == this.identifier) {
+            return undefined;
+        }
+
+        return codeIdentifier;
     }
 }
 
@@ -1375,18 +1440,19 @@ export class LVGLMeterWidget extends LVGLWidget {
                 "lv_meter_add_scale"
             );
 
+            const stateVar = code.genStateVar(
+                scale.objID,
+                "lv_meter_scale_t *",
+                scale.identifier ? `${scale.identifier}!` : "scale"
+            );
+
             code.buildColor2(
                 this,
                 scale.minorTickColor,
                 scale.majorTickColor,
-                () =>
-                    code.genFileStaticVar(
-                        scale.objID,
-                        "lv_meter_scale_t *",
-                        "scale"
-                    ),
+                () => stateVar,
                 (minorTickColor, majorTickColor, scaleVar) => {
-                    code.assingToFileStaticVar(scaleVar, "scale");
+                    code.assingToStateVar(scaleVar, "scale");
 
                     code.callObjectFunction(
                         "lv_meter_set_scale_ticks",

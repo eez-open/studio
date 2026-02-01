@@ -68,7 +68,8 @@ export interface LVGLCode {
         func: string,
         ...args: any[]
     ): any;
-    callObjectFunctionWithAssignmentToFileStaticVar(
+    callObjectFunctionWithAssignmentToStateVar(
+        id: string,
         declType: string,
         declNamePrefix: string,
         func: string,
@@ -176,8 +177,8 @@ export interface LVGLCode {
         callback: (color1: string, color2: string, params: T) => void,
         updateCallback: (color1: any, color2: any, params: T) => void
     ): void;
-    genFileStaticVar(id: string, type: string, prefixName: string): string;
-    assingToFileStaticVar(varName: string, value: string): void;
+    genStateVar(id: string, type: string, prefixName: string): string;
+    assingToStateVar(varName: string, value: string): void;
 
     //
     blockStart(param: any): void;
@@ -443,7 +444,8 @@ export class SimulatorLVGLCode implements LVGLCode {
         return this.callObjectFunction(func, ...args);
     }
 
-    callObjectFunctionWithAssignmentToFileStaticVar(
+    callObjectFunctionWithAssignmentToStateVar(
+        id: string,
         declType: string,
         declName: string,
         func: string,
@@ -805,11 +807,11 @@ export class SimulatorLVGLCode implements LVGLCode {
         });
     }
 
-    genFileStaticVar(id: string, type: string, prefixName: string) {
+    genStateVar(id: string, type: string, prefixName: string) {
         return undefined as any;
     }
 
-    assingToFileStaticVar(varName: string, value: string) {
+    assingToStateVar(varName: string, value: string) {
         this.buildColorParams = value;
     }
 
@@ -1035,13 +1037,14 @@ export class BuildLVGLCode implements LVGLCode {
         return declName;
     }
 
-    callObjectFunctionWithAssignmentToFileStaticVar(
+    callObjectFunctionWithAssignmentToStateVar(
+        id: string,
         declType: string,
         declNamePrefix: string,
         func: string,
         ...args: any[]
     ): any {
-        const staticVar = this.genFileStaticVar(this.widget.objID, declType, declNamePrefix);
+        const staticVar = this.genStateVar(id, declType, declNamePrefix);
 
         this.build.line(
             `${staticVar} = ${func}(${[
@@ -1490,12 +1493,12 @@ export class BuildLVGLCode implements LVGLCode {
         );
     }
 
-    genFileStaticVar(id: string, type: string, prefixName: string) {
-        return this.build.genFileStaticVar(id, type, prefixName);
+    genStateVar(id: string, type: string, prefixName: string) {
+        return this.build.genStateVar(id, type, prefixName);
     }
 
-    assingToFileStaticVar(varName: string, value: string) {
-        this.build.assingToFileStaticVar(varName, value);
+    assingToStateVar(varName: string, value: string) {
+        this.build.assingToStateVar(varName, value);
     }
 
     blockStart(param: any) {

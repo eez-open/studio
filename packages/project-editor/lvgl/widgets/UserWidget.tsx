@@ -419,13 +419,13 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                     build.line(
                         `${build.getScreenCreateFunctionName(
                             userWidgetPage
-                        )}(obj, getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
+                        )}(obj, getFlowState(flowState, ${componentIndex}), ${startWidgetIndex}${build.getUserWidgetStateParam(this)});`
                     );
                 } else {
                     build.line(
                         `${build.getScreenCreateFunctionName(
                             userWidgetPage
-                        )}(obj, ${startWidgetIndex});`
+                        )}(obj, ${startWidgetIndex}${build.getUserWidgetStateParam(this)});`
                     );
                 }
             }
@@ -455,13 +455,13 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                         build.line(
                             `${build.getScreenTickFunctionName(
                                 userWidgetPage
-                            )}(getFlowState(flowState, ${componentIndex}), ${startWidgetIndex});`
+                            )}(getFlowState(flowState, ${componentIndex}), ${startWidgetIndex}${build.getUserWidgetStateParam(this)});`
                         );
                     } else {
                         build.line(
                             `${build.getScreenTickFunctionName(
                                 userWidgetPage
-                            )}(${startWidgetIndex});`
+                            )}(${startWidgetIndex}${build.getUserWidgetStateParam(this)});`
                         );
                     }
                 }

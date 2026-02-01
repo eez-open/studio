@@ -15,7 +15,7 @@ import {
     registerClass
 } from "project-editor/core/object";
 
-import { ProjectType, findFont, findLvglStyle } from "project-editor/project/project";
+import { NamingConvention, ProjectType, findFont, findLvglStyle, getName } from "project-editor/project/project";
 import { BUILT_IN_FONTS, text_font_property_info } from "project-editor/lvgl/style-catalog";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
@@ -65,6 +65,8 @@ function makePropertiesSection(name: string): PropertyInfo {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLScaleSection extends EezObject {
+    identifier: string;
+
     minValue: number | string;
     minValueType: LVGLPropertyType;
     maxValue: number | string;
@@ -96,6 +98,19 @@ export class LVGLScaleSection extends EezObject {
 
     static classInfo: ClassInfo = {
         properties: [
+            {
+                name: "identifier",
+                displayName: "Name",
+                type: PropertyType.String,
+                isOptional: true
+            },
+            {
+                name: "codeIdentifier",
+                type: PropertyType.String,
+                computed: true,
+                formText: `This identifier will be used in the generated source code. It is different from the "Name" above because in the source code we are following "lowercase with underscore" naming convention.`,
+                disabled: (object: LVGLWidget) => object.codeIdentifier == undefined
+            },            
             ...makeLvglExpressionProperty("minValue", "integer", "input", ["literal", "expression"], {
                 displayName: "Min value"
             }),
@@ -342,6 +357,8 @@ export class LVGLScaleSection extends EezObject {
         super.makeEditable();
 
         makeObservable(this, {
+            identifier: observable,
+
             minValue: observable,
             minValueType: observable,
             maxValue: observable,
@@ -371,6 +388,20 @@ export class LVGLScaleSection extends EezObject {
             labelsTextOpacity: observable,
             labelsTextFont: observable
         });
+    }
+
+    get codeIdentifier() {
+        if (!this.identifier) {
+            return undefined;
+        }
+
+        const codeIdentifier = getName("", this.identifier, NamingConvention.UnderscoreLowerCase);
+
+        if (codeIdentifier == this.identifier) {
+            return undefined;
+        }
+
+        return codeIdentifier;
     }
 }
 
@@ -1384,9 +1415,10 @@ export class LVGLScaleWidget extends LVGLWidget {
             this.sections.forEach((section, sectionIndex) => {
                 code.blockStart("{");
 
-                let sectionVar = code.callObjectFunctionWithAssignmentToFileStaticVar(
+                let sectionVar = code.callObjectFunctionWithAssignmentToStateVar(
+                    section.objID,
                     "lv_scale_section_t *",
-                    "scale_section",
+                    section.identifier ? `${section.identifier}!` : "scale_section",
                     "lv_scale_add_section"
                 );
 

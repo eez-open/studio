@@ -77,9 +77,7 @@ export class LVGLScreenWidget extends LVGLWidget {
                 if (code.hasFlowSupport) {
                     const build = code.lvglBuild;
                     let flowIndex = build.assets.getFlowIndex(page);
-                    build.line(
-                        `void *flowState = getFlowState(0, ${flowIndex});`
-                    );
+                    build.line(`void *flowState = getFlowState(0, ${flowIndex});`);
                     build.line(`(void)flowState;`);
                 }
 
