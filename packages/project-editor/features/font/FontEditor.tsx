@@ -72,6 +72,7 @@ export const FontEditor = observer(
 
         get glyphs() {
             let font = this.font;
+            font.reloadLvglGlyphs();
             return font.glyphs;
         }
 

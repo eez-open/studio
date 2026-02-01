@@ -1089,7 +1089,7 @@ const ChangeBitsPerPixel = observer(
                     lvglBinFile: fontProperties.lvglBinFile
                 });
 
-                font.loadLvglGlyphs(projectStore);
+                font.markLvglGlyphsDirty();
             } catch (err) {
                 let errorMessage;
                 if (err) {
@@ -1161,6 +1161,8 @@ export class Font extends EezObject {
     lvglFreeTypeStyle: string;
     lvglFreeTypeFilePath: string;
 
+    _lvglGlyphsDirtyDirty: boolean = true;
+
     constructor() {
         super();
 
@@ -1194,7 +1196,8 @@ export class Font extends EezObject {
             lvglUseFreeType: observable,
             lvglFreeTypeRenderMode: observable,
             lvglFreeTypeStyle: observable,
-            lvglFreeTypeFilePath: observable
+            lvglFreeTypeFilePath: observable,
+            _lvglGlyphsDirtyDirty: observable
         });
     }
 
@@ -1494,11 +1497,6 @@ export class Font extends EezObject {
                     fontJs.lvglFreeTypeRenderMode = "BITMAP";
                 }
             }
-        },
-        afterLoadHook: (font: Font, project) => {
-            try {
-                font.loadLvglGlyphs(project._store);
-            } catch (err) { }
         },
         check: (font: Font, messages: IMessage[]) => {
             const projectStore = getProjectStore(font);
@@ -1985,7 +1983,21 @@ export class Font extends EezObject {
                 setParent(glyph, this.glyphs);
                 this.glyphs.push(glyph);
             }
+
+            this._lvglGlyphsDirtyDirty = false;
         });
+    }
+
+    markLvglGlyphsDirty() {
+        runInAction(() => {
+            this._lvglGlyphsDirtyDirty = true;
+        });
+    }
+
+    reloadLvglGlyphs() {
+        if (isLVGLProject(this) && this._lvglGlyphsDirtyDirty) {
+            setTimeout(() => this.loadLvglGlyphs(ProjectEditor.getProjectStore(this)));
+        }
     }
 
     async rebuildLvglFont(
@@ -2298,7 +2310,7 @@ export async function onEditGlyphs(font: Font) {
             lvglSymbols: result.values.symbols
         });
 
-        font.loadLvglGlyphs(projectStore);
+        font.markLvglGlyphsDirty();
 
         notification.info(`Font ${font.name} successfully modified.`);
     } catch (err) {
