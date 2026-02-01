@@ -1199,11 +1199,17 @@ export class LVGLBuild extends Build {
         // enum ScreensEnum
         build.blockStart(`enum ScreensEnum {`);
         const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
+        build.line(
+            `_SCREEN_ID_FIRST = 1,`
+        );
         for (let i = 0; i < pages.length; i++) {
             build.line(
                 `SCREEN_ID_${this.getScreenIdentifier(pages[i]).toUpperCase()} = ${i + 1},`
             );
         }
+        build.line(
+            `_SCREEN_ID_LAST = ${pages.length + 1}`
+        );
         build.blockEnd(`};`);
         build.line("");
 
