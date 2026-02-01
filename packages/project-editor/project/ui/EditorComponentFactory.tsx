@@ -27,6 +27,7 @@ import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { getAncestorOfType } from "project-editor/store";
 import { ReadmeEditor } from "project-editor/features/readme/navigation";
 import { ChangesEditor } from "project-editor/features/changes/editor";
+import { isLVGLProject } from "project-editor/project/project-type-traits";
 
 export function getEditorComponent(
     object: IEezObject,
@@ -36,6 +37,7 @@ export function getEditorComponent(
           object: IEezObject;
           subObject?: IEezObject;
           EditorComponent: typeof EditorComponent;
+          params?: any;
       }
     | undefined {
     const project = getProject(object);
@@ -44,8 +46,8 @@ export function getEditorComponent(
         return { object, EditorComponent: ActionEditor };
     }
 
-    if (object instanceof Font && !object.lvglUseFreeType) {
-        return { object, EditorComponent: FontEditor };
+    if (object instanceof Font && (!isLVGLProject(project) || params && params.forceOpenEditor)) {
+        return { object, EditorComponent: FontEditor, params };
     }
 
     if (object == project.micropython) {
@@ -106,9 +108,9 @@ export function getEditorComponent(
     return undefined;
 }
 
-export function getAncestorWithEditorComponent(object: IEezObject) {
+export function getAncestorWithEditorComponent(object: IEezObject, params?: any) {
     while (object) {
-        const result = getEditorComponent(object, undefined);
+        const result = getEditorComponent(object, params);
         if (result) {
             return result;
         }

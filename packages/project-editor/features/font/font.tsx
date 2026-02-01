@@ -70,6 +70,7 @@ import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import { getLvglDefaultFontBpp } from "project-editor/lvgl/lvgl-versions";
 import { settingsController } from "home/settings";
+import { ProjectContext } from "project-editor/project/context";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1032,6 +1033,47 @@ const ExportFontFilePropertyGridUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const ViewGlyphsPropertyGridUI = observer(
+    class ViewGlyphsPropertyGridUI extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        view = async () => {
+            this.context.navigationStore.showObjects(
+                this.props.objects,
+                true,
+                false,
+                false,
+                {
+                    forceOpenEditor: true
+                }
+            )
+        };
+
+        render() {
+            if (this.props.objects.length > 1) {
+                return null;
+            }
+            return (
+                <div style={{ marginTop: 10, marginBottom: 10, display: "flex" }}>
+                    <div style={{ width: "33%" }}></div>
+                    <div style={{ width: "100%" }}>
+                        <Button
+                            color="primary"
+                            size="small"
+                            onClick={this.view}
+                        >
+                            View Glyphs
+                        </Button>
+                    </div>
+                </div>
+            );
+        }
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const ChangeBitsPerPixel = observer(
     class ChangeBitsPerPixel extends React.Component<PropertyProps> {
         onModify = async () => {
@@ -1431,6 +1473,16 @@ export class Font extends EezObject {
                 skipSearch: true,
                 hideInPropertyGrid: (font: Font) => {
                     return !font.embeddedFontFile;
+                }
+            },
+            {
+                name: "viewGlyphs",
+                type: PropertyType.Any,
+                computed: true,
+                propertyGridRowComponent: ViewGlyphsPropertyGridUI,
+                skipSearch: true,
+                hideInPropertyGrid: (font: Font) => {
+                    return !isLVGLProject(font) || font.lvglUseFreeType
                 }
             }
         ],

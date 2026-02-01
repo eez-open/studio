@@ -445,7 +445,8 @@ export class NavigationStore {
         objects: IEezObject[],
         openEditor: boolean,
         showInNavigation: boolean,
-        selectObject: boolean
+        selectObject: boolean,
+        openEditorParams?: any
     ) {
         objects = objects.map(object =>
             isValue(object) ? getParent(object) : object
@@ -453,12 +454,13 @@ export class NavigationStore {
 
         if (openEditor) {
             const result = ProjectEditor.getAncestorWithEditorComponent(
-                objects[0]
+                objects[0], openEditorParams
             );
             if (result) {
                 const editor = this.projectStore.editorsStore.openEditor(
                     result.object,
-                    result.subObject
+                    result.subObject,
+                    result.params
                 );
                 const editorState = editor.state;
                 if (editorState && editorState.selectObjectsAndEnsureVisible) {
