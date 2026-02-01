@@ -15,6 +15,7 @@
         "strictNullChecks": true,
         "baseUrl": "./packages",
         "sourceMap": false,
+        "inlineSourceMap": false,
         "pretty": false,
         "outDir": "./build",
         "skipLibCheck": true,

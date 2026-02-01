@@ -5470,31 +5470,31 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1160520: ($0) => { startToDebuggerMessage($0); },  
- 1160552: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1160627: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1160702: ($0) => { finishToDebuggerMessage($0); },  
- 1160735: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1160765: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1160795: ($0) => { lvglScreenTick($0); },  
- 1160819: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1160859: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1160913: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1160967: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1161020: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1161073: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1161126: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
- 1161178: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1161225: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1161258: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1161294: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1161339: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1161445: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1161481: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1161518: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1161558: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1161615: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1161674: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1157960: ($0) => { startToDebuggerMessage($0); },  
+ 1157992: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1158067: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1158142: ($0) => { finishToDebuggerMessage($0); },  
+ 1158175: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1158205: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1158235: ($0) => { lvglScreenTick($0); },  
+ 1158259: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1158299: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1158353: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1158407: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1158460: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1158513: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1158566: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1158618: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1158665: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1158698: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1158734: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1158779: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1158885: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1158921: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1158958: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1158998: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1159055: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1159114: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5765,11 +5765,12 @@ var _v8_lv_slider_get_value = Module['_v8_lv_slider_get_value'] = makeInvalidEar
 var _v8_lv_slider_set_left_value = Module['_v8_lv_slider_set_left_value'] = makeInvalidEarlyAccess('_v8_lv_slider_set_left_value');
 var _v8_lv_slider_get_left_value = Module['_v8_lv_slider_get_left_value'] = makeInvalidEarlyAccess('_v8_lv_slider_get_left_value');
 var _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = makeInvalidEarlyAccess('_lvglCreateFreeTypeFont');
+var _lvglCreateAnim = Module['_lvglCreateAnim'] = makeInvalidEarlyAccess('_lvglCreateAnim');
+var _lv_anim_init = Module['_lv_anim_init'] = makeInvalidEarlyAccess('_lv_anim_init');
 var _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = makeInvalidEarlyAccess('_lv_disp_get_scr_prev');
 var _lv_obj_get_disp = Module['_lv_obj_get_disp'] = makeInvalidEarlyAccess('_lv_obj_get_disp');
 var _lv_anim_del = Module['_lv_anim_del'] = makeInvalidEarlyAccess('_lv_anim_del');
 var _lv_obj_remove_local_style_prop = Module['_lv_obj_remove_local_style_prop'] = makeInvalidEarlyAccess('_lv_obj_remove_local_style_prop');
-var _lv_anim_init = Module['_lv_anim_init'] = makeInvalidEarlyAccess('_lv_anim_init');
 var _lv_disp_get_hor_res = Module['_lv_disp_get_hor_res'] = makeInvalidEarlyAccess('_lv_disp_get_hor_res');
 var _lv_disp_get_ver_res = Module['_lv_disp_get_ver_res'] = makeInvalidEarlyAccess('_lv_disp_get_ver_res');
 var _lv_event_send = Module['_lv_event_send'] = makeInvalidEarlyAccess('_lv_event_send');
@@ -5898,10 +5899,6 @@ var _lv_mem_buf_release = Module['_lv_mem_buf_release'] = makeInvalidEarlyAccess
 var _lv_mem_init = Module['_lv_mem_init'] = makeInvalidEarlyAccess('_lv_mem_init');
 var _lv_draw_init = Module['_lv_draw_init'] = makeInvalidEarlyAccess('_lv_draw_init');
 var _lv_extra_init = Module['_lv_extra_init'] = makeInvalidEarlyAccess('_lv_extra_init');
-var _lv_deinit = Module['_lv_deinit'] = makeInvalidEarlyAccess('_lv_deinit');
-var _lv_disp_set_default = Module['_lv_disp_set_default'] = makeInvalidEarlyAccess('_lv_disp_set_default');
-var _lv_mem_deinit = Module['_lv_mem_deinit'] = makeInvalidEarlyAccess('_lv_mem_deinit');
-var _lv_log_register_print_cb = Module['_lv_log_register_print_cb'] = makeInvalidEarlyAccess('_lv_log_register_print_cb');
 var _lv_obj_class_create_obj = Module['_lv_obj_class_create_obj'] = makeInvalidEarlyAccess('_lv_obj_class_create_obj');
 var _lv_obj_class_init_obj = Module['_lv_obj_class_init_obj'] = makeInvalidEarlyAccess('_lv_obj_class_init_obj');
 var _lv_obj_is_layout_positioned = Module['_lv_obj_is_layout_positioned'] = makeInvalidEarlyAccess('_lv_obj_is_layout_positioned');
@@ -6513,6 +6510,7 @@ var _lv_timer_ready = Module['_lv_timer_ready'] = makeInvalidEarlyAccess('_lv_ti
 var _lv_disp_drv_update = Module['_lv_disp_drv_update'] = makeInvalidEarlyAccess('_lv_disp_drv_update');
 var _lv_disp_remove = Module['_lv_disp_remove'] = makeInvalidEarlyAccess('_lv_disp_remove');
 var _lv_timer_del = Module['_lv_timer_del'] = makeInvalidEarlyAccess('_lv_timer_del');
+var _lv_disp_set_default = Module['_lv_disp_set_default'] = makeInvalidEarlyAccess('_lv_disp_set_default');
 var _lv_disp_get_physical_hor_res = Module['_lv_disp_get_physical_hor_res'] = makeInvalidEarlyAccess('_lv_disp_get_physical_hor_res');
 var _lv_disp_get_physical_ver_res = Module['_lv_disp_get_physical_ver_res'] = makeInvalidEarlyAccess('_lv_disp_get_physical_ver_res');
 var _lv_disp_get_offset_x = Module['_lv_disp_get_offset_x'] = makeInvalidEarlyAccess('_lv_disp_get_offset_x');
@@ -6557,6 +6555,7 @@ var _lv_fs_dir_close = Module['_lv_fs_dir_close'] = makeInvalidEarlyAccess('_lv_
 var _lv_fs_get_letters = Module['_lv_fs_get_letters'] = makeInvalidEarlyAccess('_lv_fs_get_letters');
 var _lv_fs_up = Module['_lv_fs_up'] = makeInvalidEarlyAccess('_lv_fs_up');
 var _lv_fs_get_last = Module['_lv_fs_get_last'] = makeInvalidEarlyAccess('_lv_fs_get_last');
+var _lv_log_register_print_cb = Module['_lv_log_register_print_cb'] = makeInvalidEarlyAccess('_lv_log_register_print_cb');
 var _lv_log = Module['_lv_log'] = makeInvalidEarlyAccess('_lv_log');
 var _lv_lru_create = Module['_lv_lru_create'] = makeInvalidEarlyAccess('_lv_lru_create');
 var _lv_lru_del = Module['_lv_lru_del'] = makeInvalidEarlyAccess('_lv_lru_del');
@@ -6566,17 +6565,9 @@ var _lv_lru_get = Module['_lv_lru_get'] = makeInvalidEarlyAccess('_lv_lru_get');
 var _lv_lru_remove = Module['_lv_lru_remove'] = makeInvalidEarlyAccess('_lv_lru_remove');
 var _lv_sqrt = Module['_lv_sqrt'] = makeInvalidEarlyAccess('_lv_sqrt');
 var _lv_rand = Module['_lv_rand'] = makeInvalidEarlyAccess('_lv_rand');
-var _lv_tlsf_create_with_pool = Module['_lv_tlsf_create_with_pool'] = makeInvalidEarlyAccess('_lv_tlsf_create_with_pool');
-var _lv_tlsf_destroy = Module['_lv_tlsf_destroy'] = makeInvalidEarlyAccess('_lv_tlsf_destroy');
-var _lv_tlsf_malloc = Module['_lv_tlsf_malloc'] = makeInvalidEarlyAccess('_lv_tlsf_malloc');
-var _lv_tlsf_free = Module['_lv_tlsf_free'] = makeInvalidEarlyAccess('_lv_tlsf_free');
-var _lv_tlsf_realloc = Module['_lv_tlsf_realloc'] = makeInvalidEarlyAccess('_lv_tlsf_realloc');
+var _lv_mem_deinit = Module['_lv_mem_deinit'] = makeInvalidEarlyAccess('_lv_mem_deinit');
 var _lv_mem_test = Module['_lv_mem_test'] = makeInvalidEarlyAccess('_lv_mem_test');
-var _lv_tlsf_check = Module['_lv_tlsf_check'] = makeInvalidEarlyAccess('_lv_tlsf_check');
-var _lv_tlsf_get_pool = Module['_lv_tlsf_get_pool'] = makeInvalidEarlyAccess('_lv_tlsf_get_pool');
-var _lv_tlsf_check_pool = Module['_lv_tlsf_check_pool'] = makeInvalidEarlyAccess('_lv_tlsf_check_pool');
 var _lv_mem_monitor = Module['_lv_mem_monitor'] = makeInvalidEarlyAccess('_lv_mem_monitor');
-var _lv_tlsf_walk_pool = Module['_lv_tlsf_walk_pool'] = makeInvalidEarlyAccess('_lv_tlsf_walk_pool');
 var _lv_vsnprintf = Module['_lv_vsnprintf'] = makeInvalidEarlyAccess('_lv_vsnprintf');
 var _lv_style_get_num_custom_props = Module['_lv_style_get_num_custom_props'] = makeInvalidEarlyAccess('_lv_style_get_num_custom_props');
 var _lv_style_set_min_width = Module['_lv_style_set_min_width'] = makeInvalidEarlyAccess('_lv_style_set_min_width');
@@ -6625,17 +6616,6 @@ var _lv_timer_set_cb = Module['_lv_timer_set_cb'] = makeInvalidEarlyAccess('_lv_
 var _lv_timer_set_period = Module['_lv_timer_set_period'] = makeInvalidEarlyAccess('_lv_timer_set_period');
 var _lv_timer_reset = Module['_lv_timer_reset'] = makeInvalidEarlyAccess('_lv_timer_reset');
 var _lv_timer_get_idle = Module['_lv_timer_get_idle'] = makeInvalidEarlyAccess('_lv_timer_get_idle');
-var _lv_tlsf_block_size = Module['_lv_tlsf_block_size'] = makeInvalidEarlyAccess('_lv_tlsf_block_size');
-var _lv_tlsf_size = Module['_lv_tlsf_size'] = makeInvalidEarlyAccess('_lv_tlsf_size');
-var _lv_tlsf_align_size = Module['_lv_tlsf_align_size'] = makeInvalidEarlyAccess('_lv_tlsf_align_size');
-var _lv_tlsf_block_size_min = Module['_lv_tlsf_block_size_min'] = makeInvalidEarlyAccess('_lv_tlsf_block_size_min');
-var _lv_tlsf_block_size_max = Module['_lv_tlsf_block_size_max'] = makeInvalidEarlyAccess('_lv_tlsf_block_size_max');
-var _lv_tlsf_pool_overhead = Module['_lv_tlsf_pool_overhead'] = makeInvalidEarlyAccess('_lv_tlsf_pool_overhead');
-var _lv_tlsf_alloc_overhead = Module['_lv_tlsf_alloc_overhead'] = makeInvalidEarlyAccess('_lv_tlsf_alloc_overhead');
-var _lv_tlsf_add_pool = Module['_lv_tlsf_add_pool'] = makeInvalidEarlyAccess('_lv_tlsf_add_pool');
-var _lv_tlsf_remove_pool = Module['_lv_tlsf_remove_pool'] = makeInvalidEarlyAccess('_lv_tlsf_remove_pool');
-var _lv_tlsf_create = Module['_lv_tlsf_create'] = makeInvalidEarlyAccess('_lv_tlsf_create');
-var _lv_tlsf_memalign = Module['_lv_tlsf_memalign'] = makeInvalidEarlyAccess('_lv_tlsf_memalign');
 var _lv_arc_set_angles = Module['_lv_arc_set_angles'] = makeInvalidEarlyAccess('_lv_arc_set_angles');
 var _lv_arc_set_change_rate = Module['_lv_arc_set_change_rate'] = makeInvalidEarlyAccess('_lv_arc_set_change_rate');
 var _lv_arc_get_angle_start = Module['_lv_arc_get_angle_start'] = makeInvalidEarlyAccess('_lv_arc_get_angle_start');
@@ -7035,11 +7015,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['v8_lv_slider_set_left_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_set_left_value');
   assert(typeof wasmExports['v8_lv_slider_get_left_value'] != 'undefined', 'missing Wasm export: v8_lv_slider_get_left_value');
   assert(typeof wasmExports['lvglCreateFreeTypeFont'] != 'undefined', 'missing Wasm export: lvglCreateFreeTypeFont');
+  assert(typeof wasmExports['lvglCreateAnim'] != 'undefined', 'missing Wasm export: lvglCreateAnim');
+  assert(typeof wasmExports['lv_anim_init'] != 'undefined', 'missing Wasm export: lv_anim_init');
   assert(typeof wasmExports['lv_disp_get_scr_prev'] != 'undefined', 'missing Wasm export: lv_disp_get_scr_prev');
   assert(typeof wasmExports['lv_obj_get_disp'] != 'undefined', 'missing Wasm export: lv_obj_get_disp');
   assert(typeof wasmExports['lv_anim_del'] != 'undefined', 'missing Wasm export: lv_anim_del');
   assert(typeof wasmExports['lv_obj_remove_local_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_remove_local_style_prop');
-  assert(typeof wasmExports['lv_anim_init'] != 'undefined', 'missing Wasm export: lv_anim_init');
   assert(typeof wasmExports['lv_disp_get_hor_res'] != 'undefined', 'missing Wasm export: lv_disp_get_hor_res');
   assert(typeof wasmExports['lv_disp_get_ver_res'] != 'undefined', 'missing Wasm export: lv_disp_get_ver_res');
   assert(typeof wasmExports['lv_event_send'] != 'undefined', 'missing Wasm export: lv_event_send');
@@ -7168,10 +7149,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_mem_init'] != 'undefined', 'missing Wasm export: lv_mem_init');
   assert(typeof wasmExports['lv_draw_init'] != 'undefined', 'missing Wasm export: lv_draw_init');
   assert(typeof wasmExports['lv_extra_init'] != 'undefined', 'missing Wasm export: lv_extra_init');
-  assert(typeof wasmExports['lv_deinit'] != 'undefined', 'missing Wasm export: lv_deinit');
-  assert(typeof wasmExports['lv_disp_set_default'] != 'undefined', 'missing Wasm export: lv_disp_set_default');
-  assert(typeof wasmExports['lv_mem_deinit'] != 'undefined', 'missing Wasm export: lv_mem_deinit');
-  assert(typeof wasmExports['lv_log_register_print_cb'] != 'undefined', 'missing Wasm export: lv_log_register_print_cb');
   assert(typeof wasmExports['lv_obj_class_create_obj'] != 'undefined', 'missing Wasm export: lv_obj_class_create_obj');
   assert(typeof wasmExports['lv_obj_class_init_obj'] != 'undefined', 'missing Wasm export: lv_obj_class_init_obj');
   assert(typeof wasmExports['lv_obj_is_layout_positioned'] != 'undefined', 'missing Wasm export: lv_obj_is_layout_positioned');
@@ -7783,6 +7760,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_disp_drv_update'] != 'undefined', 'missing Wasm export: lv_disp_drv_update');
   assert(typeof wasmExports['lv_disp_remove'] != 'undefined', 'missing Wasm export: lv_disp_remove');
   assert(typeof wasmExports['lv_timer_del'] != 'undefined', 'missing Wasm export: lv_timer_del');
+  assert(typeof wasmExports['lv_disp_set_default'] != 'undefined', 'missing Wasm export: lv_disp_set_default');
   assert(typeof wasmExports['lv_disp_get_physical_hor_res'] != 'undefined', 'missing Wasm export: lv_disp_get_physical_hor_res');
   assert(typeof wasmExports['lv_disp_get_physical_ver_res'] != 'undefined', 'missing Wasm export: lv_disp_get_physical_ver_res');
   assert(typeof wasmExports['lv_disp_get_offset_x'] != 'undefined', 'missing Wasm export: lv_disp_get_offset_x');
@@ -7827,6 +7805,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_fs_get_letters'] != 'undefined', 'missing Wasm export: lv_fs_get_letters');
   assert(typeof wasmExports['lv_fs_up'] != 'undefined', 'missing Wasm export: lv_fs_up');
   assert(typeof wasmExports['lv_fs_get_last'] != 'undefined', 'missing Wasm export: lv_fs_get_last');
+  assert(typeof wasmExports['lv_log_register_print_cb'] != 'undefined', 'missing Wasm export: lv_log_register_print_cb');
   assert(typeof wasmExports['lv_log'] != 'undefined', 'missing Wasm export: lv_log');
   assert(typeof wasmExports['lv_lru_create'] != 'undefined', 'missing Wasm export: lv_lru_create');
   assert(typeof wasmExports['lv_lru_del'] != 'undefined', 'missing Wasm export: lv_lru_del');
@@ -7836,17 +7815,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_lru_remove'] != 'undefined', 'missing Wasm export: lv_lru_remove');
   assert(typeof wasmExports['lv_sqrt'] != 'undefined', 'missing Wasm export: lv_sqrt');
   assert(typeof wasmExports['lv_rand'] != 'undefined', 'missing Wasm export: lv_rand');
-  assert(typeof wasmExports['lv_tlsf_create_with_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_create_with_pool');
-  assert(typeof wasmExports['lv_tlsf_destroy'] != 'undefined', 'missing Wasm export: lv_tlsf_destroy');
-  assert(typeof wasmExports['lv_tlsf_malloc'] != 'undefined', 'missing Wasm export: lv_tlsf_malloc');
-  assert(typeof wasmExports['lv_tlsf_free'] != 'undefined', 'missing Wasm export: lv_tlsf_free');
-  assert(typeof wasmExports['lv_tlsf_realloc'] != 'undefined', 'missing Wasm export: lv_tlsf_realloc');
+  assert(typeof wasmExports['lv_mem_deinit'] != 'undefined', 'missing Wasm export: lv_mem_deinit');
   assert(typeof wasmExports['lv_mem_test'] != 'undefined', 'missing Wasm export: lv_mem_test');
-  assert(typeof wasmExports['lv_tlsf_check'] != 'undefined', 'missing Wasm export: lv_tlsf_check');
-  assert(typeof wasmExports['lv_tlsf_get_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_get_pool');
-  assert(typeof wasmExports['lv_tlsf_check_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_check_pool');
   assert(typeof wasmExports['lv_mem_monitor'] != 'undefined', 'missing Wasm export: lv_mem_monitor');
-  assert(typeof wasmExports['lv_tlsf_walk_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_walk_pool');
   assert(typeof wasmExports['lv_vsnprintf'] != 'undefined', 'missing Wasm export: lv_vsnprintf');
   assert(typeof wasmExports['lv_style_get_num_custom_props'] != 'undefined', 'missing Wasm export: lv_style_get_num_custom_props');
   assert(typeof wasmExports['lv_style_set_min_width'] != 'undefined', 'missing Wasm export: lv_style_set_min_width');
@@ -7895,17 +7866,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_timer_set_period'] != 'undefined', 'missing Wasm export: lv_timer_set_period');
   assert(typeof wasmExports['lv_timer_reset'] != 'undefined', 'missing Wasm export: lv_timer_reset');
   assert(typeof wasmExports['lv_timer_get_idle'] != 'undefined', 'missing Wasm export: lv_timer_get_idle');
-  assert(typeof wasmExports['lv_tlsf_block_size'] != 'undefined', 'missing Wasm export: lv_tlsf_block_size');
-  assert(typeof wasmExports['lv_tlsf_size'] != 'undefined', 'missing Wasm export: lv_tlsf_size');
-  assert(typeof wasmExports['lv_tlsf_align_size'] != 'undefined', 'missing Wasm export: lv_tlsf_align_size');
-  assert(typeof wasmExports['lv_tlsf_block_size_min'] != 'undefined', 'missing Wasm export: lv_tlsf_block_size_min');
-  assert(typeof wasmExports['lv_tlsf_block_size_max'] != 'undefined', 'missing Wasm export: lv_tlsf_block_size_max');
-  assert(typeof wasmExports['lv_tlsf_pool_overhead'] != 'undefined', 'missing Wasm export: lv_tlsf_pool_overhead');
-  assert(typeof wasmExports['lv_tlsf_alloc_overhead'] != 'undefined', 'missing Wasm export: lv_tlsf_alloc_overhead');
-  assert(typeof wasmExports['lv_tlsf_add_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_add_pool');
-  assert(typeof wasmExports['lv_tlsf_remove_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_remove_pool');
-  assert(typeof wasmExports['lv_tlsf_create'] != 'undefined', 'missing Wasm export: lv_tlsf_create');
-  assert(typeof wasmExports['lv_tlsf_memalign'] != 'undefined', 'missing Wasm export: lv_tlsf_memalign');
   assert(typeof wasmExports['lv_arc_set_angles'] != 'undefined', 'missing Wasm export: lv_arc_set_angles');
   assert(typeof wasmExports['lv_arc_set_change_rate'] != 'undefined', 'missing Wasm export: lv_arc_set_change_rate');
   assert(typeof wasmExports['lv_arc_get_angle_start'] != 'undefined', 'missing Wasm export: lv_arc_get_angle_start');
@@ -8301,11 +8261,12 @@ function assignWasmExports(wasmExports) {
   _v8_lv_slider_set_left_value = Module['_v8_lv_slider_set_left_value'] = createExportWrapper('v8_lv_slider_set_left_value', 3);
   _v8_lv_slider_get_left_value = Module['_v8_lv_slider_get_left_value'] = createExportWrapper('v8_lv_slider_get_left_value', 1);
   _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = createExportWrapper('lvglCreateFreeTypeFont', 4);
+  _lvglCreateAnim = Module['_lvglCreateAnim'] = createExportWrapper('lvglCreateAnim', 6);
+  _lv_anim_init = Module['_lv_anim_init'] = createExportWrapper('lv_anim_init', 1);
   _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = createExportWrapper('lv_disp_get_scr_prev', 1);
   _lv_obj_get_disp = Module['_lv_obj_get_disp'] = createExportWrapper('lv_obj_get_disp', 1);
   _lv_anim_del = Module['_lv_anim_del'] = createExportWrapper('lv_anim_del', 2);
   _lv_obj_remove_local_style_prop = Module['_lv_obj_remove_local_style_prop'] = createExportWrapper('lv_obj_remove_local_style_prop', 3);
-  _lv_anim_init = Module['_lv_anim_init'] = createExportWrapper('lv_anim_init', 1);
   _lv_disp_get_hor_res = Module['_lv_disp_get_hor_res'] = createExportWrapper('lv_disp_get_hor_res', 1);
   _lv_disp_get_ver_res = Module['_lv_disp_get_ver_res'] = createExportWrapper('lv_disp_get_ver_res', 1);
   _lv_event_send = Module['_lv_event_send'] = createExportWrapper('lv_event_send', 3);
@@ -8434,10 +8395,6 @@ function assignWasmExports(wasmExports) {
   _lv_mem_init = Module['_lv_mem_init'] = createExportWrapper('lv_mem_init', 0);
   _lv_draw_init = Module['_lv_draw_init'] = createExportWrapper('lv_draw_init', 0);
   _lv_extra_init = Module['_lv_extra_init'] = createExportWrapper('lv_extra_init', 0);
-  _lv_deinit = Module['_lv_deinit'] = createExportWrapper('lv_deinit', 0);
-  _lv_disp_set_default = Module['_lv_disp_set_default'] = createExportWrapper('lv_disp_set_default', 1);
-  _lv_mem_deinit = Module['_lv_mem_deinit'] = createExportWrapper('lv_mem_deinit', 0);
-  _lv_log_register_print_cb = Module['_lv_log_register_print_cb'] = createExportWrapper('lv_log_register_print_cb', 1);
   _lv_obj_class_create_obj = Module['_lv_obj_class_create_obj'] = createExportWrapper('lv_obj_class_create_obj', 2);
   _lv_obj_class_init_obj = Module['_lv_obj_class_init_obj'] = createExportWrapper('lv_obj_class_init_obj', 1);
   _lv_obj_is_layout_positioned = Module['_lv_obj_is_layout_positioned'] = createExportWrapper('lv_obj_is_layout_positioned', 1);
@@ -9049,6 +9006,7 @@ function assignWasmExports(wasmExports) {
   _lv_disp_drv_update = Module['_lv_disp_drv_update'] = createExportWrapper('lv_disp_drv_update', 2);
   _lv_disp_remove = Module['_lv_disp_remove'] = createExportWrapper('lv_disp_remove', 1);
   _lv_timer_del = Module['_lv_timer_del'] = createExportWrapper('lv_timer_del', 1);
+  _lv_disp_set_default = Module['_lv_disp_set_default'] = createExportWrapper('lv_disp_set_default', 1);
   _lv_disp_get_physical_hor_res = Module['_lv_disp_get_physical_hor_res'] = createExportWrapper('lv_disp_get_physical_hor_res', 1);
   _lv_disp_get_physical_ver_res = Module['_lv_disp_get_physical_ver_res'] = createExportWrapper('lv_disp_get_physical_ver_res', 1);
   _lv_disp_get_offset_x = Module['_lv_disp_get_offset_x'] = createExportWrapper('lv_disp_get_offset_x', 1);
@@ -9093,6 +9051,7 @@ function assignWasmExports(wasmExports) {
   _lv_fs_get_letters = Module['_lv_fs_get_letters'] = createExportWrapper('lv_fs_get_letters', 1);
   _lv_fs_up = Module['_lv_fs_up'] = createExportWrapper('lv_fs_up', 1);
   _lv_fs_get_last = Module['_lv_fs_get_last'] = createExportWrapper('lv_fs_get_last', 1);
+  _lv_log_register_print_cb = Module['_lv_log_register_print_cb'] = createExportWrapper('lv_log_register_print_cb', 1);
   _lv_log = Module['_lv_log'] = createExportWrapper('lv_log', 2);
   _lv_lru_create = Module['_lv_lru_create'] = createExportWrapper('lv_lru_create', 4);
   _lv_lru_del = Module['_lv_lru_del'] = createExportWrapper('lv_lru_del', 1);
@@ -9102,17 +9061,9 @@ function assignWasmExports(wasmExports) {
   _lv_lru_remove = Module['_lv_lru_remove'] = createExportWrapper('lv_lru_remove', 3);
   _lv_sqrt = Module['_lv_sqrt'] = createExportWrapper('lv_sqrt', 3);
   _lv_rand = Module['_lv_rand'] = createExportWrapper('lv_rand', 2);
-  _lv_tlsf_create_with_pool = Module['_lv_tlsf_create_with_pool'] = createExportWrapper('lv_tlsf_create_with_pool', 2);
-  _lv_tlsf_destroy = Module['_lv_tlsf_destroy'] = createExportWrapper('lv_tlsf_destroy', 1);
-  _lv_tlsf_malloc = Module['_lv_tlsf_malloc'] = createExportWrapper('lv_tlsf_malloc', 2);
-  _lv_tlsf_free = Module['_lv_tlsf_free'] = createExportWrapper('lv_tlsf_free', 2);
-  _lv_tlsf_realloc = Module['_lv_tlsf_realloc'] = createExportWrapper('lv_tlsf_realloc', 3);
+  _lv_mem_deinit = Module['_lv_mem_deinit'] = createExportWrapper('lv_mem_deinit', 0);
   _lv_mem_test = Module['_lv_mem_test'] = createExportWrapper('lv_mem_test', 0);
-  _lv_tlsf_check = Module['_lv_tlsf_check'] = createExportWrapper('lv_tlsf_check', 1);
-  _lv_tlsf_get_pool = Module['_lv_tlsf_get_pool'] = createExportWrapper('lv_tlsf_get_pool', 1);
-  _lv_tlsf_check_pool = Module['_lv_tlsf_check_pool'] = createExportWrapper('lv_tlsf_check_pool', 1);
   _lv_mem_monitor = Module['_lv_mem_monitor'] = createExportWrapper('lv_mem_monitor', 1);
-  _lv_tlsf_walk_pool = Module['_lv_tlsf_walk_pool'] = createExportWrapper('lv_tlsf_walk_pool', 3);
   _lv_vsnprintf = Module['_lv_vsnprintf'] = createExportWrapper('lv_vsnprintf', 4);
   _lv_style_get_num_custom_props = Module['_lv_style_get_num_custom_props'] = createExportWrapper('lv_style_get_num_custom_props', 0);
   _lv_style_set_min_width = Module['_lv_style_set_min_width'] = createExportWrapper('lv_style_set_min_width', 2);
@@ -9161,17 +9112,6 @@ function assignWasmExports(wasmExports) {
   _lv_timer_set_period = Module['_lv_timer_set_period'] = createExportWrapper('lv_timer_set_period', 2);
   _lv_timer_reset = Module['_lv_timer_reset'] = createExportWrapper('lv_timer_reset', 1);
   _lv_timer_get_idle = Module['_lv_timer_get_idle'] = createExportWrapper('lv_timer_get_idle', 0);
-  _lv_tlsf_block_size = Module['_lv_tlsf_block_size'] = createExportWrapper('lv_tlsf_block_size', 1);
-  _lv_tlsf_size = Module['_lv_tlsf_size'] = createExportWrapper('lv_tlsf_size', 0);
-  _lv_tlsf_align_size = Module['_lv_tlsf_align_size'] = createExportWrapper('lv_tlsf_align_size', 0);
-  _lv_tlsf_block_size_min = Module['_lv_tlsf_block_size_min'] = createExportWrapper('lv_tlsf_block_size_min', 0);
-  _lv_tlsf_block_size_max = Module['_lv_tlsf_block_size_max'] = createExportWrapper('lv_tlsf_block_size_max', 0);
-  _lv_tlsf_pool_overhead = Module['_lv_tlsf_pool_overhead'] = createExportWrapper('lv_tlsf_pool_overhead', 0);
-  _lv_tlsf_alloc_overhead = Module['_lv_tlsf_alloc_overhead'] = createExportWrapper('lv_tlsf_alloc_overhead', 0);
-  _lv_tlsf_add_pool = Module['_lv_tlsf_add_pool'] = createExportWrapper('lv_tlsf_add_pool', 3);
-  _lv_tlsf_remove_pool = Module['_lv_tlsf_remove_pool'] = createExportWrapper('lv_tlsf_remove_pool', 2);
-  _lv_tlsf_create = Module['_lv_tlsf_create'] = createExportWrapper('lv_tlsf_create', 1);
-  _lv_tlsf_memalign = Module['_lv_tlsf_memalign'] = createExportWrapper('lv_tlsf_memalign', 3);
   _lv_arc_set_angles = Module['_lv_arc_set_angles'] = createExportWrapper('lv_arc_set_angles', 3);
   _lv_arc_set_change_rate = Module['_lv_arc_set_change_rate'] = createExportWrapper('lv_arc_set_change_rate', 2);
   _lv_arc_get_angle_start = Module['_lv_arc_get_angle_start'] = createExportWrapper('lv_arc_get_angle_start', 1);

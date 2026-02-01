@@ -737,6 +737,8 @@ export interface IWasmFlowRuntime {
 
     _lvglGetBuiltinFontPtr(fontName: number): number;
 
+    _lvglCreateAnim(setDelay: boolean, delay: number, setRepeatDelay: boolean, repeatDelay: number, setRepeatCount: boolean, repeatCount: number): number;
+
     _eez_flow_init_themes(themeNames: number, numThemes: number, changeColorTheme: number, themeColors: number, numColorsPerTheme: number);
 }
 

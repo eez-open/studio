@@ -2395,7 +2395,8 @@ const color_filter_opa_property_info: LVGLPropertyInfo = {
 };
 const anim_property_info: LVGLPropertyInfo = {
     name: "anim",
-    type: PropertyType.Any,
+    type: PropertyType.String,
+    formText: "e.g., delay=1000, repeat_delay=1000, repeat_count=3 (any order, all optional, repeat_count=-1 for infinite)",
     lvglStyleProp: {
         code: LVGL_STYLE_PROP_CODES.LV_STYLE_ANIM,
         description:
@@ -2718,13 +2719,11 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
             opa_property_info,
             //color_filter_dsc_property_info,
             //color_filter_opa_property_info,
-            //anim_property_info,
-            //anim_time_property_info,
-            //anim_speed_property_info,
             //transition_property_info,
             blend_mode_property_info,
             base_dir_property_info,
 
+            anim_property_info,
             anim_time_property_info,
             anim_duration_property_info,
             anim_speed_property_info

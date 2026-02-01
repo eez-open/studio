@@ -5470,31 +5470,31 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1158312: ($0) => { startToDebuggerMessage($0); },  
- 1158344: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1158419: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1158494: ($0) => { finishToDebuggerMessage($0); },  
- 1158527: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1158557: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1158587: ($0) => { lvglScreenTick($0); },  
- 1158611: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1158651: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1158705: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1158759: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1158812: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1158865: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1158918: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
- 1158970: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1159017: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1159050: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1159086: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1159131: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1159237: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1159273: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1159310: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1159350: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1159407: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1159466: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1155432: ($0) => { startToDebuggerMessage($0); },  
+ 1155464: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1155539: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1155614: ($0) => { finishToDebuggerMessage($0); },  
+ 1155647: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1155677: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1155707: ($0) => { lvglScreenTick($0); },  
+ 1155731: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1155771: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1155825: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1155879: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1155932: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1155985: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1156038: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1156090: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1156137: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1156170: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1156206: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1156251: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1156357: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1156393: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1156430: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1156470: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1156527: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1156586: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5767,6 +5767,11 @@ var _lv_tabview_get_tab_bar = Module['_lv_tabview_get_tab_bar'] = makeInvalidEar
 var _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = makeInvalidEarlyAccess('_lv_obj_get_child_by_type');
 var _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = makeInvalidEarlyAccess('_lvglCreateFreeTypeFont');
 var _lv_log_add = Module['_lv_log_add'] = makeInvalidEarlyAccess('_lv_log_add');
+var _lvglCreateAnim = Module['_lvglCreateAnim'] = makeInvalidEarlyAccess('_lvglCreateAnim');
+var _lv_anim_init = Module['_lv_anim_init'] = makeInvalidEarlyAccess('_lv_anim_init');
+var _lv_anim_set_delay = Module['_lv_anim_set_delay'] = makeInvalidEarlyAccess('_lv_anim_set_delay');
+var _lv_anim_set_repeat_delay = Module['_lv_anim_set_repeat_delay'] = makeInvalidEarlyAccess('_lv_anim_set_repeat_delay');
+var _lv_anim_set_repeat_count = Module['_lv_anim_set_repeat_count'] = makeInvalidEarlyAccess('_lv_anim_set_repeat_count');
 var _lv_group_init = Module['_lv_group_init'] = makeInvalidEarlyAccess('_lv_group_init');
 var _lv_group_deinit = Module['_lv_group_deinit'] = makeInvalidEarlyAccess('_lv_group_deinit');
 var _lv_ll_init = Module['_lv_ll_init'] = makeInvalidEarlyAccess('_lv_ll_init');
@@ -5972,7 +5977,6 @@ var _lv_obj_get_scroll_end = Module['_lv_obj_get_scroll_end'] = makeInvalidEarly
 var _lv_anim_get = Module['_lv_anim_get'] = makeInvalidEarlyAccess('_lv_anim_get');
 var _lv_obj_scroll_by_bounded = Module['_lv_obj_scroll_by_bounded'] = makeInvalidEarlyAccess('_lv_obj_scroll_by_bounded');
 var _lv_obj_scroll_by = Module['_lv_obj_scroll_by'] = makeInvalidEarlyAccess('_lv_obj_scroll_by');
-var _lv_anim_init = Module['_lv_anim_init'] = makeInvalidEarlyAccess('_lv_anim_init');
 var _lv_anim_set_var = Module['_lv_anim_set_var'] = makeInvalidEarlyAccess('_lv_anim_set_var');
 var _lv_anim_set_deleted_cb = Module['_lv_anim_set_deleted_cb'] = makeInvalidEarlyAccess('_lv_anim_set_deleted_cb');
 var _lv_anim_speed_clamped = Module['_lv_anim_speed_clamped'] = makeInvalidEarlyAccess('_lv_anim_speed_clamped');
@@ -6005,7 +6009,6 @@ var _lv_obj_remove_local_style_prop = Module['_lv_obj_remove_local_style_prop'] 
 var _lv_color_eq = Module['_lv_color_eq'] = makeInvalidEarlyAccess('_lv_color_eq');
 var _lv_anim_set_start_cb = Module['_lv_anim_set_start_cb'] = makeInvalidEarlyAccess('_lv_anim_set_start_cb');
 var _lv_anim_set_completed_cb = Module['_lv_anim_set_completed_cb'] = makeInvalidEarlyAccess('_lv_anim_set_completed_cb');
-var _lv_anim_set_delay = Module['_lv_anim_set_delay'] = makeInvalidEarlyAccess('_lv_anim_set_delay');
 var _lv_anim_set_early_apply = Module['_lv_anim_set_early_apply'] = makeInvalidEarlyAccess('_lv_anim_set_early_apply');
 var _lv_anim_set_user_data = Module['_lv_anim_set_user_data'] = makeInvalidEarlyAccess('_lv_anim_set_user_data');
 var _lv_color_mix = Module['_lv_color_mix'] = makeInvalidEarlyAccess('_lv_color_mix');
@@ -6432,7 +6435,6 @@ var _lv_indev_remove_event = Module['_lv_indev_remove_event'] = makeInvalidEarly
 var _lv_indev_remove_event_cb_with_user_data = Module['_lv_indev_remove_event_cb_with_user_data'] = makeInvalidEarlyAccess('_lv_indev_remove_event_cb_with_user_data');
 var _lv_indev_scroll_throw_handler = Module['_lv_indev_scroll_throw_handler'] = makeInvalidEarlyAccess('_lv_indev_scroll_throw_handler');
 var _lv_timer_get_paused = Module['_lv_timer_get_paused'] = makeInvalidEarlyAccess('_lv_timer_get_paused');
-var _lv_anim_set_repeat_count = Module['_lv_anim_set_repeat_count'] = makeInvalidEarlyAccess('_lv_anim_set_repeat_count');
 var _lv_indev_scroll_throw_predict = Module['_lv_indev_scroll_throw_predict'] = makeInvalidEarlyAccess('_lv_indev_scroll_throw_predict');
 var _lv_flex_init = Module['_lv_flex_init'] = makeInvalidEarlyAccess('_lv_flex_init');
 var _lv_obj_set_flex_flow = Module['_lv_obj_set_flex_flow'] = makeInvalidEarlyAccess('_lv_obj_set_flex_flow');
@@ -6489,7 +6491,6 @@ var _lv_point_swap = Module['_lv_point_swap'] = makeInvalidEarlyAccess('_lv_poin
 var _lv_fs_get_ext = Module['_lv_fs_get_ext'] = makeInvalidEarlyAccess('_lv_fs_get_ext');
 var _lv_snprintf = Module['_lv_snprintf'] = makeInvalidEarlyAccess('_lv_snprintf');
 var _lv_strlcpy = Module['_lv_strlcpy'] = makeInvalidEarlyAccess('_lv_strlcpy');
-var _lv_deinit = Module['_lv_deinit'] = makeInvalidEarlyAccess('_lv_deinit');
 var _lv_ll_clear_custom = Module['_lv_ll_clear_custom'] = makeInvalidEarlyAccess('_lv_ll_clear_custom');
 var _lv_span_stack_deinit = Module['_lv_span_stack_deinit'] = makeInvalidEarlyAccess('_lv_span_stack_deinit');
 var _lv_theme_default_deinit = Module['_lv_theme_default_deinit'] = makeInvalidEarlyAccess('_lv_theme_default_deinit');
@@ -6560,7 +6561,6 @@ var _lv_anim_set_get_value_cb = Module['_lv_anim_set_get_value_cb'] = makeInvali
 var _lv_anim_set_playback_duration = Module['_lv_anim_set_playback_duration'] = makeInvalidEarlyAccess('_lv_anim_set_playback_duration');
 var _lv_anim_set_playback_time = Module['_lv_anim_set_playback_time'] = makeInvalidEarlyAccess('_lv_anim_set_playback_time');
 var _lv_anim_set_playback_delay = Module['_lv_anim_set_playback_delay'] = makeInvalidEarlyAccess('_lv_anim_set_playback_delay');
-var _lv_anim_set_repeat_delay = Module['_lv_anim_set_repeat_delay'] = makeInvalidEarlyAccess('_lv_anim_set_repeat_delay');
 var _lv_anim_set_bezier3_param = Module['_lv_anim_set_bezier3_param'] = makeInvalidEarlyAccess('_lv_anim_set_bezier3_param');
 var _lv_anim_get_delay = Module['_lv_anim_get_delay'] = makeInvalidEarlyAccess('_lv_anim_get_delay');
 var _lv_anim_get_time = Module['_lv_anim_get_time'] = makeInvalidEarlyAccess('_lv_anim_get_time');
@@ -6843,37 +6843,17 @@ var _lv_roller_bind_value = Module['_lv_roller_bind_value'] = makeInvalidEarlyAc
 var _lv_dropdown_bind_value = Module['_lv_dropdown_bind_value'] = makeInvalidEarlyAccess('_lv_dropdown_bind_value');
 var _lv_observer_get_target_obj = Module['_lv_observer_get_target_obj'] = makeInvalidEarlyAccess('_lv_observer_get_target_obj');
 var _lv_observer_get_user_data = Module['_lv_observer_get_user_data'] = makeInvalidEarlyAccess('_lv_observer_get_user_data');
-var _lv_tlsf_create_with_pool = Module['_lv_tlsf_create_with_pool'] = makeInvalidEarlyAccess('_lv_tlsf_create_with_pool');
-var _lv_tlsf_get_pool = Module['_lv_tlsf_get_pool'] = makeInvalidEarlyAccess('_lv_tlsf_get_pool');
-var _lv_tlsf_destroy = Module['_lv_tlsf_destroy'] = makeInvalidEarlyAccess('_lv_tlsf_destroy');
-var _lv_mem_add_pool = Module['_lv_mem_add_pool'] = makeInvalidEarlyAccess('_lv_mem_add_pool');
-var _lv_tlsf_add_pool = Module['_lv_tlsf_add_pool'] = makeInvalidEarlyAccess('_lv_tlsf_add_pool');
-var _lv_mem_remove_pool = Module['_lv_mem_remove_pool'] = makeInvalidEarlyAccess('_lv_mem_remove_pool');
-var _lv_tlsf_remove_pool = Module['_lv_tlsf_remove_pool'] = makeInvalidEarlyAccess('_lv_tlsf_remove_pool');
-var _lv_malloc_core = Module['_lv_malloc_core'] = makeInvalidEarlyAccess('_lv_malloc_core');
-var _lv_tlsf_malloc = Module['_lv_tlsf_malloc'] = makeInvalidEarlyAccess('_lv_tlsf_malloc');
-var _lv_tlsf_block_size = Module['_lv_tlsf_block_size'] = makeInvalidEarlyAccess('_lv_tlsf_block_size');
-var _lv_realloc_core = Module['_lv_realloc_core'] = makeInvalidEarlyAccess('_lv_realloc_core');
-var _lv_tlsf_realloc = Module['_lv_tlsf_realloc'] = makeInvalidEarlyAccess('_lv_tlsf_realloc');
-var _lv_free_core = Module['_lv_free_core'] = makeInvalidEarlyAccess('_lv_free_core');
-var _lv_tlsf_free = Module['_lv_tlsf_free'] = makeInvalidEarlyAccess('_lv_tlsf_free');
-var _lv_mem_monitor_core = Module['_lv_mem_monitor_core'] = makeInvalidEarlyAccess('_lv_mem_monitor_core');
-var _lv_tlsf_walk_pool = Module['_lv_tlsf_walk_pool'] = makeInvalidEarlyAccess('_lv_tlsf_walk_pool');
-var _lv_mem_test_core = Module['_lv_mem_test_core'] = makeInvalidEarlyAccess('_lv_mem_test_core');
-var _lv_tlsf_check = Module['_lv_tlsf_check'] = makeInvalidEarlyAccess('_lv_tlsf_check');
-var _lv_tlsf_check_pool = Module['_lv_tlsf_check_pool'] = makeInvalidEarlyAccess('_lv_tlsf_check_pool');
 var _lv_strncpy = Module['_lv_strncpy'] = makeInvalidEarlyAccess('_lv_strncpy');
 var _lv_strcpy = Module['_lv_strcpy'] = makeInvalidEarlyAccess('_lv_strcpy');
 var _lv_strcat = Module['_lv_strcat'] = makeInvalidEarlyAccess('_lv_strcat');
 var _lv_strncat = Module['_lv_strncat'] = makeInvalidEarlyAccess('_lv_strncat');
-var _lv_tlsf_size = Module['_lv_tlsf_size'] = makeInvalidEarlyAccess('_lv_tlsf_size');
-var _lv_tlsf_align_size = Module['_lv_tlsf_align_size'] = makeInvalidEarlyAccess('_lv_tlsf_align_size');
-var _lv_tlsf_block_size_min = Module['_lv_tlsf_block_size_min'] = makeInvalidEarlyAccess('_lv_tlsf_block_size_min');
-var _lv_tlsf_block_size_max = Module['_lv_tlsf_block_size_max'] = makeInvalidEarlyAccess('_lv_tlsf_block_size_max');
-var _lv_tlsf_pool_overhead = Module['_lv_tlsf_pool_overhead'] = makeInvalidEarlyAccess('_lv_tlsf_pool_overhead');
-var _lv_tlsf_alloc_overhead = Module['_lv_tlsf_alloc_overhead'] = makeInvalidEarlyAccess('_lv_tlsf_alloc_overhead');
-var _lv_tlsf_create = Module['_lv_tlsf_create'] = makeInvalidEarlyAccess('_lv_tlsf_create');
-var _lv_tlsf_memalign = Module['_lv_tlsf_memalign'] = makeInvalidEarlyAccess('_lv_tlsf_memalign');
+var _lv_mem_add_pool = Module['_lv_mem_add_pool'] = makeInvalidEarlyAccess('_lv_mem_add_pool');
+var _lv_mem_remove_pool = Module['_lv_mem_remove_pool'] = makeInvalidEarlyAccess('_lv_mem_remove_pool');
+var _lv_malloc_core = Module['_lv_malloc_core'] = makeInvalidEarlyAccess('_lv_malloc_core');
+var _lv_realloc_core = Module['_lv_realloc_core'] = makeInvalidEarlyAccess('_lv_realloc_core');
+var _lv_free_core = Module['_lv_free_core'] = makeInvalidEarlyAccess('_lv_free_core');
+var _lv_mem_monitor_core = Module['_lv_mem_monitor_core'] = makeInvalidEarlyAccess('_lv_mem_monitor_core');
+var _lv_mem_test_core = Module['_lv_mem_test_core'] = makeInvalidEarlyAccess('_lv_mem_test_core');
 var _lv_mem_test = Module['_lv_mem_test'] = makeInvalidEarlyAccess('_lv_mem_test');
 var _lv_mem_monitor = Module['_lv_mem_monitor'] = makeInvalidEarlyAccess('_lv_mem_monitor');
 var _lv_theme_get_from_obj = Module['_lv_theme_get_from_obj'] = makeInvalidEarlyAccess('_lv_theme_get_from_obj');
@@ -7488,6 +7468,11 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_get_child_by_type'] != 'undefined', 'missing Wasm export: lv_obj_get_child_by_type');
   assert(typeof wasmExports['lvglCreateFreeTypeFont'] != 'undefined', 'missing Wasm export: lvglCreateFreeTypeFont');
   assert(typeof wasmExports['lv_log_add'] != 'undefined', 'missing Wasm export: lv_log_add');
+  assert(typeof wasmExports['lvglCreateAnim'] != 'undefined', 'missing Wasm export: lvglCreateAnim');
+  assert(typeof wasmExports['lv_anim_init'] != 'undefined', 'missing Wasm export: lv_anim_init');
+  assert(typeof wasmExports['lv_anim_set_delay'] != 'undefined', 'missing Wasm export: lv_anim_set_delay');
+  assert(typeof wasmExports['lv_anim_set_repeat_delay'] != 'undefined', 'missing Wasm export: lv_anim_set_repeat_delay');
+  assert(typeof wasmExports['lv_anim_set_repeat_count'] != 'undefined', 'missing Wasm export: lv_anim_set_repeat_count');
   assert(typeof wasmExports['lv_group_init'] != 'undefined', 'missing Wasm export: lv_group_init');
   assert(typeof wasmExports['lv_group_deinit'] != 'undefined', 'missing Wasm export: lv_group_deinit');
   assert(typeof wasmExports['lv_ll_init'] != 'undefined', 'missing Wasm export: lv_ll_init');
@@ -7693,7 +7678,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_anim_get'] != 'undefined', 'missing Wasm export: lv_anim_get');
   assert(typeof wasmExports['lv_obj_scroll_by_bounded'] != 'undefined', 'missing Wasm export: lv_obj_scroll_by_bounded');
   assert(typeof wasmExports['lv_obj_scroll_by'] != 'undefined', 'missing Wasm export: lv_obj_scroll_by');
-  assert(typeof wasmExports['lv_anim_init'] != 'undefined', 'missing Wasm export: lv_anim_init');
   assert(typeof wasmExports['lv_anim_set_var'] != 'undefined', 'missing Wasm export: lv_anim_set_var');
   assert(typeof wasmExports['lv_anim_set_deleted_cb'] != 'undefined', 'missing Wasm export: lv_anim_set_deleted_cb');
   assert(typeof wasmExports['lv_anim_speed_clamped'] != 'undefined', 'missing Wasm export: lv_anim_speed_clamped');
@@ -7726,7 +7710,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_color_eq'] != 'undefined', 'missing Wasm export: lv_color_eq');
   assert(typeof wasmExports['lv_anim_set_start_cb'] != 'undefined', 'missing Wasm export: lv_anim_set_start_cb');
   assert(typeof wasmExports['lv_anim_set_completed_cb'] != 'undefined', 'missing Wasm export: lv_anim_set_completed_cb');
-  assert(typeof wasmExports['lv_anim_set_delay'] != 'undefined', 'missing Wasm export: lv_anim_set_delay');
   assert(typeof wasmExports['lv_anim_set_early_apply'] != 'undefined', 'missing Wasm export: lv_anim_set_early_apply');
   assert(typeof wasmExports['lv_anim_set_user_data'] != 'undefined', 'missing Wasm export: lv_anim_set_user_data');
   assert(typeof wasmExports['lv_color_mix'] != 'undefined', 'missing Wasm export: lv_color_mix');
@@ -8153,7 +8136,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_indev_remove_event_cb_with_user_data'] != 'undefined', 'missing Wasm export: lv_indev_remove_event_cb_with_user_data');
   assert(typeof wasmExports['lv_indev_scroll_throw_handler'] != 'undefined', 'missing Wasm export: lv_indev_scroll_throw_handler');
   assert(typeof wasmExports['lv_timer_get_paused'] != 'undefined', 'missing Wasm export: lv_timer_get_paused');
-  assert(typeof wasmExports['lv_anim_set_repeat_count'] != 'undefined', 'missing Wasm export: lv_anim_set_repeat_count');
   assert(typeof wasmExports['lv_indev_scroll_throw_predict'] != 'undefined', 'missing Wasm export: lv_indev_scroll_throw_predict');
   assert(typeof wasmExports['lv_flex_init'] != 'undefined', 'missing Wasm export: lv_flex_init');
   assert(typeof wasmExports['lv_obj_set_flex_flow'] != 'undefined', 'missing Wasm export: lv_obj_set_flex_flow');
@@ -8210,7 +8192,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_fs_get_ext'] != 'undefined', 'missing Wasm export: lv_fs_get_ext');
   assert(typeof wasmExports['lv_snprintf'] != 'undefined', 'missing Wasm export: lv_snprintf');
   assert(typeof wasmExports['lv_strlcpy'] != 'undefined', 'missing Wasm export: lv_strlcpy');
-  assert(typeof wasmExports['lv_deinit'] != 'undefined', 'missing Wasm export: lv_deinit');
   assert(typeof wasmExports['lv_ll_clear_custom'] != 'undefined', 'missing Wasm export: lv_ll_clear_custom');
   assert(typeof wasmExports['lv_span_stack_deinit'] != 'undefined', 'missing Wasm export: lv_span_stack_deinit');
   assert(typeof wasmExports['lv_theme_default_deinit'] != 'undefined', 'missing Wasm export: lv_theme_default_deinit');
@@ -8281,7 +8262,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_anim_set_playback_duration'] != 'undefined', 'missing Wasm export: lv_anim_set_playback_duration');
   assert(typeof wasmExports['lv_anim_set_playback_time'] != 'undefined', 'missing Wasm export: lv_anim_set_playback_time');
   assert(typeof wasmExports['lv_anim_set_playback_delay'] != 'undefined', 'missing Wasm export: lv_anim_set_playback_delay');
-  assert(typeof wasmExports['lv_anim_set_repeat_delay'] != 'undefined', 'missing Wasm export: lv_anim_set_repeat_delay');
   assert(typeof wasmExports['lv_anim_set_bezier3_param'] != 'undefined', 'missing Wasm export: lv_anim_set_bezier3_param');
   assert(typeof wasmExports['lv_anim_get_delay'] != 'undefined', 'missing Wasm export: lv_anim_get_delay');
   assert(typeof wasmExports['lv_anim_get_time'] != 'undefined', 'missing Wasm export: lv_anim_get_time');
@@ -8564,37 +8544,17 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_dropdown_bind_value'] != 'undefined', 'missing Wasm export: lv_dropdown_bind_value');
   assert(typeof wasmExports['lv_observer_get_target_obj'] != 'undefined', 'missing Wasm export: lv_observer_get_target_obj');
   assert(typeof wasmExports['lv_observer_get_user_data'] != 'undefined', 'missing Wasm export: lv_observer_get_user_data');
-  assert(typeof wasmExports['lv_tlsf_create_with_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_create_with_pool');
-  assert(typeof wasmExports['lv_tlsf_get_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_get_pool');
-  assert(typeof wasmExports['lv_tlsf_destroy'] != 'undefined', 'missing Wasm export: lv_tlsf_destroy');
-  assert(typeof wasmExports['lv_mem_add_pool'] != 'undefined', 'missing Wasm export: lv_mem_add_pool');
-  assert(typeof wasmExports['lv_tlsf_add_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_add_pool');
-  assert(typeof wasmExports['lv_mem_remove_pool'] != 'undefined', 'missing Wasm export: lv_mem_remove_pool');
-  assert(typeof wasmExports['lv_tlsf_remove_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_remove_pool');
-  assert(typeof wasmExports['lv_malloc_core'] != 'undefined', 'missing Wasm export: lv_malloc_core');
-  assert(typeof wasmExports['lv_tlsf_malloc'] != 'undefined', 'missing Wasm export: lv_tlsf_malloc');
-  assert(typeof wasmExports['lv_tlsf_block_size'] != 'undefined', 'missing Wasm export: lv_tlsf_block_size');
-  assert(typeof wasmExports['lv_realloc_core'] != 'undefined', 'missing Wasm export: lv_realloc_core');
-  assert(typeof wasmExports['lv_tlsf_realloc'] != 'undefined', 'missing Wasm export: lv_tlsf_realloc');
-  assert(typeof wasmExports['lv_free_core'] != 'undefined', 'missing Wasm export: lv_free_core');
-  assert(typeof wasmExports['lv_tlsf_free'] != 'undefined', 'missing Wasm export: lv_tlsf_free');
-  assert(typeof wasmExports['lv_mem_monitor_core'] != 'undefined', 'missing Wasm export: lv_mem_monitor_core');
-  assert(typeof wasmExports['lv_tlsf_walk_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_walk_pool');
-  assert(typeof wasmExports['lv_mem_test_core'] != 'undefined', 'missing Wasm export: lv_mem_test_core');
-  assert(typeof wasmExports['lv_tlsf_check'] != 'undefined', 'missing Wasm export: lv_tlsf_check');
-  assert(typeof wasmExports['lv_tlsf_check_pool'] != 'undefined', 'missing Wasm export: lv_tlsf_check_pool');
   assert(typeof wasmExports['lv_strncpy'] != 'undefined', 'missing Wasm export: lv_strncpy');
   assert(typeof wasmExports['lv_strcpy'] != 'undefined', 'missing Wasm export: lv_strcpy');
   assert(typeof wasmExports['lv_strcat'] != 'undefined', 'missing Wasm export: lv_strcat');
   assert(typeof wasmExports['lv_strncat'] != 'undefined', 'missing Wasm export: lv_strncat');
-  assert(typeof wasmExports['lv_tlsf_size'] != 'undefined', 'missing Wasm export: lv_tlsf_size');
-  assert(typeof wasmExports['lv_tlsf_align_size'] != 'undefined', 'missing Wasm export: lv_tlsf_align_size');
-  assert(typeof wasmExports['lv_tlsf_block_size_min'] != 'undefined', 'missing Wasm export: lv_tlsf_block_size_min');
-  assert(typeof wasmExports['lv_tlsf_block_size_max'] != 'undefined', 'missing Wasm export: lv_tlsf_block_size_max');
-  assert(typeof wasmExports['lv_tlsf_pool_overhead'] != 'undefined', 'missing Wasm export: lv_tlsf_pool_overhead');
-  assert(typeof wasmExports['lv_tlsf_alloc_overhead'] != 'undefined', 'missing Wasm export: lv_tlsf_alloc_overhead');
-  assert(typeof wasmExports['lv_tlsf_create'] != 'undefined', 'missing Wasm export: lv_tlsf_create');
-  assert(typeof wasmExports['lv_tlsf_memalign'] != 'undefined', 'missing Wasm export: lv_tlsf_memalign');
+  assert(typeof wasmExports['lv_mem_add_pool'] != 'undefined', 'missing Wasm export: lv_mem_add_pool');
+  assert(typeof wasmExports['lv_mem_remove_pool'] != 'undefined', 'missing Wasm export: lv_mem_remove_pool');
+  assert(typeof wasmExports['lv_malloc_core'] != 'undefined', 'missing Wasm export: lv_malloc_core');
+  assert(typeof wasmExports['lv_realloc_core'] != 'undefined', 'missing Wasm export: lv_realloc_core');
+  assert(typeof wasmExports['lv_free_core'] != 'undefined', 'missing Wasm export: lv_free_core');
+  assert(typeof wasmExports['lv_mem_monitor_core'] != 'undefined', 'missing Wasm export: lv_mem_monitor_core');
+  assert(typeof wasmExports['lv_mem_test_core'] != 'undefined', 'missing Wasm export: lv_mem_test_core');
   assert(typeof wasmExports['lv_mem_test'] != 'undefined', 'missing Wasm export: lv_mem_test');
   assert(typeof wasmExports['lv_mem_monitor'] != 'undefined', 'missing Wasm export: lv_mem_monitor');
   assert(typeof wasmExports['lv_theme_get_from_obj'] != 'undefined', 'missing Wasm export: lv_theme_get_from_obj');
@@ -9205,6 +9165,11 @@ function assignWasmExports(wasmExports) {
   _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = createExportWrapper('lv_obj_get_child_by_type', 3);
   _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = createExportWrapper('lvglCreateFreeTypeFont', 4);
   _lv_log_add = Module['_lv_log_add'] = createExportWrapper('lv_log_add', 6);
+  _lvglCreateAnim = Module['_lvglCreateAnim'] = createExportWrapper('lvglCreateAnim', 6);
+  _lv_anim_init = Module['_lv_anim_init'] = createExportWrapper('lv_anim_init', 1);
+  _lv_anim_set_delay = Module['_lv_anim_set_delay'] = createExportWrapper('lv_anim_set_delay', 2);
+  _lv_anim_set_repeat_delay = Module['_lv_anim_set_repeat_delay'] = createExportWrapper('lv_anim_set_repeat_delay', 2);
+  _lv_anim_set_repeat_count = Module['_lv_anim_set_repeat_count'] = createExportWrapper('lv_anim_set_repeat_count', 2);
   _lv_group_init = Module['_lv_group_init'] = createExportWrapper('lv_group_init', 0);
   _lv_group_deinit = Module['_lv_group_deinit'] = createExportWrapper('lv_group_deinit', 0);
   _lv_ll_init = Module['_lv_ll_init'] = createExportWrapper('lv_ll_init', 2);
@@ -9410,7 +9375,6 @@ function assignWasmExports(wasmExports) {
   _lv_anim_get = Module['_lv_anim_get'] = createExportWrapper('lv_anim_get', 2);
   _lv_obj_scroll_by_bounded = Module['_lv_obj_scroll_by_bounded'] = createExportWrapper('lv_obj_scroll_by_bounded', 4);
   _lv_obj_scroll_by = Module['_lv_obj_scroll_by'] = createExportWrapper('lv_obj_scroll_by', 4);
-  _lv_anim_init = Module['_lv_anim_init'] = createExportWrapper('lv_anim_init', 1);
   _lv_anim_set_var = Module['_lv_anim_set_var'] = createExportWrapper('lv_anim_set_var', 2);
   _lv_anim_set_deleted_cb = Module['_lv_anim_set_deleted_cb'] = createExportWrapper('lv_anim_set_deleted_cb', 2);
   _lv_anim_speed_clamped = Module['_lv_anim_speed_clamped'] = createExportWrapper('lv_anim_speed_clamped', 3);
@@ -9443,7 +9407,6 @@ function assignWasmExports(wasmExports) {
   _lv_color_eq = Module['_lv_color_eq'] = createExportWrapper('lv_color_eq', 2);
   _lv_anim_set_start_cb = Module['_lv_anim_set_start_cb'] = createExportWrapper('lv_anim_set_start_cb', 2);
   _lv_anim_set_completed_cb = Module['_lv_anim_set_completed_cb'] = createExportWrapper('lv_anim_set_completed_cb', 2);
-  _lv_anim_set_delay = Module['_lv_anim_set_delay'] = createExportWrapper('lv_anim_set_delay', 2);
   _lv_anim_set_early_apply = Module['_lv_anim_set_early_apply'] = createExportWrapper('lv_anim_set_early_apply', 2);
   _lv_anim_set_user_data = Module['_lv_anim_set_user_data'] = createExportWrapper('lv_anim_set_user_data', 2);
   _lv_color_mix = Module['_lv_color_mix'] = createExportWrapper('lv_color_mix', 4);
@@ -9870,7 +9833,6 @@ function assignWasmExports(wasmExports) {
   _lv_indev_remove_event_cb_with_user_data = Module['_lv_indev_remove_event_cb_with_user_data'] = createExportWrapper('lv_indev_remove_event_cb_with_user_data', 3);
   _lv_indev_scroll_throw_handler = Module['_lv_indev_scroll_throw_handler'] = createExportWrapper('lv_indev_scroll_throw_handler', 1);
   _lv_timer_get_paused = Module['_lv_timer_get_paused'] = createExportWrapper('lv_timer_get_paused', 1);
-  _lv_anim_set_repeat_count = Module['_lv_anim_set_repeat_count'] = createExportWrapper('lv_anim_set_repeat_count', 2);
   _lv_indev_scroll_throw_predict = Module['_lv_indev_scroll_throw_predict'] = createExportWrapper('lv_indev_scroll_throw_predict', 2);
   _lv_flex_init = Module['_lv_flex_init'] = createExportWrapper('lv_flex_init', 0);
   _lv_obj_set_flex_flow = Module['_lv_obj_set_flex_flow'] = createExportWrapper('lv_obj_set_flex_flow', 2);
@@ -9927,7 +9889,6 @@ function assignWasmExports(wasmExports) {
   _lv_fs_get_ext = Module['_lv_fs_get_ext'] = createExportWrapper('lv_fs_get_ext', 1);
   _lv_snprintf = Module['_lv_snprintf'] = createExportWrapper('lv_snprintf', 4);
   _lv_strlcpy = Module['_lv_strlcpy'] = createExportWrapper('lv_strlcpy', 3);
-  _lv_deinit = Module['_lv_deinit'] = createExportWrapper('lv_deinit', 0);
   _lv_ll_clear_custom = Module['_lv_ll_clear_custom'] = createExportWrapper('lv_ll_clear_custom', 2);
   _lv_span_stack_deinit = Module['_lv_span_stack_deinit'] = createExportWrapper('lv_span_stack_deinit', 0);
   _lv_theme_default_deinit = Module['_lv_theme_default_deinit'] = createExportWrapper('lv_theme_default_deinit', 0);
@@ -9998,7 +9959,6 @@ function assignWasmExports(wasmExports) {
   _lv_anim_set_playback_duration = Module['_lv_anim_set_playback_duration'] = createExportWrapper('lv_anim_set_playback_duration', 2);
   _lv_anim_set_playback_time = Module['_lv_anim_set_playback_time'] = createExportWrapper('lv_anim_set_playback_time', 2);
   _lv_anim_set_playback_delay = Module['_lv_anim_set_playback_delay'] = createExportWrapper('lv_anim_set_playback_delay', 2);
-  _lv_anim_set_repeat_delay = Module['_lv_anim_set_repeat_delay'] = createExportWrapper('lv_anim_set_repeat_delay', 2);
   _lv_anim_set_bezier3_param = Module['_lv_anim_set_bezier3_param'] = createExportWrapper('lv_anim_set_bezier3_param', 5);
   _lv_anim_get_delay = Module['_lv_anim_get_delay'] = createExportWrapper('lv_anim_get_delay', 1);
   _lv_anim_get_time = Module['_lv_anim_get_time'] = createExportWrapper('lv_anim_get_time', 1);
@@ -10281,37 +10241,17 @@ function assignWasmExports(wasmExports) {
   _lv_dropdown_bind_value = Module['_lv_dropdown_bind_value'] = createExportWrapper('lv_dropdown_bind_value', 2);
   _lv_observer_get_target_obj = Module['_lv_observer_get_target_obj'] = createExportWrapper('lv_observer_get_target_obj', 1);
   _lv_observer_get_user_data = Module['_lv_observer_get_user_data'] = createExportWrapper('lv_observer_get_user_data', 1);
-  _lv_tlsf_create_with_pool = Module['_lv_tlsf_create_with_pool'] = createExportWrapper('lv_tlsf_create_with_pool', 2);
-  _lv_tlsf_get_pool = Module['_lv_tlsf_get_pool'] = createExportWrapper('lv_tlsf_get_pool', 1);
-  _lv_tlsf_destroy = Module['_lv_tlsf_destroy'] = createExportWrapper('lv_tlsf_destroy', 1);
-  _lv_mem_add_pool = Module['_lv_mem_add_pool'] = createExportWrapper('lv_mem_add_pool', 2);
-  _lv_tlsf_add_pool = Module['_lv_tlsf_add_pool'] = createExportWrapper('lv_tlsf_add_pool', 3);
-  _lv_mem_remove_pool = Module['_lv_mem_remove_pool'] = createExportWrapper('lv_mem_remove_pool', 1);
-  _lv_tlsf_remove_pool = Module['_lv_tlsf_remove_pool'] = createExportWrapper('lv_tlsf_remove_pool', 2);
-  _lv_malloc_core = Module['_lv_malloc_core'] = createExportWrapper('lv_malloc_core', 1);
-  _lv_tlsf_malloc = Module['_lv_tlsf_malloc'] = createExportWrapper('lv_tlsf_malloc', 2);
-  _lv_tlsf_block_size = Module['_lv_tlsf_block_size'] = createExportWrapper('lv_tlsf_block_size', 1);
-  _lv_realloc_core = Module['_lv_realloc_core'] = createExportWrapper('lv_realloc_core', 2);
-  _lv_tlsf_realloc = Module['_lv_tlsf_realloc'] = createExportWrapper('lv_tlsf_realloc', 3);
-  _lv_free_core = Module['_lv_free_core'] = createExportWrapper('lv_free_core', 1);
-  _lv_tlsf_free = Module['_lv_tlsf_free'] = createExportWrapper('lv_tlsf_free', 2);
-  _lv_mem_monitor_core = Module['_lv_mem_monitor_core'] = createExportWrapper('lv_mem_monitor_core', 1);
-  _lv_tlsf_walk_pool = Module['_lv_tlsf_walk_pool'] = createExportWrapper('lv_tlsf_walk_pool', 3);
-  _lv_mem_test_core = Module['_lv_mem_test_core'] = createExportWrapper('lv_mem_test_core', 0);
-  _lv_tlsf_check = Module['_lv_tlsf_check'] = createExportWrapper('lv_tlsf_check', 1);
-  _lv_tlsf_check_pool = Module['_lv_tlsf_check_pool'] = createExportWrapper('lv_tlsf_check_pool', 1);
   _lv_strncpy = Module['_lv_strncpy'] = createExportWrapper('lv_strncpy', 3);
   _lv_strcpy = Module['_lv_strcpy'] = createExportWrapper('lv_strcpy', 2);
   _lv_strcat = Module['_lv_strcat'] = createExportWrapper('lv_strcat', 2);
   _lv_strncat = Module['_lv_strncat'] = createExportWrapper('lv_strncat', 3);
-  _lv_tlsf_size = Module['_lv_tlsf_size'] = createExportWrapper('lv_tlsf_size', 0);
-  _lv_tlsf_align_size = Module['_lv_tlsf_align_size'] = createExportWrapper('lv_tlsf_align_size', 0);
-  _lv_tlsf_block_size_min = Module['_lv_tlsf_block_size_min'] = createExportWrapper('lv_tlsf_block_size_min', 0);
-  _lv_tlsf_block_size_max = Module['_lv_tlsf_block_size_max'] = createExportWrapper('lv_tlsf_block_size_max', 0);
-  _lv_tlsf_pool_overhead = Module['_lv_tlsf_pool_overhead'] = createExportWrapper('lv_tlsf_pool_overhead', 0);
-  _lv_tlsf_alloc_overhead = Module['_lv_tlsf_alloc_overhead'] = createExportWrapper('lv_tlsf_alloc_overhead', 0);
-  _lv_tlsf_create = Module['_lv_tlsf_create'] = createExportWrapper('lv_tlsf_create', 1);
-  _lv_tlsf_memalign = Module['_lv_tlsf_memalign'] = createExportWrapper('lv_tlsf_memalign', 3);
+  _lv_mem_add_pool = Module['_lv_mem_add_pool'] = createExportWrapper('lv_mem_add_pool', 2);
+  _lv_mem_remove_pool = Module['_lv_mem_remove_pool'] = createExportWrapper('lv_mem_remove_pool', 1);
+  _lv_malloc_core = Module['_lv_malloc_core'] = createExportWrapper('lv_malloc_core', 1);
+  _lv_realloc_core = Module['_lv_realloc_core'] = createExportWrapper('lv_realloc_core', 2);
+  _lv_free_core = Module['_lv_free_core'] = createExportWrapper('lv_free_core', 1);
+  _lv_mem_monitor_core = Module['_lv_mem_monitor_core'] = createExportWrapper('lv_mem_monitor_core', 1);
+  _lv_mem_test_core = Module['_lv_mem_test_core'] = createExportWrapper('lv_mem_test_core', 0);
   _lv_mem_test = Module['_lv_mem_test'] = createExportWrapper('lv_mem_test', 0);
   _lv_mem_monitor = Module['_lv_mem_monitor'] = createExportWrapper('lv_mem_monitor', 1);
   _lv_theme_get_from_obj = Module['_lv_theme_get_from_obj'] = createExportWrapper('lv_theme_get_from_obj', 1);

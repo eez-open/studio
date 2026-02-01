@@ -1557,6 +1557,7 @@ export class LVGLScaleWidget extends LVGLWidget {
                         style = "&" + styleVar;
                     } else {
                         style = code.callFreeFunction("lvglStyleCreate");
+                        code.pageRuntime!.pointers.push(style);
                     }
 
                     // mainWidth
@@ -1636,6 +1637,7 @@ export class LVGLScaleWidget extends LVGLWidget {
                         style = "&" + styleVar;
                     } else {
                         style = code.callFreeFunction("lvglStyleCreate");
+                        code.pageRuntime!.pointers.push(style);
                     }
 
                     // minorTicksWidth
@@ -1718,6 +1720,7 @@ export class LVGLScaleWidget extends LVGLWidget {
                         style = "&" + styleVar;
                     } else {
                         style = code.callFreeFunction("lvglStyleCreate");
+                        code.pageRuntime!.pointers.push(style);
                     }
 
                     // majorTicksWidth

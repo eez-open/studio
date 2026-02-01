@@ -600,6 +600,24 @@ export class LVGLStylesDefinition extends EezObject {
                                     );
                                 }
                             }
+                        } else if (propertyInfo.type == PropertyType.String) {
+                            if (value) {
+                                // For anim property
+                                let { setDelay, setRepeatDelay, setRepeatCount, delay, repeatDelay, repeatCount } = extractAnimProperties(value);
+
+                                if (setDelay || setRepeatDelay || setRepeatCount) {
+                                    const animPtr = runtime.wasm._lvglCreateAnim(setDelay, delay, setRepeatDelay, repeatDelay, setRepeatCount, repeatCount);
+                                    runtime.pointers.push(animPtr);
+                                    runtime.wasm._lvglObjSetLocalStylePropPtr(
+                                        obj,
+                                        runtime.getLvglStylePropCode(
+                                            propertyInfo.lvglStyleProp.code
+                                        ),
+                                        animPtr,
+                                        selectorCode
+                                    );
+                                }
+                            }
                         }
                     }
                 );
@@ -752,6 +770,21 @@ export class LVGLStylesDefinition extends EezObject {
                                     value
                                 )}, ${selectorCode});`
                             );
+                        } else if (propertyInfo.type == PropertyType.String) {
+                            if (value) {
+                                // For anim property
+                                let { setDelay, setRepeatDelay, setRepeatCount, delay, repeatDelay, repeatCount } = extractAnimProperties(value);
+
+                                if (
+                                    setDelay ||
+                                    setRepeatDelay ||
+                                    setRepeatCount
+                                ) {
+                                    build.line(
+                                        `lv_obj_set_style_anim(obj, ${build.createAnimation(setDelay, setRepeatDelay, setRepeatCount, delay, repeatDelay, repeatCount)}, ${selectorCode});`
+                                    );
+                                }
+                            }
                         }
                     }
                 );
@@ -876,6 +909,21 @@ export class LVGLStylesDefinition extends EezObject {
                             propertyInfo.name
                         )}(style, ${build.getImageAccessor(value)});`
                     );
+                } else if (propertyInfo.type == PropertyType.String) {
+                    if (value) {
+                        // For anim property
+                        let { setDelay, setRepeatDelay, setRepeatCount, delay, repeatDelay, repeatCount } = extractAnimProperties(value);
+
+                        if (
+                            setDelay ||
+                            setRepeatDelay ||
+                            setRepeatCount
+                        ) {
+                            build.line(
+                                `lv_style_set_anim(style, ${build.createAnimation(setDelay, setRepeatDelay, setRepeatCount, delay, repeatDelay, repeatCount)});`
+                            );
+                        }
+                    }
                 }
             }
         );
@@ -894,4 +942,48 @@ export class LVGLStylesDefinition extends EezObject {
 
 registerClass("LVGLStylesDefinition", LVGLStylesDefinition);
 
+
+function extractAnimProperties(value: any) {
+    let setDelay = false;
+    let delay = 0;
+
+    let setRepeatDelay = false;
+    let repeatDelay = 0;
+
+    let setRepeatCount = false;
+    let repeatCount = 0;
+
+    const props = value.split(",");
+    for (let i = 0; i < props.length; i++) {
+        let [propName, propValueStr] = props[i].split("=");
+        if (!propName) {
+            continue;
+        }
+        propName = propName.trim();
+        if (!propValueStr) {
+            continue;
+        }
+        propValueStr = propValueStr.trim();
+        if (propName == "delay") {
+            let propValue = Number(propValueStr);
+            if (Number.isInteger(propValue)) {
+                setDelay = true;
+                delay = propValue;
+            }
+        } else if (propName == "repeat_delay") {
+            let propValue = Number(propValueStr);
+            if (Number.isInteger(propValue)) {
+                setRepeatDelay = true;
+                repeatDelay = propValue;
+            }
+        } else if (propName == "repeat_count") {
+            let propValue = Number(propValueStr);
+            if (Number.isInteger(propValue)) {
+                setRepeatCount = true;
+                repeatCount = propValue;
+            }
+        }
+    }
+    return { setDelay, setRepeatDelay, setRepeatCount, delay, repeatDelay, repeatCount };
+}
 ////////////////////////////////////////////////////////////////////////////////

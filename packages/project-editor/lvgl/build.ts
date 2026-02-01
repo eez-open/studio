@@ -111,8 +111,13 @@ export class LVGLBuild extends Build {
     postBuildCallbacks: (() => void)[] = [];
 
     functions: {
-        [key: string]: () => void;
+        [key: string]: {
+            callback: () => void;
+            decl?: string;
+        };
     } = {};
+
+    animations: Map<string, string> = new Map();
 
     constructor(public assets: Assets) {
         super();
@@ -1183,8 +1188,73 @@ export class LVGLBuild extends Build {
         this.postBuildCallbacks = [];
     }
 
-    addFunction(name: string, callback: () => void) {
-        this.functions[name] = callback;
+    addFunction(name: string, callback: () => void, decl?: string) {
+        this.functions[name] = {
+            callback,
+            decl
+        };
+    }
+
+    createAnimation(
+        setDelay: boolean,
+        setRepeatDelay: boolean,
+        setRepeatCount: boolean,
+        delay: number,
+        repeatDelay: number,
+        repeatCount: number
+    ): string {
+        // Create a unique key based on parameters
+        const key = `${setDelay ? delay : "_"}_${setRepeatDelay ? repeatDelay : "_"}_${setRepeatCount ? repeatCount : "_"}`;
+
+        // Check if animation with same parameters already exists
+        let funcName = this.animations.get(key);
+        if (funcName) {
+            return `${funcName}()`;
+        }
+
+        // Generate unique function name
+        const animIndex = this.animations.size;
+
+        // Declare global variables for the animation
+        const animVar = this.declareGlobalVar(
+            `anim_${animIndex}`,
+            "lv_anim_t",
+            `anim`,
+            true
+        );
+        const animInitializedVar = this.declareGlobalVar(
+            `anim_${animIndex}_initialized`,
+            "bool",
+            `${animVar}_initialized!`,
+            true
+        );
+
+        funcName = `get_${animVar}`;
+        this.animations.set(key, funcName);
+
+        // Add the function that creates the animation
+        const build = this;
+        this.addFunction(funcName, () => {
+            build.blockStart(`lv_anim_t *${funcName}() {`);
+            build.blockStart(`if (!${animInitializedVar}) {`);
+            build.line(`lv_anim_init(&${animVar});`);
+            if (setDelay) {
+                build.line(`lv_anim_set_delay(&${animVar}, ${delay});`);
+            }
+            if (setRepeatDelay) {
+                build.line(`lv_anim_set_repeat_delay(&${animVar}, ${repeatDelay});`);
+            }
+            if (setRepeatCount) {
+                build.line(`lv_anim_set_repeat_count(&${animVar}, ${repeatCount});`);
+            }
+            build.line(`${animInitializedVar} = true;`);
+            build.blockEnd(`}`);
+            build.line(`return &${animVar};`);
+            build.blockEnd(`}`);
+            build.line("");
+        }, `lv_anim_t *${funcName}();`);
+
+        return `${funcName}()`;
     }
 
     async buildScreensDecl() {
@@ -1347,7 +1417,7 @@ export class LVGLBuild extends Build {
 
         // global vars
         if (this.globalVars.length > 0) {
-            let first = true
+            let first = true;
             for (const globalVar of this.globalVars) {
                 if (!globalVar.isStatic) {
                     if (first) {
@@ -1361,6 +1431,28 @@ export class LVGLBuild extends Build {
                     );
                 }
             }
+        }
+
+        //
+        // Helper functions
+        //
+
+        if (Object.values(this.functions).length > 0) {
+            let first = true;
+
+            Object.values(this.functions).forEach(funct => {
+                if (funct.decl) {
+                    if (first) {
+                        build.line("");
+                        build.line("//");
+                        build.line("// Helper functions");
+                        build.line("//");
+                        build.line("");
+                        first = false;
+                    }
+                    build.line(funct.decl);
+                }
+            });
         }
 
         return this.result;
@@ -1434,7 +1526,7 @@ export class LVGLBuild extends Build {
             build.line("//");
             build.line("");
 
-            Object.values(this.functions).forEach(callback => callback());
+            Object.values(this.functions).forEach(funct => funct.callback());
         }
 
         //
