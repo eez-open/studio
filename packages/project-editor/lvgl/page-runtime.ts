@@ -687,6 +687,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     dispose2: IReactionDisposer | undefined;
     requestAnimationFrameId: number | undefined;
     wasError: boolean = false;
+    ctxPage: Page | undefined;
 
     constructor(
         page: Page,
@@ -850,8 +851,10 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                             }
                         });
 
-                        this.ctx.fillStyle = "#FFFFFF";
-                        this.ctx.fillRect(0, 0, this.displayWidth, this.displayHeight);
+                        if (this.ctxPage != undefined && this.ctxPage != this.page) {
+                            this.ctx.fillStyle = "#FFFFFF";
+                            this.ctx.fillRect(0, 0, this.displayWidth, this.displayHeight);
+                        }
                     } catch (e) {
                         console.error(e);
                         this.wasError = true;
@@ -891,6 +894,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 this.displayWidth,
                 this.displayHeight
             );
+            this.ctxPage = this.page;
         } else {
             if (this.wasError) {
                 this.ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);

@@ -94,6 +94,13 @@ export class LVGLBuild extends Build {
     stateVars: Map<Page, StateVar[]> = new Map();
     pagesWithStateVars: Page[] = [];
 
+    globalVars: {
+        id: string;
+        varType: string;
+        varName: string;
+        isStatic: boolean;
+    }[] = [];
+
     objectAccessors: string[] | undefined;
 
     tickCallbacks: (() => void)[];
@@ -136,6 +143,8 @@ export class LVGLBuild extends Build {
             stateVars.set(key, value.slice() );
         }
 
+        const globalVars = this.globalVars.slice();
+
         const objectAccessors = this.objectAccessors?.slice();
         const tickCallbacks = this.tickCallbacks.slice();
 
@@ -151,6 +160,7 @@ export class LVGLBuild extends Build {
         await this.buildScreensDef();
 
         this.stateVars = stateVars;
+        this.globalVars = globalVars;
         this.finishStateVars();
         this.objectAccessors = objectAccessors;
         this.tickCallbacks = tickCallbacks;
@@ -1092,6 +1102,28 @@ export class LVGLBuild extends Build {
         this.pagesWithStateVars = pages;
     }
 
+    declareGlobalVar(id: string, varType: string, prefixName: string, isStatic: boolean) {
+        let globalVar = this.globalVars.find(globalVar => globalVar.id == id);
+        if (globalVar) {
+            return globalVar.varName;
+        }
+
+        let varName: string;
+        if (prefixName.endsWith("!")) {
+            varName = prefixName.slice(0, -1);
+        } else {
+            varName = prefixName;
+            let suffix = 0;
+            while (this.globalVars.find(globalVar => globalVar.varName == varName)) {
+                suffix += 1;
+                varName = prefixName + suffix;
+            }
+        }
+
+        this.globalVars.push({ id, varType, varName, isStatic });
+        
+        return varName;
+    }
 
     addTickCallback(callback: () => void) {
         this.tickCallbacks.push(callback);
@@ -1307,6 +1339,24 @@ export class LVGLBuild extends Build {
             }
         }
 
+        // global vars
+        if (this.globalVars.length > 0) {
+            let first = true
+            for (const globalVar of this.globalVars) {
+                if (!globalVar.isStatic) {
+                    if (first) {
+                        build.line("");
+                        build.line("// Global state variables");
+                        build.line("");
+                        first = false;
+                    }
+                    build.line(
+                        `extern ${globalVar.varType} ${globalVar.varName};`
+                    );
+                }
+            }
+        }
+
         return this.result;
     }
 
@@ -1351,6 +1401,20 @@ export class LVGLBuild extends Build {
             }
 
             build.line("");
+        }
+
+        // global vars
+        if (this.globalVars.length > 0) {
+            build.line("");
+            build.line("// Global state variables");
+            build.line("");
+            for (const globalVar of this.globalVars) {
+                if (globalVar.isStatic) {
+                    build.line(`static ${globalVar.varType} ${globalVar.varName};`);
+                } else {
+                    build.line(`${globalVar.varType} ${globalVar.varName};`);
+                }
+            }
         }
 
         //

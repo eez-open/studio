@@ -677,6 +677,9 @@ export interface IWasmFlowRuntime {
     _lvglObjGetStylePropFontAddr(obj: number, part: number, state: number, prop: number): number;
     _lvglObjSetLocalStylePropBuiltInFont(obj: number, prop: number, font_index: number, selector: number): void;
 
+    _lvglSetObjStylePropBuiltInFont(obj: number, style: number, prop: number, font_index: number): void
+    _lvglSetObjStylePropPtr(obj: number, style: number, prop: number, ptr: number): void;
+
     _lvglStyleCreate(): number;
     _lvglStyleSetPropColor(obj: number, prop: number, color: number): void;
     _lvglSetStylePropBuiltInFont(obj: number, prop: number, font_index: number): void

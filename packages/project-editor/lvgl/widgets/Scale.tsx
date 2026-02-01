@@ -80,13 +80,11 @@ export class LVGLScaleSection extends EezObject {
     mainOpacity: number;
 
     // Minor ticks styles (LV_PART_ITEMS)
-    minorTicksLength: number;
     minorTicksWidth: number;
     minorTicksColor: string;
     minorTicksOpacity: number;
 
     // Major ticks styles (LV_PART_INDICATOR)
-    majorTicksLength: number;
     majorTicksWidth: number;
     majorTicksColor: string;
     majorTicksOpacity: number;
@@ -152,12 +150,6 @@ export class LVGLScaleSection extends EezObject {
             makePropertiesSection("minorTicksStyles"),
 
             {
-                name: "minorTicksLength",
-                displayName: "Minor ticks length",
-                type: PropertyType.Number,
-                isOptional: true
-            },
-            {
                 name: "minorTicksWidth",
                 displayName: "Minor ticks width",
                 type: PropertyType.Number,
@@ -179,12 +171,6 @@ export class LVGLScaleSection extends EezObject {
             // Major ticks styles (LV_PART_INDICATOR)
             makePropertiesSection("majorTicksStyles"),
 
-            {
-                name: "majorTicksLength",
-                displayName: "Major ticks length",
-                type: PropertyType.Number,
-                isOptional: true
-            },
             {
                 name: "majorTicksWidth",
                 displayName: "Major ticks width",
@@ -244,13 +230,11 @@ export class LVGLScaleSection extends EezObject {
             mainOpacity: undefined,
 
             // Minor ticks styles
-            minorTicksLength: undefined,
             minorTicksWidth: undefined,
             minorTicksColor: undefined,
             minorTicksOpacity: undefined,
 
             // Major ticks styles
-            majorTicksLength: undefined,
             majorTicksWidth: undefined,
             majorTicksColor: undefined,
             majorTicksOpacity: undefined,
@@ -372,13 +356,11 @@ export class LVGLScaleSection extends EezObject {
             mainOpacity: observable,
 
             // Minor ticks styles
-            minorTicksLength: observable,
             minorTicksWidth: observable,
             minorTicksColor: observable,
             minorTicksOpacity: observable,
 
             // Major ticks styles
-            majorTicksLength: observable,
             majorTicksWidth: observable,
             majorTicksColor: observable,
             majorTicksOpacity: observable,
@@ -972,6 +954,8 @@ export class LVGLScaleWidget extends LVGLWidget {
 
         code.createObject(`lv_scale_create`);
 
+        const scaleObjectAccessor = code.objectAccessor;
+
         // scaleMode
         code.callObjectFunction("lv_scale_set_mode", code.constant(`LV_SCALE_MODE_${this.scaleMode}`));
 
@@ -1497,51 +1481,213 @@ export class LVGLScaleWidget extends LVGLWidget {
                                 const definition = style.fullDefinition;
                                 if (definition) {
                                     if (definition[part]?.[state]) {
-                                        code.callFreeFunction(
-                                            "lv_scale_section_set_style",
-                                            sectionVar,
-                                            code.constant(`LV_PART_${part}`),
-                                            `${code.lvglBuild.getGetStyleFunctionName(style, part, state)}()`
-                                        );
+                                        if (code.isLVGLVersion(["9.2.2"])) {
+                                            code.callFreeFunction(
+                                                "lv_scale_section_set_style",
+                                                sectionVar,
+                                                code.constant(`LV_PART_${part}`),
+                                                `${code.lvglBuild.getGetStyleFunctionName(style, part, state)}()`
+                                            );
+                                        } else {
+                                            code.callObjectFunction(
+                                                `lv_scale_set_section_style_${part.toLowerCase()}`,
+                                                sectionVar,
+                                                `${code.lvglBuild.getGetStyleFunctionName(style, part, state)}()`
+                                            );
+                                        }                                        
                                     }
                                 }
                             } else if (code.pageRuntime) {
                                 const lvglStyleObjects = code.pageRuntime.styleObjMap.get(style);
                                 if (lvglStyleObjects?.[part]?.[state]) {
-                                    code.callFreeFunction(
-                                        "lv_scale_section_set_style",
-                                        sectionVar,
-                                        code.constant(`LV_PART_${part}`),
-                                        lvglStyleObjects[part][state]
-                                    );
+                                    if (code.isLVGLVersion(["9.2.2"])) {
+                                        code.callFreeFunction(
+                                            "lv_scale_section_set_style",
+                                            sectionVar,
+                                            code.constant(`LV_PART_${part}`),
+                                            lvglStyleObjects[part][state]
+                                        );
+                                    } else {
+                                        code.callObjectFunction(
+                                            `lv_scale_set_section_style_${part.toLowerCase()}`,
+                                            sectionVar,
+                                            lvglStyleObjects[part][state]
+                                        );
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                // Section inline styles - MAIN part
+                //
+                // Section inline styles
+                //
+
+                const getVarName = (part: string) => {
+                    const scaleName = this.identifier ? this.identifier : "scale";
+                    const sectionName = section.identifier ? section.identifier : "section";
+                    return `${scaleName}_${sectionName}_${part}_style`;
+                }
+
+                // MAIN part
                 const hasMainStyles =
                     section.mainWidth != undefined || section.mainColor || section.mainOpacity != undefined;
 
-                if (hasMainStyles && code.lvglBuild) {
-                    // TODO: implement
+                if (hasMainStyles) {
+                    let style;
+                    if (code.lvglBuild) {
+                        code.lvglBuild.blockStart("{");
+                        const styleVar = code.lvglBuild.declareGlobalVar(
+                            section.objID + "_main",
+                            "lv_style_t",
+                            getVarName("main"),
+                            false
+                        );
+                        const styleInitializedVar =
+                            code.lvglBuild.declareGlobalVar(
+                                section.objID + "_main_initialized",
+                                "bool",
+                                styleVar + "_initialized!",
+                                true
+                            );
+                        code.lvglBuild.blockStart(`if (!${styleInitializedVar}) {`);
+                        code.lvglBuild.line(`lv_style_init(&${styleVar});`);
+                        code.lvglBuild.line(`${styleInitializedVar} = true;`);
+                        style = "&" + styleVar;
+                    } else {
+                        style = code.callFreeFunction("lvglStyleCreate");
+                    }
+
+                    // mainWidth
+                    if (section.mainWidth != undefined) {
+                        code.callFreeFunction(`lv_style_set_${isRoundMode ? "arc" : "line"}_width`, style, section.mainWidth);
+                    }
+
+                    // mainColor
+                    if (section.mainColor) {
+                        code.buildColor(
+                            this,
+                            section.mainColor,
+                            () => style,
+                            color => {
+                                code.callFreeFunction(`lv_style_set_${isRoundMode ? "arc" : "line"}_color`, style, code.color(color));
+                            },
+                            (color, obj) => {
+                                if (
+                                    code.lvglBuild &&
+                                    code.screensLifetimeSupport
+                                ) {
+                                    const build = code.lvglBuild;
+                                    build.line(`if (${scaleObjectAccessor}) lv_style_set_${isRoundMode ? "arc" : "line"}_color(${style}, ${code.color(color)});`);
+                                } else {
+                                    code.callFreeFunction(`lv_style_set_${isRoundMode ? "arc" : "line"}_color`, style, code.color(color));
+                                }
+                            }
+                        );
+                    }
+
+                    // mainOpacity
+                    if (section.mainOpacity != undefined) {
+                        code.callFreeFunction(`lv_style_set_${isRoundMode ? "arc" : "line"}_opa`, style, section.mainOpacity);
+                    }
+
+                    if (code.lvglBuild) {
+                        code.lvglBuild.blockEnd("}");
+                    }
+
+                    if (code.isLVGLVersion(["9.2.2"])) {
+                        code.callFreeFunction("lv_scale_section_set_style", sectionVar, code.constant("LV_PART_MAIN"), style);
+                    } else {
+                        code.callObjectFunction("lv_scale_set_section_style_main", sectionVar, style);
+                    }
+
+                    if (code.lvglBuild) {
+                        code.lvglBuild.blockEnd("}");
+                    }
                 }
 
-                // Section inline styles - ITEMS part (minor ticks)
+                // ITEMS part (minor ticks)
                 const hasItemsStyles =
-                    section.minorTicksLength != undefined ||
                     section.minorTicksWidth != undefined ||
                     section.minorTicksColor ||
                     section.minorTicksOpacity != undefined;
 
-                if (hasItemsStyles && code.lvglBuild) {
-                    // TODO: implement
+                if (hasItemsStyles) {
+                    let style;
+                    if (code.lvglBuild) {
+                        code.lvglBuild.blockStart("{");
+                        const styleVar = code.lvglBuild.declareGlobalVar(
+                            section.objID + "_items",
+                            "lv_style_t",
+                            getVarName("items"),
+                            false
+                        );
+                        const styleInitializedVar =
+                            code.lvglBuild.declareGlobalVar(
+                                section.objID + "_items_initialized",
+                                "bool",
+                                styleVar + "_initialized!",
+                                true
+                            );
+                        code.lvglBuild.blockStart(`if (!${styleInitializedVar}) {`);
+                        code.lvglBuild.line(`lv_style_init(&${styleVar});`);
+                        code.lvglBuild.line(`${styleInitializedVar} = true;`);
+                        style = "&" + styleVar;
+                    } else {
+                        style = code.callFreeFunction("lvglStyleCreate");
+                    }
+
+                    // minorTicksWidth
+                    if (section.minorTicksWidth != undefined) {
+                        code.callFreeFunction("lv_style_set_line_width", style, section.minorTicksWidth);
+                    }
+
+                    // minorTicksColor
+                    if (section.minorTicksColor) {
+                        code.buildColor(
+                            this,
+                            section.minorTicksColor,
+                            () => style,
+                            color => {
+                                code.callFreeFunction("lv_style_set_line_color", style, code.color(color));
+                            },
+                            (color, obj) => {
+                                if (
+                                    code.lvglBuild &&
+                                    code.screensLifetimeSupport
+                                ) {
+                                    const build = code.lvglBuild;
+                                    build.line(`if (${scaleObjectAccessor}) lv_style_set_line_color(${style}, ${code.color(color)});`);
+                                } else {
+                                    code.callFreeFunction("lv_style_set_line_color", style, code.color(color));
+                                }
+                            }
+                        );
+                    }
+
+                    // minorTicksOpacity
+                    if (section.minorTicksOpacity != undefined) {
+                        code.callFreeFunction("lv_style_set_line_opa", style, section.minorTicksOpacity);
+                    }
+
+                    if (code.lvglBuild) {
+                        code.lvglBuild.blockEnd("}");
+                    }
+
+                    if (code.isLVGLVersion(["9.2.2"])) {
+                        code.callFreeFunction("lv_scale_section_set_style", sectionVar, code.constant("LV_PART_ITEMS"), style);
+                    } else {
+                        code.callObjectFunction("lv_scale_set_section_style_items", sectionVar, style);
+                    }
+
+                    if (code.lvglBuild) {
+                        code.lvglBuild.blockEnd("}");
+                    }
                 }
 
-                // Section inline styles - INDICATOR part (major ticks and labels)
+                // INDICATOR part (major ticks and labels)
                 const hasIndicatorStyles =
-                    section.majorTicksLength != undefined ||
                     section.majorTicksWidth != undefined ||
                     section.majorTicksColor ||
                     section.majorTicksOpacity != undefined ||
@@ -1549,8 +1695,145 @@ export class LVGLScaleWidget extends LVGLWidget {
                     section.labelsTextOpacity != undefined ||
                     section.labelsTextFont;
 
-                if (hasIndicatorStyles && code.lvglBuild) {
-                    // TODO: implement
+                if (hasIndicatorStyles) {
+                    let style;
+                    if (code.lvglBuild) {
+                        code.lvglBuild.blockStart("{");
+                        const styleVar = code.lvglBuild.declareGlobalVar(
+                            section.objID + "_indicator",
+                            "lv_style_t",
+                            getVarName("indicator"),
+                            false
+                        );
+                        const styleInitializedVar =
+                            code.lvglBuild.declareGlobalVar(
+                                section.objID + "_indicator_initialized",
+                                "bool",
+                                styleVar + "_initialized!",
+                                true
+                            );
+                        code.lvglBuild.blockStart(`if (!${styleInitializedVar}) {`);
+                        code.lvglBuild.line(`lv_style_init(&${styleVar});`);
+                        code.lvglBuild.line(`${styleInitializedVar} = true;`);
+                        style = "&" + styleVar;
+                    } else {
+                        style = code.callFreeFunction("lvglStyleCreate");
+                    }
+
+                    // majorTicksWidth
+                    if (section.majorTicksWidth != undefined) {
+                        code.callFreeFunction("lv_style_set_line_width", style, section.majorTicksWidth);
+                    }
+
+                    // majorTicksColor
+                    if (section.majorTicksColor) {
+                        code.buildColor(
+                            this,
+                            section.majorTicksColor,
+                            () => style,
+                            color => {
+                                code.callFreeFunction("lv_style_set_line_color", style, code.color(color));
+                            },
+                            (color, obj) => {
+                                if (
+                                    code.lvglBuild &&
+                                    code.screensLifetimeSupport
+                                ) {
+                                    const build = code.lvglBuild;
+                                    build.line(`if (${scaleObjectAccessor}) lv_style_set_line_color(${style}, ${code.color(color)});`);
+                                } else {
+                                    code.callFreeFunction("lv_style_set_line_color", style, code.color(color));
+                                }
+                            }
+                        );
+                    }
+
+                    // majorTicksOpacity
+                    if (section.majorTicksOpacity != undefined) {
+                        code.callFreeFunction("lv_style_set_line_opa", style, section.majorTicksOpacity);
+                    }
+
+                    // labelsTextColor
+                    if (section.labelsTextColor) {
+                        code.buildColor(
+                            this,
+                            section.labelsTextColor,
+                            () => style,
+                            color => {
+                                code.callFreeFunction("lv_style_set_text_color", style, code.color(color));
+                            },
+                            (color, obj) => {
+                                if (
+                                    code.lvglBuild &&
+                                    code.screensLifetimeSupport
+                                ) {
+                                    const build = code.lvglBuild;
+                                    build.line(`if (${scaleObjectAccessor}) lv_style_set_text_color(${style}, ${code.color(color)});`);
+                                } else {
+                                    code.callFreeFunction("lv_style_set_text_color", style, code.color(color));
+                                }
+                            }
+                        );
+                    }
+
+                    // labelsTextOpacity
+                    if (section.labelsTextOpacity != undefined) {
+                        code.callFreeFunction("lv_style_set_text_opa", style, section.labelsTextOpacity);
+                    }
+
+                    // labelsTextFont
+                    if (section.labelsTextFont) {
+                        const fontIndex = BUILT_IN_FONTS.indexOf(section.labelsTextFont);
+                        if (code.lvglBuild) {
+                            if (fontIndex != -1) {
+                                // Built-in font
+                                code.callFreeFunction("lv_style_set_text_font", style, `&lv_font_${section.labelsTextFont.toLowerCase()}`);
+                            } else {
+                                // Custom font
+                                const font = findFont(ProjectEditor.getProject(this), section.labelsTextFont);
+                                if (font) {
+                                    code.callFreeFunction("lv_style_set_text_font", style, code.lvglBuild.getFontAccessor(font));
+                                }
+                            }
+                        } else {
+                            const pageRuntime = code.pageRuntime!;
+                            if (fontIndex != -1) {
+                                pageRuntime.wasm._lvglSetObjStylePropBuiltInFont(
+                                    code.objectAccessor,
+                                    style,
+                                    pageRuntime.getLvglStylePropCode(text_font_property_info.lvglStyleProp.code),
+                                    fontIndex
+                                );
+                            } else {
+                                const font = findFont(ProjectEditor.getProject(this), section.labelsTextFont);
+                                if (font) {
+                                    const fontPtr = pageRuntime.getFontPtr(font);
+                                    if (fontPtr) {
+                                        pageRuntime.wasm._lvglSetObjStylePropPtr(
+                                            code.objectAccessor,
+                                            style,
+                                            pageRuntime.getLvglStylePropCode(text_font_property_info.lvglStyleProp.code),
+                                            fontPtr
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (code.lvglBuild) {
+                        code.lvglBuild.blockEnd("}");
+                    }
+
+                    if (code.isLVGLVersion(["9.2.2"])) {
+                        code.callFreeFunction("lv_scale_section_set_style", sectionVar, code.constant("LV_PART_INDICATOR"), style);
+                    } else {
+                        code.callObjectFunction("lv_scale_set_section_style_indicator", sectionVar, style);
+                    }
+
+                    if (code.lvglBuild) {
+                        code.lvglBuild.blockEnd("}");
+                    }
                 }
 
                 code.blockEnd("}");
