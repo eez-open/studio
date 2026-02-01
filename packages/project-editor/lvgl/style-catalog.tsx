@@ -2324,6 +2324,22 @@ export const radius_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
+
+const radial_offset_property_info: LVGLPropertyInfo = {
+    name: "radial_offset",
+    displayName: "Radial Offset",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_RADIAL_OFFSET,
+        description:
+            "Move start point of object (e.g. scale tick) radially",
+        defaultValue: "0",
+        inherited: false,
+        layout: false,
+        extDraw: false
+    }
+};
+
 const clip_corner_property_info: LVGLPropertyInfo = {
     name: "clip_corner",
     displayName: "Clip corner",
@@ -2697,6 +2713,7 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
         groupDescription: "Mixed properties for various purposes.",
         properties: [
             radius_property_info,
+            radial_offset_property_info,
             clip_corner_property_info,
             opa_property_info,
             //color_filter_dsc_property_info,
