@@ -398,7 +398,8 @@ export class LVGLScaleWidget extends LVGLWidget {
     maxValue: number | string;
     maxValueType: LVGLPropertyType;
     angleRange: number;
-    rotation: number;
+    rotation: number | string;
+    rotationType: LVGLPropertyType;
     totalTickCount: number;
     majorTickEvery: number;
     postDraw: boolean;
@@ -468,11 +469,9 @@ export class LVGLScaleWidget extends LVGLWidget {
                 type: PropertyType.Number,
                 propertyGridGroup: specificGroup
             },
-            {
-                name: "rotation",
-                type: PropertyType.Number,
+            ...makeLvglExpressionProperty("rotation", "integer", "input", ["literal", "expression"], {
                 propertyGridGroup: specificGroup
-            },
+            }),
             {
                 name: "totalTickCount",
                 displayName: "Total tick count",
@@ -706,6 +705,7 @@ export class LVGLScaleWidget extends LVGLWidget {
             maxValueType: "literal",
             angleRange: 270,
             rotation: 135,
+            rotationType: "literal",
             totalTickCount: 31,
             majorTickEvery: 5,
             postDraw: false,
@@ -750,6 +750,9 @@ export class LVGLScaleWidget extends LVGLWidget {
             }
             if (jsObject.maxValueType == undefined) {
                 jsObject.maxValueType = "literal";
+            }
+            if (jsObject.rotationType == undefined) {
+                jsObject.rotationType = "literal";
             }
             // migrate old minorRange/majorRange to minValue/maxValue
             if ((jsObject as any).minorRange != undefined && jsObject.minValue == undefined) {
@@ -800,10 +803,16 @@ export class LVGLScaleWidget extends LVGLWidget {
                 );
             }
 
-            if (widget.rotation == undefined || widget.rotation == null || !Number.isInteger(widget.rotation)) {
-                messages.push(
-                    new Message(MessageType.ERROR, `Rotation must be an integer`, getChildOfObject(widget, "rotation"))
-                );
+            if (widget.rotationType == "literal") {
+                if (
+                    widget.rotation == undefined ||
+                    widget.rotation == null ||
+                    !Number.isInteger(Number(widget.rotation))
+                ) {
+                    messages.push(
+                        new Message(MessageType.ERROR, `Rotation must be an integer`, getChildOfObject(widget, "rotation"))
+                    );
+                }
             }
 
             if (widget.minValueType == "literal") {
@@ -906,6 +915,7 @@ export class LVGLScaleWidget extends LVGLWidget {
             maxValueType: observable,
             angleRange: observable,
             rotation: observable,
+            rotationType: observable,
             totalTickCount: observable,
             majorTickEvery: observable,
             postDraw: observable,
@@ -1032,8 +1042,31 @@ export class LVGLScaleWidget extends LVGLWidget {
         }
 
         // rotation
-        if (this.rotation != undefined) {
-            code.callObjectFunction("lv_scale_set_rotation", this.rotation);
+        if (this.rotationType == "literal") {
+            if (this.rotation != undefined) {
+                code.callObjectFunction("lv_scale_set_rotation", this.rotation);
+            }
+        } else if (this.rotationType == "expression") {
+            code.addToTick("rotation", () => {
+                const new_val = code.evalIntegerProperty(
+                    "int32_t",
+                    "new_val",
+                    this.rotation as string,
+                    "Failed to evaluate Rotation in Scale widget"
+                );
+
+                const cur_val = code.callObjectFunctionWithAssignment(
+                    "int32_t",
+                    "cur_val",
+                    "lv_scale_get_rotation"
+                );
+
+                code.ifNotEqual(new_val, cur_val, () => {
+                    code.tickChangeStart();
+                    code.callObjectFunction("lv_scale_set_rotation", new_val);
+                    code.tickChangeEnd();
+                });
+            });
         }
 
         // totalTickCount
