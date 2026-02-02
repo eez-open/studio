@@ -251,6 +251,24 @@ export abstract class Flow extends EezObject {
             .forEach(connectionLine => deleteObject(connectionLine));
     }
 
+    removeComponentFromGroups(component: Component) {
+        for (const group of this.componentGroups) {
+            const index = group.components.indexOf(component.objID);
+            if (index !== -1) {
+                const newComponents = group.components.filter(
+                    id => id !== component.objID
+                );
+                if (newComponents.length === 0) {
+                    console.log("Deleting empty group", group);
+                    deleteObject(group);
+                } else {
+                    console.log("Removing component from group", group);
+                    updateObject(group, { components: newComponents });
+                }
+            }
+        }
+    }
+
     rerouteConnectionLinesInput(
         component: Component,
         inputBefore: string,

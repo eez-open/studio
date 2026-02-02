@@ -2200,6 +2200,9 @@ export class Component extends EezObject {
             if (!keepConnectionLines) {
                 flow.deleteConnectionLines(component);
             }
+
+            // Remove component from any groups it belongs to
+            flow.removeComponentFromGroups(component);
         },
 
         objectsToClipboardData: (components: Component[]) => {
