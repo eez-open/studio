@@ -1044,15 +1044,16 @@ export class BuildLVGLCode implements LVGLCode {
         func: string,
         ...args: any[]
     ): any {
-        const staticVar = this.genStateVar(id, declType, declNamePrefix);
+        const stateVar = this.genStateVar(id, declType, declNamePrefix);
 
         this.build.line(
-            `${staticVar} = ${func}(${[
+            `${stateVar} = ${func}(${[
                 this.isTick ? this.objectAccessor : "obj",
                 ...args
             ].join(", ")});`
         );
-        return staticVar;
+
+        return stateVar;
     }
 
     callObjectFunctionInline(func: string, ...args: any[]): any {

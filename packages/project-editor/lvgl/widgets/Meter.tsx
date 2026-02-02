@@ -216,7 +216,6 @@ export class LVGLMeterIndicator extends EezObject {
     addToTick(
         code: LVGLCode,
         indicatorObj: any,
-        indicatorIndex: number,
         propName: string,
         propFullName: string,
         get_cur_val: string,
@@ -235,19 +234,7 @@ export class LVGLMeterIndicator extends EezObject {
             if (code.lvglBuild) {
                 const build = code.lvglBuild;
 
-                const objectAccessor = build.getLvglObjectAccessor(widget);
-
-                build.line(`lv_meter_indicator_t *indicator;`);
-                build.line("");
-                build.line(
-                    `lv_ll_t *indicators = &((lv_meter_t *)${objectAccessor})->indicator_ll;`
-                );
-                build.line(`int index = ${indicatorIndex};`);
-                build.line(
-                    `for (indicator = _lv_ll_get_tail(indicators); index > 0 && indicator != NULL; indicator = _lv_ll_get_prev(indicators, indicator), index--);`
-                );
-                build.line("");
-                build.blockStart("if (indicator) {");
+                build.blockStart(`if (${indicatorObj}) {`);
             } else {
                 // we already have indicatorObj for the Simulator
             }
@@ -264,7 +251,7 @@ export class LVGLMeterIndicator extends EezObject {
             let cur_val;
             if (code.lvglBuild) {
                 code.lvglBuild.line(
-                    `int32_t cur_val = indicator->${get_cur_val};`
+                    `int32_t cur_val = ${indicatorObj}->${get_cur_val};`
                 );
                 cur_val = "cur_val";
             } else {
@@ -415,7 +402,6 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
             this.addToTick(
                 code,
                 indicatorObj,
-                indicatorIndex,
                 "value",
                 `scales[${scaleIndex}].indicators[${indicatorIndex}].value`,
                 "start_value",
@@ -530,7 +516,7 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
         scaleIndex: number,
         indicatorIndex: number
     ) {
-        const stateVar = code.genStateVar(
+        const indicatorVar = code.genStateVar(
             this.objID,
             "lv_meter_indicator_t *",
             this.identifier ? `${this.identifier}!` : "indicator"
@@ -539,7 +525,7 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
         code.buildColor(
             this,
             this.color,
-            () => stateVar,
+            () => indicatorVar,
             (color, indicatorVar) => {
                 const indicatorObj = code.callObjectFunctionWithAssignment(
                     "lv_meter_indicator_t *",
@@ -562,8 +548,7 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
                 } else {
                     this.addToTick(
                         code,
-                        indicatorObj,
-                        indicatorIndex,
+                        code.lvglBuild ? indicatorVar : indicatorObj,
                         "value",
                         `scales[${scaleIndex}].indicators[${indicatorIndex}].value`,
                         "start_value",
@@ -756,7 +741,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
         scaleIndex: number,
         indicatorIndex: number
     ) {
-        const stateVar = code.genStateVar(
+        const indicatorVar = code.genStateVar(
             this.objID,
             "lv_meter_indicator_t *",
             this.identifier ? `${this.identifier}!` : "indicator"
@@ -766,7 +751,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
             this,
             this.colorStart,
             this.colorEnd,
-            () => stateVar,
+            () => indicatorVar,
             (colorStart, colorEnd, indicatorVar) => {
                 const indicatorObj = code.callObjectFunctionWithAssignment(
                     "lv_meter_indicator_t *",
@@ -790,8 +775,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
                 } else {
                     this.addToTick(
                         code,
-                        indicatorObj,
-                        indicatorIndex,
+                        code.lvglBuild ? indicatorVar : indicatorObj,
                         "startValue",
                         `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`,
                         "start_value",
@@ -808,8 +792,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
                 } else {
                     this.addToTick(
                         code,
-                        indicatorObj,
-                        indicatorIndex,
+                        code.lvglBuild ? indicatorVar : indicatorObj,
                         "endValue",
                         `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`,
                         "end_value",
@@ -990,7 +973,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
         scaleIndex: number,
         indicatorIndex: number
     ) {
-        const stateVar = code.genStateVar(
+        const indicatorVar = code.genStateVar(
             this.objID,
             "lv_meter_indicator_t *",
             this.identifier ? `${this.identifier}!` : "indicator"
@@ -999,7 +982,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
         code.buildColor(
             this,
             this.color,
-            () => stateVar,
+            () => indicatorVar,
             (color, indicatorVar) => {
                 const indicatorObj = code.callObjectFunctionWithAssignment(
                     "lv_meter_indicator_t *",
@@ -1022,8 +1005,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
                 } else {
                     this.addToTick(
                         code,
-                        indicatorObj,
-                        indicatorIndex,
+                        code.lvglBuild ? indicatorVar : indicatorObj,
                         "startValue",
                         `scales[${scaleIndex}].indicators[${indicatorIndex}].startValue`,
                         "start_value",
@@ -1040,8 +1022,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
                 } else {
                     this.addToTick(
                         code,
-                        indicatorObj,
-                        indicatorIndex,
+                        code.lvglBuild ? indicatorVar : indicatorObj,
                         "endValue",
                         `scales[${scaleIndex}].indicators[${indicatorIndex}].endValue`,
                         "end_value",
@@ -1440,7 +1421,7 @@ export class LVGLMeterWidget extends LVGLWidget {
                 "lv_meter_add_scale"
             );
 
-            const stateVar = code.genStateVar(
+            const scaleVar = code.genStateVar(
                 scale.objID,
                 "lv_meter_scale_t *",
                 scale.identifier ? `${scale.identifier}!` : "scale"
@@ -1450,7 +1431,7 @@ export class LVGLMeterWidget extends LVGLWidget {
                 this,
                 scale.minorTickColor,
                 scale.majorTickColor,
-                () => stateVar,
+                () => scaleVar,
                 (minorTickColor, majorTickColor, scaleVar) => {
                     code.assingToStateVar(scaleVar, "scale");
 
