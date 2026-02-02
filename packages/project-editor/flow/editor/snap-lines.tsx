@@ -236,7 +236,7 @@ export function findSnapLines(
             return;
         }
 
-        if (!(node.object instanceof ProjectEditor.PageClass || node.object instanceof ProjectEditor.ComponentClass)) {
+        if (!(node.object instanceof ProjectEditor.FlowClass || node.object instanceof ProjectEditor.ComponentClass)) {
             return;
         }
 

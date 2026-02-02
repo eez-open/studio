@@ -259,10 +259,8 @@ export abstract class Flow extends EezObject {
                     id => id !== component.objID
                 );
                 if (newComponents.length === 0) {
-                    console.log("Deleting empty group", group);
                     deleteObject(group);
                 } else {
-                    console.log("Removing component from group", group);
                     updateObject(group, { components: newComponents });
                 }
             }
