@@ -347,7 +347,7 @@ async function generateFiles(
         projectStore.masterProject &&
         project.settings.general.projectType != ProjectType.FIRMWARE
     ) {
-        parts = generateFile(
+        parts = await generateFile(
             projectStore,
             configurationBuildResults,
             projectStore.selectedBuildConfiguration
@@ -406,7 +406,7 @@ async function generateFiles(
                     }
                 }
             } else {
-                parts = generateFile(
+                parts = await generateFile(
                     projectStore,
                     configurationBuildResults,
                     projectStore.selectedBuildConfiguration
