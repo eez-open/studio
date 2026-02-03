@@ -2135,7 +2135,7 @@ const ProjectTypeComponent = observer(
                                               projectType.id ==
                                                   "LVGL with EEZ Flow")
                                             ? "8.x | 9.x"
-                                            : "8.x"
+                                            : undefined
                                         : undefined
                             }}
                         />

@@ -299,90 +299,117 @@ export const LVGLStylesDefinitionTree = observer(
                 }
             });
 
+            let totalModifications: number = 0;
+            parts?.forEach(part => {
+                totalModifications += this.getNumModificationsForPart(part);
+            });
+
             return {
                 id: "root",
                 label: "Root",
-                children:
-                    parts?.map(part => {
-                        const numModifications =
-                            this.getNumModificationsForPart(part);
-
-                        const partLabel = humanize(part) + " part";
-
-                        return {
-                            id: part,
+                children: parts
+                    ? [
+                          ...(totalModifications > 0 ? [{
+                            id: "_totalModifications",
                             label: (
-                                <span
-                                    className={classNames(
-                                        "EezStudio_LVGLStyle_PartLabel",
-                                        {
-                                            inError:
-                                                this.props.stylesDefinitions
-                                                    .length === 1 &&
-                                                isPropertyInError(
-                                                    this.props
-                                                        .stylesDefinitions[0],
-                                                    part
-                                                )
-                                        }
-                                    )}
-                                >
-                                    {numModifications == 0
-                                        ? partLabel
-                                        : `${partLabel} (${numModifications})`}
+                                <span className="EezStudio_LVGLStyle_PartLabel">
+                                    {`Changed (${totalModifications})`}
                                 </span>
                             ),
-                            children: LVGL_STYLE_STATES.map(state => {
-                                const numModifications =
-                                    this.getNumModificationsForPartAndState(
-                                        part,
-                                        state
-                                    );
-                                return {
-                                    id: state,
-                                    label: (
-                                        <span
-                                            className={classNames(
-                                                "EezStudio_LVGLStyle_StateLabel",
-                                                {
-                                                    inError:
-                                                        this.props
-                                                            .stylesDefinitions
-                                                            .length === 1 &&
-                                                        isPropertyInError(
-                                                            this.props
-                                                                .stylesDefinitions[0],
-                                                            part,
-                                                            state
-                                                        )
-                                                }
-                                            )}
-                                        >
-                                            {numModifications == 0
-                                                ? state
-                                                : `${state} (${numModifications})`}
-                                        </span>
-                                    ),
-                                    children: [],
-                                    selected:
-                                        this.lvglPart == part &&
-                                        this.lvglState == state,
-                                    expanded: false,
-                                    data: { part, state },
-                                    className: classNames("state", {
-                                        modified: numModifications > 0
-                                    })
-                                };
-                            }),
+                            children: [],
                             selected: false,
-                            expanded: true,
+                            expanded: false,
                             className: classNames("part", {
-                                modified: numModifications > 0
+                                modified: totalModifications > 0
                             })
-                        };
-                    }) ?? [],
+                          }] : []),
+                          ...parts.map(part => {
+                              const numModifications =
+                                  this.getNumModificationsForPart(part);
+
+                              const partLabel = humanize(part) + " part";
+
+                              return {
+                                  id: part,
+                                  label: (
+                                      <span
+                                          className={classNames(
+                                              "EezStudio_LVGLStyle_PartLabel",
+                                              {
+                                                  inError:
+                                                      this.props
+                                                          .stylesDefinitions
+                                                          .length === 1 &&
+                                                      isPropertyInError(
+                                                          this.props
+                                                              .stylesDefinitions[0],
+                                                          part
+                                                      )
+                                              }
+                                          )}
+                                      >
+                                          {numModifications == 0
+                                              ? partLabel
+                                              : `${partLabel} (${numModifications})`}
+                                      </span>
+                                  ),
+                                  children: LVGL_STYLE_STATES.map(state => {
+                                      const numModifications =
+                                          this.getNumModificationsForPartAndState(
+                                              part,
+                                              state
+                                          );
+                                      return {
+                                          id: state,
+                                          label: (
+                                              <span
+                                                  className={classNames(
+                                                      "EezStudio_LVGLStyle_StateLabel",
+                                                      {
+                                                          inError:
+                                                              this.props
+                                                                  .stylesDefinitions
+                                                                  .length ===
+                                                                  1 &&
+                                                              isPropertyInError(
+                                                                  this.props
+                                                                      .stylesDefinitions[0],
+                                                                  part,
+                                                                  state
+                                                              )
+                                                      }
+                                                  )}
+                                              >
+                                                  {numModifications == 0
+                                                      ? state
+                                                      : `${state} (${numModifications})`}
+                                              </span>
+                                          ),
+                                          children: [],
+                                          selected:
+                                              this.lvglPart == part &&
+                                              this.lvglState == state,
+                                          expanded: false,
+                                          data: { part, state },
+                                          className: classNames("state", {
+                                              modified: numModifications > 0
+                                          })
+                                      };
+                                  }),
+                                  selected: false,
+                                  expanded: true,
+                                  className: classNames("part", {
+                                      modified: numModifications > 0
+                                  })
+                              };
+                          })
+                      ]
+                    : [],
                 selected: false,
-                expanded: true
+                expanded: true,
+                className: classNames("part", {
+                    modified: totalModifications > 0
+                })
             };
         }
 
@@ -514,6 +541,22 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                 propertyInfo
                             );
 
+                            let propertyNameShort;
+                            let groupName = propertiesGroup.groupName.trim().toLowerCase();
+                            if (groupName == "background") {
+                                groupName = "bg";
+                            } else if (groupName == "padding") {
+                                groupName = "pad";
+                            }
+                            if (propertyName.toLowerCase().startsWith(groupName + " ")) {
+                                // Remove group name prefix from property name
+                                propertyNameShort = propertyName
+                                    .substring(groupName.length )
+                                    .trim();
+                            } else {
+                                propertyNameShort = propertyName;
+                            }
+
                             return (
                                 <div
                                     key={propertyInfo.name}
@@ -597,7 +640,7 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                                 readOnly={readOnly}
                                             />
                                             <span title={propertyName}>
-                                                {" " + propertyName}
+                                                {" " + propertyNameShort}
                                             </span>
                                         </label>
                                     </div>

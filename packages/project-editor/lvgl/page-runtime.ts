@@ -80,50 +80,77 @@ interface LVGLCreateContext {
 export abstract class LVGLPageRuntime {
     lvglVersion: LVGLVersion;
     wasm: IWasmFlowRuntime;
-    toLVGLCode = new SimulatorLVGLCode(this, LVGL_CONSTANTS_ALL);
+    toLVGLCode: SimulatorLVGLCode;
     isMounted: boolean = false;
-    bitmapsCache = new Map<
+    bitmapsCache: Map<
         Bitmap,
         {
             imageElement: HTMLImageElement;
             bitmapPtr: number;
         }
-    >();
-    fontsCache = new Map<
+    >;
+    fontsCache: Map<
         Font,
         {
             lvglBinFile: string;
             fontPtr: number;
         }
-    >();
-    fontAddressToFont = new Map<number, Font>();
+    >;
+    fontAddressToFont: Map<number, Font>;
     lvglCreateContext: LVGLCreateContext;
-    tick_value_change_obj: number = 0;
-    widgetIndexes: number[] = [];
-    pointers: number[] = [];
-    oldStyleObjMap = new Map<LVGLStyle, LVGLStyleObjects>();
-    styleObjMap = new Map<LVGLStyle, LVGLStyleObjects>();
-    themeIndex: number = 0;
+    tick_value_change_obj: number;
+    widgetIndexes: number[];
+    pointers: number[];
+    oldStyleObjMap: Map<LVGLStyle, LVGLStyleObjects>;
+    styleObjMap: Map<LVGLStyle, LVGLStyleObjects>;
+    themeIndex: number;
     changeColorCallbacks: {
         page: Page | undefined;
         callback: () => void;
-    }[] = [];
-    stringLiterals = new Map<string, number>();
-    postCreateCallbacks: (() => void)[] = [];
+    }[];
+    stringLiterals: Map<string, number>;
+    postCreateCallbacks: (() => void)[];
+    buttonMatrixBuffers: {
+        mapBuffer: number;
+        mapArray: Uint32Array;
+        ctrlMapBuffer: number;
+    }[];
+    _isInsideUserWidget: number;
 
     constructor(public page: Page) {
         this.lvglVersion = this.project.settings.general.lvglVersion;
 
-        this.lvglCreateContext = {
-            page,
-            pageIndex: 0,
-            flowState: 0
-        };
+        this.reset();
 
         makeObservable(this, {
             projectStore: computed,
             project: computed
         });
+    }
+
+    reset() {
+        this.wasm = undefined as any;
+        this.toLVGLCode = new SimulatorLVGLCode(this, LVGL_CONSTANTS_ALL);
+        this.isMounted = false;
+        this.bitmapsCache = new Map();
+        this.fontsCache = new Map();
+        this.fontAddressToFont = new Map();
+        this.lvglCreateContext = {
+            page: this.page,
+            pageIndex: 0,
+            flowState: 0
+        };        
+        this.tick_value_change_obj = 0;
+        this.widgetIndexes = [];
+        this.pointers = [];
+        this.oldStyleObjMap = new Map();
+        this.styleObjMap = new Map();
+        this.themeIndex = 0;
+        this.changeColorCallbacks = [];
+        this.stringLiterals = new Map();
+        this.postCreateCallbacks = [];
+        this.buttonMatrixBuffers = [];
+        this._isInsideUserWidget = 0;
     }
 
     get projectStore() {
@@ -151,8 +178,6 @@ export abstract class LVGLPageRuntime {
 
     abstract mount(): void;
     abstract unmount(): void;
-
-    _isInsideUserWidget: number = 0;
 
     beginUserWidget(widget: LVGLUserWidgetWidget) {
         this._isInsideUserWidget++;
@@ -412,11 +437,10 @@ export abstract class LVGLPageRuntime {
         return ptr;
     }
 
-    freePointers() {
-        for (const ptr of this.pointers) {
+    freePointers(pointers: number[]) {
+        for (const ptr of pointers) {
             this.wasm._free(ptr);
         }
-        this.pointers = [];
     }
 
     static detachRuntimeFromPage(page: Page) {
@@ -648,13 +672,6 @@ export abstract class LVGLPageRuntime {
 
     lvglOnEventHandler(obj: number, eventCode: number, event: number) {}
 
-    // button matrix buffers
-    buttonMatrixBuffers: {
-        mapBuffer: number;
-        mapArray: Uint32Array;
-        ctrlMapBuffer: number;
-    }[] = [];
-
     addButtonMatrixBuffers(mapBuffer: number, mapArray: Uint32Array, ctrlMapBuffer: number) {
         this.buttonMatrixBuffers.push({
             mapBuffer,
@@ -787,7 +804,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
                         this.wasm._lvglClearTimeline();
 
-                        this.freePointers();
+                        const pointers = this.pointers.slice();
+                        this.pointers = [];
 
                         this.freeAllButtonMatrixBuffers();
 
@@ -824,6 +842,8 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                             }
                             this.page._lvglObj = pageObj;
                         });
+
+                        this.freePointers(pointers);
 
                         this.deleteStyles();
 
@@ -924,9 +944,9 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
             this.dispose2 = undefined;
         }
 
-        LVGLPageRuntime.detachRuntimeFromPage(this.page);
+        super.reset();
 
-        this.isMounted = false;
+        LVGLPageRuntime.detachRuntimeFromPage(this.page);
     }
 }
 

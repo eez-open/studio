@@ -1118,6 +1118,7 @@ export class SwitchActionComponent extends ActionComponent {
                     <pre key={getId(test)}>
                         {`#${i + 1} `}
                         {test.condition}
+                        {test.outputValue ? <><RightArrow />{test.outputValue}</> : null}
                     </pre>
                 ))}
             </div>

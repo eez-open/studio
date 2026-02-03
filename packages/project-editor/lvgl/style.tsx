@@ -22,7 +22,7 @@ import {
 } from "project-editor/core/object";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { ProjectContext } from "project-editor/project/context";
-import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
+import { extractAnimProperties, LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { createObject } from "project-editor/store";
 import { getComponentName } from "project-editor/flow/components/components-registry";
@@ -44,7 +44,6 @@ import {
     text_font_property_info
 } from "project-editor/lvgl/style-catalog";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import { getLvglCoord } from "./lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -544,7 +543,7 @@ export class LVGLStyle extends EezObject {
                                         .valueToNum
                                         ? propertyInfo.lvglStyleProp.valueToNum(
                                               value,
-                                              runtime
+                                              project._store
                                           )
                                         : value;
 
@@ -564,14 +563,9 @@ export class LVGLStyle extends EezObject {
                                     .lvglStyleProp.valueToNum
                                     ? propertyInfo.lvglStyleProp.valueToNum(
                                           value,
-                                          runtime
+                                          project._store
                                       )
                                     : value;
-
-                                const { LV_COORD_MAX } = getLvglCoord(this);
-                                const LV_GRID_TEMPLATE_LAST = LV_COORD_MAX;
-
-                                arrValue.push(LV_GRID_TEMPLATE_LAST);
 
                                 runtime.wasm._lvglSetStylePropPtr(
                                     getStyleObj(),
@@ -609,6 +603,24 @@ export class LVGLStyle extends EezObject {
                                                 propertyInfo.lvglStyleProp.code
                                             ),
                                             bitmapPtr
+                                        );
+                                    }
+                                }
+                            } else if (propertyInfo.type == PropertyType.String) {
+                                if (value) {
+                                    // For anim property
+                                    let { setDelay, setRepeatDelay, setRepeatCount, delay, repeatDelay, repeatCount } = 
+                                        extractAnimProperties(value);
+    
+                                    if (setDelay || setRepeatDelay || setRepeatCount) {
+                                        const animPtr = runtime.wasm._lvglCreateAnim(setDelay, delay, setRepeatDelay, repeatDelay, setRepeatCount, repeatCount);
+                                        runtime.pointers.push(animPtr);
+                                        runtime.wasm._lvglSetStylePropPtr(
+                                            getStyleObj(),
+                                            runtime.getLvglStylePropCode(
+                                                propertyInfo.lvglStyleProp.code
+                                            ),
+                                            animPtr
                                         );
                                     }
                                 }

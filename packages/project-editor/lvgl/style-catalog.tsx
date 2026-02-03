@@ -46,9 +46,9 @@ import {
 } from "project-editor/lvgl/lvgl-constants";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getEnumItems } from "project-editor/ui-components/PropertyGrid/utils";
-import type { LVGLPageRuntime } from "./page-runtime";
 import { settingsController } from "home/settings";
 import { registerSystemEnum } from "project-editor/features/variable/value-type";
+import { getLvglCoord } from "project-editor/lvgl/lvgl-versions";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +86,7 @@ interface LVGLStyleProp {
     layout: boolean;
     extDraw: boolean;
     valueRead?: (value: number) => string;
-    valueToNum?: (value: string, runtime?: LVGLPageRuntime) => number | number[];
+    valueToNum?: (value: string, projectStore: ProjectStore) => number | number[];
     valueBuild?: (value: string) => string;
     buildPrefix?: string;
 }
@@ -709,36 +709,89 @@ function dscArrayValueRead(value: number) {
     return "";
 }
 
-function getArrayFromValue(value: string, build: boolean = false) {
-    let arr;
-    if (value.indexOf(",") !== -1) {
-        arr = value.split(",").map(v => parseInt(v));
-    } else {
-        arr = value.split(" ").map(v => parseInt(v));
+function dscArrayValueToNum(value: string, projectStore: ProjectStore) {
+    const { LV_COORD_MAX } = getLvglCoord(projectStore.project);
+    const LV_GRID_CONTENT = LV_COORD_MAX - 101;
+    function LV_GRID_FR(x: number) {
+        return LV_COORD_MAX - 100 + x;
     }
-    arr = arr.filter(v => !isNaN(v));
+    const LV_GRID_TEMPLATE_LAST = LV_COORD_MAX;
 
-    if (!build) {
-        for (let i = arr.length; i < 100; i++) {
-            arr.push(0);
+    let arrStr = value.trim().split(value.indexOf(",") !== -1 ? "," : " ");
+    let arr: number[] = [];
+
+    for (let i = 0; i < arrStr.length; i++) {
+        const colStr = arrStr[i].trim().toUpperCase();
+        if (colStr.startsWith("FR(") && colStr.endsWith(")")) {
+            const fr = colStr.slice(3, -1);
+            const frNum = Number(fr);
+            if (Number.isInteger(frNum)) {
+                if (frNum != 0) {
+                    arr.push(LV_GRID_FR(frNum));
+                } else {
+                    arr.push(0);
+                }
+            } else {
+                arr.push(0);
+            }
+        } else if (colStr === "CONTENT") {
+            arr.push(LV_GRID_CONTENT);
+        } else {
+            const col = Number(colStr);
+            if (Number.isInteger(col)) {
+                arr.push(col);
+            } else {
+                arr.push(0);
+            }
         }
     }
+
+    arr.push(LV_GRID_TEMPLATE_LAST);
 
     return arr;
 }
 
-function dscArrayValueToNum(value: string) {
-    return getArrayFromValue(value);
-}
-
 function dscArrayValueBuild(value: string) {
-    return getArrayFromValue(value, true).join(", ");
+    let arrStr = value.split(value.indexOf(",") !== -1 ? "," : " ");
+
+    let resultArr: string[] = [];
+
+    for (let i = 0; i < arrStr.length; i++) {
+        const colStr = arrStr[i].trim().toUpperCase();
+        if (colStr.startsWith("FR(") && colStr.endsWith(")")) {
+            const fr = colStr.slice(3, -1);
+            const frNum = Number(fr);
+            if (Number.isInteger(frNum)) {
+                if (frNum != 0) {
+                    resultArr.push(`LV_GRID_FR(${frNum})`);
+                } else {
+                    resultArr.push("0");
+                }
+            } else {
+                resultArr.push("0");
+            }
+        } else if (colStr === "CONTENT") {
+            resultArr.push("LV_GRID_CONTENT");
+        } else {
+            const col = Number(colStr);
+            if (Number.isInteger(col)) {
+                resultArr.push(col.toString());
+            } else {
+                resultArr.push("0");
+            }
+        }
+    }
+
+    resultArr.push("LV_GRID_TEMPLATE_LAST");
+
+    return resultArr.join(", ");
 }
 
 export const grid_row_dsc_array_property_info: LVGLPropertyInfo = {
     name: "grid_row_dsc_array",
     displayName: "Grid row descriptor",
     type: PropertyType.NumberArrayAsString,
+    formText: "Defines the size of grid rows as a comma or space-separated list of values. Options: fixed value in pixels (e.g. 50), FR(x) (e.g. FR(1), FR(2), etc.) or CONTENT.",
     lvglStyleProp: {
         code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_ROW_DSC_ARRAY,
         description:
@@ -757,6 +810,7 @@ export const grid_column_dsc_array_property_info: LVGLPropertyInfo = {
     name: "grid_column_dsc_array",
     displayName: "Grid column descriptor",
     type: PropertyType.NumberArrayAsString,
+    formText: "Defines the size of grid columns as a comma or space-separated list of values. Options: fixed value in pixels (e.g. 50), FR(x) (e.g. FR(1), FR(2), etc.) or CONTENT. ",
     lvglStyleProp: {
         code: LVGL_STYLE_PROP_CODES.LV_STYLE_GRID_COLUMN_DSC_ARRAY,
         description:
@@ -782,8 +836,10 @@ const grid_cell_column_pos_property_info: LVGLPropertyInfo = {
         inherited: false,
         layout: true,
         extDraw: false,
-        valueToNum: (value: string, runtime) =>
-            !runtime || runtime.isV9 ? parseInt(value) : parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
+        valueToNum: (value: string, projectStore) =>
+            projectStore.project.settings.general.lvglVersion.startsWith("8.")
+                ? parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
+                : parseInt(value)
     }
 };
 
@@ -836,8 +892,10 @@ const grid_cell_row_pos_property_info: LVGLPropertyInfo = {
         inherited: false,
         layout: true,
         extDraw: false,
-        valueToNum: (value: string, runtime) =>
-            !runtime || runtime.isV9 ? parseInt(value) : parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
+        valueToNum: (value: string, projectStore) =>
+            projectStore.project.settings.general.lvglVersion.startsWith("8.")
+                ? parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
+                : parseInt(value)
     }
 };
 

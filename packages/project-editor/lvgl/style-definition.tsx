@@ -38,7 +38,6 @@ import {
     getSelectorBuildCode,
     getSelectorCode
 } from "project-editor/lvgl/style-helper";
-import { getLvglCoord } from "./lvgl-versions";
 import { getThemedColor } from "project-editor/features/style/theme";
 import { isValid } from "eez-studio-shared/color";
 import type { LVGLStyle } from "./style";
@@ -529,7 +528,7 @@ export class LVGLStylesDefinition extends EezObject {
                                     .valueToNum
                                     ? propertyInfo.lvglStyleProp.valueToNum(
                                           value,
-                                          runtime
+                                          projectStore
                                       )
                                     : value;
 
@@ -550,14 +549,9 @@ export class LVGLStylesDefinition extends EezObject {
                                 .lvglStyleProp.valueToNum
                                 ? propertyInfo.lvglStyleProp.valueToNum(
                                       value,
-                                      runtime
+                                      projectStore
                                   )
                                 : value;
-
-                            const { LV_COORD_MAX } = getLvglCoord(widget);
-                            const LV_GRID_TEMPLATE_LAST = LV_COORD_MAX;
-
-                            arrValue.push(LV_GRID_TEMPLATE_LAST);
 
                             runtime.wasm._lvglObjSetLocalStylePropPtr(
                                 obj,
@@ -734,12 +728,6 @@ export class LVGLStylesDefinition extends EezObject {
                                 ? propertyInfo.lvglStyleProp.valueBuild(value)
                                 : "";
 
-                            if (dsc) {
-                                dsc += ", ";
-                            }
-
-                            dsc += "LV_GRID_TEMPLATE_LAST";
-
                             build.blockStart("{");
                             build.line(`static lv_coord_t dsc[] = {${dsc}};`);
 
@@ -876,12 +864,6 @@ export class LVGLStylesDefinition extends EezObject {
                         ? propertyInfo.lvglStyleProp.valueBuild(value)
                         : "";
 
-                    if (dsc) {
-                        dsc += ", ";
-                    }
-
-                    dsc += "LV_GRID_TEMPLATE_LAST";
-
                     build.blockStart("{");
                     build.line(`static lv_coord_t dsc[] = {${dsc}};`);
 
@@ -943,7 +925,7 @@ export class LVGLStylesDefinition extends EezObject {
 registerClass("LVGLStylesDefinition", LVGLStylesDefinition);
 
 
-function extractAnimProperties(value: any) {
+export function extractAnimProperties(value: any) {
     let setDelay = false;
     let delay = 0;
 

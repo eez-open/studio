@@ -1082,13 +1082,13 @@ export class LVGLActionType extends EezObject {
                     return 0;
                 }
                 
+                const projectStore = ProjectEditor.getProjectStore(this);
+
                 if (styleProperty.lvglStyleProp.valueToNum) {
-                    return styleProperty.lvglStyleProp.valueToNum(value);
+                    return styleProperty.lvglStyleProp.valueToNum(value, projectStore);
                 }
 
                 if (styleProperty.type == PropertyType.ThemedColor) {
-                    const projectStore = ProjectEditor.getProjectStore(this);
-
                     const themedColor = getThemedColor(
                         projectStore,
                         value
