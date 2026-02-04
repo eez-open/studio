@@ -875,6 +875,38 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 62,
+    name: "arcRotateObjToAngle",
+    group: "Arc",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Arc",
+            helpText: "The arc object"
+        },
+        {
+            name: "objToRotate",
+            type: "widget",
+            helpText: "The object to rotate"
+        },
+        {
+            name: "offset",
+            type: "integer",
+            helpText: "Consider the radius larger with this value (< 0: for smaller radius)"
+        }
+    ],
+    defaults: {},
+    label: ([object, objToRotate, offset]) => (
+        <>
+            {object} {objToRotate} {offset}
+        </>
+    ),
+    helpText: "Rotate an object to the current position of the arc (knob)"
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerAction({
     id: 24,
     name: "barSetValue",
     group: "Bar",

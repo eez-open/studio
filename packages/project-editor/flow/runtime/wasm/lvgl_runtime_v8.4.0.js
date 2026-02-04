@@ -5470,31 +5470,31 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1157960: ($0) => { startToDebuggerMessage($0); },  
- 1157992: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1158067: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1158142: ($0) => { finishToDebuggerMessage($0); },  
- 1158175: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1158205: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1158235: ($0) => { lvglScreenTick($0); },  
- 1158259: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1158299: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1158353: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1158407: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1158460: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1158513: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1158566: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
- 1158618: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1158665: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1158698: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1158734: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1158779: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1158885: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1158921: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1158958: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1158998: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1159055: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1159114: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1157992: ($0) => { startToDebuggerMessage($0); },  
+ 1158024: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1158099: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1158174: ($0) => { finishToDebuggerMessage($0); },  
+ 1158207: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1158237: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1158267: ($0) => { lvglScreenTick($0); },  
+ 1158291: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1158331: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1158385: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1158439: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1158492: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1158545: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1158598: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1158650: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1158697: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1158730: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1158766: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1158811: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1158917: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1158953: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1158990: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1159030: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1159087: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1159146: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5767,6 +5767,7 @@ var _v8_lv_slider_get_left_value = Module['_v8_lv_slider_get_left_value'] = make
 var _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = makeInvalidEarlyAccess('_lvglCreateFreeTypeFont');
 var _lvglCreateAnim = Module['_lvglCreateAnim'] = makeInvalidEarlyAccess('_lvglCreateAnim');
 var _lv_anim_init = Module['_lv_anim_init'] = makeInvalidEarlyAccess('_lv_anim_init');
+var _lvglArcGetRotation = Module['_lvglArcGetRotation'] = makeInvalidEarlyAccess('_lvglArcGetRotation');
 var _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = makeInvalidEarlyAccess('_lv_disp_get_scr_prev');
 var _lv_obj_get_disp = Module['_lv_obj_get_disp'] = makeInvalidEarlyAccess('_lv_obj_get_disp');
 var _lv_anim_del = Module['_lv_anim_del'] = makeInvalidEarlyAccess('_lv_anim_del');
@@ -7017,6 +7018,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglCreateFreeTypeFont'] != 'undefined', 'missing Wasm export: lvglCreateFreeTypeFont');
   assert(typeof wasmExports['lvglCreateAnim'] != 'undefined', 'missing Wasm export: lvglCreateAnim');
   assert(typeof wasmExports['lv_anim_init'] != 'undefined', 'missing Wasm export: lv_anim_init');
+  assert(typeof wasmExports['lvglArcGetRotation'] != 'undefined', 'missing Wasm export: lvglArcGetRotation');
   assert(typeof wasmExports['lv_disp_get_scr_prev'] != 'undefined', 'missing Wasm export: lv_disp_get_scr_prev');
   assert(typeof wasmExports['lv_obj_get_disp'] != 'undefined', 'missing Wasm export: lv_obj_get_disp');
   assert(typeof wasmExports['lv_anim_del'] != 'undefined', 'missing Wasm export: lv_anim_del');
@@ -8263,6 +8265,7 @@ function assignWasmExports(wasmExports) {
   _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = createExportWrapper('lvglCreateFreeTypeFont', 4);
   _lvglCreateAnim = Module['_lvglCreateAnim'] = createExportWrapper('lvglCreateAnim', 6);
   _lv_anim_init = Module['_lv_anim_init'] = createExportWrapper('lv_anim_init', 1);
+  _lvglArcGetRotation = Module['_lvglArcGetRotation'] = createExportWrapper('lvglArcGetRotation', 1);
   _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = createExportWrapper('lv_disp_get_scr_prev', 1);
   _lv_obj_get_disp = Module['_lv_obj_get_disp'] = createExportWrapper('lv_obj_get_disp', 1);
   _lv_anim_del = Module['_lv_anim_del'] = createExportWrapper('lv_anim_del', 2);
