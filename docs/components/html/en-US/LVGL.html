@@ -56,6 +56,12 @@ function live(eventType, elementQuerySelector, cb) { document.addEventListener(e
 <li><p><strong>Obj Get Height</strong>: Get the height of the object</p></li>
 <li><p><em>Object</em>: The object to get the height</p></li>
 <li><p><em>Store result into</em>: The variable to store the height</p></li>
+<li><p><strong>Set Obj Style Prop</strong>: Set the value of property in a style.</p></li>
+<li><p><em>Object</em>: Widget</p></li>
+<li><p><em>Property</em>: The style property to set</p></li>
+<li><p><em>Value</em>: The value to set for the property</p></li>
+<li><p><em>Part</em>: The part of the object to set the property</p></li>
+<li><p><em>State</em>: The state of the object to set the property</p></li>
 <li><p><strong>Obj Set Style Opa</strong>: Set the opacity of the object</p></li>
 <li><p><em>Object</em>: The object to set the opacity</p></li>
 <li><p><em>Opacity</em>: The opacity to set (0-255)</p></li>
@@ -100,6 +106,10 @@ function live(eventType, elementQuerySelector, cb) { document.addEventListener(e
 <li><p><strong>Arc Set Value</strong>: Set the value of the arc</p></li>
 <li><p><em>Object</em>: The arc to set the value</p></li>
 <li><p><em>Value</em>: The value to set</p></li>
+<li><p><strong>Arc Rotate Obj to Angle</strong>: Rotate an object to the current position of the arc (knob)</p></li>
+<li><p><em>Object</em>: The arc object</p></li>
+<li><p><em>Obj to rotate</em>: The object to rotate</p></li>
+<li><p><em>Offset</em>: Consider the radius larger with this value (&lt; 0: for smaller radius)</p></li>
 <li><p><strong>Bar Set Value</strong>: Set the value of the bar</p></li>
 <li><p><em>Object</em>: The bar to set the value</p></li>
 <li><p><em>Value</em>: The value to set (0-100)</p></li>
@@ -143,6 +153,9 @@ function live(eventType, elementQuerySelector, cb) { document.addEventListener(e
 <li><p><strong>Image Set Zoom</strong>: Set the zoom of the image</p></li>
 <li><p><em>Object</em>: The image to set the zoom</p></li>
 <li><p><em>Zoom</em>: The zoom to set. Set factor to 256 to disable zooming. A larger value enlarges the images (e.g. 512 double size), a smaller value shrinks it (e.g. 128 half size).</p></li>
+<li><p><strong>Keyboard Set Textarea</strong>: Set the textarea for the keyboard</p></li>
+<li><p><em>Object</em>: The keyboard to set the textarea</p></li>
+<li><p><em>Textarea</em>: The textarea to set</p></li>
 <li><p><strong>Label Set Text</strong>: Set the text of the label</p></li>
 <li><p><em>Object</em>: The label to set the text</p></li>
 <li><p><em>Text</em>: The text to set</p></li>
@@ -165,9 +178,13 @@ function live(eventType, elementQuerySelector, cb) { document.addEventListener(e
 <li><p><em>Object</em>: The bar to set the value</p></li>
 <li><p><em>Min</em>: Minimum value</p></li>
 <li><p><em>Max</em>: Maximum value</p></li>
-<li><p><strong>Keyboard Set Textarea</strong>: Set the textarea for the keyboard</p></li>
-<li><p><em>Object</em>: The keyboard to set the textarea</p></li>
-<li><p><em>Textarea</em>: The textarea to set</p></li>
+<li><p><strong>Tabview Set Active Tab</strong>: Set the active tab of the tabview</p></li>
+<li><p><em>Object</em>: The tabview to set the active tab</p></li>
+<li><p><em>Tab</em>: The index of the tab to activate (0-based)</p></li>
+<li><p><em>Animated</em>: Use animation when switching tabs</p></li>
+<li><p><strong>Tabview Get Active Tab</strong>: Get the active tab index of the tabview</p></li>
+<li><p><em>Object</em>: The tabview to get the active tab</p></li>
+<li><p><em>Store result into</em>: The variable to store the active tab index</p></li>
 <li><p><strong>Group Focus Obj</strong>: Focus the object</p></li>
 <li><p><em>Object</em>: The object to focus</p></li>
 <li><p><strong>Group Focus Next</strong>: Focus the next object in the group</p></li>

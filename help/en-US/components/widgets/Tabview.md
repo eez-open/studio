@@ -24,6 +24,14 @@ With this property, the tab bar can be moved to any sides.
 
 The size of the tab bar. In case of vertical arrangement is means the height of the tab bar, and in horizontal arrangement it means the width.
 
+## Active tab
+
+The index (zero-based) of the currently active tab.
+
+## Selected tab type
+
+Select between `Literal` and `Assignable`. If `Assignable` is selected then `Active tab` can be a variable in which the currently selected tab index will be stored.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

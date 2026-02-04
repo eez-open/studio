@@ -315,7 +315,7 @@
                         "content": "LVGL.html",
                         "status": "publish",
                         "id": 10095,
-                        "sha256": "0a5c06ae11496354fe900746a1600571a2607202e4865bbefc064e03dc057469"
+                        "sha256": "6e7ba5bb702616bad2f9481fe2b6831857dda9e1febef9f7bb2c3098450472fa"
                     }
                 ]
             },
@@ -649,7 +649,7 @@
                         "content": "Arc.html",
                         "status": "publish",
                         "id": 12211,
-                        "sha256": "60e3ffbc8e1080a86608673386fda8140203e0d0c2280cebcdea3d28369dc7db"
+                        "sha256": "d3f5eddb6c204ee6519db74f894999c5db87fd9cc61c91e4dab7323188f7849d"
                     },
                     {
                         "content": "Bitmap (Dashboard).html",
@@ -703,7 +703,7 @@
                         "content": "Image.html",
                         "status": "publish",
                         "id": 12219,
-                        "sha256": "ed91a6c80ecbb8b7930fe8de6b8a827ba13c8991bac94148830571f6a02c6ac7"
+                        "sha256": "e62417aedd685b975732454a4d615e1aaa0a67a467598e640d90fb90c5c04426"
                     },
                     {
                         "content": "Label.html",
@@ -749,7 +749,9 @@
                     },
                     {
                         "content": "QRCode.html",
-                        "status": "publish"
+                        "status": "publish",
+                        "id": 14887,
+                        "sha256": "2416bb2a1234a3f9779bc0c70d9b16f0f693dd70752c4cd368c183376cdcd9f6"
                     },
                     {
                         "content": "Rectangle (Dashboard).html",
@@ -785,7 +787,7 @@
                         "content": "Tabview.html",
                         "status": "publish",
                         "id": 13360,
-                        "sha256": "3cb223cbe27960f6f5a3b618fb75c9b7368251cc5d238a4d0bb362a6d8e95357"
+                        "sha256": "7587ca4313f5fb73e191e61a914c79b00596b1d1c65fc850381867ff5e457af8"
                     },
                     {
                         "content": "Tab.html",
@@ -903,7 +905,7 @@
                         "content": "Colorwheel.html",
                         "status": "publish",
                         "id": 12238,
-                        "sha256": "007217b96ac731fe192299816ddcde1f2df443a7d4a83cb7283293833d5ec054"
+                        "sha256": "0e1cf3851d20d3a3f2eea8b83f45820ebda54e4c84fe2943368ea54607e60306"
                     },
                     {
                         "content": "Dropdown (Dashboard).html",
@@ -969,7 +971,7 @@
                         "content": "Scale.html",
                         "status": "publish",
                         "id": 12630,
-                        "sha256": "acfd95ceb53fe0040cebcc36529239f9d2d32d43c2ab47516f19bb97e0a10d93"
+                        "sha256": "1fc7d1437eef5f2e43e8d020e9aca14795887d5fce31ebd898d085058f0619a3"
                     },
                     {
                         "content": "Spinbox.html",
@@ -993,7 +995,7 @@
                         "content": "Slider (LVGL).html",
                         "status": "publish",
                         "id": 12249,
-                        "sha256": "d9d4d9f3e35f58718ded9d49eae34ad2eba1b9528a8119a213261f695ad956ca"
+                        "sha256": "745ddbb76513b73c4487c9b76a3e1c612af2a73edd8561e45fc8b0c68c7c51c7"
                     },
                     {
                         "content": "Switch (Dashboard).html",
@@ -1097,7 +1099,7 @@
                         "content": "Line.html",
                         "status": "publish",
                         "id": 13369,
-                        "sha256": "089887f3a312e59a0e046f75fa2ae0d4c17f0a17fa9cffc9995d2e412b1c32b1"
+                        "sha256": "fba0500baa5a8fe3b67f762f780ff7f98996bbefbe41cd10ce6a74b0369d8575"
                     },
                     {
                         "content": "LineChart (Dashboard).html",

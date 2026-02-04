@@ -62,6 +62,13 @@ List of actions to be executed. The following actions are available:
   - *Object*: The object to get the height
   - *Store result into*: The variable to store the height
 
+- **Set Obj Style Prop**: Set the value of property in a style.
+  - *Object*: Widget
+  - *Property*: The style property to set
+  - *Value*: The value to set for the property
+  - *Part*: The part of the object to set the property
+  - *State*: The state of the object to set the property
+
 - **Obj Set Style Opa**: Set the opacity of the object
   - *Object*: The object to set the opacity
   - *Opacity*: The opacity to set (0-255)
@@ -120,6 +127,11 @@ List of actions to be executed. The following actions are available:
   - *Object*: The arc to set the value
   - *Value*: The value to set
 
+- **Arc Rotate Obj to Angle**: Rotate an object to the current position of the arc (knob)
+  - *Object*: The arc object
+  - *Obj to rotate*: The object to rotate
+  - *Offset*: Consider the radius larger with this value (< 0: for smaller radius)
+
 - **Bar Set Value**: Set the value of the bar
   - *Object*: The bar to set the value
   - *Value*: The value to set (0-100)
@@ -174,6 +186,10 @@ List of actions to be executed. The following actions are available:
   - *Object*: The image to set the zoom
   - *Zoom*: The zoom to set. Set factor to 256 to disable zooming. A larger value enlarges the images (e.g. 512 double size), a smaller value shrinks it (e.g. 128 half size).
 
+- **Keyboard Set Textarea**: Set the textarea for the keyboard
+  - *Object*: The keyboard to set the textarea
+  - *Textarea*: The textarea to set
+
 - **Label Set Text**: Set the text of the label
   - *Object*: The label to set the text
   - *Text*: The text to set
@@ -202,9 +218,14 @@ List of actions to be executed. The following actions are available:
   - *Min*: Minimum value
   - *Max*: Maximum value
 
-- **Keyboard Set Textarea**: Set the textarea for the keyboard
-  - *Object*: The keyboard to set the textarea
-  - *Textarea*: The textarea to set
+- **Tabview Set Active Tab**: Set the active tab of the tabview
+  - *Object*: The tabview to set the active tab
+  - *Tab*: The index of the tab to activate (0-based)
+  - *Animated*: Use animation when switching tabs
+
+- **Tabview Get Active Tab**: Get the active tab index of the tabview
+  - *Object*: The tabview to get the active tab
+  - *Store result into*: The variable to store the active tab index
 
 - **Group Focus Obj**: Focus the object
   - *Object*: The object to focus
