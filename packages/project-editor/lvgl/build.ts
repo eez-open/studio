@@ -2190,7 +2190,11 @@ export class LVGLBuild extends Build {
                 this.project.settings.general.darkTheme ? "true" : "false"
             }, LV_FONT_DEFAULT);`
         );
-        build.line("lv_disp_set_theme(dispp, theme);");
+        if (this.isV9) {
+            build.line("lv_display_set_theme(dispp, theme);");
+        } else {
+            build.line("lv_disp_set_theme(dispp, theme);");
+        }
 
         build.line("");
 
