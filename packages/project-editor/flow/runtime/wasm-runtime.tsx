@@ -1573,7 +1573,7 @@ export const WasmCanvas = observer(
                     width={wasmRuntime.displayWidth}
                     height={wasmRuntime.displayHeight}
                     style={
-                        this.context.project.settings.general.circularDisplay
+                        this.context.project.settings.general.circularDisplay && Number.isInteger(wasmRuntime.displayWidth) && Number.isInteger(wasmRuntime.displayHeight)
                             ? {
                                   borderRadius: Math.min(
                                       wasmRuntime.displayWidth,
