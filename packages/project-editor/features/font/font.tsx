@@ -1203,7 +1203,7 @@ export class Font extends EezObject {
     lvglFreeTypeStyle: string;
     lvglFreeTypeFilePath: string;
 
-    _lvglGlyphsDirtyDirty: boolean = true;
+    _lvglGlyphsDirty: boolean = true;
 
     constructor() {
         super();
@@ -1239,7 +1239,7 @@ export class Font extends EezObject {
             lvglFreeTypeRenderMode: observable,
             lvglFreeTypeStyle: observable,
             lvglFreeTypeFilePath: observable,
-            _lvglGlyphsDirtyDirty: observable
+            _lvglGlyphsDirty: observable
         });
     }
 
@@ -1549,6 +1549,11 @@ export class Font extends EezObject {
                     fontJs.lvglFreeTypeRenderMode = "BITMAP";
                 }
             }
+        },
+        afterLoadHook: (font: Font, project) => {
+            try {
+                font.loadLvglFont(project._store, false);
+            } catch (err) { }
         },
         check: (font: Font, messages: IMessage[]) => {
             const projectStore = getProjectStore(font);
@@ -1989,7 +1994,7 @@ export class Font extends EezObject {
         return Math.max(...this.glyphs.map(glyph => glyph.encoding));
     }
 
-    async loadLvglGlyphs(projectStore: ProjectStore) {
+    async loadLvglFont(projectStore: ProjectStore, createGlyphs: boolean) {
         if (
             (!this.lvglRanges && !this.lvglSymbols) ||
             !ProjectEditor.getProjectStore(this) ||
@@ -2014,7 +2019,7 @@ export class Font extends EezObject {
             bpp: this.bpp,
             size: this.source!.size!,
             threshold: this.threshold,
-            createGlyphs: true,
+            createGlyphs,
             encodings,
             symbols,
             createBlankGlyphs: false,
@@ -2025,30 +2030,32 @@ export class Font extends EezObject {
         runInAction(() => {
             this.lvglBinFile = fontProperties.lvglBinFile;
 
-            this.glyphs.splice(0, this.glyphs.length);
-            for (const glyphProperties of fontProperties.glyphs) {
-                const glyph = createObject<Glyph>(
-                    projectStore,
-                    glyphProperties as any,
-                    Glyph
-                );
-                setParent(glyph, this.glyphs);
-                this.glyphs.push(glyph);
-            }
+            if (createGlyphs) {
+                this.glyphs.splice(0, this.glyphs.length);
+                for (const glyphProperties of fontProperties.glyphs) {
+                    const glyph = createObject<Glyph>(
+                        projectStore,
+                        glyphProperties as any,
+                        Glyph
+                    );
+                    setParent(glyph, this.glyphs);
+                    this.glyphs.push(glyph);
+                }
 
-            this._lvglGlyphsDirtyDirty = false;
+                this._lvglGlyphsDirty = false;
+            }
         });
     }
 
     markLvglGlyphsDirty() {
         runInAction(() => {
-            this._lvglGlyphsDirtyDirty = true;
+            this._lvglGlyphsDirty = true;
         });
     }
 
     reloadLvglGlyphs() {
-        if (isLVGLProject(this) && this._lvglGlyphsDirtyDirty) {
-            setTimeout(() => this.loadLvglGlyphs(ProjectEditor.getProjectStore(this)));
+        if (isLVGLProject(this) && this._lvglGlyphsDirty) {
+            setTimeout(() => this.loadLvglFont(ProjectEditor.getProjectStore(this), true));
         }
     }
 
