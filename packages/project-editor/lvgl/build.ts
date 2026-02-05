@@ -2022,7 +2022,7 @@ export class LVGLBuild extends Build {
         }
 
         {
-            const anyExternalFont = this.fonts.some(font => font.lvglUseFreeType || this.project.settings.build.fontExportMode == "binary");            
+            const anyExternalFont = this.fonts.some(font => font.lvglUseFreeType || this.project.settings.build.fontExportMode == "binary");
             if (anyExternalFont) {
                 build.line("// Load external fonts");
 
@@ -2110,7 +2110,7 @@ export class LVGLBuild extends Build {
 
                             build.blockEnd("}");
                         }
-                    } else {
+                    } else if (this.project.settings.build.fontExportMode == "binary") {
                         build.blockStart("{");
 
                         const output = getName(
