@@ -2130,13 +2130,13 @@ export class LVGLBuild extends Build {
                                 `${this.getFontVariableName(font)} = lv_font_load(${escapeCString(`${path}${output}.bin`)});`
                             );
                         }
+
+                        build.blockStart(`if (${this.getFontVariableName(font)}) {`);
                         if (font.lvglFallbackFont) {
                             build.line(
                                 `${this.getFontVariableName(font)}->fallback = &${font.lvglFallbackFont};`
                             );
                         }
-
-                        build.blockStart(`if (${this.getFontVariableName(font)}) {`);
                         build.line(
                             `fonts[${fontIndex}].font_ptr = ${this.getFontVariableName(font)};`
                         );
