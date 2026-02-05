@@ -777,13 +777,11 @@ export class LVGLBuild extends Build {
     getFontAccessor(font: Font) {
         const variableName = this.getFontVariableName(font);
 
-        if (font.lvglUseFreeType) {
+        if (font.lvglUseFreeType || this.project.settings.build.fontExportMode == "binary") {
             return variableName;
         }
 
-        return this.project.settings.build.fontExportMode == "binary"
-            ? variableName
-            : `&${variableName}`;
+        return `&${variableName}`;
     }
 
     getAddStyleFunctionName(style: LVGLStyle) {
@@ -1871,7 +1869,7 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
-                //
+        //
         // fonts
         //
 
@@ -1882,16 +1880,16 @@ export class LVGLBuild extends Build {
         build.line("");
 
         {
-            let anyFontWithFreeType = false;
+            let anyFontDef = false;
 
             for (const font of this.fonts) {
-                if (font.lvglUseFreeType) {
+                if (font.lvglUseFreeType || this.project.settings.build.fontExportMode == "binary") {
                     build.line(`lv_font_t *${this.getFontVariableName(font)};`);
-                    anyFontWithFreeType = true;
+                    anyFontDef = true;
                 }
             }
 
-            if (anyFontWithFreeType) {
+            if (anyFontDef) {
                 build.line("");
             }
         }
@@ -1899,7 +1897,7 @@ export class LVGLBuild extends Build {
         build.blockStart(`ext_font_desc_t fonts[] = {`);
         for (const font of this.fonts) {
             build.line(
-                `{ "${font.name}", ${font.lvglUseFreeType ? "NULL" : this.getFontAccessor(font)} },`
+                `{ "${font.name}", ${font.lvglUseFreeType || this.project.settings.build.fontExportMode == "binary" ? "NULL" : this.getFontAccessor(font)} },`
             );
         }
         for (const font of BUILT_IN_FONTS) {
@@ -1909,17 +1907,6 @@ export class LVGLBuild extends Build {
         }
         build.blockEnd(`};`);
         build.line("");
-
-        if (
-            this.project.settings.build.fontExportMode == "binary" &&
-            this.fonts.length > 0
-        ) {
-            for (const font of this.fonts) {
-                build.line(`lv_font_t *${this.getFontVariableName(font)};`);
-            }
-
-            build.line("");
-        }
 
         //
         // Themes
@@ -2034,133 +2021,141 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
-        if (
-            this.project.settings.build.fontExportMode == "binary" &&
-            this.fonts.length > 0
-        ) {
-            build.line("// Load external fonts");
-            let path = this.project.settings.build.fileSystemPath;
-            if (!path.endsWith("/") && !path.endsWith("\\")) {
-                if (path.indexOf("\\") != -1) path += "\\";
-                else path += "/";
-            }
-
-            for (const font of this.fonts) {
-                const output = getName(
-                    "ui_font_",
-                    font.name || "",
-                    NamingConvention.UnderscoreLowerCase
-                );
-
-                if (this.isV9) {
-                    build.line(
-                        `${this.getFontVariableName(font)} = lv_binfont_create(${escapeCString(
-                            `${path}${output}.bin`
-                        )});`
-                    );
-                } else {
-                    build.line(
-                        `${this.getFontVariableName(font)} = lv_font_load(${escapeCString(`${path}${output}.bin`)});`
-                    );
-                }
-                if (font.lvglFallbackFont) {
-                    build.line(
-                        `${this.getFontVariableName(font)}->fallback = &${font.lvglFallbackFont};`
-                    );
-                }
-            }
-
-            build.line("");
-        }
-
         {
-            let anyFontWithFreeType = false;
+            const anyExternalFont = this.fonts.some(font => font.lvglUseFreeType || this.project.settings.build.fontExportMode == "binary");            
+            if (anyExternalFont) {
+                build.line("// Load external fonts");
 
-            for (
-                let fontIndex = 0;
-                fontIndex < this.fonts.length;
-                fontIndex++
-            ) {
-                const font = this.fonts[fontIndex];
-                if (font.lvglUseFreeType) {
-                    if (this.isV9) {
-                        build.blockStart("{");
+                let path = this.project.settings.build.fileSystemPath;
+                if (!path.endsWith("/") && !path.endsWith("\\")) {
+                    if (path.indexOf("\\") != -1) path += "\\";
+                    else path += "/";
+                }
 
-                        build.line(
-                            `${this.getFontVariableName(font)} = lv_freetype_font_create(${escapeCString(
-                                font.lvglFreeTypeFilePath
-                            )}, ${font.lvglFreeTypeRenderMode == "OUTLINE" ? "LV_FREETYPE_FONT_RENDER_MODE_OUTLINE" : "LV_FREETYPE_FONT_RENDER_MODE_BITMAP"}, ${
-                                font.source!.size
-                            }, ${
-                                font.lvglFreeTypeStyle == "BOLD"
-                                    ? "LV_FREETYPE_FONT_STYLE_BOLD"
-                                    : font.lvglFreeTypeStyle == "ITALIC"
-                                      ? "LV_FREETYPE_FONT_STYLE_ITALIC"
-                                      : font.lvglFreeTypeStyle == "BOLD_ITALIC"
-                                        ? "LV_FREETYPE_FONT_STYLE_BOLD | LV_FREETYPE_FONT_STYLE_ITALIC"
-                                        : "LV_FREETYPE_FONT_STYLE_NORMAL"
-                            });`
-                        );
 
-                        build.line(
-                            `fonts[${fontIndex}].font_ptr = ${this.getFontVariableName(font)};`
-                        );
+                for (let fontIndex = 0; fontIndex < this.fonts.length; fontIndex++) {
+                    const font = this.fonts[fontIndex];
+                    if (font.lvglUseFreeType) {
+                        if (this.isV9) {
+                            build.blockStart("{");
 
-                        build.blockStart(
-                            `if (!${this.getFontVariableName(font)}) {`
-                        );
-                        build.line(
-                            `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`
-                        );
-                        build.blockEnd("}");
+                            build.line(
+                                `${this.getFontVariableName(font)} = lv_freetype_font_create(${escapeCString(
+                                    font.lvglFreeTypeFilePath
+                                )}, ${font.lvglFreeTypeRenderMode == "OUTLINE" ? "LV_FREETYPE_FONT_RENDER_MODE_OUTLINE" : "LV_FREETYPE_FONT_RENDER_MODE_BITMAP"}, ${
+                                    font.source!.size
+                                }, ${
+                                    font.lvglFreeTypeStyle == "BOLD"
+                                        ? "LV_FREETYPE_FONT_STYLE_BOLD"
+                                        : font.lvglFreeTypeStyle == "ITALIC"
+                                        ? "LV_FREETYPE_FONT_STYLE_ITALIC"
+                                        : font.lvglFreeTypeStyle == "BOLD_ITALIC"
+                                            ? "LV_FREETYPE_FONT_STYLE_BOLD | LV_FREETYPE_FONT_STYLE_ITALIC"
+                                            : "LV_FREETYPE_FONT_STYLE_NORMAL"
+                                });`
+                            );
 
-                        build.blockEnd("}");
+                            build.blockStart(
+                                `if (${this.getFontVariableName(font)}) {`
+                            );
+                            build.line(
+                                `fonts[${fontIndex}].font_ptr = ${this.getFontVariableName(font)};`
+                            );
+                            build.unindent();
+                            build.line("} else {");
+                            build.indent();
+                            build.line(
+                                `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`
+                            );
+                            build.blockEnd("}");
+
+
+                            build.blockEnd("}");
+                        } else {
+                            build.blockStart("{");
+
+                            build.line(`lv_ft_info_t info;`);
+
+                            build.line(
+                                `info.name = ${escapeCString(font.lvglFreeTypeFilePath)};`
+                            );
+                            build.line(`info.weight = ${font.source!.size};`);
+                            build.line(
+                                `info.style = ${
+                                    font.lvglFreeTypeStyle == "BOLD"
+                                        ? "FT_FONT_STYLE_BOLD"
+                                        : font.lvglFreeTypeStyle == "ITALIC"
+                                        ? "FT_FONT_STYLE_ITALIC"
+                                        : font.lvglFreeTypeStyle == "BOLD_ITALIC"
+                                            ? "FT_FONT_STYLE_BOLD | FT_FONT_STYLE_ITALIC"
+                                            : "FT_FONT_STYLE_NORMAL"
+                                };`
+                            );
+                            build.line(`info.mem = 0;`);
+
+                            build.blockStart(`if (lv_ft_font_init(&info)) {`);
+                            build.line(
+                                `${this.getFontVariableName(font)} = info.font;`
+                            );
+                            build.line(
+                                `fonts[${fontIndex}].font_ptr = ${this.getFontVariableName(font)};`
+                            );
+                            build.unindent();
+                            build.line("} else {");
+                            build.indent();
+                            build.line(
+                                `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`
+                            );
+                            build.blockEnd("}");
+
+                            build.blockEnd("}");
+                        }
                     } else {
                         build.blockStart("{");
 
-                        build.line(`lv_ft_info_t info;`);
-
-                        build.line(
-                            `info.name = ${escapeCString(font.lvglFreeTypeFilePath)};`
+                        const output = getName(
+                            "ui_font_",
+                            font.name || "",
+                            NamingConvention.UnderscoreLowerCase
                         );
-                        build.line(`info.weight = ${font.source!.size};`);
-                        build.line(
-                            `info.style = ${
-                                font.lvglFreeTypeStyle == "BOLD"
-                                    ? "FT_FONT_STYLE_BOLD"
-                                    : font.lvglFreeTypeStyle == "ITALIC"
-                                      ? "FT_FONT_STYLE_ITALIC"
-                                      : font.lvglFreeTypeStyle == "BOLD_ITALIC"
-                                        ? "FT_FONT_STYLE_BOLD | FT_FONT_STYLE_ITALIC"
-                                        : "FT_FONT_STYLE_NORMAL"
-                            };`
-                        );
-                        build.line(`info.mem = 0;`);
 
-                        build.blockStart(`if (!lv_ft_font_init(&info)) {`);
+                        if (this.isV9) {
+                            build.line(
+                                `${this.getFontVariableName(font)} = lv_binfont_create(${escapeCString(
+                                    `${path}${output}.bin`
+                                )});`
+                            );
+                        } else {
+                            build.line(
+                                `${this.getFontVariableName(font)} = lv_font_load(${escapeCString(`${path}${output}.bin`)});`
+                            );
+                        }
+                        if (font.lvglFallbackFont) {
+                            build.line(
+                                `${this.getFontVariableName(font)}->fallback = &${font.lvglFallbackFont};`
+                            );
+                        }
+
+                        build.blockStart(`if (${this.getFontVariableName(font)}) {`);
                         build.line(
-                            `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`
+                            `fonts[${fontIndex}].font_ptr = ${this.getFontVariableName(font)};`
                         );
                         build.unindent();
                         build.line("} else {");
                         build.indent();
                         build.line(
-                            `${this.getFontVariableName(font)} = info.font;`
+                            `LV_LOG_ERROR("font create failed: ${this.getFontVariableName(font)}");`
                         );
                         build.blockEnd("}");
 
-                        //return info->font;
+
 
                         build.blockEnd("}");
                     }
-
-                    anyFontWithFreeType = true;
                 }
             }
 
-            if (anyFontWithFreeType) {
-                build.line("");
-            }
+            build.line("");
         }
 
         if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {

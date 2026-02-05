@@ -702,7 +702,8 @@ export class ProjectStore {
                             extensions: ["eez-project"]
                         },
                         { name: "All Files", extensions: ["*"] }
-                    ]
+                    ],
+                    defaultPath: this.filePath
                 });
                 let filePath = result.filePath;
                 if (filePath) {

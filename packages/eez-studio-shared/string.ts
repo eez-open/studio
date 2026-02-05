@@ -96,8 +96,8 @@ export function camelize(string: string): string {
 }
 
 export function stringCompare(a: string, b: string) {
-    a = a.toLocaleLowerCase();
-    b = b.toLocaleLowerCase();
+    a = (a??"").toLocaleLowerCase();
+    b = (b??"").toLocaleLowerCase();
     return a < b ? -1 : a > b ? 1 : 0;
 }
 

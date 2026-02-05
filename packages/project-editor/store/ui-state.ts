@@ -54,6 +54,8 @@ export class UIStateStore {
 
     implementationLanguage = "C";
 
+    openDialogDefaultPath: string | undefined;
+
     get pageEditorFrontFace() {
         return this._pageEditorFrontFace;
     }
@@ -252,6 +254,10 @@ export class UIStateStore {
             if (uiState.implementationLanguage != undefined) {
                 this.implementationLanguage = uiState.implementationLanguage;
             }
+
+            if (uiState.openDialogDefaultPath != undefined) {
+                this.openDialogDefaultPath = uiState.openDialogDefaultPath;
+            }
         });
     }
 
@@ -316,7 +322,8 @@ export class UIStateStore {
             showInactiveFlowsInDebugger: this.showFinishedFlowsInDebugger,
             globalFlowZoom: this.globalFlowZoom,
             flowZoom: this.flowZoom,
-            implementationLanguage: this.implementationLanguage
+            implementationLanguage: this.implementationLanguage,
+            openDialogDefaultPath: this.openDialogDefaultPath
         };
 
         return state;

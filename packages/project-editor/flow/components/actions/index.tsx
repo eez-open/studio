@@ -4255,7 +4255,8 @@ export class CommentActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_COMMENT_ACTION,
 
-        label: (object: CommentActionComponent) => object.description,
+        label: (object: CommentActionComponent) => 
+            object.description || "Comment",
 
         properties: [
             {

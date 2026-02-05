@@ -1070,12 +1070,14 @@ export const Property = observer(
                                                     {
                                                         properties: [
                                                             "openDirectory"
-                                                        ]
+                                                        ],
+                                                        defaultPath: this.context.uiStateStore.openDialogDefaultPath || this.context.filePath
                                                     }
                                                 );
 
                                             const filePaths = result.filePaths;
                                             if (filePaths && filePaths[0]) {
+                                                this.context.uiStateStore.openDialogDefaultPath = result.filePaths[0];
                                                 this.changeValue(
                                                     this.context.getFolderPathRelativeToProjectPath(
                                                         filePaths[0]
@@ -1169,12 +1171,14 @@ export const Property = observer(
                                                             "openFile"
                                                         ],
                                                         filters:
-                                                            propertyInfo.fileFilters
+                                                            propertyInfo.fileFilters,
+                                                        defaultPath: this.context.uiStateStore.openDialogDefaultPath || this.context.filePath
                                                     }
                                                 );
 
                                             const filePaths = result.filePaths;
                                             if (filePaths && filePaths[0]) {
+                                                this.context.uiStateStore.openDialogDefaultPath = result.filePaths[0];
                                                 this.changeValue(
                                                     this.context.getFolderPathRelativeToProjectPath(
                                                         filePaths[0]

@@ -18,10 +18,12 @@ export class RelativeFileInput extends FieldComponent {
     onSelect = async () => {
         const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openFile"],
-            filters: this.props.fieldProperties.options.filters
+            filters: this.props.fieldProperties.options.filters,
+            defaultPath: this.context.uiStateStore.openDialogDefaultPath || this.context.filePath
         });
 
         if (result.filePaths && result.filePaths[0]) {
+            this.context.uiStateStore.openDialogDefaultPath = result.filePaths[0];
             this.props.onChange(
                 this.context.getFilePathRelativeToProjectPath(
                     result.filePaths[0]
@@ -83,10 +85,12 @@ export class AbsoluteFileInput extends FieldComponent {
     onSelect = async () => {
         const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openFile"],
-            filters: this.props.fieldProperties.options.filters
+            filters: this.props.fieldProperties.options.filters,
+            defaultPath: this.context.uiStateStore.openDialogDefaultPath || this.context.filePath
         });
 
         if (result.filePaths && result.filePaths[0]) {
+            this.context.uiStateStore.openDialogDefaultPath = result.filePaths[0];
             this.props.onChange(result.filePaths[0]);
         }
     };
@@ -144,10 +148,12 @@ export class MultipleAbsoluteFileInput extends FieldComponent {
     onSelect = async () => {
         const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openFile", "multiSelections"],
-            filters: this.props.fieldProperties.options.filters
+            filters: this.props.fieldProperties.options.filters,
+            defaultPath: this.context.uiStateStore.openDialogDefaultPath || this.context.filePath
         });
 
         if (result.filePaths && result.filePaths.length > 0) {
+            this.context.uiStateStore.openDialogDefaultPath = result.filePaths[0];
             this.props.onChange(result.filePaths);
         }
     };
@@ -216,10 +222,12 @@ export class AbsoluteFileSaveInput extends FieldComponent {
     onSelect = async () => {
         const result = await dialog.showSaveDialog(getCurrentWindow(), {
             properties: ["showOverwriteConfirmation"],
-            filters: this.props.fieldProperties.options.filters
+            filters: this.props.fieldProperties.options.filters,
+            defaultPath: this.context.uiStateStore.openDialogDefaultPath || this.context.filePath
         });
 
         if (result.filePath) {
+            this.context.uiStateStore.openDialogDefaultPath = result.filePath;
             this.props.onChange(result.filePath);
         }
     };

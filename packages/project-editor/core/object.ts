@@ -248,7 +248,6 @@ export interface PropertyInfo {
         object: IEezObject,
         propertyInfo: PropertyInfo
     ) => string;
-    defaultImagesPath?: (projectStore: ProjectStore) => string | undefined;
     partOfNavigation?: boolean;
     fileFilters?: any;
 

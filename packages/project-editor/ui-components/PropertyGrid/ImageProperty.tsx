@@ -119,16 +119,12 @@ export const ImageProperty = observer(
                                                     extensions: ["*"]
                                                 }
                                             ],
-                                            defaultPath:
-                                                propertyInfo.defaultImagesPath
-                                                    ? propertyInfo.defaultImagesPath(
-                                                          this.context
-                                                      )
-                                                    : undefined
+                                            defaultPath: this.context.uiStateStore.openDialogDefaultPath || this.context.filePath
                                         }
                                     );
                                     const filePaths = result.filePaths;
                                     if (filePaths && filePaths[0]) {
+                                        this.context.uiStateStore.openDialogDefaultPath = result.filePaths[0];
                                         if (
                                             propertyInfo.embeddedImage == true
                                         ) {
