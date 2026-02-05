@@ -1276,7 +1276,7 @@ export class LVGLBuild extends Build {
             );
         }
         build.line(
-            `_SCREEN_ID_LAST = ${pages.length + 1}`
+            `_SCREEN_ID_LAST = ${pages.length}`
         );
         build.blockEnd(`};`);
         build.line("");
