@@ -1938,8 +1938,7 @@ export class LVGLWidget extends Widget {
                     code.lvglBuild.assets.markLvglStyleUsed(lvglStyle);
                     code.lvglBuild.line(`${code.lvglBuild.getAddStyleFunctionName(lvglStyle)}(obj);`);
                 } else {
-                    const runtime = code.pageRuntime!;
-                    lvglStyle.lvglCreateLocalStyles(runtime, this, code.objectAccessor);
+                    lvglStyle.lvglAddStyleToObject(code.pageRuntime!, code.objectAccessor);
                 }
             }
         }

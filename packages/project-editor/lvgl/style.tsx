@@ -43,7 +43,6 @@ import {
     lvglPropertiesMap,
     text_font_property_info
 } from "project-editor/lvgl/style-catalog";
-import type { LVGLWidget } from "project-editor/lvgl/widgets";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -446,17 +445,6 @@ export class LVGLStyle extends EezObject {
         }
 
         return fullDefinition;
-    }
-
-    lvglCreateLocalStyles(
-        runtime: LVGLPageRuntime,
-        widget: LVGLWidget,
-        obj: number
-    ) {
-        if (this.parentStyle) {
-            this.parentStyle.lvglCreateLocalStyles(runtime, widget, obj);
-        }
-        this.definition.lvglCreate(runtime, widget, obj);
     }
 
     lvglCreateStyles(runtime: LVGLPageRuntime) {
