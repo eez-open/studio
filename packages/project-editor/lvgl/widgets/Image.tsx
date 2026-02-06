@@ -26,7 +26,7 @@ import {
     propertyNotFoundMessage
 } from "project-editor/store";
 import { getComponentName } from "project-editor/flow/components/components-registry";
-import { LV_IMAGE_ALIGN, LV_IMAGE_SIZE_MODE } from "../lvgl-constants";
+import { LV_IMAGE_ALIGN, LV_IMG_SIZE_MODE } from "../lvgl-constants";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,7 +39,7 @@ export class LVGLImageWidget extends LVGLWidget {
     zoom: number;
     angle: number;
     innerAlign: keyof typeof LV_IMAGE_ALIGN;
-    sizeMode: keyof typeof LV_IMAGE_SIZE_MODE;
+    sizeMode: keyof typeof LV_IMG_SIZE_MODE;
     value: number | string;
     valueType: LVGLPropertyType;
     previewValue: string;
@@ -124,7 +124,7 @@ export class LVGLImageWidget extends LVGLWidget {
             {
                 name: "sizeMode",
                 type: PropertyType.Enum,
-                enumItems: Object.keys(LV_IMAGE_SIZE_MODE).map(id => ({
+                enumItems: Object.keys(LV_IMG_SIZE_MODE).map(id => ({
                     id,
                     label: id
                 })),
@@ -414,7 +414,7 @@ export class LVGLImageWidget extends LVGLWidget {
                 if (this.sizeMode != "VIRTUAL") {
                     code.callObjectFunction(
                         "lv_img_set_size_mode",
-                        code.constant(`LV_IMAGE_SIZE_MODE_${this.sizeMode}`)
+                        code.constant(`LV_IMG_SIZE_MODE_${this.sizeMode}`)
                     );
                 }
             }

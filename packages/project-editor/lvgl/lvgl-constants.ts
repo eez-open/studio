@@ -681,7 +681,7 @@ export const LV_IMAGE_ALIGN = {
 };
 
 // _lv_image_align_t
-export const LV_IMAGE_SIZE_MODE = {
+export const LV_IMG_SIZE_MODE = {
     VIRTUAL: 0,
     REAL: 1
 };
