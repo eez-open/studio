@@ -680,6 +680,12 @@ export const LV_IMAGE_ALIGN = {
     TILE: 12
 };
 
+// _lv_image_align_t
+export const LV_IMAGE_SIZE_MODE = {
+    VIRTUAL: 0,
+    REAL: 1
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const LV_SCR_LOAD_ANIM_NONE = 0;
@@ -769,6 +775,9 @@ export const LVGL_CONSTANTS_ALL = {
     LV_IMAGE_ALIGN_AUTO_TRANSFORM: 10,
     LV_IMAGE_ALIGN_STRETCH: 11,
     LV_IMAGE_ALIGN_TILE: 12,
+
+    LV_IMAGE_SIZE_MODE_VIRTUAL: 0,
+    LV_IMAGE_SIZE_MODE_REAL: 1,
 
     LV_IMAGEBUTTON_STATE_RELEASED: 0,
     LV_IMAGEBUTTON_STATE_PRESSED: 1,

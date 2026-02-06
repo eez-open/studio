@@ -26,7 +26,7 @@ import {
     propertyNotFoundMessage
 } from "project-editor/store";
 import { getComponentName } from "project-editor/flow/components/components-registry";
-import { LV_IMAGE_ALIGN } from "../lvgl-constants";
+import { LV_IMAGE_ALIGN, LV_IMAGE_SIZE_MODE } from "../lvgl-constants";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,6 +39,7 @@ export class LVGLImageWidget extends LVGLWidget {
     zoom: number;
     angle: number;
     innerAlign: keyof typeof LV_IMAGE_ALIGN;
+    sizeMode: keyof typeof LV_IMAGE_SIZE_MODE;
     value: number | string;
     valueType: LVGLPropertyType;
     previewValue: string;
@@ -120,6 +121,20 @@ export class LVGLImageWidget extends LVGLWidget {
                     ProjectEditor.getProject(widget).settings.general
                         .lvglVersion.startsWith("8.")
             },
+            {
+                name: "sizeMode",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(LV_IMAGE_SIZE_MODE).map(id => ({
+                    id,
+                    label: id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (widget: LVGLImageWidget) =>
+                    widget.isScaleNeedle ||
+                    ProjectEditor.getProject(widget).settings.general
+                        .lvglVersion.startsWith("9.")
+            },
             ...makeLvglExpressionProperty(
                 "value",
                 "integer",
@@ -166,6 +181,10 @@ export class LVGLImageWidget extends LVGLWidget {
         ) => {
             if (jsObject.innerAlign == undefined) {
                 jsObject.innerAlign = "CENTER";
+            }
+
+            if (jsObject.sizeMode == undefined) {
+                jsObject.sizeMode = "VIRTUAL";
             }
 
             if (jsObject.setPivot == undefined) {
@@ -246,6 +265,7 @@ export class LVGLImageWidget extends LVGLWidget {
             zoom: observable,
             angle: observable,
             innerAlign: observable,
+            sizeMode: observable,
             value: observable,
             valueType: observable,
             previewValue: observable
@@ -383,11 +403,20 @@ export class LVGLImageWidget extends LVGLWidget {
                 );
             }
 
-            if (code.isV9 && this.innerAlign != "CENTER") {
-                code.callObjectFunction(
-                    "lv_image_set_inner_align",
-                    code.constant(`LV_IMAGE_ALIGN_${this.innerAlign}`)
-                );
+            if (code.isV9) {
+                if (this.innerAlign != "CENTER") {
+                    code.callObjectFunction(
+                        "lv_image_set_inner_align",
+                        code.constant(`LV_IMAGE_ALIGN_${this.innerAlign}`)
+                    );
+                }
+            } else {
+                if (this.sizeMode != "VIRTUAL") {
+                    code.callObjectFunction(
+                        "lv_img_set_size_mode",
+                        code.constant(`LV_IMAGE_SIZE_MODE_${this.sizeMode}`)
+                    );
+                }
             }
         }
     }
