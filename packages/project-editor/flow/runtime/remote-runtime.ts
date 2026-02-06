@@ -845,7 +845,7 @@ export abstract class DebuggerConnectionBase {
                             this.runtime.freeMemory = parseInt(
                                 messageParameters[6]
                             );
-                            this.runtime.totalMemory = parseInt(
+                            this.runtime.totalMemory = this.runtime.freeMemory + parseInt(
                                 messageParameters[7]
                             );
                         });

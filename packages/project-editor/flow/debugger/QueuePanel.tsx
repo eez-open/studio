@@ -7,6 +7,7 @@ import { QueueTask, RuntimeBase } from "project-editor/flow/runtime/runtime";
 import { IconAction } from "eez-studio-ui/action";
 import { DebugInfoRuntime } from "project-editor/flow//runtime/debug-info-runtime";
 import { getQueueTaskLabel } from "project-editor/flow/debugger/logs";
+import { isLVGLProject } from "project-editor/project/project-type-traits";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -22,11 +23,17 @@ export const QueuePanel = observer(
                     <Panel
                         id="project-editor/debugger/queue"
                         title={
-                            this.props.runtime.totalMemory != 0
-                                ? `Memory usage: ${memAlloc} of ${memTotal} (${Math.round(
-                                      (memAlloc * 100) / memTotal
-                                  )}%)`
-                                : ""
+                            isLVGLProject(
+                                this.props.runtime.projectStore.project
+                            )
+                                ? this.props.runtime.totalMemory != 0
+                                    ? `Memory usage: ${memAlloc}`
+                                    : ""
+                                : this.props.runtime.totalMemory != 0
+                                  ? `Memory usage: ${memAlloc} of ${memTotal} (${Math.round(
+                                        (memAlloc * 100) / memTotal
+                                    )}%)`
+                                  : ""
                         }
                         buttons={
                             this.props.runtime instanceof DebugInfoRuntime
