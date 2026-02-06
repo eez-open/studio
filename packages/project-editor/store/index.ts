@@ -1238,6 +1238,11 @@ export class ProjectStore {
         }
 
         this.editorsStore?.refresh(true);
+
+        // Also exit full simulator mode if active
+        if (this.layoutModels.isDockerSimulatorMode) {
+            this.onExitFullSimulatorMode();
+        }        
     }
 
     async setEditorMode(force: boolean = false) {
