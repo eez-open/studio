@@ -31,7 +31,6 @@ import { getSelectorBuildCode } from "project-editor/lvgl/style-helper";
 import type { LVGLGroup } from "./groups";
 import tinycolor from "tinycolor2";
 import { GENERATED_NAME_PREFIX } from "./identifiers";
-import type { Flow } from "project-editor/flow/flow";
 import { escapeCString, isGeometryControlledByParent } from "./widget-common";
 import { BuildLVGLCode } from "project-editor/lvgl/to-lvgl-code";
 import { cleanupSourceFile } from "project-editor/build/cleanup-c-source-files";
@@ -49,8 +48,24 @@ interface StateVar {
     id: string;
     varType: string;
     varName: string;
-    userWidgetPage: Page|undefined;
-};
+    userWidgetPage: Page | undefined;
+}
+
+interface UpdateColorCallback {
+    object: IEezObject;
+    callback: () => void;
+}
+
+interface UpdateColorCallbackForPage {
+    page: Page;
+    updateColorCallbacks: UpdateColorCallback[];
+    updateColorCallbackForUserWidgets: UpdateColorCallbackForUserWidget[];
+}
+
+interface UpdateColorCallbackForUserWidget {
+    lvglUserWidget: LVGLUserWidgetWidget;
+    updateColorsForPage: UpdateColorCallbackForPage;
+}
 
 export class LVGLBuild extends Build {
     project: Project;
@@ -86,10 +101,7 @@ export class LVGLBuild extends Build {
         fromUserWidgets: new Map()
     };
 
-    updateColorCallbacks: {
-        object: IEezObject;
-        callback: () => void;
-    }[] = [];
+    updateColorCallbacks: UpdateColorCallback[] = [];
 
     stateVars: Map<Page, StateVar[]> = new Map();
     pagesWithStateVars: Page[] = [];
@@ -145,7 +157,7 @@ export class LVGLBuild extends Build {
 
         const stateVars = new Map(this.stateVars);
         for (const [key, value] of stateVars) {
-            stateVars.set(key, value.slice() );
+            stateVars.set(key, value.slice());
         }
 
         const globalVars = this.globalVars.slice();
@@ -160,7 +172,7 @@ export class LVGLBuild extends Build {
 
         const postBuildCallbacks = this.postBuildCallbacks.slice();
 
-        const functions = {...this.functions};
+        const functions = { ...this.functions };
 
         await this.buildScreensDef();
 
@@ -777,7 +789,10 @@ export class LVGLBuild extends Build {
     getFontAccessor(font: Font) {
         const variableName = this.getFontVariableName(font);
 
-        if (font.lvglUseFreeType || this.project.settings.build.fontExportMode == "binary") {
+        if (
+            font.lvglUseFreeType ||
+            this.project.settings.build.fontExportMode == "binary"
+        ) {
             return variableName;
         }
 
@@ -940,10 +955,7 @@ export class LVGLBuild extends Build {
             this.stateVars.set(this.currentPage, pageStateVars);
         }
 
-
-        let stateVar = pageStateVars.find(
-            stateVar => stateVar.id == id
-        );
+        let stateVar = pageStateVars.find(stateVar => stateVar.id == id);
         if (!stateVar) {
             let varName: string;
             if (prefixName.endsWith("!")) {
@@ -951,7 +963,11 @@ export class LVGLBuild extends Build {
             } else {
                 varName = prefixName;
                 let suffix = 0;
-                while (pageStateVars.find(pageStateVar => pageStateVar.varName == varName)) {
+                while (
+                    pageStateVars.find(
+                        pageStateVar => pageStateVar.varName == varName
+                    )
+                ) {
                     suffix += 1;
                     varName = prefixName + suffix;
                 }
@@ -979,7 +995,7 @@ export class LVGLBuild extends Build {
             "",
             page.name,
             NamingConvention.UnderscoreLowerCase
-        );        
+        );
         return `${page.isUsedAsUserWidget ? "user_widget" : "screen"}_${userWidgetPageName}_state_t`;
     }
 
@@ -988,22 +1004,34 @@ export class LVGLBuild extends Build {
             "",
             page.name,
             NamingConvention.UnderscoreLowerCase
-        );        
+        );
         return `screen_${userWidgetPageName}_state`;
     }
 
-    getUserWidgetStateParam(userWidget: LVGLUserWidgetWidget) {
+    getUserWidgetStateVarName(userWidget: LVGLUserWidgetWidget) {
         const pageStateVars = this.stateVars.get(this.currentPage);
         if (!pageStateVars) {
             return "";
         }
 
-        const stateVar = pageStateVars.find(stateVar => stateVar.id == userWidget.objID);
+        const stateVar = pageStateVars.find(
+            stateVar => stateVar.id == userWidget.objID
+        );
         if (!stateVar) {
             return "";
         }
 
-        return `, &state->${stateVar.varName}`;
+        return stateVar.varName;
+    }
+
+    getUserWidgetStateParam(userWidget: LVGLUserWidgetWidget) {
+        const userWidgetStateVarName =
+            this.getUserWidgetStateVarName(userWidget);
+        if (!userWidgetStateVarName) {
+            return "";
+        }
+
+        return `, &state->${userWidgetStateVarName}`;
     }
 
     // Ensure that state vars are created in correct order.
@@ -1044,6 +1072,25 @@ export class LVGLBuild extends Build {
             pages.splice(usedInPageIndex, 0, page);
         }
 
+        const userWidgetHasState = (page: Page) => {
+            if (this.stateVars.get(page)) {
+                return true;
+            }
+
+            for (const widget of visitObjects(page)) {
+                if (widget instanceof ProjectEditor.LVGLUserWidgetWidgetClass) {
+                    if (
+                        widget.userWidgetPage &&
+                        userWidgetHasState(widget.userWidgetPage)
+                    ) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        };
+
         let done = false;
         while (!done) {
             done = true;
@@ -1055,8 +1102,14 @@ export class LVGLBuild extends Build {
                 }
 
                 for (const widget of visitObjects(page)) {
-                    if (widget instanceof ProjectEditor.LVGLUserWidgetWidgetClass) {
-                        if (widget.userWidgetPage && this.stateVars.get(widget.userWidgetPage)) {
+                    if (
+                        widget instanceof
+                        ProjectEditor.LVGLUserWidgetWidgetClass
+                    ) {
+                        if (
+                            widget.userWidgetPage &&
+                            userWidgetHasState(widget.userWidgetPage)
+                        ) {
                             const userWidgetPageName = getName(
                                 "",
                                 widget.userWidgetPage.name,
@@ -1072,16 +1125,27 @@ export class LVGLBuild extends Build {
 
                             let id = widget.objID;
 
-                            let stateVar = pageStateVars.find(stateVar => stateVar.id == id);
+                            let stateVar = pageStateVars.find(
+                                stateVar => stateVar.id == id
+                            );
                             if (!stateVar) {
                                 // create state var for user widget
                                 let varName: string;
                                 if (widget.identifier) {
-                                    varName = getName("", widget.identifier, NamingConvention.UnderscoreLowerCase);;
+                                    varName = getName(
+                                        "",
+                                        widget.identifier,
+                                        NamingConvention.UnderscoreLowerCase
+                                    );
                                 } else {
                                     let suffix = 1;
                                     varName = `${userWidgetPageName}${suffix}_state`;
-                                    while (pageStateVars.find(pageStateVar => pageStateVar.varName == varName)) {
+                                    while (
+                                        pageStateVars.find(
+                                            pageStateVar =>
+                                                pageStateVar.varName == varName
+                                        )
+                                    ) {
                                         suffix += 1;
                                         varName = `${userWidgetPageName}${suffix}_state`;
                                     }
@@ -1089,11 +1153,14 @@ export class LVGLBuild extends Build {
 
                                 pageStateVars.push({
                                     id,
-                                    varType: this.getStateStructName(widget.userWidgetPage) + " ",
+                                    varType:
+                                        this.getStateStructName(
+                                            widget.userWidgetPage
+                                        ) + " ",
                                     varName,
                                     userWidgetPage: widget.userWidgetPage
                                 });
-    
+
                                 insertPage(widget.userWidgetPage, page);
                             }
                         }
@@ -1105,7 +1172,12 @@ export class LVGLBuild extends Build {
         this.pagesWithStateVars = pages;
     }
 
-    declareGlobalVar(id: string, varType: string, prefixName: string, isStatic: boolean) {
+    declareGlobalVar(
+        id: string,
+        varType: string,
+        prefixName: string,
+        isStatic: boolean
+    ) {
         let globalVar = this.globalVars.find(globalVar => globalVar.id == id);
         if (globalVar) {
             return globalVar.varName;
@@ -1117,14 +1189,16 @@ export class LVGLBuild extends Build {
         } else {
             varName = prefixName;
             let suffix = 0;
-            while (this.globalVars.find(globalVar => globalVar.varName == varName)) {
+            while (
+                this.globalVars.find(globalVar => globalVar.varName == varName)
+            ) {
                 suffix += 1;
                 varName = prefixName + suffix;
             }
         }
 
         this.globalVars.push({ id, varType, varName, isStatic });
-        
+
         return varName;
     }
 
@@ -1232,25 +1306,33 @@ export class LVGLBuild extends Build {
 
         // Add the function that creates the animation
         const build = this;
-        this.addFunction(funcName, () => {
-            build.blockStart(`lv_anim_t *${funcName}() {`);
-            build.blockStart(`if (!${animInitializedVar}) {`);
-            build.line(`lv_anim_init(&${animVar});`);
-            if (setDelay) {
-                build.line(`lv_anim_set_delay(&${animVar}, ${delay});`);
-            }
-            if (setRepeatDelay) {
-                build.line(`lv_anim_set_repeat_delay(&${animVar}, ${repeatDelay});`);
-            }
-            if (setRepeatCount) {
-                build.line(`lv_anim_set_repeat_count(&${animVar}, ${repeatCount});`);
-            }
-            build.line(`${animInitializedVar} = true;`);
-            build.blockEnd(`}`);
-            build.line(`return &${animVar};`);
-            build.blockEnd(`}`);
-            build.line("");
-        }, `lv_anim_t *${funcName}();`);
+        this.addFunction(
+            funcName,
+            () => {
+                build.blockStart(`lv_anim_t *${funcName}() {`);
+                build.blockStart(`if (!${animInitializedVar}) {`);
+                build.line(`lv_anim_init(&${animVar});`);
+                if (setDelay) {
+                    build.line(`lv_anim_set_delay(&${animVar}, ${delay});`);
+                }
+                if (setRepeatDelay) {
+                    build.line(
+                        `lv_anim_set_repeat_delay(&${animVar}, ${repeatDelay});`
+                    );
+                }
+                if (setRepeatCount) {
+                    build.line(
+                        `lv_anim_set_repeat_count(&${animVar}, ${repeatCount});`
+                    );
+                }
+                build.line(`${animInitializedVar} = true;`);
+                build.blockEnd(`}`);
+                build.line(`return &${animVar};`);
+                build.blockEnd(`}`);
+                build.line("");
+            },
+            `lv_anim_t *${funcName}();`
+        );
 
         return `${funcName}()`;
     }
@@ -1267,17 +1349,13 @@ export class LVGLBuild extends Build {
         // enum ScreensEnum
         build.blockStart(`enum ScreensEnum {`);
         const pages = this.pages.filter(page => !page.isUsedAsUserWidget);
-        build.line(
-            `_SCREEN_ID_FIRST = 1,`
-        );
+        build.line(`_SCREEN_ID_FIRST = 1,`);
         for (let i = 0; i < pages.length; i++) {
             build.line(
                 `SCREEN_ID_${this.getScreenIdentifier(pages[i]).toUpperCase()} = ${i + 1},`
             );
         }
-        build.line(
-            `_SCREEN_ID_LAST = ${pages.length}`
-        );
+        build.line(`_SCREEN_ID_LAST = ${pages.length}`);
         build.blockEnd(`};`);
         build.line("");
 
@@ -1314,7 +1392,9 @@ export class LVGLBuild extends Build {
             for (const page of this.pagesWithStateVars) {
                 if (!page.isUsedAsUserWidget) {
                     if (this.stateVars.get(page)!) {
-                        build.line(`extern ${this.getStateStructName(page)} ${this.getScreenStateVarName(page)};`);
+                        build.line(
+                            `extern ${this.getStateStructName(page)} ${this.getScreenStateVarName(page)};`
+                        );
                     }
                 }
             }
@@ -1491,7 +1571,9 @@ export class LVGLBuild extends Build {
             for (const page of this.pagesWithStateVars) {
                 if (!page.isUsedAsUserWidget) {
                     if (this.stateVars.get(page)) {
-                        build.line(`${this.getStateStructName(page)} ${this.getScreenStateVarName(page)};`);
+                        build.line(
+                            `${this.getStateStructName(page)} ${this.getScreenStateVarName(page)};`
+                        );
                     }
                 }
             }
@@ -1506,7 +1588,9 @@ export class LVGLBuild extends Build {
             build.line("");
             for (const globalVar of this.globalVars) {
                 if (globalVar.isStatic) {
-                    build.line(`static ${globalVar.varType} ${globalVar.varName};`);
+                    build.line(
+                        `static ${globalVar.varType} ${globalVar.varName};`
+                    );
                 } else {
                     build.line(`${globalVar.varType} ${globalVar.varName};`);
                 }
@@ -1519,7 +1603,7 @@ export class LVGLBuild extends Build {
 
         if (Object.values(this.functions).length > 0) {
             build.line("");
-            build.line("//");            
+            build.line("//");
             build.line("// Helper functions");
             build.line("//");
             build.line("");
@@ -1655,9 +1739,11 @@ export class LVGLBuild extends Build {
                     `void ${this.getScreenCreateFunctionName(page)}() {`
                 );
                 if (this.stateVars.get(page)) {
-                    build.line(`${this.getStateStructName(page)} *state = &${this.getScreenStateVarName(page)};`);
+                    build.line(
+                        `${this.getStateStructName(page)} *state = &${this.getScreenStateVarName(page)};`
+                    );
                     build.line(`(void)state;`);
-                }                
+                }
             }
 
             this.objectAccessors = [];
@@ -1718,9 +1804,14 @@ export class LVGLBuild extends Build {
                         if (stateVars) {
                             for (const stateVar of stateVars) {
                                 if (stateVar.userWidgetPage) {
-                                    cleanStateVars(stateVar.userWidgetPage, `${prefix}.${stateVar.varName}`);
+                                    cleanStateVars(
+                                        stateVar.userWidgetPage,
+                                        `${prefix}.${stateVar.varName}`
+                                    );
                                 } else {
-                                    build.line(`${prefix}.${stateVar.varName} = 0;`);
+                                    build.line(
+                                        `${prefix}.${stateVar.varName} = 0;`
+                                    );
                                 }
                             }
                         }
@@ -1764,9 +1855,11 @@ export class LVGLBuild extends Build {
                     `void ${this.getScreenTickFunctionName(page)}() {`
                 );
                 if (this.stateVars.get(page)) {
-                    build.line(`${this.getStateStructName(page)} *state = &${this.getScreenStateVarName(page)};`);
+                    build.line(
+                        `${this.getStateStructName(page)} *state = &${this.getScreenStateVarName(page)};`
+                    );
                     build.line(`(void)state;`);
-                }                
+                }
             }
             for (const tickCallback of this.tickCallbacks) {
                 tickCallback();
@@ -1851,7 +1944,7 @@ export class LVGLBuild extends Build {
             build.line("//");
             build.line("// Styles");
             build.line("//");
-            build.line("");    
+            build.line("");
 
             build.line(
                 `static const char *style_names[] = { ${this.styles.map(style => `"${style.name}"`).join(", ")} };`
@@ -1883,7 +1976,10 @@ export class LVGLBuild extends Build {
             let anyFontDef = false;
 
             for (const font of this.fonts) {
-                if (font.lvglUseFreeType || this.project.settings.build.fontExportMode == "binary") {
+                if (
+                    font.lvglUseFreeType ||
+                    this.project.settings.build.fontExportMode == "binary"
+                ) {
                     build.line(`lv_font_t *${this.getFontVariableName(font)};`);
                     anyFontDef = true;
                 }
@@ -1920,7 +2016,7 @@ export class LVGLBuild extends Build {
             build.line("//");
             build.line("// Color themes");
             build.line("//");
-            build.line("");    
+            build.line("");
         }
 
         if (!this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
@@ -1929,7 +2025,10 @@ export class LVGLBuild extends Build {
 
         this.buildChangeColorTheme();
 
-        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport && this.updateColorCallbacks.length > 0) {
+        if (
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+            this.updateColorCallbacks.length > 0
+        ) {
             build.line(
                 `static const char *theme_names[] = { ${this.project.themes
                     .map(theme => `"${theme.name}"`)
@@ -1956,7 +2055,7 @@ export class LVGLBuild extends Build {
 
         //
         // Groups
-        // 
+        //
 
         if (this.project.lvglGroups.groups.length > 0) {
             build.line("");
@@ -1967,7 +2066,7 @@ export class LVGLBuild extends Build {
             build.line(`groups_t groups;`);
             build.line("static bool groups_created = false;");
 
-            if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {            
+            if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
                 build.line(
                     `static const char *group_names[] = { ${this.project.lvglGroups.groups
                         .map(group => `"${group.name}"`)
@@ -2013,16 +2112,23 @@ export class LVGLBuild extends Build {
         build.blockStart("void create_screens() {");
 
         if (
-            this.assets.projectStore.projectTypeTraits.hasFlowSupport && this.styles.length > 0
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+            this.styles.length > 0
         ) {
             build.line("// Initialize styles");
             build.line("eez_flow_init_styles(add_style, remove_style);");
-            build.line(`eez_flow_init_style_names(style_names, sizeof(style_names) / sizeof(const char *));`);
+            build.line(
+                `eez_flow_init_style_names(style_names, sizeof(style_names) / sizeof(const char *));`
+            );
             build.line("");
         }
 
         {
-            const anyExternalFont = this.fonts.some(font => font.lvglUseFreeType || this.project.settings.build.fontExportMode == "binary");
+            const anyExternalFont = this.fonts.some(
+                font =>
+                    font.lvglUseFreeType ||
+                    this.project.settings.build.fontExportMode == "binary"
+            );
             if (anyExternalFont) {
                 build.line("// Load external fonts");
 
@@ -2032,8 +2138,11 @@ export class LVGLBuild extends Build {
                     else path += "/";
                 }
 
-
-                for (let fontIndex = 0; fontIndex < this.fonts.length; fontIndex++) {
+                for (
+                    let fontIndex = 0;
+                    fontIndex < this.fonts.length;
+                    fontIndex++
+                ) {
                     const font = this.fonts[fontIndex];
                     if (font.lvglUseFreeType) {
                         if (this.isV9) {
@@ -2048,8 +2157,9 @@ export class LVGLBuild extends Build {
                                     font.lvglFreeTypeStyle == "BOLD"
                                         ? "LV_FREETYPE_FONT_STYLE_BOLD"
                                         : font.lvglFreeTypeStyle == "ITALIC"
-                                        ? "LV_FREETYPE_FONT_STYLE_ITALIC"
-                                        : font.lvglFreeTypeStyle == "BOLD_ITALIC"
+                                          ? "LV_FREETYPE_FONT_STYLE_ITALIC"
+                                          : font.lvglFreeTypeStyle ==
+                                              "BOLD_ITALIC"
                                             ? "LV_FREETYPE_FONT_STYLE_BOLD | LV_FREETYPE_FONT_STYLE_ITALIC"
                                             : "LV_FREETYPE_FONT_STYLE_NORMAL"
                                 });`
@@ -2069,7 +2179,6 @@ export class LVGLBuild extends Build {
                             );
                             build.blockEnd("}");
 
-
                             build.blockEnd("}");
                         } else {
                             build.blockStart("{");
@@ -2085,8 +2194,9 @@ export class LVGLBuild extends Build {
                                     font.lvglFreeTypeStyle == "BOLD"
                                         ? "FT_FONT_STYLE_BOLD"
                                         : font.lvglFreeTypeStyle == "ITALIC"
-                                        ? "FT_FONT_STYLE_ITALIC"
-                                        : font.lvglFreeTypeStyle == "BOLD_ITALIC"
+                                          ? "FT_FONT_STYLE_ITALIC"
+                                          : font.lvglFreeTypeStyle ==
+                                              "BOLD_ITALIC"
                                             ? "FT_FONT_STYLE_BOLD | FT_FONT_STYLE_ITALIC"
                                             : "FT_FONT_STYLE_NORMAL"
                                 };`
@@ -2110,7 +2220,9 @@ export class LVGLBuild extends Build {
 
                             build.blockEnd("}");
                         }
-                    } else if (this.project.settings.build.fontExportMode == "binary") {
+                    } else if (
+                        this.project.settings.build.fontExportMode == "binary"
+                    ) {
                         build.blockStart("{");
 
                         const output = getName(
@@ -2131,7 +2243,9 @@ export class LVGLBuild extends Build {
                             );
                         }
 
-                        build.blockStart(`if (${this.getFontVariableName(font)}) {`);
+                        build.blockStart(
+                            `if (${this.getFontVariableName(font)}) {`
+                        );
                         if (font.lvglFallbackFont) {
                             build.line(
                                 `${this.getFontVariableName(font)}->fallback = &${font.lvglFallbackFont};`
@@ -2148,8 +2262,6 @@ export class LVGLBuild extends Build {
                         );
                         build.blockEnd("}");
 
-
-
                         build.blockEnd("}");
                     }
                 }
@@ -2159,10 +2271,14 @@ export class LVGLBuild extends Build {
         }
 
         if (this.assets.projectStore.projectTypeTraits.hasFlowSupport) {
-            build.line(`eez_flow_init_fonts(fonts, sizeof(fonts) / sizeof(ext_font_desc_t));`);
+            build.line(
+                `eez_flow_init_fonts(fonts, sizeof(fonts) / sizeof(ext_font_desc_t));`
+            );
             if (this.updateColorCallbacks.length > 0) {
                 build.line("");
-                build.line(`eez_flow_init_themes(theme_names, sizeof(theme_names) / sizeof(const char *), change_color_theme, &theme_colors[0][0], sizeof(theme_colors[0]) / sizeof(uint32_t));`);
+                build.line(
+                    `eez_flow_init_themes(theme_names, sizeof(theme_names) / sizeof(const char *), change_color_theme, &theme_colors[0][0], sizeof(theme_colors[0]) / sizeof(uint32_t));`
+                );
             }
             build.line("");
         }
@@ -2174,8 +2290,13 @@ export class LVGLBuild extends Build {
         if (this.project.lvglGroups.groups.length > 0) {
             build.line("ui_create_groups();");
         }
-        if (this.assets.projectStore.projectTypeTraits.hasFlowSupport && this.project.lvglGroups.groups.length > 0) {
-            build.line(`eez_flow_init_group_names(group_names, sizeof(group_names) / sizeof(const char *));`);
+        if (
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+            this.project.lvglGroups.groups.length > 0
+        ) {
+            build.line(
+                `eez_flow_init_group_names(group_names, sizeof(group_names) / sizeof(const char *));`
+            );
         }
 
         build.line("");
@@ -2212,7 +2333,7 @@ export class LVGLBuild extends Build {
             }
             build.line("");
         }
-        
+
         if (
             this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
             build.project.settings.build.screensLifetimeSupport
@@ -2241,6 +2362,72 @@ export class LVGLBuild extends Build {
             return;
         }
 
+        // enumerate
+        const updateColorCallbackForPages: UpdateColorCallbackForPage[] = [];
+
+        const enumPage: (
+            page: Page
+        ) => UpdateColorCallbackForPage | undefined = (page: Page) => {
+            const updateColorCallbacks = this.updateColorCallbacks.filter(
+                updateColorCallback => {
+                    return (
+                        page ==
+                        getAncestorOfType<Page>(
+                            updateColorCallback.object,
+                            ProjectEditor.PageClass.classInfo
+                        )
+                    );
+                }
+            );
+
+            const lvglUserWidgets = page._lvglWidgets.filter(
+                lvglWidget =>
+                    lvglWidget instanceof
+                        ProjectEditor.LVGLUserWidgetWidgetClass &&
+                    lvglWidget.userWidgetPage
+            ) as LVGLUserWidgetWidget[];
+
+            const updateColorCallbackForUserWidgets: UpdateColorCallbackForUserWidget[] =
+                [];
+
+            lvglUserWidgets.map(lvglUserWidget => {
+                const updateColorsForPage = enumPage(
+                    lvglUserWidget.userWidgetPage!
+                );
+                if (updateColorsForPage != undefined) {
+                    updateColorCallbackForUserWidgets.push({
+                        lvglUserWidget,
+                        updateColorsForPage
+                    });
+                }
+            });
+
+            if (
+                updateColorCallbacks.length > 0 ||
+                updateColorCallbackForUserWidgets.length > 0
+            ) {
+                return {
+                    page,
+                    updateColorCallbacks,
+                    updateColorCallbackForUserWidgets
+                };
+            }
+
+            return undefined;
+        };
+
+        for (const page of this.pages) {
+            if (page.isUsedAsUserWidget) {
+                continue;
+            }
+
+            const result = enumPage(page);
+            if (result != undefined) {
+                updateColorCallbackForPages.push(result);
+            }
+        }
+
+        // generate code for change_color_theme
         const build = this;
 
         build.blockStart(`void change_color_theme(uint32_t theme_index) {`);
@@ -2250,32 +2437,98 @@ export class LVGLBuild extends Build {
             build.line("");
         }
 
-        this.updateColorCallbacks.forEach(updateColorCallback => {
-            const flow = getAncestorOfType<Flow>(
-                updateColorCallback.object,
-                ProjectEditor.FlowClass.classInfo
-            );
+        const updateColors = (
+            updateColorCallbackForPage: UpdateColorCallbackForPage,
+            userWidgetStateVarName?: string,
+            startWidgetIndex?: number
+        ) => {
+            build.blockStart(`{`);
+
+            const page = updateColorCallbackForPage.page;
+
+            if (userWidgetStateVarName != undefined) {
+                build.line(`startWidgetIndex = ${startWidgetIndex!};`);
+
+                if (userWidgetStateVarName) {
+                    build.line(
+                        `${this.getStateStructName(page)} *state = &parent_state->${userWidgetStateVarName};`
+                    );
+                    build.line(`(void)state;`);
+                }
+            } else {
+                if (this.stateVars.get(page)) {
+                    build.line(
+                        `${this.getStateStructName(page)} *state = &${this.getScreenStateVarName(page)};`
+                    );
+                    build.line(`(void)state;`);
+                }
+            }
+
+            for (const updateColorCallback of updateColorCallbackForPage.updateColorCallbacks) {
+                updateColorCallback.callback();
+            }
 
             if (
-                flow instanceof ProjectEditor.PageClass &&
-                flow.isUsedAsUserWidget
+                updateColorCallbackForPage.updateColorCallbackForUserWidgets
+                    .length > 0
             ) {
-                return;
+                build.blockStart(`{`);
+
+                if (
+                    userWidgetStateVarName == undefined ||
+                    userWidgetStateVarName
+                ) {
+                    build.line(
+                        `${this.getStateStructName(page)} *parent_state = state;`
+                    );
+                }
+
+                if (startWidgetIndex == undefined) {
+                    build.line(`int startWidgetIndex;`);
+                    build.line(`(void)startWidgetIndex;`);
+                }
+
+                for (const updateColorCallbackForUserWidget of updateColorCallbackForPage.updateColorCallbackForUserWidgets) {
+                    const temp = this.currentPage;
+                    this.currentPage = page;
+                    const userWidgetStateVarName =
+                        this.getUserWidgetStateVarName(
+                            updateColorCallbackForUserWidget.lvglUserWidget
+                        );
+                    this.currentPage = temp;
+
+                    updateColors(
+                        updateColorCallbackForUserWidget.updateColorsForPage,
+                        userWidgetStateVarName,
+                        (startWidgetIndex ?? 0) +
+                            this.getWidgetObjectIndex(
+                                updateColorCallbackForUserWidget.lvglUserWidget
+                            ) +
+                            1
+                    );
+                }
+
+                build.blockEnd("}");
             }
 
-            updateColorCallback.callback();
-        });
+            build.blockEnd("}");
+        };
 
-        this.pages.forEach(page => {
-            if (page.isUsedAsUserWidget) {
-                return;
+        for (const updateColorCallbackForPage of updateColorCallbackForPages) {
+            updateColors(updateColorCallbackForPage);
+        }
+
+        for (const updateColorCallback of this.updateColorCallbacks) {
+            const lvglStyle = getAncestorOfType<LVGLStyle>(
+                updateColorCallback.object,
+                ProjectEditor.LVGLStyleClass.classInfo
+            );
+            if (lvglStyle) {
+                updateColorCallback.callback();
             }
+        }
 
-            if (this.buildChangeColorThemeForUserWidget(page, true)) {
-                build.line("");
-            }
-        });
-
+        // invalidate all pages
         build.pages
             .filter(page => !page.isUsedAsUserWidget)
             .forEach(page => {
@@ -2291,66 +2544,6 @@ export class LVGLBuild extends Build {
             });
 
         build.blockEnd("}");
-    }
-
-    buildChangeColorThemeForUserWidget(page: Page, flag: boolean) {
-        const build = this;
-
-        let first = true;
-
-        page._lvglWidgets.forEach(lvglWidget => {
-            if (
-                !(lvglWidget instanceof ProjectEditor.LVGLUserWidgetWidgetClass)
-            ) {
-                return;
-            }
-
-            const updateColorCallbacks = this.updateColorCallbacks.filter(
-                (updateColorCallback, i) => {
-                    const flow = getAncestorOfType<Flow>(
-                        updateColorCallback.object,
-                        ProjectEditor.FlowClass.classInfo
-                    );
-
-                    return flow == lvglWidget.userWidgetPage;
-                }
-            );
-
-            if (updateColorCallbacks.length == 0) {
-                return;
-            }
-
-            if (first) {
-                first = false;
-            } else {
-                build.line("");
-            }
-
-            build.blockStart("{");
-
-            if (flag) {
-                build.line(
-                    `int startWidgetIndex = ${this.getWidgetObjectIndex(lvglWidget) + 1};`
-                );
-            } else {
-                build.line(
-                    `startWidgetIndex += ${this.getWidgetObjectIndex(lvglWidget) + 1};`
-                );
-            }
-
-            updateColorCallbacks.forEach(updateColorCallback =>
-                updateColorCallback.callback()
-            );
-
-            this.buildChangeColorThemeForUserWidget(
-                lvglWidget.userWidgetPage!,
-                false
-            );
-
-            build.blockEnd("}");
-        });
-
-        return !first;
     }
 
     async buildScreensDeclExt() {

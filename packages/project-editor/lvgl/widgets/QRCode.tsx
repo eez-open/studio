@@ -102,6 +102,12 @@ export class LVGLQRCodeWidget extends LVGLWidget {
                             obj,
                             code.color(darkColor)
                         );
+                        code.callFreeFunction(
+                            "lv_qrcode_update",
+                            obj,
+                            code.stringLiteral(text),
+                            text.length
+                        );
                     }
                 }
             );
@@ -129,6 +135,12 @@ export class LVGLQRCodeWidget extends LVGLWidget {
                             "lv_qrcode_set_light_color",
                             obj,
                             code.color(lightColor)
+                        );
+                        code.callFreeFunction(
+                            "lv_qrcode_update",
+                            obj,
+                            code.stringLiteral(text),
+                            text.length
                         );
                     }
                 }

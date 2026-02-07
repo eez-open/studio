@@ -229,6 +229,7 @@ export class SimulatorLVGLCode implements LVGLCode {
         this.widget = widget;
         this.parentObj = parentObj;
         this.customWidget = customWidget;
+        this.buildColorParams = undefined;
     }
 
     endWidget() {
@@ -769,10 +770,10 @@ export class SimulatorLVGLCode implements LVGLCode {
     ) {
         callback(color, undefined as any);
 
-        let params = this.buildColorParams;
-
         const widget = this.widget;
         const obj = this.obj;
+
+        let params = this.buildColorParams || getParams();
 
         this.runtime.lvglUpdateColor(color, (wasm, colorNum) => {
             this.widget = widget;
@@ -791,10 +792,10 @@ export class SimulatorLVGLCode implements LVGLCode {
     ) {
         callback(color1, color2, undefined as T);
 
-        let params = this.buildColorParams;
-
         const widget = this.widget;
         const obj = this.obj;
+
+        let params = this.buildColorParams || getParams();
 
         this.runtime.lvglUpdateColor(color1, (wasm, colorNum) => {
             this.widget = widget;
