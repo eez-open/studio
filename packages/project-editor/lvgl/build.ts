@@ -2475,7 +2475,7 @@ export class LVGLBuild extends Build {
                 build.blockStart(`{`);
 
                 if (
-                    userWidgetStateVarName == undefined ||
+                    userWidgetStateVarName == undefined && this.stateVars.get(page) ||
                     userWidgetStateVarName
                 ) {
                     build.line(
