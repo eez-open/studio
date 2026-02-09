@@ -99,6 +99,7 @@ export const enum ProjectType {
 export interface EnumItem {
     id: string | number;
     label?: string;
+    icon?: React.ReactNode;
 }
 
 export enum MessageType {

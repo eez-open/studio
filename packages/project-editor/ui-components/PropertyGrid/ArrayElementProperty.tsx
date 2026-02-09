@@ -1063,7 +1063,7 @@ const ArrayElementProperties = observer(
                             title="Add Item Before"
                         />
 
-                        <div ref={this.refHeader}>
+                        <div className="EezStudio_ArrayElementProperty_Header_ElementIndexAndLabel" ref={this.refHeader}>
                             {!this.props.propertyInfo
                                 .hideElementIndexInPropertyGrid && (
                                 <div className="element-index">

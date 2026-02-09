@@ -15,7 +15,6 @@ import {
     PropertyProps,
     findPropertyByNameInClassInfo,
     IEezObject,
-    PropertyInfo,
     MessageType,
     getClassInfoLvglProperties,
     IMessage
@@ -93,6 +92,7 @@ import {
 import { LVGLPropertyInfo } from "project-editor/lvgl/style-catalog";
 
 import { LVGLScreenWidget } from "./internal";
+import { FIT_HEIGHT_TO_CONTENT_ICON, FIT_WIDTH_TO_CONTENT_ICON, PERCENT_ICON, PX_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -149,47 +149,119 @@ function changes<T extends string>(defaults: T[], arr: T[]) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const GeometryProperty = observer(
-    class GeometryProperty extends React.Component<PropertyProps> {
+export const GeometryProperties = observer(
+    class GeometryProperties extends React.Component<PropertyProps> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
         render() {
-            const classInfo = getClassInfo(this.props.objects[0]);
-            const unitPropertyInfo = findPropertyByNameInClassInfo(
-                classInfo,
-                this.props.propertyInfo.name + "Unit"
-            ) as PropertyInfo;
-
-            const readOnly =
+            const widthReadOnly =
                 this.props.objects.find(
-                    object =>
-                        (object as any)[unitPropertyInfo.name] == "content"
+                    object => (object as any).widthUnit == "content"
+                ) != undefined;
+
+            const heightReadOnly =
+                this.props.objects.find(
+                    object => (object as any).heightUnit == "content"
                 ) != undefined;
 
             return (
-                <div className="EezStudio_LVGLGeometryProperty">
+                <div className="EezStudio_LVGLWidgetGeometryProperty">
+                    <div>X</div>
                     <Property
-                        propertyInfo={Object.assign(
-                            {},
-                            this.props.propertyInfo,
-                            {
-                                propertyGridColumnComponent: undefined
-                            }
-                        )}
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                LVGLWidget.classInfo,
+                                "left"
+                            )!
+                        }
                         objects={this.props.objects}
-                        readOnly={this.props.readOnly || readOnly}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                LVGLWidget.classInfo,
+                                "leftUnit"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
                         updateObject={this.props.updateObject}
                     />
 
-                    {unitPropertyInfo && (
-                        <Property
-                            propertyInfo={unitPropertyInfo}
-                            objects={this.props.objects}
-                            readOnly={this.props.readOnly}
-                            updateObject={this.props.updateObject}
-                        />
-                    )}
+                    <div>Y</div>
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                LVGLWidget.classInfo,
+                                "top"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                LVGLWidget.classInfo,
+                                "topUnit"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+
+                    <div title="Width">W</div>
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                LVGLWidget.classInfo,
+                                "width"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly || widthReadOnly}
+                        updateObject={this.props.updateObject}
+                    />
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                LVGLWidget.classInfo,
+                                "widthUnit"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+
+                    <div title="Height">H</div>
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                LVGLWidget.classInfo,
+                                "height"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly || heightReadOnly}
+                        updateObject={this.props.updateObject}
+                    />
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                LVGLWidget.classInfo,
+                                "heightUnit"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
                 </div>
             );
         }
@@ -575,17 +647,17 @@ export class LVGLWidget extends Widget {
             {
                 name: "left",
                 type: PropertyType.Number,
-                propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
                 readOnlyInPropertyGrid: isGeometryControlledByParent,
-                disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using left from the Page
+                disabled: object => object instanceof LVGLScreenWidget, // LVGLScreenWidget is using left from the Page
+                hideInPropertyGrid: true
             },
             {
                 name: "leftUnit",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: "px", label: "px" },
-                    { id: "%", label: "%" }
+                    { id: "px", label: "Pixels", icon: PX_ICON },
+                    { id: "%", label: "Percent", icon: PERCENT_ICON }
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup,
@@ -595,17 +667,17 @@ export class LVGLWidget extends Widget {
             {
                 name: "top",
                 type: PropertyType.Number,
-                propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
                 readOnlyInPropertyGrid: isGeometryControlledByParent,
-                disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using top from the Page
+                disabled: object => object instanceof LVGLScreenWidget, // LVGLScreenWidget is using top from the Page
+                hideInPropertyGrid: true
             },
             {
                 name: "topUnit",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: "px", label: "px" },
-                    { id: "%", label: "%" }
+                    { id: "px", label: "Pixels", icon: PX_ICON },
+                    { id: "%", label: "Percent", icon: PERCENT_ICON }
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup,
@@ -615,18 +687,18 @@ export class LVGLWidget extends Widget {
             {
                 name: "width",
                 type: PropertyType.Number,
-                propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
                 readOnlyInPropertyGrid: isGeometryControlledByParent,
-                disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using width from the Page
+                disabled: object => object instanceof LVGLScreenWidget, // LVGLScreenWidget is using width from the Page
+                hideInPropertyGrid: true
             },
             {
                 name: "widthUnit",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: "px", label: "px" },
-                    { id: "%", label: "%" },
-                    { id: "content", label: "content" }
+                    { id: "px", label: "Pixels", icon: PX_ICON },
+                    { id: "%", label: "Percent", icon: PERCENT_ICON },
+                    { id: "content", label: "Content", icon: FIT_WIDTH_TO_CONTENT_ICON }
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup,
@@ -636,18 +708,18 @@ export class LVGLWidget extends Widget {
             {
                 name: "height",
                 type: PropertyType.Number,
-                propertyGridColumnComponent: GeometryProperty,
                 propertyGridGroup: geometryGroup,
                 readOnlyInPropertyGrid: isGeometryControlledByParent,
-                disabled: object => object instanceof LVGLScreenWidget // LVGLScreenWidget is using height from the Page
+                disabled: object => object instanceof LVGLScreenWidget, // LVGLScreenWidget is using height from the Page
+                hideInPropertyGrid: true
             },
             {
                 name: "heightUnit",
                 type: PropertyType.Enum,
                 enumItems: [
-                    { id: "px", label: "px" },
-                    { id: "%", label: "%" },
-                    { id: "content", label: "content" }
+                    { id: "px", label: "Pixels", icon: PX_ICON },
+                    { id: "%", label: "Percent", icon: PERCENT_ICON },
+                    { id: "content", label: "Content", icon: FIT_HEIGHT_TO_CONTENT_ICON }
                 ],
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup,
@@ -655,13 +727,23 @@ export class LVGLWidget extends Widget {
                 disabled: object => object instanceof LVGLScreenWidget
             },
             {
+                name: "geometryProperties",
+                type: PropertyType.Any,
+                propertyGridGroup: geometryGroup,
+                computed: true,
+                propertyGridRowComponent: GeometryProperties,
+                skipSearch: true,
+                disabled: object => object instanceof LVGLScreenWidget, // LVGLScreenWidget is using height from the Page
+            },
+            {
                 name: "absolutePosition",
                 displayName: "Absolute pos.",
                 type: PropertyType.String,
                 propertyGridGroup: geometryGroup,
                 computed: true,
-                //hideInPropertyGrid: true,
-                disabled: object => object instanceof LVGLScreenWidget
+                hideInPropertyGrid: (widget: LVGLWidget) => 
+                    widget instanceof LVGLScreenWidget || 
+                    widget.left == widget.absolutePositionPoint.x && widget.top == widget.absolutePositionPoint.y
             },
             {
                 name: "children",

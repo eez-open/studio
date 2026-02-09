@@ -3585,3 +3585,326 @@ export const QR_CODE_ICON = (
         />
     </svg>
 );
+
+export const PERCENT_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M12 3L4 13"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+        />
+        <circle cx="5" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.2" />
+        <circle
+            cx="11"
+            cy="11"
+            r="2.5"
+            stroke="currentColor"
+            strokeWidth="1.1"
+        />
+    </svg>
+);
+
+export const PX_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M2.5 14V3H5.5C7 3 8 4 8 5.5V5.5C8 7 7 8 5.5 8H2.5"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M9 8.5L13.5 14M13.5 8.5L9 14"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+        />
+    </svg>
+);
+
+export const FIT_WIDTH_TO_CONTENT_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M0 8H4.5M0 8L2.5 5.5M0 8L2.5 10.5"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M16 8H11.5M16 8L13.5 5.5M16 8L13.5 10.5"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <rect
+            x="5.5"
+            y="2"
+            width="5"
+            height="12"
+            rx="0.5"
+            stroke="currentColor"
+            strokeWidth="1.1"
+        />
+    </svg>
+);
+
+export const FIT_HEIGHT_TO_CONTENT_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M8 0V4.5M8 0L5.5 2.5M8 0L10.5 2.5"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M8 16V11.5M8 16L5.5 13.5M8 16L10.5 13.5"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <rect
+            x="2"
+            y="5.5"
+            width="12"
+            height="5"
+            rx="0.5"
+            stroke="currentColor"
+            strokeWidth="1.1"
+        />
+    </svg>
+);
+
+export const EXPRESSION_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M5 0.5C5 0.5 3 0.5 3 3L3 6C3 6.5 2 7.5 1 8C2 8.5 3 9.5 3 10L3 13C3 15.5 5 15.5 5 15.5"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+        <path
+            d="M11 0.5C11 0.5 13 0.5 13 3L13 6C13 6.5 14 7.5 15 8C14 8.5 13 9.5 13 10L13 13C13 15.5 11 15.5 11 15.5"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+        <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+    </svg>
+);
+
+export const ASSIGNABLE_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M5 0.5C5 0.5 3 0.5 3 3L3 6C3 6.5 2 7.5 1 8C2 8.5 3 9.5 3 10L3 13C3 15.5 5 15.5 5 15.5"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+        <path
+            d="M11 0.5C11 0.5 13 0.5 13 3L13 6C13 6.5 14 7.5 15 8C14 8.5 13 9.5 13 10L13 13C13 15.5 11 15.5 11 15.5"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+        <path
+            d="M8.5 5L5.5 8L8.5 11M5.5 8H11"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+    </svg>
+);
+
+export const LITERAL_STRING_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M0.5 9L3.5 1.5L6.5 9M1.5 7H5.5"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M10 8L15 8L10 14L15 14"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
+export const TRANSLATED_LITERAL_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <circle cx="8" cy="8" r="7.4" stroke="currentColor" strokeWidth="1.2" />
+        <path d="M0.6 5.5H15.4" stroke="currentColor" strokeWidth="0.8" />
+        <path d="M0.6 10.5H15.4" stroke="currentColor" strokeWidth="0.8" />
+        <ellipse
+            cx="8"
+            cy="8"
+            rx="3"
+            ry="7.4"
+            stroke="currentColor"
+            strokeWidth="0.8"
+        />
+    </svg>
+);
+
+export const LITERAL_NUMBER_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <path
+            d="M6.5 2L5 14M11 2L9.5 14"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+        />
+        <path
+            d="M2 6H13.5M2.5 10.5H14"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            strokeLinecap="round"
+        />
+    </svg>
+);
+
+export const LITERAL_BOOLEAN_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <rect
+            x="0.6"
+            y="3"
+            width="14.8"
+            height="10"
+            rx="5"
+            stroke="currentColor"
+            strokeWidth="1.2"
+        />
+        <circle cx="10.4" cy="8" r="3.2" fill="currentColor" />
+    </svg>
+);
+
+export const LITERAL_COLOR_ICON = (
+    <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <circle
+            cx="5"
+            cy="5"
+            r="4.4"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            fill="none"
+            opacity="0.7"
+        />
+        <circle
+            cx="11"
+            cy="5"
+            r="4.4"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            fill="none"
+            opacity="0.7"
+        />
+        <circle
+            cx="8"
+            cy="10.5"
+            r="4.4"
+            stroke="currentColor"
+            strokeWidth="1.1"
+            fill="none"
+            opacity="0.7"
+        />
+    </svg>
+);
+
+export const LITERAL_ENUM_ICON = (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={24}
+        height={25}
+        viewBox="0 0 24 24"
+    >
+        <path
+            fill="currentColor" 
+            d="M17 5h3l-1.5 2zM3 2h18a2 2 0 0 1 2 2v4c0 1.11-.89 2-2 2h-5v10c0 1.11-.89 2-2 2H3a2 2 0 0 1-2-2V4c0-1.1.9-2 2-2m0 2v4h11V4zm18 4V4h-5v4zM3 20h11V10H3zm2-8h7v2H5zm0 4h7v2H5z"
+        />
+    </svg>
+);

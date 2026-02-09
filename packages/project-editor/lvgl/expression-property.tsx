@@ -21,6 +21,17 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getPropertyValue } from "project-editor/ui-components/PropertyGrid/utils";
 import { ValueType } from "eez-studio-types";
+import {
+    ASSIGNABLE_ICON,
+    EXPRESSION_ICON,
+    LITERAL_BOOLEAN_ICON,
+    LITERAL_COLOR_ICON,
+    LITERAL_ENUM_ICON,
+    LITERAL_NUMBER_ICON,
+    LITERAL_STRING_ICON,
+    TRANSLATED_LITERAL_ICON
+} from "project-editor/ui-components/icons";
+import { capitalize } from "eez-studio-shared/string";
 
 export type LVGLPropertyType = "literal" | "translated-literal" | "expression";
 
@@ -51,13 +62,13 @@ const LVGLProperty = observer(
                 propertyInfoType = propertyInfo.colorEditorForLiteral
                     ? PropertyType.ThemedColor
                     : propertyInfo.expressionType == "integer"
-                    ? PropertyType.Number
-                    : propertyInfo.expressionType == "string" ||
-                      propertyInfo.expressionType == "array:string"
-                    ? PropertyType.MultilineText
-                    : propertyInfo.expressionType == "boolean"
-                    ? PropertyType.Boolean
-                    : propertyInfo.type;
+                      ? PropertyType.Number
+                      : propertyInfo.expressionType == "string" ||
+                          propertyInfo.expressionType == "array:string"
+                        ? PropertyType.MultilineText
+                        : propertyInfo.expressionType == "boolean"
+                          ? PropertyType.Boolean
+                          : propertyInfo.type;
             }
 
             let referencedObjectCollectionPath =
@@ -184,7 +195,10 @@ export function makeLvglExpressionProperty(
                         : undefined;
                 },
                 isFlowPropertyBuildable: (widget: LVGLWidget, propertyInfo) => {
-                    return getProperty(widget, propertyInfo.name + "Type") == "expression";
+                    return (
+                        getProperty(widget, propertyInfo.name + "Type") ==
+                        "expression"
+                    );
                 },
                 expressionType,
                 disableSpellcheck: true
@@ -195,19 +209,87 @@ export function makeLvglExpressionProperty(
             name: name + "Type",
             type: PropertyType.Enum,
             enumItems: (object: EezObject) =>
-                types.map(id => ({
-                    id,
-                    label:
+                types.map(id => {
+                    let label: string;
+                    let icon: React.ReactNode;
+
+                    function getLiteralLabel() {
+                        let propertyType;
+                        if (props.dynamicType) {
+                            propertyType = props.dynamicType(object)
+                        }
+
+                        return propertyType && propertyType == PropertyType.ThemedColor || props.colorEditorForLiteral
+                            ? "Literal - Color"
+                            : propertyType && propertyType == PropertyType.Enum
+                            ? "Literal - Enumeration"
+                            : expressionType == "boolean"
+                              ? "Literal - Boolean"
+                              : expressionType == "integer" ||
+                                  expressionType == "float" ||
+                                  expressionType == "double"
+                                ? `Literal - ${capitalize(expressionType)}`
+                                : "Literal - String";
+                    }
+
+
+                    function getLiteralIcon() {
+                        let propertyType;
+                        if (props.dynamicType) {
+                            propertyType = props.dynamicType(object)
+                        }
+
+                        return propertyType && propertyType == PropertyType.ThemedColor || props.colorEditorForLiteral
+                            ? LITERAL_COLOR_ICON
+                            : propertyType && propertyType == PropertyType.Enum
+                            ? LITERAL_ENUM_ICON
+                            : expressionType == "boolean"
+                              ? LITERAL_BOOLEAN_ICON
+                              : expressionType == "integer" ||
+                                  expressionType == "float" ||
+                                  expressionType == "double"
+                                ? LITERAL_NUMBER_ICON
+                                : LITERAL_STRING_ICON;
+                    }
+
+                    if (
                         !ProjectEditor.getProject(object).projectTypeTraits
-                            .hasFlowSupport && id == "expression"
-                            ? "Variable"
-                            : ProjectEditor.getProject(object).projectTypeTraits
-                                  .hasFlowSupport &&
-                              id == "expression" &&
-                              flowProperty == "assignable"
-                            ? "Assignable"
-                            : undefined
-                })),
+                            .hasFlowSupport
+                    ) {
+                        if (id == "expression") {
+                            label = "Variable";
+                            icon = EXPRESSION_ICON;
+                        } else if (id == "translated-literal") {
+                            label = "Translated Literal";
+                            icon = TRANSLATED_LITERAL_ICON;
+                        } else {
+                            label = getLiteralLabel();
+                            icon = getLiteralIcon();
+                        }
+                    } else {
+                        if (id == "expression") {
+                            if (flowProperty == "assignable") {
+                                label = "Assignable";
+                                icon = ASSIGNABLE_ICON;
+                            } else {
+                                label = "Expression";
+                                icon = EXPRESSION_ICON;
+                            }
+                        } else if (id == "translated-literal") {
+                            label = "Translated Literal";
+                            icon = TRANSLATED_LITERAL_ICON;
+                        } else {
+                            label = getLiteralLabel();
+                            icon = getLiteralIcon();
+                        }
+                    }
+
+                    return {
+                        id,
+                        label,
+                        icon
+                    };
+                }),
             enumDisallowUndefined: true,
             propertyGridGroup: props.propertyGridGroup,
             hideInPropertyGrid: true

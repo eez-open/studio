@@ -95,19 +95,19 @@ function getValueTypeFromActionPropertyType(
     actionPropertyType: LvglActionPropertyType
 ): ValueType {
     if (actionPropertyType == "screen") {
-        return "integer";
+        return "string";
     }
 
     if (actionPropertyType.startsWith("widget:")) {
-        return "widget";
+        return "string";
     }
 
     if (actionPropertyType == "group") {
-        return "integer";
+        return "string";
     }
 
     if (actionPropertyType == "style") {
-        return "integer";
+        return "string";
     }
 
     if (actionPropertyType == "image") {
@@ -119,7 +119,7 @@ function getValueTypeFromActionPropertyType(
     }
 
     if (actionPropertyType == "style-value") {
-        return "integer";
+        return "any";
     }
 
     return actionPropertyType as ValueType;

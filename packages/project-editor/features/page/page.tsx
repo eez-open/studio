@@ -1,6 +1,7 @@
 import React from "react";
 import { observable, computed, makeObservable } from "mobx";
 import classNames from "classnames";
+import { observer } from "mobx-react";
 
 import { to16bitsColor } from "eez-studio-shared/color";
 
@@ -16,7 +17,9 @@ import {
     MessageType,
     PropertyInfo,
     getProperty,
-    IMessage
+    IMessage,
+    PropertyProps,
+    findPropertyByNameInClassInfo
 } from "project-editor/core/object";
 import {
     createObject,
@@ -76,6 +79,8 @@ import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import { lvglBuildPageTimeline } from "project-editor/flow/timeline";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import { PAGES_ICON } from "project-editor/ui-components/icons";
+import { ProjectContext } from "project-editor/project/context";
+import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 
 export const FLOW_FRAGMENT_PAGE_NAME = "$FlowFragment";
 
@@ -189,6 +194,73 @@ export class PageOrientation extends EezObject {
 }
 
 registerClass("PageOrientation", PageOrientation);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export const GeometryProperties = observer(
+    class GeometryProperties extends React.Component<PropertyProps> {
+        static contextType = ProjectContext;
+        declare context: React.ContextType<typeof ProjectContext>;
+
+        render() {
+            return (
+                <div className="EezStudio_LVGLPageGeometryProperty">
+                    <div>X</div>
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                Page.classInfo,
+                                "left"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+
+                    <div>Y</div>
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                Page.classInfo,
+                                "top"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+
+                    <div title="Width">W</div>
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                Page.classInfo,
+                                "width"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+
+                    <div title="Height">H</div>
+                    <Property
+                        propertyInfo={
+                            findPropertyByNameInClassInfo(
+                                Page.classInfo,
+                                "height"
+                            )!
+                        }
+                        objects={this.props.objects}
+                        readOnly={this.props.readOnly}
+                        updateObject={this.props.updateObject}
+                    />
+                </div>
+            );
+        }
+    }
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -341,22 +413,35 @@ export class Page extends Flow {
             {
                 name: "left",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "top",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "width",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "height",
                 type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: isLVGLProject
+            },
+            {
+                name: "geometryProperties",
+                type: PropertyType.Any,
+                propertyGridGroup: geometryGroup,
+                computed: true,
+                propertyGridRowComponent: GeometryProperties,
+                skipSearch: true,
+                disabled: isNotLVGLProject
             },
             {
                 name: "scaleToFit",

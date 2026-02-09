@@ -1738,6 +1738,14 @@ export class Component extends EezObject {
 
         properties: [
             {
+                name: "geometryProperties",
+                type: PropertyType.Any,
+                propertyGridGroup: geometryGroup,
+                computed: true,
+                skipSearch: true,
+                hideInPropertyGrid: true
+            },
+            {
                 name: "type",
                 type: PropertyType.Enum,
                 hideInPropertyGrid: true,

@@ -50,6 +50,7 @@ import { ImageProperty } from "./ImageProperty";
 
 import { General } from "project-editor/project/project";
 import { UniqueValueInput } from "./UniqueValueInput";
+import { IconEnumDropdown } from "./IconEnumDropdown";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -778,6 +779,22 @@ export const Property = observer(
 
                     if (!propertyInfo.enumDisallowUndefined && value !== "") {
                         options.unshift(<option key="__empty" value="" />);
+                    }
+
+                    const allHaveIcons =
+                        enumItems.length > 0 &&
+                        enumItems.every(item => item.icon);
+
+                    if (allHaveIcons) {
+                        return (
+                            <IconEnumDropdown
+                                enumItems={enumItems}
+                                value={value}
+                                onChange={(newValue: any) => {
+                                    this.changeValue(newValue);
+                                }}
+                            />
+                        );
                     }
 
                     return (

@@ -263,6 +263,11 @@ class SettingsController {
         ) as HTMLDivElement;
         content.style.opacity = "0";
 
+        const body = document.querySelector("#EezStudio_Content>.EezStudio_HeaderWithBody>.EezStudio_Body");
+        if (body && body instanceof HTMLDivElement && body.style) {
+            body.style.display = "none";
+        }
+
         const mainLinkElement = document.getElementById(
             "main-css"
         ) as HTMLLinkElement;
@@ -289,9 +294,13 @@ class SettingsController {
         }
 
         this.onThemeSwitchedTimeout = setTimeout(() => {
+            if (body && body instanceof HTMLDivElement && body.style) {
+                body.style.display = "flex";
+            }
+
             this.onThemeSwitchedTimeout = undefined;
             content.style.opacity = "";
-        }, 500);
+        }, 50);
     }
 
     removeItemFromMRU(mruItem: IMruItem) {

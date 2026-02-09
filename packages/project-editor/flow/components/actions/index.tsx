@@ -3951,6 +3951,18 @@ export class SetColorThemeActionComponent extends ActionComponent {
             ...super.getOutputs()
         ];
     }
+
+    getBody(flowContext: IFlowContext): React.ReactNode {
+        if (!this.theme) {
+            return null;
+        }
+
+        return (
+            <div className="body">
+                <pre>{this.theme}</pre>
+            </div>
+        );
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
