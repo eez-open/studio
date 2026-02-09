@@ -300,6 +300,66 @@ registerAction({
 ////////////////////////////////////////////////////////////////////////////////
 
 registerAction({
+    id: 63,
+    name: "objGetDisplayX",
+    group: "Widget - Position and Size",
+    properties: [
+        {
+            name: "object",
+            type: "widget",
+            helpText: "The object to get the x coordinate"
+        },
+        {
+            name: "result",
+            type: "integer",
+            isAssignable: true,
+            helpText: "The variable to store the x coordinate"
+        }
+    ],
+    defaults: {},
+    label: ([object, width]) => (
+        <>
+            {object}
+            <RightArrow />
+            {width}
+        </>
+    ),
+    helpText: "Get the x coordinate of the object, relative to the display origin"
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerAction({
+    id: 64,
+    name: "objGetDisplayY",
+    group: "Widget - Position and Size",
+    properties: [
+        {
+            name: "object",
+            type: "widget",
+            helpText: "The object to get the y coordinate"
+        },
+        {
+            name: "result",
+            type: "integer",
+            isAssignable: true,
+            helpText: "The variable to store the y coordinate"
+        }
+    ],
+    defaults: {},
+    label: ([object, width]) => (
+        <>
+            {object}
+            <RightArrow />
+            {width}
+        </>
+    ),
+    helpText: "Get the y coordinate of the object, relative to the display origin"
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
+registerAction({
     id: 6,
     name: "objSetWidth",
     group: "Widget - Position and Size",
