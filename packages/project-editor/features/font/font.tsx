@@ -2101,7 +2101,7 @@ export class Font extends EezObject {
     }
 
     async getLvglSourceFile() {
-        if (!this.embeddedFontFile || this.lvglUseFreeType) {
+        if (this.lvglUseFreeType) {
             return undefined;
         }
 
