@@ -510,8 +510,11 @@ export const Canvas = observer(
                 }
 
                 scale = 1;
-            } else if (runMode && this.props.flowContext.projectStore.runtime instanceof
-                    ProjectEditor.WasmRuntimeClass) {
+            } else if (
+                this.props.flowContext.projectStore.projectTypeTraits.isLVGL &&
+                runMode && this.props.flowContext.projectStore.runtime instanceof
+                    ProjectEditor.WasmRuntimeClass
+            ) {
                 xt = Math.round(
                     (transform.clientRect.width -
                         this.props.flowContext.projectStore.runtime
