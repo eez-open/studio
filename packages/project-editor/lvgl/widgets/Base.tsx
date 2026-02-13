@@ -1526,6 +1526,11 @@ export class LVGLWidget extends Widget {
         code.startWidget(this, parentObj, customWidget);
         this.toLVGLCode(code);
 
+        code.widget = this;
+        code.parentObj = parentObj;
+        code.customWidget = customWidget;
+        code.buildColorParams = undefined;        
+
         const obj = code.obj;
         if (!runtime.isInsideUserWidget) {
             runInAction(() => (this._lvglObj = obj));
