@@ -672,6 +672,10 @@ export function canDuplicate(object: IEezObject) {
 }
 
 function isOptional(object: IEezObject) {
+    if (isArray(object)) {
+        return false;
+    }
+
     let parent = getParent(object);
     if (!parent) {
         return false;
