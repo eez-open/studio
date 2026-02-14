@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 EEZ Studio Contributors
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 import { observable, action } from "mobx";
 import { EventEmitter } from "events";
 import fs from "fs";
