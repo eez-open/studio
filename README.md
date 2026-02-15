@@ -114,7 +114,7 @@ Download and start `EEZ_Studio_setup.exe`.
 
 ### Nix
 
-**Note:** Nix packaging is currently broken (see #940). Community contributions welcome.
+**Note:** Nix packaging is currently broken (see [#940](https://github.com/eez-open/studio/issues/940)). Community contributions welcome.
 
 The Nix flake provides a derivation for EEZ Studio or an overlay
 that provides that derivation. It can be used to install the project using
