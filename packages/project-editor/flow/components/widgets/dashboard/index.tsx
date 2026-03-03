@@ -2276,7 +2276,7 @@ export class BitmapDashboardWidget extends Widget {
 
                 const fileType = detectFileType(data);
                 return URL.createObjectURL(
-                    new Blob([data], { type: fileType.mime } /* (1) */)
+                    new Blob([Buffer.from(data)], { type: fileType.mime } /* (1) */)
                 );
             }
 

@@ -19,6 +19,7 @@ import {
     hasFlowSupport,
     isAppletProject,
     isDashboardProject,
+    isEezGuiLiteProject,
     isLVGLProject,
     isNotV1Project
 } from "project-editor/project/project-type-traits";
@@ -197,7 +198,7 @@ export class Action extends Flow {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                disabled: isLVGLProject
+                disabled: (object: IEezObject) => isLVGLProject(object) || isEezGuiLiteProject(object)
             },
             {
                 name: "name",

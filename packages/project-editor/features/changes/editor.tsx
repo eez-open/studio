@@ -127,10 +127,7 @@ export const ChangesEditor = observer(
 
         get flowChange() {
             function getFlowObject(object: EezObject | EezObject[]) {
-                const component = getAncestorOfType(
-                    object,
-                    Component.classInfo
-                );
+                const component = ProjectEditor.getComponent(object);
                 if (component) {
                     return component as Component;
                 }
@@ -168,17 +165,10 @@ export const ChangesEditor = observer(
                             selectedFlowObjectAfter: undefined
                         };
                     } else {
-                        const flow = getAncestorOfType(
-                            this.selectedProjectChange.objectAfter,
-                            Flow.classInfo
-                        );
-
+                        const flow = ProjectEditor.getFlow(this.selectedProjectChange.objectAfter);
                         if (flow) {
                             return {
-                                flowBefore: getAncestorOfType(
-                                    this.selectedProjectChange.objectBefore,
-                                    Flow.classInfo
-                                ) as Flow,
+                                flowBefore: ProjectEditor.getFlow(this.selectedProjectChange.objectBefore),
                                 flowAfter: flow as Flow,
                                 selectedFlowObjectBefore: getFlowObject(
                                     this.selectedProjectChange.objectBefore
@@ -200,17 +190,15 @@ export const ChangesEditor = observer(
                         return undefined;
                     }
 
-                    const flow = getAncestorOfType(
-                        getParent(this.selectedProjectChange.arrayAfter),
-                        Flow.classInfo
+                    const flow = ProjectEditor.getFlow(
+                        getParent(this.selectedProjectChange.arrayAfter)
                     );
 
                     if (flow) {
                         return {
-                            flowBefore: getAncestorOfType(
-                                this.selectedProjectChange.arrayBefore,
-                                Flow.classInfo
-                            ) as Flow,
+                            flowBefore: ProjectEditor.getFlow(
+                                this.selectedProjectChange.arrayBefore
+                            ),
                             flowAfter: flow as Flow,
                             selectedFlowObjectBefore: getFlowObject(
                                 this.selectedProjectChange.arrayBefore[

@@ -740,6 +740,132 @@ export interface IWasmFlowRuntime {
     _lvglCreateAnim(setDelay: boolean, delay: number, setRepeatDelay: boolean, repeatDelay: number, setRepeatCount: boolean, repeatCount: number): number;
 
     _eez_flow_init_themes(themeNames: number, numThemes: number, changeColorTheme: number, themeColors: number, numColorsPerTheme: number);
+
+    // EEZ-GUI Lite
+
+    _initEezGuiLite(displayWidth: number, displayHeight: number): void;
+
+    // EEZ-GUI Lite — colors, fonts, styles
+    _setColors(colorsPtr: number, numColors: number): void;
+    _setFonts(fontsPtr: number, numFonts: number): void;
+    _setStyles(stylesPtr: number, numStyles: number): void;
+
+    // EEZ-GUI Lite — widget allocation
+    _allocTextWidget(): number;
+    _allocButtonWidget(): number;
+    _allocRectangleWidget(): number;
+    _allocSwitchWidget(): number;
+    _allocSelectWidget(): number;
+    _allocContainerWidget(): number;
+    _freeWidget(widgetPtr: number): void;
+
+    // EEZ-GUI Lite — widget field setters
+    _setWidgetFlags(widgetPtr: number, flags: number): void;
+    _setWidgetGeometry(widgetPtr: number, x: number, y: number, w: number, h: number): void;
+    _setWidgetStyle(widgetPtr: number, style: number): void;
+    _setWidgetVisible(widgetPtr: number, isVisible: number): void;
+    _setTextWidgetText(widgetPtr: number, textProp: number): void;
+    _setButtonWidgetText(widgetPtr: number, textProp: number): void;
+    _setSwitchWidgetChecked(widgetPtr: number, isCheckedProp: number): void;
+
+    // EEZ-GUI Lite — page rendering
+    _startPage(pageDataPtr: number, style: number): void;
+    _endPage(): void;
+    _renderTextWidget(widgetPtr: number): void;
+    _renderButtonWidget(widgetPtr: number): void;
+    _renderRectangleWidget(widgetPtr: number): void;
+    _renderSwitchWidget(widgetPtr: number): void;
+    _renderSelectBegin(widgetPtr: number): void;
+    _renderSelectEnd(widgetPtr: number): void;
+    _renderContainerBegin(widgetPtr: number): void;
+    _renderContainerEnd(widgetPtr: number): void;
+
+    // EEZ-GUI Lite — input and refresh
+    _pointerInput(x: number, y: number, pressed: boolean): void;
+    _requestRefresh(): void;
+
+    // EEZ-GUI Lite — struct sizes and offsets
+    _sizeofStyle(): number;
+    _sizeofColor(): number;
+    _sizeofFontData(): number;
+    _sizeofGlyphData(): number;
+    _sizeofGlyphsGroup(): number;
+    _sizeofTextWidget(): number;
+    _sizeofButtonWidget(): number;
+    _sizeofRectangleWidget(): number;
+    _sizeofSwitchWidget(): number;
+    _sizeofSelectWidget(): number;
+    _sizeofContainerWidget(): number;
+
+    // EEZ-GUI Lite — style struct offsets
+    _offsetofStyleFlags(): number;
+    _offsetofStyleBgColor(): number;
+    _offsetofStyleColor(): number;
+    _offsetofStyleActiveBgColor(): number;
+    _offsetofStyleActiveColor(): number;
+    _offsetofStyleBorderSizeTop(): number;
+    _offsetofStyleBorderSizeRight(): number;
+    _offsetofStyleBorderSizeBottom(): number;
+    _offsetofStyleBorderSizeLeft(): number;
+    _offsetofStyleBorderColor(): number;
+    _offsetofStyleFont(): number;
+    _offsetofStylePaddingTop(): number;
+    _offsetofStylePaddingRight(): number;
+    _offsetofStylePaddingBottom(): number;
+    _offsetofStylePaddingLeft(): number;
+
+    // EEZ-GUI Lite — glyph_data_t offsets
+    _offsetofGlyphDx(): number;
+    _offsetofGlyphW(): number;
+    _offsetofGlyphH(): number;
+    _offsetofGlyphX(): number;
+    _offsetofGlyphY(): number;
+    _offsetofGlyphPixelsIndex(): number;
+
+    // EEZ-GUI Lite — glyphs_group_t offsets
+    _offsetofGroupEncoding(): number;
+    _offsetofGroupGlyphIndex(): number;
+    _offsetofGroupLength(): number;
+
+    // EEZ-GUI Lite — font_data_t offsets
+    _offsetofFontAscent(): number;
+    _offsetofFontDescent(): number;
+    _offsetofFontEncodingStart(): number;
+    _offsetofFontEncodingEnd(): number;
+    _offsetofFontGroups(): number;
+    _offsetofFontGlyphs(): number;
+    _offsetofFontPixels(): number;
+
+    // EEZ-GUI Lite — widget struct offsets
+    _offsetofWidgetFlags(): number;
+    _offsetofWidgetX(): number;
+    _offsetofWidgetY(): number;
+    _offsetofWidgetW(): number;
+    _offsetofWidgetH(): number;
+    _offsetofWidgetStyle(): number;
+    _offsetofWidgetVisible(): number;
+    _offsetofTextWidgetText(): number;
+    _offsetofButtonWidgetText(): number;
+    _offsetofSwitchWidgetChecked(): number;
+
+    // EEZ-GUI Lite — constants
+    _getWidgetFlagClickable(): number;
+    _getStyleFlagHorzAlignLeft(): number;
+    _getStyleFlagHorzAlignRight(): number;
+    _getStyleFlagHorzAlignCenter(): number;
+    _getStyleFlagVertAlignTop(): number;
+    _getStyleFlagVertAlignBottom(): number;
+    _getStyleFlagVertAlignCenter(): number;
+    _getStyleFlagBlink(): number;
+
+    // EEZ-GUI Lite — color helper
+    _makeColor(r: number, g: number, b: number): number;
+
+    // EEZ-GUI Lite — JS callback registration (set on Module object)
+    _jsGetStrProp?: (prop: number) => number;
+    _jsGetBoolProp?: (prop: number) => number;
+    _jsGetIntProp?: (prop: number) => number;
+    _jsOnEvent?: (widgetPtr: number, eventType: number) => void;
 }
 
 export interface IDashboardComponentContext {

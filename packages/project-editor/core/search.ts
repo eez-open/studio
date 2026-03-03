@@ -42,8 +42,6 @@ import {
     SCPI_PART_QUERY_WITH_ASSIGNMENT
 } from "eez-studio-shared/scpi-parser";
 
-import type { Component } from "project-editor/flow/component";
-
 import {
     ValueType,
     variableTypeProperty
@@ -371,10 +369,7 @@ export function* searchForObjectDependencies(
                         valueObject
                     };
 
-                    const component = getAncestorOfType<Component>(
-                        valueObject,
-                        ProjectEditor.ComponentClass.classInfo
-                    );
+                    const component = ProjectEditor.getComponent(valueObject);
                     let expressions;
 
                     if (flowProperty && flowProperty == "template-literal") {
@@ -491,7 +486,7 @@ export function* searchForReference(
         object instanceof ProjectEditor.VariableClass ||
         object instanceof ProjectEditor.UserPropertyClass
     ) {
-        let flow = getAncestorOfType(object, ProjectEditor.FlowClass.classInfo);
+        let flow = ProjectEditor.getFlow(object);
         if (flow) {
             identifierType = "local-variable";
             root = flow;
@@ -515,16 +510,10 @@ export function* searchForReference(
         enumType = `enum:${parentEnum!.name}`;
     } else if (object instanceof ProjectEditor.CustomInputClass) {
         identifierType = "input";
-        root = getAncestorOfType(
-            object,
-            ProjectEditor.ComponentClass.classInfo
-        )!;
+        root = ProjectEditor.getComponent(object);
     } else if (object instanceof ProjectEditor.CustomOutputClass) {
         identifierType = "output";
-        root = getAncestorOfType(
-            object,
-            ProjectEditor.ComponentClass.classInfo
-        )!;
+        root = ProjectEditor.getComponent(object);
     } else if (object instanceof ProjectEditor.ImportDirectiveClass) {
         identifierType = "imported-project";
     }

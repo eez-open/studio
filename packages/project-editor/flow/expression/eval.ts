@@ -52,7 +52,7 @@ export interface IExpressionContext {
 
 export function evalExpression(
     expressionContext: IExpressionContext,
-    component: Component,
+    component: Component | undefined,
     expression: string
 ) {
     if (typeof expression == "string") {
@@ -74,7 +74,7 @@ export function evalExpression(
         }
 
         findValueTypeInExpressionNode(
-            ProjectEditor.getProject(component),
+            expressionContext.projectStore.project,
             component,
             rootNode,
             false
@@ -352,7 +352,7 @@ function getNodeDescription(node: ExpressionNode) {
 
 function evalExpressionWithContext(
     expressionContext: IExpressionContext,
-    component: Component,
+    component: Component | undefined,
     rootNode: ExpressionNode
 ) {
     function evalNode(node: ExpressionNode): any {
@@ -361,16 +361,18 @@ function evalExpressionWithContext(
         }
 
         if (node.type == "Identifier") {
-            const input = component.inputs.find(
-                input => input.name == node.name
-            );
-            if (input != undefined) {
-                const flowState = expressionContext.flowState;
-                if (!flowState) {
-                    throw `cannot get input "${input.name}" value without flow state`;
-                }
+            if (component) {
+                const input = component.inputs.find(
+                    input => input.name == node.name
+                );
+                if (input != undefined) {
+                    const flowState = expressionContext.flowState;
+                    if (!flowState) {
+                        throw `cannot get input "${input.name}" value without flow state`;
+                    }
 
-                return flowState.getInputValue(component, input.name);
+                    return flowState.getInputValue(component, input.name);
+                }
             }
 
             if (expressionContext.dataContext.has(node.name)) {

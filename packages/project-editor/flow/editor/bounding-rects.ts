@@ -18,9 +18,7 @@ import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getId } from "project-editor/core/object";
 import { ComponentGroup } from "project-editor/flow/component-group";
-import { getAncestorOfType } from "project-editor/store";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
-import type { Page } from "project-editor/features/page/page";
 
 export function getObjectBoundingRect(
     viewState: IViewState,
@@ -233,10 +231,7 @@ export function isLVGLWidgetOutsideOfItsPageBounds(object: TreeObjectAdapter, fl
         return false;
     }
     const lvglWidget = object.object as LVGLWidget;
-    const page = getAncestorOfType<Page>(
-        lvglWidget,
-        ProjectEditor.PageClass.classInfo
-    );
+    const page = ProjectEditor.getPage(lvglWidget);
     if (page) {
         const pageObject = flowDocument.findObjectById(getId(page));
         if (pageObject) {

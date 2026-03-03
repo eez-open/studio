@@ -24,12 +24,10 @@ import {
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
 import {
-    getAncestorOfType,
     getProjectStore,
     ProjectStore
 } from "project-editor/store";
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
-import type { Component } from "project-editor/flow/component";
 import {
     binaryOperators,
     builtInConstants,
@@ -432,10 +430,7 @@ const SelectItemDialog = observer(
         });
 
         get component() {
-            return getAncestorOfType(
-                this.props.object,
-                ProjectEditor.ComponentClass.classInfo
-            ) as Component;
+            return ProjectEditor.getComponent(this.props.object);
         }
 
         get flow() {

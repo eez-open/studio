@@ -91,6 +91,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { AssetsMap } from "eez-studio-types";
 import { isDashboardProject } from "project-editor/project/project-type-traits";
 import type { LVGLStyle } from "project-editor/lvgl/style";
+import { BuildEezGuiLite } from "project-editor/eez-gui-lite/build";
 
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
@@ -1869,6 +1870,17 @@ export async function buildAssets(
     }
 
     result.EEZ_FLOW_IS_USING_CRYPTO_SHA256 = assets.isUsingCrypyoSha256;
+
+    // build eez-gui-lite source code
+    if (sectionNames!.indexOf("EEZ_GUI_LITE_DECL") !== -1 || sectionNames!.indexOf("EEZ_GUI_LITE_DEF") !== -1) {
+        const buildEezGuiLite = new BuildEezGuiLite(assets); 
+        if (sectionNames!.indexOf("EEZ_GUI_LITE_DECL") !== -1) {
+            result.EEZ_GUI_LITE_DECL = buildEezGuiLite.buildDecl();
+        }
+        if (sectionNames!.indexOf("EEZ_GUI_LITE_DEF") !== -1) {
+            result.EEZ_GUI_LITE_DEF = buildEezGuiLite.BuildDef();
+        }
+    }
 
     return Object.assign(
         result,

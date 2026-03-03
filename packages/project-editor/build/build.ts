@@ -37,6 +37,7 @@ import { buildAssets } from "project-editor/build/assets";
 import { buildScpi } from "project-editor/build/scpi";
 import { generateSourceCodeForEezFramework } from "project-editor/lvgl/build";
 import { cleanupSourceFile } from "project-editor/build/cleanup-c-source-files";
+import { generateSourceCodeForEezGuiLite } from "project-editor/eez-gui-lite/build";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -604,6 +605,14 @@ export async function build(
                     ] as any as boolean
                 );
             }
+
+            if (project.projectTypeTraits.isEezGuiLite) {
+                await generateSourceCodeForEezGuiLite(
+                    project,
+                    destinationFolderPath || ""
+                );
+            }
+
 
             // Disable tracking after file generation
             disableBuildTracking();

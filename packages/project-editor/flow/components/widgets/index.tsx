@@ -27,7 +27,6 @@ import {
     propertyNotSetMessage,
     createObject,
     getChildOfObject,
-    getAncestorOfType,
     updateObject,
     getObjectPathAsString
 } from "project-editor/store";
@@ -127,10 +126,7 @@ const ContainerWidgetEditLayout = observer(
         editLayout = () => {
             const containerWidget = this.props.objects[0] as ContainerWidget;
             const projectStore = getProjectStore(containerWidget);
-            const page = getAncestorOfType<Page>(
-                containerWidget,
-                ProjectEditor.PageClass.classInfo
-            );
+            const page = ProjectEditor.getPage(containerWidget);
             if (!page) {
                 return;
             }
@@ -854,7 +850,8 @@ export class ListWidget extends Widget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1063,7 +1060,8 @@ export class GridWidget extends Widget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1909,10 +1907,7 @@ export class UserWidgetWidget extends Widget {
             return false;
         }
 
-        const origPage = getAncestorOfType(
-            this,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
+        const origPage = ProjectEditor.getPage(this);
 
         return testForCycle(userWidgetPage);
     }

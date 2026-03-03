@@ -7,7 +7,6 @@ import {
 } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
-    getAncestorOfType,
     getObjectPathAsString,
     getProjectStore,
     Message
@@ -41,7 +40,7 @@ export function getExpressionPropertyData(
         return undefined;
     }
 
-    const page = getAncestorOfType(widget, ProjectEditor.PageClass.classInfo)!;
+    const page = ProjectEditor.getPage(widget);
     const pagePath = getObjectPathAsString(page);
     const flowIndex = runtime.wasm.assetsMap.flowIndexes[pagePath];
     if (flowIndex == undefined) {

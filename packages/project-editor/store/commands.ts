@@ -19,8 +19,7 @@ import {
     getClassInfo,
     getProjectStore,
     getHumanReadableObjectPath,
-    isArrayElement,
-    getAncestorOfType
+    isArrayElement
 } from "project-editor/store/helper";
 
 import { ICommand } from "project-editor/store/undo-manager";
@@ -28,17 +27,13 @@ import { visitObjects } from "project-editor/core/search";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import type { Style } from "project-editor/features/style/style";
-import type { Page } from "project-editor/features/page/page";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // make sure LVGL widget ends up inside LVGLScreenWidget
 function fixParentObject(parentObject: IEezObject, object: EezObject) {
     if (object instanceof ProjectEditor.LVGLWidgetClass) {
-        const page = getAncestorOfType<Page>(
-            parentObject,
-            ProjectEditor.PageClass.classInfo
-        );
+        const page = ProjectEditor.getPage(parentObject);
         if (page && page.lvglScreenWidget && parentObject == page.components) {
             return page.lvglScreenWidget.children;
         }

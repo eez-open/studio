@@ -6,9 +6,7 @@ import { IEezObject, makeDerivedClassInfo } from "project-editor/core/object";
 import { ProjectType } from "project-editor/project/project";
 
 import { LVGLWidget } from "./internal";
-import { getAncestorOfType } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { Page } from "project-editor/features/page/page";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,10 +63,7 @@ export class LVGLScreenWidget extends LVGLWidget {
     }
 
     override toLVGLCode(code: LVGLCode) {
-        const page = getAncestorOfType(
-            this,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
+        const page = ProjectEditor.getPage(this);
 
         if (code.lvglBuild) {
             if (page.isUsedAsUserWidget) {

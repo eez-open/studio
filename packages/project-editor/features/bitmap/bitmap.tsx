@@ -49,6 +49,7 @@ import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import {
     BitmapColorFormat,
     isDashboardProject,
+    isEezGuiLiteProject,
     isLVGLProject,
     isNotLVGLProject
 } from "project-editor/project/project-type-traits";
@@ -155,7 +156,7 @@ export class Bitmap extends EezObject {
                 unique: true,
                 propertyGridGroup: generalGroup,
                 disabled: (bitmap: Bitmap) =>
-                    isLVGLProject(bitmap) || isDashboardProject(bitmap)
+                    isLVGLProject(bitmap) || isDashboardProject(bitmap) || isEezGuiLiteProject(bitmap)
             },
             {
                 name: "name",

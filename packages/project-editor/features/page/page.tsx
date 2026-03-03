@@ -33,6 +33,7 @@ import {
 import {
     hasFlowSupport,
     isDashboardProject,
+    isEezGuiLiteProject,
     isLVGLProject,
     isNotLVGLProject
 } from "project-editor/project/project-type-traits";
@@ -81,6 +82,7 @@ import type { ProjectEditorFeature } from "project-editor/store/features";
 import { PAGES_ICON } from "project-editor/ui-components/icons";
 import { ProjectContext } from "project-editor/project/context";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
+import { EezGuiLitePage } from "project-editor/eez-gui-lite/Page";
 
 export const FLOW_FRAGMENT_PAGE_NAME = "$FlowFragment";
 
@@ -351,7 +353,7 @@ export class Page extends Flow {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                disabled: isLVGLProject
+                disabled: (object: Page) => isLVGLProject(object) || isEezGuiLiteProject(object)
             },
             {
                 name: "name",
@@ -408,7 +410,7 @@ export class Page extends Flow {
                 displayName: "Data context",
                 type: PropertyType.JSON,
                 propertyGridGroup: generalGroup,
-                disabled: isLVGLProject
+                disabled: (object: Page) => isLVGLProject(object) || isEezGuiLiteProject(object)
             },
             {
                 name: "left",
@@ -483,7 +485,7 @@ export class Page extends Flow {
                 type: PropertyType.Boolean,
                 propertyGridGroup: generalGroup,
                 disabled: object =>
-                    isDashboardProject(object) || isLVGLProject(object)
+                    isDashboardProject(object) || isLVGLProject(object) || isEezGuiLiteProject(object)
             },
             {
                 name: "createAtStart",
@@ -875,7 +877,7 @@ export class Page extends Flow {
         return (
             !projectStore.projectTypeTraits.isDashboard &&
             projectStore.runtime &&
-            projectStore.runtime instanceof ProjectEditor.WasmRuntimeClass &&
+            (projectStore.runtime instanceof ProjectEditor.WasmRuntimeClass || projectStore.runtime instanceof ProjectEditor.EezGuiLiteWasmRuntimeClass) &&
             projectStore.runtime.selectedPage == this
         );
     }
@@ -885,7 +887,7 @@ export class Page extends Flow {
         return (
             !projectStore.projectTypeTraits.isDashboard &&
             projectStore.runtime &&
-            projectStore.runtime instanceof ProjectEditor.WasmRuntimeClass &&
+            (projectStore.runtime instanceof ProjectEditor.WasmRuntimeClass || projectStore.runtime instanceof ProjectEditor.EezGuiLiteWasmRuntimeClass) &&
             !projectStore.runtime.getFlowState(this)
         );
     }
@@ -904,7 +906,7 @@ export class Page extends Flow {
                         )}
                     {(
                         flowContext.projectStore.runtime! as WasmRuntime
-                    ).renderPage()}
+                    ).renderPage(this)}
                 </>
             );
         }
@@ -921,6 +923,23 @@ export class Page extends Flow {
             );
         }
 
+        if (flowContext.projectStore.projectTypeTraits.isEezGuiLite) {
+            return (
+                <>
+                    <ComponentEnclosure
+                        component={this}
+                        flowContext={flowContext}
+                    />
+                    {flowContext.projectStore.runtime instanceof
+                    ProjectEditor.EezGuiLiteWasmRuntimeClass ? (
+                        flowContext.projectStore.runtime.renderPage(this)
+                    ) : (
+                        <EezGuiLitePage page={this} flowContext={flowContext} />
+                    )}
+                </>
+            );
+        }
+        
         let width: number | undefined;
         let height: number | undefined;
 
@@ -1059,7 +1078,10 @@ export class Page extends Flow {
     }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        if (flowContext.projectStore.projectTypeTraits.isLVGL) {
+        if (
+            flowContext.projectStore.projectTypeTraits.isLVGL ||
+            flowContext.projectStore.projectTypeTraits.isEezGuiLite
+        ) {
             return;
         }
 

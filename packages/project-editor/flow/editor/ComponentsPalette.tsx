@@ -25,7 +25,6 @@ import { DragAndDropManager } from "project-editor/core/dd";
 import {
     createObject,
     findPastePlaceInside,
-    getAncestorOfType,
     getClass,
     getClassInfo,
     NavigationStore,
@@ -129,7 +128,7 @@ export function newComponentMenuItem(
     menuItems: Electron.MenuItem[],
     atPoint?: Point
 ) {
-    const flow = getAncestorOfType(object, ProjectEditor.FlowClass.classInfo);
+    const flow = ProjectEditor.getFlow(object);
     if (flow) {
         const isPage = flow instanceof ProjectEditor.PageClass;
         const isAction = flow instanceof ProjectEditor.ActionClass;

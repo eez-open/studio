@@ -1,6 +1,5 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
 import React from "react";
-import { URL } from "url";
 
 import { IDialogOptions, showDialog } from "eez-studio-ui/dialog";
 import {
@@ -124,14 +123,9 @@ export function onAfterPaste(
 export const SCRAPBOOK_ITEM_FILE_PREFIX = "scrapbook://";
 
 export function isValidUrl(s: string) {
-    try {
-        if (s.startsWith(SCRAPBOOK_ITEM_FILE_PREFIX)) {
-            return true;
-        }
-
-        const url = new URL(s);
-        return url.protocol === "http:" || url.protocol === "https:";
-    } catch (err) {
-        return false;
+    if (s.startsWith(SCRAPBOOK_ITEM_FILE_PREFIX)) {
+        return true;
     }
+
+    return /^https?:\/\/.+/.test(s);
 }

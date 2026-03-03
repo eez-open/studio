@@ -1395,14 +1395,37 @@ button.EezStudio_Action {
     color: @textColor;
 }
 
+.flexlayout__tabset_tabbar_inner_tab_container {
+    position: relative !important;
+    width: 100% !important;
+}
+
+.flexlayout__tab_button {
+    min-width: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+
 .flexlayout__tab_button_content {
     font-family: var(--bs-font-sans-serif) !important;
     font-size: 14px !important;
+    display: block !important;
+    overflow: hidden;
+    
+    white-space: nowrap;
+}
+
+.flexlayout__tab_button_overflow {
+    display: none !important;
 }
 
 .flexlayout__tab_button_leading .EezStudio_Icon {
     color: @textColor;
     opacity: 0.9;
+}
+
+.flexlayout__tab_toolbar {
+    padding: 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

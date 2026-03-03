@@ -24,7 +24,6 @@ import {
 import {
     createObject,
     EezValueObject,
-    getAncestorOfType,
     Message,
     propertyNotSetMessage,
     Section
@@ -555,10 +554,7 @@ export class UserPropertyValues extends EezObject {
                 return;
             }
 
-            const component = getAncestorOfType(
-                userPropertyValues,
-                ProjectEditor.ComponentClass.classInfo
-            ) as Component;
+            const component = ProjectEditor.getComponent(userPropertyValues);
 
             flow.userProperties.forEach(userProperty => {
                 const value = userPropertyValues.values[userProperty.id];

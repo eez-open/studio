@@ -1,8 +1,9 @@
 import { guid } from "eez-studio-shared/guid";
 import { action, computed, makeObservable } from "mobx";
 import { getParent, IEezObject } from "project-editor/core/object";
-import { getProjectStore, getAncestorOfType } from "project-editor/store";
+import { getProjectStore } from "project-editor/store";
 import { Component } from "project-editor/flow/component";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
 import { Transform } from "project-editor/flow/editor/transform";
 import { IEditorState } from "project-editor/project/ui/EditorComponent";
@@ -132,7 +133,7 @@ export abstract class FlowTabState implements IEditorState {
                 objects[0] instanceof ConnectionLine
             )
         ) {
-            const object = getAncestorOfType(objects[0], Component.classInfo);
+            const object = ProjectEditor.getComponent(objects[0]);
             if (object) {
                 objects = [object];
             }

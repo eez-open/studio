@@ -1,6 +1,6 @@
 import { makeObservable, computed } from "mobx";
 
-import { ProjectStore, getAncestorOfType } from "project-editor/store";
+import { ProjectStore } from "project-editor/store";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Flow } from "project-editor/flow/flow";
@@ -163,7 +163,7 @@ export class LVGLIdentifiers {
 
     getIdentifier(object: LVGLWidget): LVGLIdentifier | undefined {
         return this.getIdentifierByName(
-            getAncestorOfType(object, ProjectEditor.FlowClass.classInfo)!,
+            ProjectEditor.getFlow(object),
             object.identifier
         );
     }

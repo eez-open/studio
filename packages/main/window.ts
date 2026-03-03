@@ -230,7 +230,7 @@ ipcMain.on("reload", (event: any) => {
     const window = findWindowByWebContents(event.sender);
     if (window) {
         window.browserWindow.webContents.reload();
-        window.browserWindow.webContents.clearHistory();
+        window.browserWindow.webContents.navigationHistory.clear();
     }
 });
 

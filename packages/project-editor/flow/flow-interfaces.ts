@@ -79,6 +79,7 @@ export interface IRuntime {
         sourceComponent: Component,
         message: string
     ): void;
+    getTick(): number;
     selectedPage: IFlow;
 }
 

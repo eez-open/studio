@@ -50,15 +50,6 @@ import type {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/*
-
-system inputs: @seqin
-system outputs: @seqout
-
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-
 export interface QueueTask {
     id: number;
     flowState: FlowState;
@@ -94,7 +85,6 @@ export abstract class RuntimeBase implements IRuntime {
     isDebuggerActive = false;
 
     _selectedPage: Page;
-    _previousPage: Page;
     selectedFlowState: FlowState | undefined;
     selectedQueueTask: QueueTask | undefined;
 
@@ -115,6 +105,13 @@ export abstract class RuntimeBase implements IRuntime {
     totalMemory: number = 0;
 
     isRTL: boolean = false;
+
+    tickTime: number = 0;
+    stateChangeTickTime: number = 0;
+
+    get isRunning() {
+        return this.state == State.RUNNING;
+    }
 
     get isPaused() {
         return this.state == State.PAUSED;
@@ -140,7 +137,6 @@ export abstract class RuntimeBase implements IRuntime {
 
     set selectedPage(value: Page) {
         runInAction(() => {
-            this._previousPage = this._selectedPage;
             this._selectedPage = value;
         });
 
@@ -153,10 +149,6 @@ export abstract class RuntimeBase implements IRuntime {
                 this.projectStore.editorsStore.openEditor(this.selectedPage);
             }
         }, 50);
-    }
-
-    get previousPage() {
-        return this._previousPage;
     }
 
     setActiveConnectionLine(connectionLine: ConnectionLine) {
@@ -179,6 +171,7 @@ export abstract class RuntimeBase implements IRuntime {
             setState: action,
             transition: action,
             pushTask: action,
+            unshiftTask: action,
             popTask: action,
             showNextQueueTask: action,
             freeMemory: observable,
@@ -187,6 +180,14 @@ export abstract class RuntimeBase implements IRuntime {
         });
 
         this.selectedPage = this.projectStore.project.pages[0];
+        this.stateChangeTickTime = Date.now();
+    }
+
+    getTick() {
+        if (this.state == State.RUNNING || this.state == State.RESUMED) {
+            return this.tickTime + (Date.now() - this.stateChangeTickTime);
+        }
+        return this.tickTime;
     }
 
     startRuntime(isDebuggerActive: boolean) {
@@ -225,6 +226,11 @@ export abstract class RuntimeBase implements IRuntime {
     }
 
     private setState(state: State) {
+        if (this.state == State.RUNNING || state == State.RESUMED) {
+            this.tickTime += Date.now() - this.stateChangeTickTime;
+        }
+        this.stateChangeTickTime = Date.now();
+
         this.state = state;
 
         if (this.state == State.PAUSED) {
@@ -367,6 +373,28 @@ export abstract class RuntimeBase implements IRuntime {
             this.showNextQueueTask();
         }
     }
+
+    unshiftTask({
+        flowState,
+        component,
+        connectionLine
+    }: {
+        flowState: FlowState;
+        component: Component;
+        connectionLine?: ConnectionLine;
+    }) {
+        this.queue.unshift({
+            id: ++this.queueTaskId,
+            flowState,
+            component,
+            connectionLine
+        });
+        flowState.numActiveComponents++;
+
+        if (this.state == State.PAUSED) {
+            this.showNextQueueTask();
+        }
+    }    
 
     popTask() {
         this.queue.shift();
@@ -841,6 +869,7 @@ export class FlowState implements IFlowState {
     isFinished: boolean = false;
     numActiveComponents = 0;
     timelinePosition: number = 0;
+    expressionContext: IExpressionContext;
 
     constructor(
         public runtime: RuntimeBase,

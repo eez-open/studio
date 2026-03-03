@@ -34,7 +34,6 @@ import {
     getId
 } from "project-editor/core/object";
 import {
-    getAncestorOfType,
     updateObject,
     createObject,
     getProjectStore,
@@ -1569,10 +1568,7 @@ class WidgetTimelinePath {
     }
 
     get pageTabState() {
-        const page = getAncestorOfType<Page>(
-            this.widget,
-            ProjectEditor.PageClass.classInfo
-        )!;
+        const page = ProjectEditor.getPage(this.widget);
         const projectStore = getProjectStore(page);
 
         const editor = projectStore.editorsStore.getEditorByObject(page);
@@ -2920,10 +2916,7 @@ export function getTimelineProperty(
         value = widget[propertyName] ?? 0;
     } else {
         if (widget instanceof ProjectEditor.LVGLWidgetClass) {
-            const page = getAncestorOfType(
-                widget,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
+            const page = ProjectEditor.getPage(widget);
 
             let stylePropertyInfo;
 
@@ -3039,10 +3032,7 @@ export function getKeyframesFromPropertyValue(
     propertyName: TimelineKeyframeProperty
 ) {
     return getKeyframesValue<number>(keyframes, keyframe => {
-        const widget: Widget = getAncestorOfType(
-            keyframe,
-            ProjectEditor.WidgetClass.classInfo
-        )!;
+        const widget: Widget = ProjectEditor.getWidget(keyframe)!;
 
         let fromValue;
 

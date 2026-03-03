@@ -14,8 +14,7 @@ import { LayoutModels, type ProjectStore } from "project-editor/store";
 import {
     isValue,
     getObjectPathAsString,
-    findPropertyByChildObject,
-    getAncestorOfType
+    findPropertyByChildObject
 } from "project-editor/store/helper";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 
@@ -414,10 +413,7 @@ export class NavigationStore {
 
                 if (
                     selectedObject &&
-                    getAncestorOfType(
-                        selectedObject,
-                        ProjectEditor.FlowClass.classInfo
-                    )
+                    ProjectEditor.getFlow(selectedObject)
                 ) {
                     this.setSelectedPanel(panel);
                 }

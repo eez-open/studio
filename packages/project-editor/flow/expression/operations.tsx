@@ -380,6 +380,10 @@ export const builtInFunctions: {
             expressionContext: IExpressionContext | undefined,
             ...args: any[]
         ) => {
+            if (expressionContext && expressionContext.flowState) {
+                return expressionContext.flowState.runtime.getTick();
+            }
+
             return Date.now();
         },
         getValueType: (...args: ValueType[]) => {

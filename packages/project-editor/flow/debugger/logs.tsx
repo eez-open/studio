@@ -274,7 +274,10 @@ export class RuntimeLogs {
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getFlowStateLabel(flowState: FlowState) {
-    return `${getLabel(flowState.flow)} (${flowState.flowStateIndex})`;
+    if (flowState.flowStateIndex != undefined) {
+        return `${getLabel(flowState.flow)} (${flowState.flowStateIndex})`;
+    }
+    return getLabel(flowState.flow);
 }
 
 function getFullFlowStateLabel(flowState: FlowState): string {

@@ -782,7 +782,8 @@ export const PROJECT_TYPE_NAMES = {
     [ProjectType.APPLET]: "BB3 Applet",
     [ProjectType.DASHBOARD]: "Dashboard",
     [ProjectType.LVGL]: "LVGL",
-    [ProjectType.IEXT]: "IEXT"
+    [ProjectType.IEXT]: "IEXT",
+    [ProjectType.EEZ_GUI_LITE]: "EEZ-GUI Lite"
 };
 
 export type LVGLVersion = "8.4.0" | "9.2.2" | "9.3.0" | "9.4.0";

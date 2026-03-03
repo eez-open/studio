@@ -60,6 +60,14 @@ class ProjectTypeTraits {
         return false;
     }
 
+    get isEezFlowLite() {
+        return false;
+    }
+
+    get isEezGuiLite() {
+        return false;
+    }
+
     get hasFlowSupport() {
         return false;
     }
@@ -249,6 +257,22 @@ class IEXTProjectTypeTraits extends ProjectTypeTraits {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class EezGuiLiteProjectTypeTraits extends FirmwareProjectTypeTraits {
+    override get id() {
+        return 8;
+    }
+
+    override get isEezFlowLite() {
+        return true;
+    }
+
+    override get isEezGuiLite() {
+        return true;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export function isDashboardProject(object: IEezObject) {
     const project = ProjectEditor.getProject(object);
     return project.projectTypeTraits.isDashboard;
@@ -351,6 +375,16 @@ export function isNotScpiProject(object: IEezObject) {
     return !projectStore.isScpiInstrument;
 }
 
+export function isEezFlowLiteProject(object: IEezObject) {
+    const project = ProjectEditor.getProject(object);
+    return project.projectTypeTraits.isEezFlowLite;
+}
+
+export function isEezGuiLiteProject(object: IEezObject) {
+    const project = ProjectEditor.getProject(object);
+    return project.projectTypeTraits.isEezGuiLite;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function createProjectTypeTraits(project: Project) {
@@ -369,5 +403,8 @@ export function createProjectTypeTraits(project: Project) {
         return new LVGLProjectTypeTraits(project);
     if (projectType === ProjectType.IEXT)
         return new IEXTProjectTypeTraits(project);
+    if (projectType === ProjectType.EEZ_GUI_LITE)
+        return new EezGuiLiteProjectTypeTraits(project);
+
     return new ProjectTypeTraits(project);
 }

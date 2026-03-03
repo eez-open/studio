@@ -26,7 +26,6 @@ import {
     IObjectClassInfo
 } from "project-editor/core/object";
 import {
-    getAncestorOfType,
     getChildOfObject,
     getClassInfo,
     getListLabel,
@@ -206,6 +205,9 @@ export class EndActionComponent extends ActionComponent {
 export class InputActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_INPUT_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
 
         properties: [
             {
@@ -296,6 +298,9 @@ export class InputActionComponent extends ActionComponent {
 export class OutputActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_OUTPUT_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
 
         properties: [
             {
@@ -386,6 +391,9 @@ export class OutputActionComponent extends ActionComponent {
 export class EvalExprActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_EVAL_EXPR_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         label: () => "Evaluate",
         componentPaletteLabel: "Evaluate",
         properties: [
@@ -513,6 +521,17 @@ export class WatchVariableActionComponent extends ActionComponent {
     }
 
     getOutputs(): ComponentOutput[] {
+        if (ProjectEditor.getProject(this).projectTypeTraits.isEezFlowLite) {
+            return [
+                {
+                    name: "@seqout",
+                    type: "null" as ValueType,
+                    isSequenceOutput: true,
+                    isOptionalOutput: true
+                }
+            ];
+        }
+
         return [
             {
                 name: "@seqout",
@@ -988,10 +1007,7 @@ class SwitchTest extends EezObject {
                 values.outputName != undefined &&
                 switchTest.outputName != values.outputName
             ) {
-                const component = getAncestorOfType<Component>(
-                    switchTest,
-                    Component.classInfo
-                );
+                const component = ProjectEditor.getComponent(switchTest);
                 if (component) {
                     ProjectEditor.getFlow(
                         component
@@ -1005,10 +1021,7 @@ class SwitchTest extends EezObject {
         },
 
         deleteObjectRefHook: (switchTest: SwitchTest) => {
-            const component = getAncestorOfType<Component>(
-                switchTest,
-                Component.classInfo
-            ) as Component;
+            const component = ProjectEditor.getComponent(switchTest);
 
             ProjectEditor.getFlow(component).deleteConnectionLinesFromOutput(
                 component,
@@ -1154,6 +1167,9 @@ export class SwitchActionComponent extends ActionComponent {
 export class CompareActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_COMPARE_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {
@@ -1373,15 +1389,7 @@ export class IsTrueActionComponent extends ActionComponent {
             </svg>
         ),
         componentHeaderColor: "#AAAA66",
-        defaultValue: {
-            value: "value",
-            customInputs: [
-                {
-                    name: "value",
-                    type: "any"
-                }
-            ]
-        }
+        defaultValue: {}
     });
 
     value: any;
@@ -1453,6 +1461,9 @@ export class IsTrueActionComponent extends ActionComponent {
 export class ConstantActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_CONSTANT_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
 
         properties: [
             makeExpressionProperty(
@@ -1613,6 +1624,9 @@ export class SortArrayActionComponent extends ActionComponent {
 
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SORT_ARRAY_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {
@@ -2011,20 +2025,6 @@ export class LogActionComponent extends ActionComponent {
                 "string"
             )
         ],
-        beforeLoadHook: (object: LogActionComponent, objectJS: any) => {
-            if (
-                !objectJS.hasOwnProperty("value") &&
-                objectJS.customInputs == undefined
-            ) {
-                objectJS.customInputs = [
-                    {
-                        name: "value",
-                        type: "string"
-                    }
-                ];
-                objectJS.value = "value";
-            }
-        },
         icon: LOG_ICON,
         componentHeaderColor: "#C0DEED"
     });
@@ -2651,6 +2651,9 @@ export class DelayActionComponent extends ActionComponent {
 export class ErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_ERROR_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {
@@ -2708,6 +2711,9 @@ export class ErrorActionComponent extends ActionComponent {
 export class CatchErrorActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_CATCH_ERROR_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [],
         icon: (
             <svg viewBox="0 0 40 40" fill="currentColor">
@@ -2741,6 +2747,9 @@ export class CatchErrorActionComponent extends ActionComponent {
 export class CounterActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_COUNTER_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {
@@ -2999,7 +3008,8 @@ export class OnEventActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_ON_EVENT_ACTION,
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL && 
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         properties: [
             {
@@ -3182,7 +3192,8 @@ export class ShowMessageBoxActionComponent extends ActionComponent {
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD && 
+            projectType !== ProjectType.EEZ_GUI_LITE,
         properties: [
             {
                 name: "messageType",
@@ -3301,7 +3312,8 @@ export class ShowKeyboardActionComponent extends ActionComponent {
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD && 
+            projectType !== ProjectType.EEZ_GUI_LITE,
         properties: [
             makeExpressionProperty(
                 {
@@ -3430,7 +3442,8 @@ export class ShowKeypadActionComponent extends ActionComponent {
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD && 
+            projectType !== ProjectType.EEZ_GUI_LITE,
         properties: [
             makeExpressionProperty(
                 {
@@ -3558,7 +3571,8 @@ export class SelectLanguageActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_SELECT_LANGUAGE_ACTION,
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL && 
+            projectType !== ProjectType.EEZ_GUI_LITE,
         properties: [
             makeExpressionProperty(
                 {
@@ -3615,7 +3629,8 @@ export class SetPageDirectionActionComponent extends ActionComponent {
         flowComponentId: COMPONENT_TYPE_SET_PAGE_DIRECTION_ACTION,
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL && 
+            projectType !== ProjectType.EEZ_GUI_LITE,
         properties: [
             {
                 name: "direction",
@@ -3693,7 +3708,8 @@ export class OverrideStyleActionComponent extends ActionComponent {
         componentPaletteGroupName: "GUI",
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD && 
+            projectType !== ProjectType.EEZ_GUI_LITE,
         properties: [
             {
                 name: "fromStyle",
@@ -3783,6 +3799,8 @@ export class AnimateActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_ANIMATE_ACTION,
         componentPaletteGroupName: "GUI",
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE,
         properties: [
             makeExpressionProperty(
                 {
@@ -4465,6 +4483,9 @@ export class SyncLockActionComponent extends ActionComponent {
 export class TestAndSetActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_TEST_AND_SET_ACTION,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeAssignableExpressionProperty(
                 {

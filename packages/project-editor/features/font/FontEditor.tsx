@@ -398,7 +398,17 @@ export const FontEditor = observer(
         onDeleteGlyph() {
             const glyph = this.selectedGlyph;
             if (glyph) {
+                let glyphIndex = this.font.glyphs.indexOf(glyph);
                 this.context.deleteObject(glyph);
+
+                runInAction(() => {
+                    if (this.font.glyphs.length > 0) {
+                        if (glyphIndex >= this.font.glyphs.length) {
+                            glyphIndex = this.font.glyphs.length - 1;
+                        }
+                        this.context.navigationStore.selectedGlyphObject.set(this.font.glyphs[glyphIndex]);
+                    }
+                });
             }
         }
 

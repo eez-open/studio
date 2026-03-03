@@ -1221,7 +1221,11 @@ export class ProjectStore {
         let runtime: RuntimeBase;
 
         if (this.projectTypeTraits.runtimeType == RuntimeType.WASM) {
-            runtime = new ProjectEditor.WasmRuntimeClass(this);
+            if (this.projectTypeTraits.isEezGuiLite) {
+                runtime = new ProjectEditor.EezGuiLiteWasmRuntimeClass(this);
+            } else {
+                runtime = new ProjectEditor.WasmRuntimeClass(this);
+            }
         } else if (this.projectTypeTraits.runtimeType == RuntimeType.REMOTE) {
             runtime = new ProjectEditor.RemoteRuntimeClass(this);
         } else {

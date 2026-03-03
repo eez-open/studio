@@ -338,13 +338,13 @@ export const Canvas = observer(
                     movementX: event.movementX
                         ? event.movementX
                         : this.mouseHandler.lastPointerEvent
-                        ? this.mouseHandler.lastPointerEvent.movementX
-                        : 0,
+                          ? this.mouseHandler.lastPointerEvent.movementX
+                          : 0,
                     movementY: event.movementY
                         ? event.movementY
                         : this.mouseHandler.lastPointerEvent
-                        ? this.mouseHandler.lastPointerEvent.movementY
-                        : 0,
+                          ? this.mouseHandler.lastPointerEvent.movementY
+                          : 0,
                     ctrlKey: event.ctrlKey,
                     shiftKey: event.shiftKey,
                     timeStamp: event.timeStamp
@@ -511,9 +511,15 @@ export const Canvas = observer(
 
                 scale = 1;
             } else if (
-                this.props.flowContext.projectStore.projectTypeTraits.isLVGL &&
-                runMode && this.props.flowContext.projectStore.runtime instanceof
-                    ProjectEditor.WasmRuntimeClass
+                (this.props.flowContext.projectStore.projectTypeTraits.isLVGL &&
+                    runMode &&
+                    this.props.flowContext.projectStore.runtime instanceof
+                        ProjectEditor.WasmRuntimeClass) ||
+                (this.props.flowContext.projectStore.projectTypeTraits
+                    .isEezGuiLite &&
+                    runMode &&
+                    this.props.flowContext.projectStore.runtime instanceof
+                        ProjectEditor.EezGuiLiteWasmRuntimeClass)
             ) {
                 xt = Math.round(
                     (transform.clientRect.width -
@@ -765,7 +771,8 @@ export const FlowViewer = observer(
             const renderParts =
                 this.flowContext.flowState ||
                 this.flowContext.flow instanceof ProjectEditor.ActionClass ||
-                this.flowContext.projectStore.projectTypeTraits.isLVGL;
+                this.flowContext.projectStore.projectTypeTraits.isLVGL ||
+                this.flowContext.projectStore.projectTypeTraits.isEezGuiLite;
 
             const lvglCreateInProgress = isLVGLCreateInProgress(
                 this.flowContext.flow

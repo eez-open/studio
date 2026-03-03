@@ -22,7 +22,6 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 
 import {
-    getAncestorOfType,
     getClassInfo,
     ProjectStore
 } from "project-editor/store";
@@ -439,10 +438,7 @@ export function rewireBegin() {
 export function rewireEnd(object: IEezObject) {
     for (const connectionLine of visitObjects(object)) {
         if (connectionLine instanceof ProjectEditor.ConnectionLineClass) {
-            const flow = getAncestorOfType<Flow>(
-                connectionLine,
-                ProjectEditor.FlowClass.classInfo
-            )!;
+            const flow = ProjectEditor.getFlow(connectionLine);
 
             if (connectionLine.source) {
                 const newSource =

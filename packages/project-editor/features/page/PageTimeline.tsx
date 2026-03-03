@@ -27,7 +27,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { getId, getParent, IEezObject } from "project-editor/core/object";
 import { TreeAdapter, ITreeRow } from "project-editor/core/objectAdapter";
-import { getAncestorOfType, IPanel } from "project-editor/store";
+import { IPanel } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 
 import { setupDragScroll } from "project-editor/flow/editor/drag-scroll";
@@ -678,10 +678,7 @@ const TimelineEditor = observer(
                     this.props.tabState.selectObjects(
                         this.props.tabState.timeline.selectedKeyframes.map(
                             keyframe =>
-                                getAncestorOfType(
-                                    keyframe,
-                                    ProjectEditor.WidgetClass.classInfo
-                                )!
+                                ProjectEditor.getWidget(keyframe)!
                         )
                     );
                 });
@@ -1000,10 +997,7 @@ const TimelineEditor = observer(
                 this.props.tabState.selectObjects(
                     this.props.tabState.timeline.selectedKeyframes.map(
                         keyframe =>
-                            getAncestorOfType(
-                                keyframe,
-                                ProjectEditor.WidgetClass.classInfo
-                            )!
+                            ProjectEditor.getWidget(keyframe)!
                     )
                 );
             }

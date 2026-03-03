@@ -12,9 +12,8 @@ import {
     LVGLParts,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
-import type { Page } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getAncestorOfType, Section } from "project-editor/store";
+import { Section } from "project-editor/store";
 import React from "react";
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import {
@@ -119,10 +118,7 @@ export const LVGLStylesDefinitionProperty = observer(
             {
                 const object = this.props.objects[0];
                 if (object instanceof ProjectEditor.LVGLWidgetClass) {
-                    const page = getAncestorOfType(
-                        object,
-                        ProjectEditor.PageClass.classInfo
-                    ) as Page;
+                    const page = ProjectEditor.getPage(object);
                     runtime = page && page._lvglRuntime;
                 } else if (object instanceof ProjectEditor.LVGLStyleClass) {
                     runtime = projectStore.project.lvglStyles.lvglRuntime;

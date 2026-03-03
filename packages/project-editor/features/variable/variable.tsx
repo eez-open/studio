@@ -33,13 +33,13 @@ import {
     Message,
     propertyNotSetMessage,
     createObject,
-    getAncestorOfType,
     findPropertyByNameInObject
 } from "project-editor/store";
 import {
     isDashboardProject,
     hasFlowSupport,
-    isLVGLProject
+    isLVGLProject,
+    isEezGuiLiteProject
 } from "project-editor/project/project-type-traits";
 import {
     Project,
@@ -67,7 +67,9 @@ import {
     isValidType,
     getSystemEnums,
     isEnumType,
-    getEnumTypeNameFromType
+    getEnumTypeNameFromType,
+    isArrayType,
+    getArrayElementTypeFromType
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -79,7 +81,6 @@ import { RenderVariableStatusPropertyUI } from "project-editor/features/variable
 import { VARIABLE_ICON } from "project-editor/ui-components/icons";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import type { UserProperty } from "project-editor/flow/user-property";
-import type { Flow } from "project-editor/flow/flow";
 import { observer } from "mobx-react";
 import { ProjectContext } from "project-editor/project/context";
 import { Build, getName, NamingConvention } from "project-editor/build/helper";
@@ -98,10 +99,7 @@ export function uniqueForVariableAndUserProperty(
     parent: IEezObject,
     propertyInfo?: PropertyInfo
 ) {
-    const flow = getAncestorOfType(
-        parent,
-        ProjectEditor.FlowClass.classInfo
-    ) as Flow;
+    const flow = ProjectEditor.getFlow(parent);
     if (!flow) {
         return validators.unique(object, parent);
     }
@@ -218,30 +216,34 @@ export const NativeVariableImplementationInfoPropertyUI = observer(
             build.line("");
 
             build.line(
-                `${variable.type == "string"
-                    ? this.implementationLanguage == "C"
-                        ? "char "
-                        : "std::string "
-                    : nativeType
-                }${variableName}${variable.type == "string" &&
+                `${
+                    variable.type == "string"
+                        ? this.implementationLanguage == "C"
+                            ? "char "
+                            : "std::string "
+                        : nativeType
+                }${variableName}${
+                    variable.type == "string" &&
                     this.implementationLanguage == "C"
-                    ? "[100] = { 0 }"
-                    : ""
+                        ? "[100] = { 0 }"
+                        : ""
                 };`
             );
 
             build.line("");
 
             build.line(
-                `${this.implementationLanguage == "C++" ? `extern "C" ` : ""
+                `${
+                    this.implementationLanguage == "C++" ? `extern "C" ` : ""
                 }${nativeType}${"get_var_" + variableName}() {`
             );
             build.indent();
             build.line(
-                `return ${variableName}${variable.type == "string" &&
+                `return ${variableName}${
+                    variable.type == "string" &&
                     this.implementationLanguage == "C++"
-                    ? ".c_str()"
-                    : ""
+                        ? ".c_str()"
+                        : ""
                 };`
             );
             build.unindent();
@@ -250,7 +252,8 @@ export const NativeVariableImplementationInfoPropertyUI = observer(
             build.line("");
 
             build.line(
-                `${this.implementationLanguage == "C++" ? `extern "C" ` : ""
+                `${
+                    this.implementationLanguage == "C++" ? `extern "C" ` : ""
                 }void ${"set_var_" + variableName}(${nativeType}value) {`
             );
             build.indent();
@@ -297,8 +300,8 @@ export const NativeVariableImplementationInfoPropertyUI = observer(
                                 className="form-select"
                                 value={this.implementationLanguage}
                                 onChange={event =>
-                                (this.implementationLanguage =
-                                    event.target.value)
+                                    (this.implementationLanguage =
+                                        event.target.value)
                                 }
                             >
                                 <option value="C">C</option>
@@ -318,7 +321,7 @@ export const NativeVariableImplementationInfoPropertyUI = observer(
                         ref={this.codeEditorRef}
                         mode="c_cpp"
                         value={code}
-                        onChange={() => { }}
+                        onChange={() => {}}
                         readOnly={true}
                         className="form-control"
                         minLines={2}
@@ -336,17 +339,12 @@ export class Variable extends EezObject {
     id: number | undefined;
     name: string;
     description?: string;
-
     type: ValueType;
-
+    size: number;
     defaultValue: string;
-
     defaultValueList: string;
-
     usedIn?: string[];
-
     persistent: boolean;
-
     native: boolean;
 
     constructor() {
@@ -365,6 +363,7 @@ export class Variable extends EezObject {
             name: observable,
             description: observable,
             type: observable,
+            size: observable,
             defaultValue: observable,
             defaultValueList: observable,
             usedIn: observable,
@@ -382,7 +381,9 @@ export class Variable extends EezObject {
                 unique: true,
                 propertyGridGroup: generalGroup,
                 disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) || isLVGLProject(variable)
+                    !isGlobalVariable(variable) ||
+                    isLVGLProject(variable) ||
+                    isEezGuiLiteProject(variable)
             },
             {
                 name: "name",
@@ -394,6 +395,35 @@ export class Variable extends EezObject {
                 type: PropertyType.MultilineText
             },
             variableTypeProperty,
+            {
+                name: "size",
+                displayName: (variable: Variable) => {
+                    const project = ProjectEditor.getProject(variable);
+                    if (project.projectTypeTraits.isEezFlowLite) {
+                        if (variable.type == "string") {
+                            return "String length";
+                        }
+                        if (isArrayType(variable.type)) {
+                            return "Array size";
+                        }
+                    }
+                    return "size";
+                },
+                type: PropertyType.Number,
+                disabled: (variable: Variable) => {
+                    const project = ProjectEditor.getProject(variable);
+                    if (!project.projectTypeTraits.isEezFlowLite) {
+                        return true;
+                    }
+                    if (
+                        variable.type != "string" &&
+                        !isArrayType(variable.type)
+                    ) {
+                        return true;
+                    }
+                    return false;
+                }
+            },
             {
                 name: "defaultValue",
                 type: PropertyType.MultilineText,
@@ -419,9 +449,8 @@ export class Variable extends EezObject {
                         variable
                     ).projectTypeTraits.isVariableTypeSupportedAsNative(
                         variable.type
-                    ) || ProjectEditor.getProject(
-                        variable
-                    ).masterProject != null,
+                    ) ||
+                    ProjectEditor.getProject(variable).masterProject != null,
                 checkboxStyleSwitch: true
             },
             {
@@ -460,6 +489,7 @@ export class Variable extends EezObject {
                 type: PropertyType.Boolean,
                 disabled: (variable: Variable) =>
                     isLVGLProject(variable) ||
+                    isEezGuiLiteProject(variable) ||
                     !isGlobalVariable(variable) ||
                     variable.native ||
                     (isObjectType(variable.type) &&
@@ -516,8 +546,9 @@ export class Variable extends EezObject {
             );
         },
         propertiesPanelLabel: (variable: Variable) => {
-            return `${ProjectEditor.getFlow(variable) ? "Local" : "Global"
-                } variable: ${variable.name}`;
+            return `${
+                ProjectEditor.getFlow(variable) ? "Local" : "Global"
+            } variable: ${variable.name}`;
         },
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);
@@ -533,7 +564,8 @@ export class Variable extends EezObject {
                         parent
                     ).projectTypeTraits.isVariableTypeSupportedAsNative(
                         values.type
-                    ) && project.masterProject == null
+                    ) &&
+                    project.masterProject == null
                 );
             }
 
@@ -559,6 +591,26 @@ export class Variable extends EezObject {
                             name: "type",
                             type: VariableTypeFieldComponent,
                             validators: [validators.required]
+                        },
+                        {
+                            name: "stringLength",
+                            displayName: "String length",
+                            type: "number",
+                            validators: [validators.required],
+                            visible: (values: any) =>
+                                project.projectTypeTraits.isEezFlowLite &&
+                                values.type == "string" &&
+                                !values.native
+                        },
+                        {
+                            name: "arraySize",
+                            displayName: "Array size",
+                            type: "number",
+                            validators: [validators.required],
+                            visible: (values: any) =>
+                                project.projectTypeTraits.isEezFlowLite &&
+                                isArrayType(values.type) &&
+                                !values.native
                         },
                         {
                             name: "defaultValue",
@@ -589,6 +641,12 @@ export class Variable extends EezObject {
             const variableProperties: Partial<Variable> = {
                 name: result.values.name,
                 type: result.values.type,
+                size:
+                    result.values.type == "string"
+                        ? result.values.stringLength
+                        : isArrayType(result.values.type)
+                          ? result.values.arraySize
+                          : undefined,
                 defaultValue: result.values.defaultValue,
                 persistent,
                 native: isNativeFlagEnabled(result.values)
@@ -618,6 +676,49 @@ export class Variable extends EezObject {
 
             if (!variable.type) {
                 messages.push(propertyNotSetMessage(variable, "type"));
+            }
+
+            if (projectStore.projectTypeTraits.isEezFlowLite) {
+                if (variable.type == "string") {
+                    if (
+                        !Number.isInteger(Number(variable.size)) ||
+                        variable.size <= 0
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `String length must be an integer greater than zero`,
+                                getChildOfObject(variable, "size")
+                            )
+                        );
+                    }
+                } else if (isArrayType(variable.type)) {
+                    const elementType = getArrayElementTypeFromType(
+                        variable.type
+                    );
+                    if (elementType && isArrayType(elementType)) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Type '${variable.type}' not supported`,
+                                getChildOfObject(variable, "type")
+                            )
+                        );
+                    }
+
+                    if (
+                        !Number.isInteger(Number(variable.size)) ||
+                        variable.size <= 0
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Array size must be an integer greater than zero`,
+                                getChildOfObject(variable, "size")
+                            )
+                        );
+                    }
+                }
             }
 
             // if (
@@ -719,7 +820,10 @@ export class DataContext implements IDataContext {
         if (this.localVariables) {
             this.localVariables.forEach(variable => {
                 if (this.project._store.runtime) {
-                    this.runtimeValues.set(variable.fullName, undefined);
+                    this.runtimeValues.set(
+                        variable.fullName,
+                        variable.defaultValue
+                    );
                 } else {
                     try {
                         const { value } = evalConstantExpression(
@@ -1074,7 +1178,7 @@ export class DataContext implements IDataContext {
                 const valueJS = toJS(value);
                 JSON.stringify(valueJS);
                 runtimeValues[name] = valueJS;
-            } catch (err) { }
+            } catch (err) {}
         }
 
         return {
@@ -1376,7 +1480,10 @@ export class EnumMember extends EezObject implements IEnumMember {
                 project._store.updateObject(enumMember, {
                     specificValue: enumMember.value
                 });
-            } else if (values.automaticValue && values.specificValue != undefined) {
+            } else if (
+                values.automaticValue &&
+                values.specificValue != undefined
+            ) {
                 project._store.updateObject(enumMember, {
                     specificValue: undefined
                 });

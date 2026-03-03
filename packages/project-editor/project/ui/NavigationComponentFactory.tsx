@@ -26,7 +26,6 @@ import {
     Variable,
     Enum
 } from "project-editor/features/variable/variable";
-import { Component } from "project-editor/flow/component";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
 import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Language, TextResource } from "project-editor/features/texts";
@@ -39,7 +38,7 @@ export function getNavigationObject(
 ): IEezObject | undefined {
     let ancestor;
 
-    ancestor = getAncestorOfType(object, Component.classInfo);
+    ancestor = ProjectEditor.getComponent(object);
     if (ancestor) {
         return ancestor;
     }

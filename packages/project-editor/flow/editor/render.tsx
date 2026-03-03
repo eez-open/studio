@@ -257,6 +257,7 @@ export const ComponentEnclosure = observer(
             if (component instanceof ProjectEditor.WidgetClass) {
                 if (flowContext.flowState) {
                     if (
+                        !flowContext.projectStore.projectTypeTraits.isEezGuiLite &&
                         !getBooleanValue(
                             flowContext,
                             component,
@@ -463,6 +464,10 @@ export const ComponentCanvas = observer(
         }
 
         render() {
+            if (ProjectEditor.getProject(this.props.component).projectTypeTraits.isEezGuiLite) {
+                return null;
+            }
+
             const { draw } = this.props;
 
             this.canvas = document.createElement("canvas");

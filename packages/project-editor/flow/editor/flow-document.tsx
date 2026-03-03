@@ -16,7 +16,6 @@ import {
     createObject,
     updateObject,
     deleteObject,
-    getAncestorOfType,
     getProjectStore
 } from "project-editor/store";
 import type { TreeObjectAdapter } from "project-editor/core/objectAdapter";
@@ -25,7 +24,6 @@ import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Component, ActionComponent } from "project-editor/flow/component";
 import { ComponentGroup } from "project-editor/flow/component-group";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import type { Page } from "project-editor/features/page/page";
 import { canPasteWithDependencies } from "project-editor/store/paste-with-dependencies";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { selectComponentDialog } from "project-editor/flow/editor/ComponentsPalette";
@@ -131,11 +129,7 @@ export class FlowDocument implements IDocument {
                 if (
                     editorObject.object instanceof ProjectEditor.LVGLWidgetClass
                 ) {
-                    const page = getAncestorOfType<Page>(
-                        parent,
-                        ProjectEditor.PageClass.classInfo
-                    );
-
+                    const page = ProjectEditor.getPage(parent);
                     if (
                         page &&
                         page.lvglScreenWidget &&
@@ -732,7 +726,9 @@ export class FlowDocument implements IDocument {
                         targetObject instanceof LogActionComponent
                     ) {
                         if (connectionInput.isSequenceInput) {
-                            this.projectStore.deleteObject(targetObject.customInputs[0]);
+                            if (targetObject.customInputs.length > 0) {
+                                this.projectStore.deleteObject(targetObject.customInputs[0]);
+                            }
 
                             this.projectStore.updateObject(targetObject, {
                                 value: ""

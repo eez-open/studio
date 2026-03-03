@@ -29,11 +29,11 @@ import {
     propertyNotSetMessage,
     createObject,
     isEezObjectArray,
-    getAncestorOfType,
     getClassInfo
 } from "project-editor/store";
 import {
     isDashboardProject,
+    isEezGuiLiteProject,
     isNotDashboardProject,
     isV1Project,
     isV3OrNewerProject
@@ -160,10 +160,7 @@ export class ConditionalStyle extends EezObject {
 
             try {
                 checkExpression(
-                    getAncestorOfType<Widget>(
-                        conditionalStyleItem,
-                        ProjectEditor.WidgetClass.classInfo
-                    )!,
+                    ProjectEditor.getWidget(conditionalStyleItem)!,
                     conditionalStyleItem.condition
                 );
             } catch (err) {
@@ -207,7 +204,7 @@ const idProperty: PropertyInfo = {
     unique: true,
     inheritable: false,
     disabled: style =>
-        isWidgetParentOfStyle(style) || isDashboardProject(style),
+        isWidgetParentOfStyle(style) || isDashboardProject(style) || isEezGuiLiteProject(style),
     defaultValue: undefined
 };
 
@@ -414,9 +411,7 @@ export const conditionalStylesProperty: PropertyInfo = {
         if (isNotDashboardProject(object)) {
             return true;
         }
-        if (
-            !getAncestorOfType(object, ProjectEditor.ComponentClass.classInfo)
-        ) {
+        if (!ProjectEditor.getComponent(object)) {
             return true;
         }
         return false;
@@ -791,12 +786,7 @@ export const dynamicCssProperty = makeExpressionProperty(
             if (isNotDashboardProject(object)) {
                 return true;
             }
-            if (
-                !getAncestorOfType(
-                    object,
-                    ProjectEditor.ComponentClass.classInfo
-                )
-            ) {
+            if (!ProjectEditor.getComponent(object)) {
                 return true;
             }
             return false;
@@ -1213,10 +1203,7 @@ export class Style extends EezObject {
                 }
 
                 if (style.dynamicCSS) {
-                    const widget = getAncestorOfType<Widget>(
-                        style,
-                        ProjectEditor.WidgetClass.classInfo
-                    );
+                    const widget = ProjectEditor.getWidget(style);
                     if (widget) {
                         try {
                             checkExpression(widget, style.dynamicCSS);
@@ -2179,10 +2166,7 @@ export class Style extends EezObject {
         const classNames: string[] = [];
 
         if (this.conditionalStyles) {
-            const widget = getAncestorOfType<Widget>(
-                this,
-                ProjectEditor.WidgetClass.classInfo
-            );
+            const widget = ProjectEditor.getWidget(this);
             if (widget) {
                 this.conditionalStyles.forEach((conditionalStyle, index) => {
                     let condition =
@@ -2214,10 +2198,7 @@ export class Style extends EezObject {
 
     getDynamicCSSClassName(flowContext: IFlowContext) {
         if (this.dynamicCSS) {
-            const widget = getAncestorOfType<Widget>(
-                this,
-                ProjectEditor.WidgetClass.classInfo
-            );
+            const widget = ProjectEditor.getWidget(this);
             if (widget) {
                 let value = ProjectEditor.evalProperty(
                     flowContext,

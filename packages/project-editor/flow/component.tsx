@@ -35,7 +35,8 @@ import {
     IMessage,
     IPropertyGridGroupDefinition,
     isPropertyOptional,
-    setKey
+    setKey,
+    WidgetEvents
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -52,6 +53,8 @@ import {
     getObjectIcon
 } from "project-editor/store";
 import {
+    isEezFlowLiteProject,
+    isEezGuiLiteProject,
     isLVGLProject,
     isNotDashboardProject,
     isNotLVGLProject,
@@ -442,9 +445,8 @@ export function makeExpressionProperty(
                           let menuItems: Electron.MenuItem[] = [];
 
                           if (props.objects.length == 1) {
-                              const component = getAncestorOfType<Component>(
-                                  props.objects[0],
-                                  Component.classInfo
+                              const component = ProjectEditor.getComponent(
+                                  props.objects[0]
                               );
 
                               if (
@@ -608,6 +610,17 @@ export function isFlowProperty(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export function getComponent(object: IEezObject) {
+    return getAncestorOfType(object, Component.classInfo) as Component;
+}
+
+export function getWidget(object: IEezObject) {
+    return getAncestorOfType(
+        object,
+        ProjectEditor.WidgetClass.classInfo
+    ) as Widget;
+}
+
 // Return immediate parent, which can be of type Page or Widget
 // (i.e. ContainerWidget, ListWidget, GridWidget, SelectWidget)
 export function getWidgetParent(widget: Component | Page) {
@@ -629,10 +642,7 @@ export function componentInputOrOutputUnique(
     const oldName = propertyInfo
         ? getProperty(object, propertyInfo.name)
         : undefined;
-    const component = getAncestorOfType(
-        parent,
-        Component.classInfo
-    ) as Component;
+    const component = ProjectEditor.getComponent(parent);
 
     return (object: any, ruleName: string) => {
         if (!component) {
@@ -802,10 +812,7 @@ export class CustomInput extends EezObject implements ComponentInput {
 
         updateObjectValueHook: (object: CustomInput, values: any) => {
             if (values.name != undefined && object.name != values.name) {
-                const component = getAncestorOfType<Component>(
-                    object,
-                    Component.classInfo
-                );
+                const component = ProjectEditor.getComponent(object);
                 if (component) {
                     ProjectEditor.getFlow(
                         component
@@ -819,10 +826,7 @@ export class CustomInput extends EezObject implements ComponentInput {
         },
 
         deleteObjectRefHook: (customInput: CustomInput) => {
-            const component = getAncestorOfType<Component>(
-                customInput,
-                Component.classInfo
-            ) as Component;
+            const component = ProjectEditor.getComponent(customInput);
 
             ProjectEditor.getFlow(component).deleteConnectionLinesToInput(
                 component,
@@ -931,10 +935,7 @@ export class CustomOutput extends EezObject implements ComponentOutput {
 
         updateObjectValueHook: (object: CustomInput, values: any) => {
             if (values.name != undefined && object.name != values.name) {
-                const component = getAncestorOfType<Component>(
-                    object,
-                    Component.classInfo
-                );
+                const component = ProjectEditor.getComponent(object);
                 if (component) {
                     ProjectEditor.getFlow(
                         component
@@ -948,10 +949,7 @@ export class CustomOutput extends EezObject implements ComponentOutput {
         },
 
         deleteObjectRefHook: (customOutput: CustomOutput) => {
-            const component = getAncestorOfType<Component>(
-                customOutput,
-                Component.classInfo
-            ) as Component;
+            const component = ProjectEditor.getComponent(customOutput);
 
             ProjectEditor.getFlow(component).deleteConnectionLinesFromOutput(
                 component,
@@ -1857,7 +1855,10 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                disabled: isNotProjectWithFlowSupport
+                disabled: (component: Component) =>
+                    component.customInputs.length == 0 &&
+                    (isNotProjectWithFlowSupport(component) ||
+                        isEezFlowLiteProject(component))
             },
             {
                 name: "customOutputs",
@@ -1868,13 +1869,19 @@ export class Component extends EezObject {
                 partOfNavigation: false,
                 enumerable: false,
                 defaultValue: [],
-                disabled: isNotProjectWithFlowSupport
+                disabled: (component: Component) =>
+                    component.customOutputs.length == 0 &&
+                    (isNotProjectWithFlowSupport(component) ||
+                        isEezFlowLiteProject(component))
             },
             {
                 name: "catchError",
                 type: PropertyType.Boolean,
                 propertyGridGroup: flowGroup,
-                disabled: isNotProjectWithFlowSupport,
+                disabled: (component: Component) =>
+                    !component.catchError &&
+                    (isNotProjectWithFlowSupport(component) ||
+                        isEezFlowLiteProject(component)),
                 checkboxStyleSwitch: true
             }
         ],
@@ -2438,7 +2445,7 @@ export class Component extends EezObject {
 
 function getWidgetEvents(object: IEezObject) {
     const widgetEvents = getClassInfo(
-        getAncestorOfType<Widget>(object, ProjectEditor.WidgetClass.classInfo)!
+        ProjectEditor.getWidget(object)
     ).widgetEvents;
 
     if (!widgetEvents) {
@@ -2546,10 +2553,7 @@ export class EventHandler extends EezObject {
                 values.handlerType == "action" &&
                 eventHandler.handlerType == "flow"
             ) {
-                const widget = getAncestorOfType<Widget>(
-                    eventHandler,
-                    ProjectEditor.WidgetClass.classInfo
-                )!;
+                const widget = ProjectEditor.getWidget(eventHandler)!;
 
                 ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
                     widget,
@@ -2559,10 +2563,7 @@ export class EventHandler extends EezObject {
                 values.eventName != undefined &&
                 eventHandler.eventName != values.eventName
             ) {
-                const widget = getAncestorOfType<Widget>(
-                    eventHandler,
-                    ProjectEditor.WidgetClass.classInfo
-                );
+                const widget = ProjectEditor.getWidget(eventHandler);
                 if (widget) {
                     ProjectEditor.getFlow(widget).rerouteConnectionLinesOutput(
                         widget,
@@ -2575,10 +2576,7 @@ export class EventHandler extends EezObject {
 
         deleteObjectRefHook: (eventHandler: EventHandler) => {
             if (eventHandler.handlerType == "flow") {
-                const widget = getAncestorOfType<Widget>(
-                    eventHandler,
-                    ProjectEditor.WidgetClass.classInfo
-                )!;
+                const widget = ProjectEditor.getWidget(eventHandler)!;
 
                 ProjectEditor.getFlow(widget).deleteConnectionLinesFromOutput(
                     widget,
@@ -2756,10 +2754,7 @@ export class EventHandler extends EezObject {
     }
 
     get eventParamExpressionType() {
-        const widget = getAncestorOfType(
-            this,
-            ProjectEditor.WidgetClass.classInfo
-        );
+        const widget = ProjectEditor.getWidget(this);
         if (widget) {
             const classInfo = getClassInfo(widget);
             if (classInfo.overrideEventParamExpressionType) {
@@ -3359,11 +3354,72 @@ export class Widget extends Component {
             }
         },
 
-        widgetEvents: {
-            CLICKED: {
-                code: 1,
-                paramExpressionType: `struct:${CLICK_EVENT_STRUCT_NAME}`,
-                oldName: "action"
+        widgetEvents: (object: Widget) => {
+            if (isEezGuiLiteProject(object)) {
+                const widgetEvents: WidgetEvents = {
+                    PRESSED: {
+                        code: 0,
+                        paramExpressionType: "null"
+                    },
+                    PRESSING: {
+                        code: 1,
+                        paramExpressionType: "null"
+                    },
+                    PRESS_LOST: {
+                        code: 2,
+                        paramExpressionType: "null"
+                    },
+                    SHORT_CLICKED: {
+                        code: 3,
+                        paramExpressionType: "null"
+                    },
+                    SINGLE_CLICKED: {
+                        code: 4,
+                        paramExpressionType: "null"
+                    },
+                    DOUBLE_CLICKED: {
+                        code: 5,
+                        paramExpressionType: "null"
+                    },
+                    TRIPLE_CLICKED: {
+                        code: 6,
+                        paramExpressionType: "null"
+                    },
+                    LONG_PRESSED: {
+                        code: 7,
+                        paramExpressionType: "null"
+                    },
+                    LONG_PRESSED_REPEAT: {
+                        code: 8,
+                        paramExpressionType: "null"
+                    },
+                    CLICKED: {
+                        code: 9,
+                        paramExpressionType: "null"
+                    },
+                    RELEASED: {
+                        code: 10,
+                        paramExpressionType: "null"
+                    },
+
+                    HOVER_OVER: {
+                        code: 11,
+                        paramExpressionType: "null"
+                    },
+                    HOVER_LEAVE: {
+                        code: 12,
+                        paramExpressionType: "null"
+                    }
+                };
+                return widgetEvents;
+            } else {
+                return {
+                    CLICKED: {
+                        code: 1,
+                        paramExpressionType: `struct:${CLICK_EVENT_STRUCT_NAME}`,
+                        oldName: "action"
+                    }
+                };
             }
         }
     });
@@ -4508,10 +4564,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                             if (propertyInfo.type == "expression") {
                                 try {
                                     checkExpression(
-                                        getAncestorOfType(
-                                            item,
-                                            Component.classInfo
-                                        ) as Component,
+                                        ProjectEditor.getComponent(item),
                                         (item as any)[propertyInfo.name]
                                     );
                                 } catch (err) {
@@ -4531,10 +4584,7 @@ function getProperties(propertyDefinitions: IComponentProperty[]) {
                             ) {
                                 try {
                                     checkAssignableExpression(
-                                        getAncestorOfType(
-                                            item,
-                                            Component.classInfo
-                                        ) as Component,
+                                        ProjectEditor.getComponent(item),
                                         (item as any)[propertyInfo.name]
                                     );
                                 } catch (err) {

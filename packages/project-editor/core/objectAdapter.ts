@@ -56,7 +56,6 @@ import {
     isObjectReferencable,
     canContain,
     getProjectEditorDataFromClipboard,
-    getAncestorOfType,
     getAddItemName
 } from "project-editor/store";
 
@@ -766,9 +765,8 @@ export class TreeObjectAdapter {
         // Add Widget
         if (
             editable &&
-            getAncestorOfType(
-                selectedObject || parentObject,
-                ProjectEditor.FlowClass.classInfo
+            ProjectEditor.getFlow(
+                selectedObject || parentObject
             ) &&
             getKey(parentObject) != "localVariables" &&
             getKey(parentObject) != "actions" &&

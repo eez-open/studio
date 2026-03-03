@@ -7,6 +7,7 @@ import { DataContext } from "project-editor/features/variable/variable";
 import type { IProjectEditor } from "project-editor/project-editor-interface";
 import { RemoteRuntime } from "project-editor/flow/runtime/remote-runtime";
 import { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
+import { EezGuiLiteWasmRuntime } from "./eez-gui-lite/wasm-runtime";
 import { DebugInfoRuntime } from "project-editor/flow/runtime/debug-info-runtime";
 import {
     build as buildProject,
@@ -20,12 +21,15 @@ import {
     checkObjectReference,
     checkAssetId,
     ImportDirective,
-    BuildFile
+    BuildFile,
+    getPage
 } from "project-editor/project/project";
 
 import {
     ActionComponent,
     Component,
+    getComponent,
+    getWidget,
     getWidgetParent,
     CustomInput,
     CustomOutput,
@@ -164,6 +168,7 @@ export async function createProjectEditor(
         },
         RemoteRuntimeClass: RemoteRuntime,
         WasmRuntimeClass: WasmRuntime,
+        EezGuiLiteWasmRuntimeClass: EezGuiLiteWasmRuntime,
         DebugInfoRuntimeClass: DebugInfoRuntime,
         build: {
             buildProject,
@@ -213,7 +218,10 @@ export async function createProjectEditor(
         getProject,
         getProjectStore,
         getFlow,
+        getPage,
         getObjectVariableTypeFromType,
+        getComponent,
+        getWidget,
         getWidgetParent,
         rebuildLvglFonts,
         getBitmapData,

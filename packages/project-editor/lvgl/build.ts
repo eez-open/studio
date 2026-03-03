@@ -193,10 +193,7 @@ export class LVGLBuild extends Build {
     }
 
     markObjectAccessibleFromSourceCode(widget: LVGLWidget) {
-        const page = getAncestorOfType(
-            widget,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
+        const page = ProjectEditor.getPage(widget);
 
         if (page.isUsedAsUserWidget) {
             let widgets =
@@ -393,10 +390,7 @@ export class LVGLBuild extends Build {
             return true;
         }
 
-        let page = getAncestorOfType(
-            widget,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
+        let page = ProjectEditor.getPage(widget);
 
         if (page.isUsedAsUserWidget) {
             return (
@@ -563,10 +557,7 @@ export class LVGLBuild extends Build {
     }
 
     getPageIdentifiers(object: IEezObject) {
-        const flow = getAncestorOfType(
-            object,
-            ProjectEditor.FlowClass.classInfo
-        );
+        const flow = ProjectEditor.getFlow(object);
         if (
             flow instanceof ProjectEditor.PageClass &&
             flow.isUsedAsUserWidget
@@ -698,28 +689,19 @@ export class LVGLBuild extends Build {
     }
 
     getEventHandlerCallbackName(widget: LVGLWidget) {
-        const page = getAncestorOfType(
-            widget,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
+        const page = ProjectEditor.getPage(widget);
         return `event_handler_cb_${this.getScreenIdentifier(page)}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
     }
 
     getCheckedEventHandlerCallbackName(widget: LVGLWidget) {
-        const page = getAncestorOfType(
-            widget,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
+        const page = ProjectEditor.getPage(widget);
         return `event_handler_checked_cb_${this.getScreenIdentifier(
             page
         )}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
     }
 
     getUncheckedEventHandlerCallbackName(widget: LVGLWidget) {
-        const page = getAncestorOfType(
-            widget,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
+        const page = ProjectEditor.getPage(widget);
         return `event_handler_unchecked_cb_${this.getScreenIdentifier(
             page
         )}_${this.getLvglObjectIdentifierInSourceCode(widget)}`;
@@ -1229,11 +1211,7 @@ export class LVGLBuild extends Build {
     buildWidgetSetPosAndSize(widget: LVGLWidget) {
         const build = this;
         if (widget instanceof ProjectEditor.LVGLScreenWidgetClass) {
-            const page = getAncestorOfType(
-                widget,
-                ProjectEditor.PageClass.classInfo
-            ) as Page;
-
+            const page = ProjectEditor.getPage(widget);
             build.line(`lv_obj_set_pos(obj, ${page.left}, ${page.top});`);
             build.line(`lv_obj_set_size(obj, ${page.width}, ${page.height});`);
         } else if (isGeometryControlledByParent(widget)) {
@@ -2370,13 +2348,7 @@ export class LVGLBuild extends Build {
         ) => UpdateColorCallbackForPage | undefined = (page: Page) => {
             const updateColorCallbacks = this.updateColorCallbacks.filter(
                 updateColorCallback => {
-                    return (
-                        page ==
-                        getAncestorOfType<Page>(
-                            updateColorCallback.object,
-                            ProjectEditor.PageClass.classInfo
-                        )
-                    );
+                    return page == ProjectEditor.getPage(updateColorCallback.object);
                 }
             );
 

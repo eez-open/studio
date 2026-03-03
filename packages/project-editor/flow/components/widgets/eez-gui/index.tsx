@@ -160,7 +160,8 @@ export class DisplayDataWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         flowComponentId: WIDGET_TYPE_DISPLAY_DATA,
 
@@ -556,6 +557,10 @@ export class TextWidget extends Widget {
     }
 
     override render(flowContext: IFlowContext, width: number, height: number) {
+        if (flowContext.projectStore.projectTypeTraits.isEezGuiLite) {
+            return super.render(flowContext, width, height);
+        }
+
         const result = getTextValue(
             flowContext,
             this,
@@ -829,7 +834,8 @@ export class MultilineTextWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         flowComponentId: WIDGET_TYPE_MULTILINE_TEXT,
 
@@ -1070,6 +1076,10 @@ export class RectangleWidget extends Widget {
     }
 
     override render(flowContext: IFlowContext, width: number, height: number) {
+        if (flowContext.projectStore.projectTypeTraits.isEezGuiLite) {
+            return super.render(flowContext, width, height);
+        }
+
         const invertColors = isV3OrNewerProject(this)
             ? true
             : this.invertColors;
@@ -1202,7 +1212,8 @@ export class BitmapWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         flowComponentId: WIDGET_TYPE_BITMAP,
 
@@ -1324,7 +1335,7 @@ export class BitmapWidget extends Widget {
                     require("instrument/connection/file-type") as typeof FileTypeModule;
                 const fileType = detectFileType(data);
                 return URL.createObjectURL(
-                    new Blob([data], { type: fileType.mime } /* (1) */)
+                    new Blob([Buffer.from(data)], { type: fileType.mime } /* (1) */)
                 );
             }
 
@@ -1559,6 +1570,10 @@ export class ButtonWidget extends Widget {
     }
 
     override render(flowContext: IFlowContext, width: number, height: number) {
+        if (flowContext.projectStore.projectTypeTraits.isEezGuiLite) {
+            return super.render(flowContext, width, height);
+        }
+
         const result = getTextValue(
             flowContext,
             this,
@@ -1629,7 +1644,8 @@ export class ToggleButtonWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         flowComponentId: WIDGET_TYPE_TOGGLE_BUTTON,
 
@@ -1745,7 +1761,8 @@ export class ButtonGroupWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         flowComponentId: WIDGET_TYPE_BUTTON_GROUP,
 
@@ -1991,7 +2008,8 @@ export class BarGraphWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -2366,7 +2384,8 @@ export class YTGraphWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -2477,7 +2496,8 @@ export class UpDownWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Input",
 
@@ -2670,7 +2690,8 @@ export class ListGraphWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Visualiser",
         flowComponentId: WIDGET_TYPE_LIST_GRAPH,
@@ -2821,7 +2842,8 @@ export class ProgressWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -3018,7 +3040,8 @@ export class AppViewWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -3124,7 +3147,8 @@ export class ScrollBarWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         flowComponentId: WIDGET_TYPE_SCROLL_BAR,
 
@@ -3326,7 +3350,8 @@ export class CanvasWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -3491,7 +3516,8 @@ export class LineChartEmbeddedWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -4470,7 +4496,8 @@ export class GaugeEmbeddedWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -4927,7 +4954,8 @@ export class InputEmbeddedWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Input",
 
@@ -5171,7 +5199,8 @@ export class RollerWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Input",
 
@@ -5387,6 +5416,10 @@ export class SwitchWidget extends Widget {
     });
 
     override render(flowContext: IFlowContext, width: number, height: number) {
+        if (flowContext.projectStore.projectTypeTraits.isEezGuiLite) {
+            return super.render(flowContext, width, height);
+        }
+
         const enabled = getBooleanValue(flowContext, this, "data", false);
 
         return (
@@ -5462,7 +5495,8 @@ export class SliderWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Input",
 
@@ -5626,7 +5660,8 @@ export class DropDownListWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Input",
 
@@ -5786,7 +5821,8 @@ export class QRCodeWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Visualiser",
 

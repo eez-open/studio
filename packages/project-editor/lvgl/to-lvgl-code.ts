@@ -1,6 +1,5 @@
 import type { IEezObject } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getAncestorOfType } from "project-editor/store";
 import { findBitmap, Project } from "project-editor/project/project";
 import type { ICustomWidgetCreateParams } from "project-editor/features/page/page";
 
@@ -360,12 +359,7 @@ export class SimulatorLVGLCode implements LVGLCode {
 
             this.obj = this.runtime.wasm._lvglCreateScreen(
                 this.parentObj,
-                this.runtime.getCreateWidgetIndex(
-                    getAncestorOfType(
-                        this.widget,
-                        ProjectEditor.PageClass.classInfo
-                    )!
-                ),
+                this.runtime.getCreateWidgetIndex(ProjectEditor.getPage(this.widget)),
                 rect.left,
                 rect.top,
                 rect.width,

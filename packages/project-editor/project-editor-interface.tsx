@@ -4,6 +4,7 @@ import type { IDocumentSearch } from "project-editor/core/search";
 import type { DataContext } from "project-editor/features/variable/variable";
 import type { RemoteRuntime } from "project-editor/flow/runtime/remote-runtime";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
+import type { EezGuiLiteWasmRuntime } from "project-editor/eez-gui-lite/wasm-runtime";
 import type { DebugInfoRuntime } from "project-editor/flow/runtime/debug-info-runtime";
 import type {
     build,
@@ -13,6 +14,7 @@ import type {
 import type {
     checkAssetId,
     getFlow,
+    getPage,
     getProject,
     Project,
     ImportDirective,
@@ -23,6 +25,8 @@ import type {
     ActionComponent,
     Component,
     Widget,
+    getComponent,
+    getWidget,
     getWidgetParent,
     CustomInput,
     CustomOutput,
@@ -121,6 +125,7 @@ export interface IProjectEditor {
     documentSearch: IDocumentSearch;
     RemoteRuntimeClass: typeof RemoteRuntime;
     WasmRuntimeClass: typeof WasmRuntime;
+    EezGuiLiteWasmRuntimeClass: typeof EezGuiLiteWasmRuntime
     DebugInfoRuntimeClass: typeof DebugInfoRuntime;
     build: {
         buildProject: typeof build;
@@ -170,7 +175,10 @@ export interface IProjectEditor {
     getProject: typeof getProject;
     getProjectStore: typeof getProjectStore;
     getFlow: typeof getFlow;
+    getPage: typeof getPage;
     getObjectVariableTypeFromType: typeof getObjectVariableTypeFromType;
+    getComponent: typeof getComponent;
+    getWidget: typeof getWidget;
     getWidgetParent: typeof getWidgetParent;
     rebuildLvglFonts: typeof rebuildLvglFonts;
     getBitmapData: typeof getBitmapData;

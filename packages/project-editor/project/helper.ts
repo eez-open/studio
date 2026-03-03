@@ -20,6 +20,7 @@ import {
 import type { AssetType } from "project-editor/project/assets";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Flow } from "project-editor/flow/flow";
+import type { Page } from "project-editor/features/page/page";
 
 export function findAllReferencedObjects(
     project: Project,
@@ -79,6 +80,10 @@ export function getProject(object: IEezObject) {
 
 export function getFlow(object: IEezObject) {
     return getAncestorOfType(object, ProjectEditor.FlowClass.classInfo) as Flow;
+}
+
+export function getPage(object: IEezObject) {
+    return getAncestorOfType(object, ProjectEditor.PageClass.classInfo) as Page;
 }
 
 export function isObjectReadOnly(object: IEezObject) {

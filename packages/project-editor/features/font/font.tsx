@@ -41,6 +41,7 @@ import {
     ProjectStore
 } from "project-editor/store";
 import {
+    isEezGuiLiteProject,
     isLVGLProject,
     isNotV1Project,
     isV1Project
@@ -1251,7 +1252,7 @@ export class Font extends EezObject {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                disabled: isLVGLProject
+                disabled: (font: Font) => isLVGLProject(font) || isEezGuiLiteProject(font)
             },
             {
                 name: "name",

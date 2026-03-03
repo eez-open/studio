@@ -22,7 +22,6 @@ import {
 
 import {
     createObject,
-    getAncestorOfType,
     getChildOfObject,
     getClassInfo,
     getObjectPathAsString,
@@ -1356,7 +1355,7 @@ export class LVGLWidget extends Widget {
         this._refreshRelativePosition;
 
         if (this._lvglObj) {
-            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
+            const page = ProjectEditor.getPage(this) as Page;
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 try {
                     this._relativePosition = {
@@ -1372,7 +1371,7 @@ export class LVGLWidget extends Widget {
 
     override fromRelativePosition(left: number, top: number) {
         if (this._lvglObj) {
-            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
+            const page = ProjectEditor.getPage(this) as Page;
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return {
                     left: Math.round(left - this.relativePosition.left + this.left),
@@ -1399,7 +1398,7 @@ export class LVGLWidget extends Widget {
 
     override get componentWidth() {
         if (this._lvglObj) {
-            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
+            const page = ProjectEditor.getPage(this);
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return page._lvglRuntime.wasm._lvglGetObjWidth(this._lvglObj);
             }
@@ -1409,7 +1408,7 @@ export class LVGLWidget extends Widget {
 
     override get componentHeight() {
         if (this._lvglObj) {
-            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
+            const page = ProjectEditor.getPage(this);
             if (page._lvglRuntime && page._lvglRuntime.isMounted) {
                 return page._lvglRuntime.wasm._lvglGetObjHeight(this._lvglObj);
             }
@@ -1563,7 +1562,7 @@ export class LVGLWidget extends Widget {
 
     getLvglCreateRect() {
         if (this instanceof LVGLScreenWidget) {
-            const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
+            const page = ProjectEditor.getPage(this);
             return page.rect;
         }
 
@@ -1703,7 +1702,7 @@ export class LVGLWidget extends Widget {
                                     eventHandler.eventName
                                 );
                             } else {
-                                const page = getAncestorOfType(this, ProjectEditor.PageClass.classInfo) as Page;
+                                const page = ProjectEditor.getPage(this);
                                 const pagePath = getObjectPathAsString(page);
                                 const flowIndex = code.pageRuntime!.wasm.assetsMap.flowIndexes[pagePath];
                                 if (flowIndex != undefined) {

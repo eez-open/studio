@@ -18,6 +18,10 @@ export function evalProperty(
     widget: Widget,
     propertyName: string
 ) {
+    if (flowContext.projectStore.projectTypeTraits.isEezFlowLite) {
+        return undefined;
+    }
+
     let expr = getProperty(widget, propertyName);
     if (!expr) {
         return undefined;
@@ -50,6 +54,10 @@ export function evalPropertyWithType(
     widget: Widget,
     propertyName: string
 ) {
+    if (flowContext.projectStore.projectTypeTraits.isEezFlowLite) {
+        return undefined;
+    }
+
     let expr = getProperty(widget, propertyName);
     if (!expr) {
         return undefined;
@@ -83,6 +91,10 @@ export function getBooleanValue(
     propertyName: string,
     defaultValue: boolean
 ) {
+    if (flowContext.projectStore.projectTypeTraits.isEezFlowLite) {
+        return false;
+    }
+
     let expr = (widget as any)[propertyName];
 
     if (!expr) {
@@ -105,6 +117,10 @@ export function getNumberValue(
     propertyName: string,
     defaultValue: number
 ) {
+    if (flowContext.projectStore.projectTypeTraits.isEezFlowLite) {
+        return 0;
+    }
+
     let expr = (widget as any)[propertyName];
 
     if (!expr) {
@@ -131,6 +147,10 @@ export function getStringValue(
     propertyName: string,
     defaultValue: string
 ) {
+    if (flowContext.projectStore.projectTypeTraits.isEezFlowLite) {
+        return "";
+    }
+
     let expr = (widget as any)[propertyName];
 
     if (!expr) {
@@ -157,6 +177,10 @@ export function getAnyValue(
     propertyName: string,
     defaultValue: any
 ) {
+    if (flowContext.projectStore.projectTypeTraits.isEezFlowLite) {
+        return undefined;
+    }
+
     let expr = (widget as any)[propertyName];
     if (!expr) {
         return defaultValue;
@@ -179,6 +203,10 @@ export function getTextValue(
     name: string | undefined,
     text: string | undefined
 ): { text: string; node: React.ReactNode } | string {
+    if (flowContext.projectStore.projectTypeTraits.isEezFlowLite) {
+        return "";
+    }
+
     let data = (widget as any)[propertyName];
 
     if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {

@@ -29,8 +29,6 @@ export class ConnectionLine extends EezObject {
     input: string;
     disabled: boolean;
 
-    _active: boolean;
-
     static classInfo: ClassInfo = {
         label: (connectionLine: ConnectionLine) => {
             const source = connectionLine.sourceComponent
@@ -229,7 +227,6 @@ export class ConnectionLine extends EezObject {
             output: observable,
             target: observable,
             input: observable,
-            _active: observable,
             disabled: observable,
             isVisible: computed
         });

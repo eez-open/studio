@@ -31,7 +31,6 @@ import {
 import {
     addObject,
     createObject,
-    getAncestorOfType,
     getChildOfObject,
     getClass,
     getClassInfo,
@@ -148,9 +147,7 @@ class PasteObject {
         this.object = object;
 
         if (object instanceof ProjectEditor.VariableClass) {
-            this.isLocalVariable =
-                getAncestorOfType(object, ProjectEditor.FlowClass.classInfo) !=
-                undefined;
+            this.isLocalVariable = ProjectEditor.getFlow(object) != undefined;
         }
 
         makeObservable(this, {
@@ -593,10 +590,7 @@ class PasteWithDependenciesModel {
                     const node = dependency.node;
                     if (node.type == "Identifier") {
                         if (node.identifierType == "local-variable") {
-                            const flow = getAncestorOfType<Flow>(
-                                object,
-                                ProjectEditor.FlowClass.classInfo
-                            );
+                            const flow = ProjectEditor.getFlow(object);
                             if (flow) {
                                 const localVariable = flow.localVariables.find(
                                     localVariable =>

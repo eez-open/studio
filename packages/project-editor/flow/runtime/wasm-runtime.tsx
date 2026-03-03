@@ -1325,7 +1325,7 @@ export class WasmRuntime extends RemoteRuntime {
 
     ////////////////////////////////////////////////////////////////////////////////
 
-    renderPage() {
+    renderPage(page: Page) {
         return <WasmCanvas />;
     }
 }

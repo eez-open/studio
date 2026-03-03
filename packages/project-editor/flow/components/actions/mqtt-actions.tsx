@@ -26,7 +26,8 @@ import {
     EezObject,
     ClassInfo,
     IMessage,
-    IEezObject
+    IEezObject,
+    ProjectType
 } from "project-editor/core/object";
 import {
     ActionComponent,
@@ -47,6 +48,7 @@ import { isDashboardProject } from "project-editor/project/project-type-traits";
 import {
     createObject,
     getAncestorOfType,
+    ProjectStore,
     propertyNotSetMessage
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -89,6 +91,8 @@ registerSystemStructure({
 export class MQTTInitActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_MQTT_INIT,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE && (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeAssignableExpressionProperty(
                 {
@@ -267,6 +271,8 @@ export class MQTTInitActionComponent extends ActionComponent {
 export class MQTTConnectActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_MQTT_CONNECT,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE && (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {
@@ -332,6 +338,8 @@ export class MQTTConnectActionComponent extends ActionComponent {
 export class MQTTDisconnectActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_MQTT_DISCONNECT,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE && (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {
@@ -629,6 +637,8 @@ class EventHandler extends EezObject {
 export class MQTTEventActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_MQTT_EVENT,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE && (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {
@@ -723,6 +733,8 @@ export class MQTTEventActionComponent extends ActionComponent {
 export class MQTTSubscribeActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_MQTT_SUBSCRIBE,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE && (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {
@@ -801,6 +813,8 @@ export class MQTTSubscribeActionComponent extends ActionComponent {
 export class MQTTUnsubscribeActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_MQTT_UNSUBSCRIBE,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE && (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {
@@ -879,6 +893,8 @@ export class MQTTUnsubscribeActionComponent extends ActionComponent {
 export class MQTTPublishActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_MQTT_PUBLISH,
+        enabledInComponentPalette: (projectType: ProjectType, projectStore?: ProjectStore) =>
+            projectType !== ProjectType.EEZ_GUI_LITE && (!projectStore || !projectStore.projectTypeTraits.isEezFlowLite),
         properties: [
             makeExpressionProperty(
                 {

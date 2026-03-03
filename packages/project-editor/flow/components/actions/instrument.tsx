@@ -80,7 +80,7 @@ export class SCPIActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SCPI_ACTION,
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL && projectType !== ProjectType.EEZ_GUI_LITE,
         properties: [
             makeExpressionProperty(
                 {

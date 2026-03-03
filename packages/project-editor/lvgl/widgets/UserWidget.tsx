@@ -24,7 +24,6 @@ import { COMPONENT_TYPE_LVGL_USER_WIDGET } from "project-editor/flow/components/
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 import {
-    getAncestorOfType,
     getChildOfObject,
     getObjectPathAsString,
     getProjectStore,
@@ -296,10 +295,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             return false;
         }
 
-        const origPage = getAncestorOfType(
-            this,
-            ProjectEditor.PageClass.classInfo
-        ) as Page;
+        const origPage = ProjectEditor.getPage(this);
 
         return testForCycle(userWidgetPage);
     }
@@ -402,10 +398,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
             if (userWidgetPage && !this.isCycleDetected) {
                 let componentIndex = build.assets.getComponentIndex(this);
 
-                const page = getAncestorOfType(
-                    this,
-                    ProjectEditor.PageClass.classInfo
-                ) as Page;
+                const page = ProjectEditor.getPage(this);
 
                 let startWidgetIndex = (
                     build.getWidgetObjectIndex(this) + 1
@@ -438,10 +431,7 @@ export class LVGLUserWidgetWidget extends LVGLWidget {
                 if (userWidgetPage && !this.isCycleDetected) {
                     let componentIndex = build.assets.getComponentIndex(this);
 
-                    const page = getAncestorOfType(
-                        this,
-                        ProjectEditor.PageClass.classInfo
-                    ) as Page;
+                    const page = ProjectEditor.getPage(this);
 
                     let startWidgetIndex = (
                         build.getWidgetObjectIndex(this) + 1
