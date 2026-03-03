@@ -2488,6 +2488,63 @@ export const EEZ_GUI_PROJECT_ICON = (size: number) => (
     </svg>
 );
 
+export const EEZ_GUI_LITE_PROJECT_ICON = (size: number) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="-20 -20 448 448"
+        width={size}
+        height={size}
+    >
+        <g>
+            <rect
+                width={408}
+                height={408}
+                rx={51}
+                fill="#adb5bd"
+                fillOpacity="1"
+            />
+        </g>
+        <g>
+            <rect
+                x={32.987}
+                y={36.963}
+                width={342}
+                height={334}
+                fill="#434667"
+                fillOpacity="1"
+            />
+        </g>
+        <g>
+            <path
+                d="M55.12 104.188h70v70h-70Zm-.04 90.328h70v70h-70Zm.336 88.969h70v70h-70z"
+                fill="#adb5bd"
+                fillOpacity="1"
+                strokeWidth="24.7486"
+            />
+            <path
+                d="M32.987 36.963h342v46h-342v-46"
+                fill="#c05fb1"
+                fillOpacity="1"
+                strokeWidth="22.4944"
+            />
+            <g transform="translate(0 -7.283)">
+                <circle
+                    cx={240.961}
+                    cy={191.635}
+                    r={68.5}
+                    fill="#adb5bd"
+                    fillOpacity="1"
+                    stroke="#000"
+                    strokeWidth="0"
+                    strokeLinecap="square"
+                    strokeOpacity="1"
+                    paintOrder="fill markers stroke"
+                />
+            </g>
+        </g>
+    </svg>
+);
+
 export const LVGL_PROJECT_ICON = (size: number) => (
     <svg viewBox="-20 -20 601 448" width={size} height={size}>
         <g>

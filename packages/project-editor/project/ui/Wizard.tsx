@@ -43,7 +43,8 @@ import {
     LVGL_WITH_FLOW_PROJECT_ICON,
     MICROPYTHON_ICON,
     APPLET_ICON,
-    IEXT_PROJECT_ICON
+    IEXT_PROJECT_ICON,
+    EEZ_GUI_LITE_PROJECT_ICON
 } from "project-editor/ui-components/icons";
 import {
     EEZ_PROJECT_EXAMPLES_REPOSITORY,
@@ -818,6 +819,16 @@ export class WizardModel {
                         "templates/IEXT - PROPRIETARY.eez-project"
                     )
                 }
+            },
+            {
+                id: "EEZ-GUI Lite",
+                projectType: PROJECT_TYPE_NAMES[ProjectType.EEZ_GUI_LITE],
+                image: EEZ_GUI_LITE_PROJECT_ICON(128),
+                projectName: "EEZ-GUI Lite",
+                description: "Start your new EEZ-GUI Lite project development here.",
+                projectFileUrl: getTemplatePathOrUrl(
+                    "templates/eez-gui-lite.eez-project"
+                )
             }
         ].filter(projectType => this.searchFilter(projectType));
     }
