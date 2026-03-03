@@ -332,6 +332,7 @@ export function registerAction(actionDefinition: IActionDefinition) {
                     return getStyleProperties(actionType);
                 };
             } else if (actionProperty.type == "style-value") {
+                enumDisallowUndefined = false;
                 enumItems = (actionType: LVGLActionType) => {
                     const styleProperty = getStyleProperty(actionType);
                     if (styleProperty && styleProperty.type == PropertyType.Enum) {
@@ -519,6 +520,28 @@ export function registerAction(actionDefinition: IActionDefinition) {
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                if (object.action == "objStyleSetProperty") {
+                    if ("property" in values) {
+                        const oldStylePropertyName = (object as any).property;
+                        const newStylePropertyName = values.property;
+
+                        const oldStyleProperty = findStyleProperty(object, oldStylePropertyName);
+                        const newStyleProperty = findStyleProperty(object, newStylePropertyName);
+
+                        if (
+                            !oldStyleProperty ||
+                            !oldStyleProperty.styleProperty ||
+                            !newStyleProperty ||
+                            !newStyleProperty.styleProperty ||
+                            oldStyleProperty.styleProperty.type != newStyleProperty.styleProperty.type
+                        ) {
+                            projectStore.updateObject(object, {
+                                 value: undefined   
+                            });
                         }
                     }
                 }
