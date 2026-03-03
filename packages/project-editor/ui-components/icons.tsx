@@ -2516,7 +2516,7 @@ export const EEZ_GUI_LITE_PROJECT_ICON = (size: number) => (
         </g>
         <g>
             <path
-                d="M55.12 104.188h70v70h-70Zm-.04 90.328h70v70h-70Zm.336 88.969h70v70h-70z"
+                d="M75 137h70v70h-70Zm0 100h70v70h-70z"
                 fill="#adb5bd"
                 fillOpacity="1"
                 strokeWidth="24.7486"
@@ -2529,8 +2529,8 @@ export const EEZ_GUI_LITE_PROJECT_ICON = (size: number) => (
             />
             <g transform="translate(0 -7.283)">
                 <circle
-                    cx={240.961}
-                    cy={191.635}
+                    cx={264}
+                    cy={234.246}
                     r={68.5}
                     fill="#adb5bd"
                     fillOpacity="1"

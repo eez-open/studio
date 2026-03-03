@@ -2,6 +2,7 @@ import { ProjectType } from "project-editor/project/project";
 import {
     DASHBOARD_PROJECT_ICON,
     EEZ_GUI_PROJECT_ICON,
+    EEZ_GUI_LITE_PROJECT_ICON,
     LVGL_PROJECT_ICON,
     LVGL_WITH_FLOW_PROJECT_ICON,
     MICROPYTHON_ICON,
@@ -36,6 +37,10 @@ export function getProjectIcon(
 
     if (projectType == ProjectType.APPLET) {
         return APPLET_ICON(size);
+    }
+
+    if (projectType == ProjectType.EEZ_GUI_LITE) {
+        return EEZ_GUI_LITE_PROJECT_ICON(size);
     }
 
     return EEZ_GUI_PROJECT_ICON(size);
