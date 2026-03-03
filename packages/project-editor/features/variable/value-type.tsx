@@ -413,7 +413,7 @@ export function registerSystemEnum({
     const existingSystemEnum = SystemEnum.SYSTEM_ENUMS.find(
         systemEnum => systemEnum.compareTo(name, projectTypes, lvglVersions)
     );
-    
+
     if (existingSystemEnum) {
         existingSystemEnum.members = members;
         existingSystemEnum._membersMap = undefined;
@@ -682,9 +682,13 @@ export const VariableTypeSelect = observer(
                       )
                     : [];
 
+            const isLVGL = this.props.project.projectTypeTraits.isLVGL;
             const enumTypes = [
                 ...project.variables.enums,
-                ...getSystemEnums(this.props.project._store)
+                ...getSystemEnums(this.props.project._store),
+                ...[...project._store.importedEnumVariableTypes.values()].filter(
+                    e => !isLVGL || e.name.includes("/")
+                )
             ];
 
             const enums = enumTypes.map(enumDef => (
@@ -702,9 +706,9 @@ export const VariableTypeSelect = observer(
 
             const structureTypes = [
                 ...project.variables.structures,
-                ...(this.props.project.projectTypeTraits.isLVGL
-                    ? []
-                    : SYSTEM_STRUCTURES)
+                ...(isLVGL ? [] : SYSTEM_STRUCTURES),
+                ...[...project._store.importedStructureVariableTypes.values()].filter(
+                    s => !isLVGL || s.name.includes("/"))
             ];
 
             const structures = this.props.project.projectTypeTraits

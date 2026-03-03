@@ -806,10 +806,34 @@ export interface IDashboardComponentContext {
     throwError: (errorMessage: string) => void;
 }
 
+export interface IStructureField {
+    name: string;
+    type: ValueType;
+}
+
+export interface IStructureDefinition {
+    name: string;
+    fields: IStructureField[];
+}
+
+export interface IEnumMember {
+    name: string;
+    value: number;
+}
+
+export interface IEnumDefinition {
+    name: string;
+    members: IEnumMember[];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IEezFlowEditor {
     registerActionComponent(definition: IActionComponentDefinition): void;
+
+    registerStructureVariableType(structure: IStructureDefinition): void;
+
+    registerEnumVariableType(enumDef: IEnumDefinition): void;
 
     registerObjectVariableType(
         name: string,
