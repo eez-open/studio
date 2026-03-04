@@ -163,6 +163,7 @@ interface ListNavigationProps {
     editable?: boolean;
     onFilesDrop?: (files: File[]) => void;
     doNotUsePropertyGrid?: boolean;
+    className?: string;
 }
 
 export const ListNavigation = observer(
@@ -387,7 +388,7 @@ export const ListNavigation = observer(
             return (
                 <div
                     ref={this.divRef}
-                    className="EezStudio_ProjectEditor_ListNavigation"
+                    className={classNames("EezStudio_ProjectEditor_ListNavigation", this.props.className)}
                 >
                     <div className="EezStudio_Title">
                         <SortControl

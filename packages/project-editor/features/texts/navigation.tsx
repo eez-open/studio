@@ -317,6 +317,7 @@ export const TextsTab = observer(
                                 : undefined
                         }
                         searchInput={false}
+                        className="EezStudio_ProjectEditor_TextsNavigation"
                     />
                 );
             }
