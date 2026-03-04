@@ -1,30 +1,519 @@
 import React from "react";
-import { makeObservable } from "mobx";
+import { observable, makeObservable } from "mobx";
 
-import { makeDerivedClassInfo } from "project-editor/core/object";
+import { isValid } from "eez-studio-shared/color";
 
-import { ProjectType } from "project-editor/project/project";
+import {
+    ClassInfo,
+    EezObject,
+    IMessage,
+    MessageType,
+    PropertyInfo,
+    PropertyType,
+    makeDerivedClassInfo,
+    registerClass
+} from "project-editor/core/object";
+
+import { findFont, ProjectType } from "project-editor/project/project";
+
+import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
+
+import {
+    LVGLPropertyType,
+    makeLvglExpressionProperty
+} from "project-editor/lvgl/expression-property";
+import {
+    BUILT_IN_FONTS,
+    text_font_property_info
+} from "project-editor/lvgl/style-catalog";
+import { getThemedColor } from "project-editor/features/style/theme";
+import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
+import { isFlowProperty } from "project-editor/flow/component";
+import { checkExpression } from "project-editor/flow/expression";
+import {
+    getAncestorOfType,
+    getChildOfObject,
+    getClassInfo,
+    Message
+} from "project-editor/store";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { LVGLWidget } from "./internal";
-import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
+
+////////////////////////////////////////////////////////////////////////////////
+
+const SPAN_MODE_CODES: { [key: string]: number } = {
+    FIXED: 0,
+    EXPAND: 1,
+    BREAK: 2
+};
+
+const SPAN_OVERFLOW_CODES: { [key: string]: number } = {
+    CLIP: 0,
+    ELLIPSIS: 1
+};
+
+const SPAN_ALIGN_CODES: { [key: string]: number } = {
+    AUTO: 0,
+    LEFT: 1,
+    CENTER: 2,
+    RIGHT: 3,
+};
+
+const TEXT_DECOR_CODES: { [key: string]: number } = {
+    NONE: 0,
+    UNDERLINE: 1,
+    STRIKETHROUGH: 2
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class LVGLSpan extends EezObject {
+    text: string;
+    textType: LVGLPropertyType;
+    textColor: string;
+    textFont: string;
+    textDecor: keyof typeof TEXT_DECOR_CODES;
+    textLetterSpace: number;
+    textLineSpace: number;
+    textOpa: number;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            ...makeLvglExpressionProperty(
+                "text",
+                "string",
+                "input",
+                ["literal", "translated-literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup
+                }
+            ),
+            {
+                name: "textColor",
+                displayName: "Text color",
+                type: PropertyType.ThemedColor,
+                isOptional: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "textFont",
+                displayName: "Text font",
+                type: PropertyType.Enum,
+                enumItems: text_font_property_info.enumItems,
+                isOptional: true,
+                referencedObjectCollectionPath: "fonts",
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "textDecor",
+                displayName: "Text decoration",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(TEXT_DECOR_CODES).map(id => ({
+                    id,
+                    label: id
+                })),
+                isOptional: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "textLetterSpace",
+                displayName: "Letter spacing",
+                type: PropertyType.Number,
+                isOptional: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "textLineSpace",
+                displayName: "Line spacing",
+                type: PropertyType.Number,
+                isOptional: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "textOpa",
+                displayName: "Text opacity",
+                type: PropertyType.Number,
+                isOptional: true,
+                propertyGridGroup: specificGroup
+            }
+        ],
+
+        listLabel: (span: LVGLSpan, collapsed: boolean) => {
+            if (span.text && span.textType == "literal") {
+                return `Span: ${span.text}`;
+            }
+            return "Span";
+        },
+
+        defaultValue: {
+            text: "Span",
+            textType: "literal"
+        },
+
+        check: (span: LVGLSpan, messages: IMessage[]) => {
+            if (span.textType == "expression") {
+                try {
+                    const widget = getAncestorOfType<LVGLWidget>(
+                        span,
+                        LVGLWidget.classInfo
+                    )!;
+                    checkExpression(widget, span.text);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(span, "text")
+                        )
+                    );
+                }
+            }
+
+            if (span.textColor) {
+                const colorValue = getThemedColor(
+                    ProjectEditor.getProjectStore(span),
+                    span.textColor
+                ).colorValue;
+
+                if (!isValid(colorValue)) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid color`,
+                            getChildOfObject(span, "textColor")
+                        )
+                    );
+                }
+            }
+        }
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            text: observable,
+            textType: observable,
+            textColor: observable,
+            textFont: observable,
+            textDecor: observable,
+            textLetterSpace: observable,
+            textLineSpace: observable,
+            textOpa: observable
+        });
+    }
+
+    toLVGLCode(code: LVGLCode, spanIndex: number) {
+        const widget = getAncestorOfType<LVGLWidget>(
+            this,
+            LVGLWidget.classInfo
+        )!;
+
+        // Create span
+        let newSpanFunc: string;
+        if (code.isLVGLVersion(["8.4.0", "9.2.2"])) {
+            newSpanFunc = "lv_spangroup_new_span";
+        } else {
+            newSpanFunc = "lv_spangroup_add_span";
+        }
+
+        const spanVar = code.callObjectFunctionWithAssignmentToStateVar(
+            this.objID,
+            "lv_span_t *",
+            `span_${spanIndex}`,
+            newSpanFunc
+        );
+
+        // Set text
+        if (this.textType == "literal" && code.lvglBuild) {
+            code.callFreeFunction(
+                "lv_span_set_text_static",
+                spanVar,
+                code.stringProperty(this.textType, this.text)
+            );
+        } else if (
+            this.textType == "literal" ||
+            this.textType == "translated-literal"
+        ) {
+            code.callFreeFunction(
+                "lv_span_set_text",
+                spanVar,
+                code.stringProperty(this.textType, this.text)
+            );
+        }
+
+        // Apply styles
+        const hasStyle =
+            this.textColor ||
+            this.textFont ||
+            (this.textDecor && this.textDecor != "NONE") ||
+            this.textLetterSpace != undefined ||
+            this.textLineSpace != undefined ||
+            this.textOpa != undefined;
+
+        if (hasStyle) {
+            let stylePtr: any;
+
+            if (code.isLVGLVersion(["8.4.0"])) {
+                if (code.lvglBuild) {
+                    stylePtr = `&(${spanVar}->style)`
+                } else {
+                    stylePtr = code.callFreeFunctionWithAssignment(
+                        "lv_style_t *",
+                        `span_${spanIndex}_style`,
+                        "lvglSpanGetStyle",
+                        spanVar
+                    );
+                }
+            } else  {
+                stylePtr = code.callFreeFunctionWithAssignment(
+                    "lv_style_t *",
+                    `span_${spanIndex}_style`,
+                    "lv_span_get_style",
+                    spanVar
+                );
+            }
+
+            // textColor
+            if (this.textColor) {
+                code.buildColor(
+                    widget,
+                    this.textColor,
+                    () => stylePtr,
+                    (color) => {
+                        code.callFreeFunction(
+                            "lv_style_set_text_color",
+                            stylePtr,
+                            code.color(color)
+                        );
+                    },
+                    (color, stylePtr) => {
+                        code.callFreeFunction(
+                            "lv_style_set_text_color",
+                            stylePtr,
+                            code.color(color)
+                        );
+                    }
+                );
+            }
+
+            // textFont
+            if (this.textFont) {
+                const fontIndex = BUILT_IN_FONTS.indexOf(this.textFont);
+                if (code.lvglBuild) {
+                    if (fontIndex != -1) {
+                        code.callFreeFunction(
+                            "lv_style_set_text_font",
+                            stylePtr,
+                            `&lv_font_${this.textFont.toLowerCase()}`
+                        );
+                    } else {
+                        const font = findFont(
+                            ProjectEditor.getProject(this),
+                            this.textFont
+                        );
+                        if (font) {
+                            code.callFreeFunction(
+                                "lv_style_set_text_font",
+                                stylePtr,
+                                code.lvglBuild!.getFontAccessor(font)
+                            );
+                        }
+                    }
+                } else if (code.pageRuntime) {
+                    const pageRuntime = code.pageRuntime;
+                    const fontPtr = pageRuntime.getFontPtrByName(this.textFont);
+                    if (fontPtr) {
+                        code.callFreeFunction(
+                            "lv_style_set_text_font",
+                            stylePtr,
+                            fontPtr
+                        );
+                    }
+                }
+            }
+
+            // textDecor
+            if (this.textDecor && this.textDecor != "NONE") {
+                code.callFreeFunction(
+                    "lv_style_set_text_decor",
+                    stylePtr,
+                    code.constant(`LV_TEXT_DECOR_${this.textDecor}`)
+                );
+            }
+
+            // textLetterSpace
+            if (this.textLetterSpace != undefined) {
+                code.callFreeFunction(
+                    "lv_style_set_text_letter_space",
+                    stylePtr,
+                    this.textLetterSpace
+                );
+            }
+
+            // textLineSpace
+            if (this.textLineSpace != undefined) {
+                code.callFreeFunction(
+                    "lv_style_set_text_line_space",
+                    stylePtr,
+                    this.textLineSpace
+                );
+            }
+
+            // textOpa
+            if (this.textOpa != undefined) {
+                code.callFreeFunction(
+                    "lv_style_set_text_opa",
+                    stylePtr,
+                    this.textOpa
+                );
+            }
+        }
+
+        // Expression-based text: add to tick for dynamic updates
+        if (this.textType == "expression") {
+            code.addToTick(`spans[${spanIndex}].text`, () => {
+                const new_val = code.evalTextProperty(
+                    "const char *",
+                    "new_val",
+                    this.text,
+                    `Failed to evaluate Text in Span widget span[${spanIndex}]`
+                );
+
+                code.callFreeFunction("lv_span_set_text", spanVar, new_val);
+
+                // Refresh spangroup after text change
+                if (code.isLVGLVersion(["8.4.0", "9.2.2"])) {
+                    code.callObjectFunction("lv_spangroup_refr_mode");
+                } else {
+                    code.callObjectFunction("lv_spangroup_refresh");
+                }
+            });
+        }
+    }
+}
+
+registerClass("LVGLSpan", LVGLSpan);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLSpanWidget extends LVGLWidget {
+    mode: keyof typeof SPAN_MODE_CODES;
+    overflow: keyof typeof SPAN_OVERFLOW_CODES;
+    indent: number;
+    maxLines: number;
+    align: keyof typeof SPAN_ALIGN_CODES;
+    spans: LVGLSpan[];
+
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.LVGL,
 
+        label: (widget: LVGLSpanWidget) => "Spangroup",
+        componentPaletteLabel: "Spangroup",
+
         componentPaletteGroupName: "!1Basic",
 
-        properties: [],
+        properties: [
+            {
+                name: "mode",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(SPAN_MODE_CODES).map(id => ({
+                    id,
+                    label: id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup,
+                disabled: (widget: LVGLSpanWidget) => {
+                    const lvglVersion = ProjectEditor.getProject(widget).settings.general.lvglVersion;
+                    return lvglVersion != "8.4.0" && lvglVersion != "9.2.2";
+                }
+            },
+            {
+                name: "overflow",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(SPAN_OVERFLOW_CODES).map(id => ({
+                    id,
+                    label: id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "indent",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "maxLines",
+                displayName: "Max lines",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "align",
+                type: PropertyType.Enum,
+                enumItems: Object.keys(SPAN_ALIGN_CODES).map(id => ({
+                    id,
+                    label: id
+                })),
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup,
+                disabled: (widget: LVGLSpanWidget) => {
+                    const lvglVersion = ProjectEditor.getProject(widget).settings.general.lvglVersion;
+                    return lvglVersion != "8.4.0" && lvglVersion != "9.2.2";
+                }
+            },
+            {
+                name: "spans",
+                type: PropertyType.Array,
+                typeClass: LVGLSpan,
+                propertyGridGroup: specificGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
+            }
+        ],
+
+        beforeLoadHook: (
+            object: LVGLSpanWidget,
+            jsObject: Partial<LVGLSpanWidget>
+        ) => {
+            if (jsObject.mode == undefined) {
+                jsObject.mode = "FIXED";
+            }
+            if (jsObject.overflow == undefined) {
+                jsObject.overflow = "CLIP";
+            }
+            if (jsObject.indent == undefined) {
+                jsObject.indent = 0;
+            }
+            if (jsObject.maxLines == undefined) {
+                jsObject.maxLines = -1;
+            }
+            if (jsObject.align == undefined) {
+                jsObject.align = "AUTO";
+            }
+            if (jsObject.spans == undefined) {
+                jsObject.spans = [];
+            }
+        },
 
         defaultValue: {
             left: 0,
             top: 0,
             width: 180,
             height: 100,
-            clickableFlag: true
+            widthUnit: "content",
+            heightUnit: "content",
+            clickableFlag: true,
+            mode: "FIXED",
+            overflow: "CLIP",
+            indent: 0,
+            maxLines: -1,
+            align: "AUTO",
+            spans: [Object.assign({}, LVGLSpan.classInfo.defaultValue)]
         },
 
         icon: (
@@ -40,16 +529,123 @@ export class LVGLSpanWidget extends LVGLWidget {
             parts: ["MAIN"],
             defaultFlags:
                 "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+        },
+
+        getAdditionalFlowProperties: (widget: LVGLSpanWidget) => {
+            const properties: PropertyInfo[] = [];
+
+            for (
+                let spanIndex = 0;
+                spanIndex < widget.spans.length;
+                spanIndex++
+            ) {
+                const span = widget.spans[spanIndex];
+                const classInfo = getClassInfo(span);
+                const flowProperties = classInfo.properties.filter(
+                    propertyInfo =>
+                        isFlowProperty(span, propertyInfo, [
+                            "input",
+                            "template-literal",
+                            "assignable"
+                        ])
+                );
+                flowProperties.forEach(flowProperty =>
+                    properties.push(
+                        Object.assign({}, flowProperty, {
+                            name: `spans[${spanIndex}].${flowProperty.name}`
+                        })
+                    )
+                );
+            }
+
+            return properties;
         }
     });
 
     override makeEditable() {
         super.makeEditable();
 
-        makeObservable(this, {});
+        makeObservable(this, {
+            mode: observable,
+            overflow: observable,
+            indent: observable,
+            maxLines: observable,
+            align: observable,
+            spans: observable
+        });
     }
 
     override toLVGLCode(code: LVGLCode) {
         code.createObject("lv_spangroup_create");
+
+        // mode
+        if (code.isLVGLVersion(["8.4.0", "9.2.2"])) {
+            if (this.mode != "FIXED") {
+                code.callObjectFunction(
+                    "lv_spangroup_set_mode",
+                    code.constant(`LV_SPAN_MODE_${this.mode}`)
+                );
+            }
+        }
+
+        // overflow
+        if (this.overflow != "CLIP") {
+            code.callObjectFunction(
+                "lv_spangroup_set_overflow",
+                code.constant(`LV_SPAN_OVERFLOW_${this.overflow}`)
+            );
+        }
+
+        // indent
+        if (this.indent != 0) {
+            code.callObjectFunction("lv_spangroup_set_indent", this.indent);
+        }
+
+        // align
+        if (code.isLVGLVersion(["8.4.0", "9.2.2"])) {
+            if (this.align != "AUTO") {
+                code.callObjectFunction(
+                    "lv_spangroup_set_align",
+                    code.constant(`LV_TEXT_ALIGN_${this.align}`)
+                );
+            }
+        }
+
+        // maxLines
+        if (this.maxLines != -1) {
+            if (code.isLVGLVersion(["8.4.0"])) {
+                code.callObjectFunction(
+                    "lv_spangroup_set_lines",
+                    this.maxLines
+                );
+            } else {
+                code.callObjectFunction(
+                    "lv_spangroup_set_max_lines",
+                    this.maxLines
+                );
+            }
+        }
+
+        // spans
+        if (this.spans) {
+            for (
+                let spanIndex = 0;
+                spanIndex < this.spans.length;
+                spanIndex++
+            ) {
+                code.blockStart("{");
+                this.spans[spanIndex].toLVGLCode(code, spanIndex);
+                code.blockEnd("}");
+            }
+
+            // Refresh after adding all spans
+            if (this.spans.length > 0) {
+                if (code.isLVGLVersion(["8.4.0", "9.2.2"])) {
+                    code.callObjectFunction("lv_spangroup_refr_mode");
+                } else {
+                    code.callObjectFunction("lv_spangroup_refresh");
+                }
+            }
+        }
     }
 }

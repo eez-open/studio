@@ -5768,6 +5768,7 @@ var _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = makeInvalidEar
 var _lvglCreateAnim = Module['_lvglCreateAnim'] = makeInvalidEarlyAccess('_lvglCreateAnim');
 var _lv_anim_init = Module['_lv_anim_init'] = makeInvalidEarlyAccess('_lv_anim_init');
 var _lvglArcGetRotation = Module['_lvglArcGetRotation'] = makeInvalidEarlyAccess('_lvglArcGetRotation');
+var _lvglSpanGetStyle = Module['_lvglSpanGetStyle'] = makeInvalidEarlyAccess('_lvglSpanGetStyle');
 var _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = makeInvalidEarlyAccess('_lv_disp_get_scr_prev');
 var _lv_obj_get_disp = Module['_lv_obj_get_disp'] = makeInvalidEarlyAccess('_lv_obj_get_disp');
 var _lv_anim_del = Module['_lv_anim_del'] = makeInvalidEarlyAccess('_lv_anim_del');
@@ -7019,6 +7020,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lvglCreateAnim'] != 'undefined', 'missing Wasm export: lvglCreateAnim');
   assert(typeof wasmExports['lv_anim_init'] != 'undefined', 'missing Wasm export: lv_anim_init');
   assert(typeof wasmExports['lvglArcGetRotation'] != 'undefined', 'missing Wasm export: lvglArcGetRotation');
+  assert(typeof wasmExports['lvglSpanGetStyle'] != 'undefined', 'missing Wasm export: lvglSpanGetStyle');
   assert(typeof wasmExports['lv_disp_get_scr_prev'] != 'undefined', 'missing Wasm export: lv_disp_get_scr_prev');
   assert(typeof wasmExports['lv_obj_get_disp'] != 'undefined', 'missing Wasm export: lv_obj_get_disp');
   assert(typeof wasmExports['lv_anim_del'] != 'undefined', 'missing Wasm export: lv_anim_del');
@@ -8266,6 +8268,7 @@ function assignWasmExports(wasmExports) {
   _lvglCreateAnim = Module['_lvglCreateAnim'] = createExportWrapper('lvglCreateAnim', 6);
   _lv_anim_init = Module['_lv_anim_init'] = createExportWrapper('lv_anim_init', 1);
   _lvglArcGetRotation = Module['_lvglArcGetRotation'] = createExportWrapper('lvglArcGetRotation', 1);
+  _lvglSpanGetStyle = Module['_lvglSpanGetStyle'] = createExportWrapper('lvglSpanGetStyle', 1);
   _lv_disp_get_scr_prev = Module['_lv_disp_get_scr_prev'] = createExportWrapper('lv_disp_get_scr_prev', 1);
   _lv_obj_get_disp = Module['_lv_obj_get_disp'] = createExportWrapper('lv_obj_get_disp', 1);
   _lv_anim_del = Module['_lv_anim_del'] = createExportWrapper('lv_anim_del', 2);
