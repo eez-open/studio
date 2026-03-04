@@ -157,10 +157,17 @@ export class LVGLDropdownWidget extends LVGLWidget {
         code.createObject(`lv_dropdown_create`);
 
         // options
-        code.callObjectFunction(
-            "lv_dropdown_set_options",
-            code.stringProperty(this.optionsType, this.options)
-        );
+        if (this.optionsType == "literal" && code.lvglBuild) {
+            code.callObjectFunction(
+                "lv_dropdown_set_options_static",
+                code.stringProperty(this.optionsType, this.options)
+            );
+        } else {
+            code.callObjectFunction(
+                "lv_dropdown_set_options",
+                code.stringProperty(this.optionsType, this.options)
+            );
+        }
 
         if (this.optionsType == "expression") {
             code.addToTick("options", () => {
