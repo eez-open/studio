@@ -92,9 +92,16 @@ export class LVGLCheckboxWidget extends LVGLWidget {
     override toLVGLCode(code: LVGLCode) {
         code.createObject("lv_checkbox_create");
 
-        code.callObjectFunction(
-            "lv_checkbox_set_text",
-            code.stringProperty(this.textType, this.text)
-        );
+        if (code.lvglBuild) {
+            code.callObjectFunction(
+                "lv_checkbox_set_text_static",
+                code.stringProperty(this.textType, this.text)
+            );
+        } else {
+            code.callObjectFunction(
+                "lv_checkbox_set_text",
+                code.stringProperty(this.textType, this.text)
+            );
+        }
     }
 }

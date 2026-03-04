@@ -169,10 +169,17 @@ export class LVGLLabelWidget extends LVGLWidget {
 
         // text
         code.postWidgetExecute(() => {
-            code.callObjectFunction(
-                "lv_label_set_text",
-                code.stringProperty(this.textType, this.text, this.previewValue)
-            );
+            if (this.textType == "literal" && code.lvglBuild) {
+                code.callObjectFunction(
+                    "lv_label_set_text_static",
+                    code.stringProperty(this.textType, this.text, this.previewValue)
+                );
+            } else {
+                code.callObjectFunction(
+                    "lv_label_set_text",
+                    code.stringProperty(this.textType, this.text, this.previewValue)
+                );
+            }
         });
         if (this.textType == "expression") {
             code.addToTick("text", () => {
