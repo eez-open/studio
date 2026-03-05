@@ -5,125 +5,126 @@ export type LVGLStylePropCode = {
     "9.2.2": number | undefined;
     "9.3.0": number | undefined;
     "9.4.0": number | undefined;
+    "9.5.0": number | undefined;
 };
 
 export const LVGL_STYLE_PROP_CODES: {
     [key: string]: LVGLStylePropCode;
 } = {
-    LV_STYLE_WIDTH: { "8.4.0": 1, "9.2.2": 1, "9.3.0": 1, "9.4.0": 1 },
-    LV_STYLE_HEIGHT: { "8.4.0": 4, "9.2.2": 2, "9.3.0": 2, "9.4.0": 2 },
-    LV_STYLE_LENGTH: { "8.4.0": undefined, "9.2.2": 3, "9.3.0": 3, "9.4.0": 3 },
-    LV_STYLE_MIN_WIDTH: { "8.4.0": 2, "9.2.2": 4, "9.3.0": 4, "9.4.0": 4 },
-    LV_STYLE_MAX_WIDTH: { "8.4.0": 3, "9.2.2": 5, "9.3.0": 5, "9.4.0": 5 },
-    LV_STYLE_MIN_HEIGHT: { "8.4.0": 5, "9.2.2": 6, "9.3.0": 6, "9.4.0": 6 },
-    LV_STYLE_MAX_HEIGHT: { "8.4.0": 6, "9.2.2": 7, "9.3.0": 7, "9.4.0": 7 },
-    LV_STYLE_X: { "8.4.0": 7, "9.2.2": 8, "9.3.0": 8, "9.4.0": 8 },
-    LV_STYLE_Y: { "8.4.0": 8, "9.2.2": 9, "9.3.0": 9, "9.4.0": 9 },
-    LV_STYLE_ALIGN: { "8.4.0": 9, "9.2.2": 10, "9.3.0": 10, "9.4.0": 10 },
-    LV_STYLE_RADIUS: { "8.4.0": 11, "9.2.2": 12, "9.3.0": 12, "9.4.0": 12 },
-    LV_STYLE_RADIAL_OFFSET: { "8.4.0": undefined, "9.2.2": undefined, "9.3.0": 13, "9.4.0": 13 },
-    LV_STYLE_PAD_TOP: { "8.4.0": 16, "9.2.2": 16, "9.3.0": 16, "9.4.0": 16 },
-    LV_STYLE_PAD_BOTTOM: { "8.4.0": 17, "9.2.2": 17, "9.3.0": 17, "9.4.0": 17 },
-    LV_STYLE_PAD_LEFT: { "8.4.0": 18, "9.2.2": 18, "9.3.0": 18, "9.4.0": 18 },
-    LV_STYLE_PAD_RIGHT: { "8.4.0": 19, "9.2.2": 19, "9.3.0": 19, "9.4.0": 19 },
-    LV_STYLE_PAD_ROW: { "8.4.0": 20, "9.2.2": 20, "9.3.0": 20, "9.4.0": 20 },
-    LV_STYLE_PAD_COLUMN: { "8.4.0": 21, "9.2.2": 21, "9.3.0": 21, "9.4.0": 21 },
-    LV_STYLE_LAYOUT: { "8.4.0": 10, "9.2.2": 22, "9.3.0": 22, "9.4.0": 22 },
-    LV_STYLE_MARGIN_TOP: { "8.4.0": undefined, "9.2.2": 24, "9.3.0": 24, "9.4.0": 24 },
-    LV_STYLE_MARGIN_BOTTOM: { "8.4.0": undefined, "9.2.2": 25, "9.3.0": 25, "9.4.0": 25 },
-    LV_STYLE_MARGIN_LEFT: { "8.4.0": undefined, "9.2.2": 26, "9.3.0": 26, "9.4.0": 26 },
-    LV_STYLE_MARGIN_RIGHT: { "8.4.0": undefined, "9.2.2": 27, "9.3.0": 27, "9.4.0": 27 },
-    LV_STYLE_BG_COLOR: { "8.4.0": 32, "9.2.2": 28, "9.3.0": 28, "9.4.0": 28 },
-    LV_STYLE_BG_OPA: { "8.4.0": 33, "9.2.2": 29, "9.3.0": 29, "9.4.0": 29 },
-    LV_STYLE_BG_GRAD_DIR: { "8.4.0": 35, "9.2.2": 32, "9.3.0": 32, "9.4.0": 32 },
-    LV_STYLE_BG_MAIN_STOP: { "8.4.0": 36, "9.2.2": 33, "9.3.0": 33, "9.4.0": 33 },
-    LV_STYLE_BG_GRAD_STOP: { "8.4.0": 37, "9.2.2": 34, "9.3.0": 34, "9.4.0": 34 },
-    LV_STYLE_BG_GRAD_COLOR: { "8.4.0": 34, "9.2.2": 35, "9.3.0": 35, "9.4.0": 35 },
-    LV_STYLE_BG_MAIN_OPA: { "8.4.0": undefined, "9.2.2": 36, "9.3.0": 36, "9.4.0": 36 },
-    LV_STYLE_BG_GRAD_OPA: { "8.4.0": undefined, "9.2.2": 37, "9.3.0": 37, "9.4.0": 37 },
-    LV_STYLE_BG_GRAD: { "8.4.0": 38, "9.2.2": 38, "9.3.0": 38, "9.4.0": 38 },
-    LV_STYLE_BASE_DIR: { "8.4.0": 22, "9.2.2": 39, "9.3.0": 39, "9.4.0": 39 },
-    LV_STYLE_BG_DITHER_MODE: { "8.4.0": 39, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined },
-    LV_STYLE_BG_IMG_SRC: { "8.4.0": 40, "9.2.2": 40, "9.3.0": 40, "9.4.0": 40 },
-    LV_STYLE_BG_IMG_OPA: { "8.4.0": 41, "9.2.2": 41, "9.3.0": 41, "9.4.0": 41 },
-    LV_STYLE_BG_IMG_RECOLOR: { "8.4.0": 42, "9.2.2": 42, "9.3.0": 42, "9.4.0": 42 },
-    LV_STYLE_BG_IMG_RECOLOR_OPA: { "8.4.0": 43, "9.2.2": 43, "9.3.0": 43, "9.4.0": 43 },
-    LV_STYLE_BG_IMG_TILED: { "8.4.0": 44, "9.2.2": 44, "9.3.0": 44, "9.4.0": 44 },
-    LV_STYLE_CLIP_CORNER: { "8.4.0": 23, "9.2.2": 45, "9.3.0": 45, "9.4.0": 45 },
-    LV_STYLE_BORDER_WIDTH: { "8.4.0": 50, "9.2.2": 48, "9.3.0": 48, "9.4.0": 48 },
-    LV_STYLE_BORDER_COLOR: { "8.4.0": 48, "9.2.2": 49, "9.3.0": 49, "9.4.0": 49 },
-    LV_STYLE_BORDER_OPA: { "8.4.0": 49, "9.2.2": 50, "9.3.0": 50, "9.4.0": 50 },
-    LV_STYLE_BORDER_SIDE: { "8.4.0": 51, "9.2.2": 52, "9.3.0": 52, "9.4.0": 52 },
-    LV_STYLE_BORDER_POST: { "8.4.0": 52, "9.2.2": 53, "9.3.0": 53, "9.4.0": 53 },
-    LV_STYLE_OUTLINE_WIDTH: { "8.4.0": 53, "9.2.2": 56, "9.3.0": 56, "9.4.0": 56 },
-    LV_STYLE_OUTLINE_COLOR: { "8.4.0": 54, "9.2.2": 57, "9.3.0": 57, "9.4.0": 57 },
-    LV_STYLE_OUTLINE_OPA: { "8.4.0": 55, "9.2.2": 58, "9.3.0": 58, "9.4.0": 58 },
-    LV_STYLE_OUTLINE_PAD: { "8.4.0": 56, "9.2.2": 59, "9.3.0": 59, "9.4.0": 59 },
-    LV_STYLE_SHADOW_WIDTH: { "8.4.0": 64, "9.2.2": 60, "9.3.0": 60, "9.4.0": 60 },
-    LV_STYLE_SHADOW_COLOR: { "8.4.0": 68, "9.2.2": 61, "9.3.0": 61, "9.4.0": 61 },
-    LV_STYLE_SHADOW_OPA: { "8.4.0": 69, "9.2.2": 62, "9.3.0": 62, "9.4.0": 62 },
-    LV_STYLE_SHADOW_OFS_X: { "8.4.0": 65, "9.2.2": 64, "9.3.0": 64, "9.4.0": 64 },
-    LV_STYLE_SHADOW_OFS_Y: { "8.4.0": 66, "9.2.2": 65, "9.3.0": 65, "9.4.0": 65 },
-    LV_STYLE_SHADOW_SPREAD: { "8.4.0": 67, "9.2.2": 66, "9.3.0": 66, "9.4.0": 66 },
-    LV_STYLE_IMG_OPA: { "8.4.0": 70, "9.2.2": 68, "9.3.0": 68, "9.4.0": 68 },
-    LV_STYLE_IMG_RECOLOR: { "8.4.0": 71, "9.2.2": 69, "9.3.0": 69, "9.4.0": 69 },
-    LV_STYLE_IMG_RECOLOR_OPA: { "8.4.0": 72, "9.2.2": 70, "9.3.0": 70, "9.4.0": 70 },
-    LV_STYLE_LINE_WIDTH: { "8.4.0": 73, "9.2.2": 72, "9.3.0": 72, "9.4.0": 72 },
-    LV_STYLE_LINE_DASH_WIDTH: { "8.4.0": 74, "9.2.2": 73, "9.3.0": 73, "9.4.0": 73 },
-    LV_STYLE_LINE_DASH_GAP: { "8.4.0": 75, "9.2.2": 74, "9.3.0": 74, "9.4.0": 74 },
-    LV_STYLE_LINE_ROUNDED: { "8.4.0": 76, "9.2.2": 75, "9.3.0": 75, "9.4.0": 75 },
-    LV_STYLE_LINE_COLOR: { "8.4.0": 77, "9.2.2": 76, "9.3.0": 76, "9.4.0": 76 },
-    LV_STYLE_LINE_OPA: { "8.4.0": 78, "9.2.2": 77, "9.3.0": 77, "9.4.0": 77 },
-    LV_STYLE_ARC_WIDTH: { "8.4.0": 80, "9.2.2": 80, "9.3.0": 80, "9.4.0": 80 },
-    LV_STYLE_ARC_ROUNDED: { "8.4.0": 81, "9.2.2": 81, "9.3.0": 81, "9.4.0": 81 },
-    LV_STYLE_ARC_COLOR: { "8.4.0": 82, "9.2.2": 82, "9.3.0": 82, "9.4.0": 82 },
-    LV_STYLE_ARC_OPA: { "8.4.0": 83, "9.2.2": 83, "9.3.0": 83, "9.4.0": 83 },
-    LV_STYLE_ARC_IMG_SRC: { "8.4.0": 84, "9.2.2": 84, "9.3.0": 84, "9.4.0": 84 },
-    LV_STYLE_TEXT_COLOR: { "8.4.0": 85, "9.2.2": 88, "9.3.0": 88, "9.4.0": 88 },
-    LV_STYLE_TEXT_OPA: { "8.4.0": 86, "9.2.2": 89, "9.3.0": 89, "9.4.0": 89 },
-    LV_STYLE_TEXT_FONT: { "8.4.0": 87, "9.2.2": 90, "9.3.0": 90, "9.4.0": 90 },
-    LV_STYLE_TEXT_LETTER_SPACE: { "8.4.0": 88, "9.2.2": 91, "9.3.0": 91, "9.4.0": 91 },
-    LV_STYLE_TEXT_LINE_SPACE: { "8.4.0": 89, "9.2.2": 92, "9.3.0": 92, "9.4.0": 92 },
-    LV_STYLE_TEXT_DECOR: { "8.4.0": 90, "9.2.2": 93, "9.3.0": 93, "9.4.0": 93 },
-    LV_STYLE_TEXT_ALIGN: { "8.4.0": 91, "9.2.2": 94, "9.3.0": 94, "9.4.0": 94 },
-    LV_STYLE_OPA: { "8.4.0": 96, "9.2.2": 95, "9.3.0": 98, "9.4.0": 98 },
-    LV_STYLE_OPA_LAYERED: { "8.4.0": 97, "9.2.2": 96, "9.3.0": 99, "9.4.0": 99 },
-    LV_STYLE_COLOR_FILTER_DSC: { "8.4.0": 98, "9.2.2": 97, "9.3.0": 100, "9.4.0": 100 },
-    LV_STYLE_COLOR_FILTER_OPA: { "8.4.0": 99, "9.2.2": 98, "9.3.0": 101, "9.4.0": 101 },
-    LV_STYLE_ANIM: { "8.4.0": 100, "9.2.2": 99, "9.3.0": 102, "9.4.0": 102 },
-    LV_STYLE_ANIM_TIME: { "8.4.0": 101, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined },
-    LV_STYLE_ANIM_DURATION: { "8.4.0": undefined, "9.2.2": 100, "9.3.0": 103, "9.4.0": 103 },
-    LV_STYLE_ANIM_SPEED: { "8.4.0": 102, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined },
-    LV_STYLE_TRANSITION: { "8.4.0": 103, "9.2.2": 102, "9.3.0": 104, "9.4.0": 104 },
-    LV_STYLE_BLEND_MODE: { "8.4.0": 104, "9.2.2": 103, "9.3.0": 105, "9.4.0": 105 },
-    LV_STYLE_TRANSFORM_WIDTH: { "8.4.0": 105, "9.2.2": 104, "9.3.0": 106, "9.4.0": 106 },
-    LV_STYLE_TRANSFORM_HEIGHT: { "8.4.0": 106, "9.2.2": 105, "9.3.0": 107, "9.4.0": 107 },
-    LV_STYLE_TRANSLATE_X: { "8.4.0": 107, "9.2.2": 106, "9.3.0": 108, "9.4.0": 108 },
-    LV_STYLE_TRANSLATE_Y: { "8.4.0": 108, "9.2.2": 107, "9.3.0": 109, "9.4.0": 109 },
-    LV_STYLE_TRANSFORM_ZOOM: { "8.4.0": 109, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined },
-    LV_STYLE_TRANSFORM_SCALE_X: { "8.4.0": undefined, "9.2.2": 108, "9.3.0": 110, "9.4.0": 110 },
-    LV_STYLE_TRANSFORM_SCALE_Y: { "8.4.0": undefined, "9.2.2": 109, "9.3.0": 111, "9.4.0": 111 },
-    LV_STYLE_TRANSFORM_ANGLE: { "8.4.0": 110, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined },
-    LV_STYLE_TRANSFORM_ROTATION: { "8.4.0": undefined, "9.2.2": 110, "9.3.0": 112, "9.4.0": 112 },
-    LV_STYLE_TRANSFORM_PIVOT_X: { "8.4.0": 111, "9.2.2": 111, "9.3.0": 113, "9.4.0": 113 },
-    LV_STYLE_TRANSFORM_PIVOT_Y: { "8.4.0": 112, "9.2.2": 112, "9.3.0": 114, "9.4.0": 114 },
-    LV_STYLE_TRANSFORM_SKEW_X: { "8.4.0": undefined, "9.2.2": 113, "9.3.0": 115, "9.4.0": 115 },
-    LV_STYLE_TRANSFORM_SKEW_Y: { "8.4.0": undefined, "9.2.2": 114, "9.3.0": 116, "9.4.0": 116 },
-    LV_STYLE_FLEX_FLOW: { "8.4.0": 113, "9.2.2": 125, "9.3.0": 122, "9.4.0": 122 },
-    LV_STYLE_FLEX_MAIN_PLACE: { "8.4.0": 114, "9.2.2": 126, "9.3.0": 123, "9.4.0": 123 },
-    LV_STYLE_FLEX_CROSS_PLACE: { "8.4.0": 115, "9.2.2": 127, "9.3.0": 124, "9.4.0": 124 },
-    LV_STYLE_FLEX_TRACK_PLACE: { "8.4.0": 116, "9.2.2": 128, "9.3.0": 125, "9.4.0": 125 },
-    LV_STYLE_FLEX_GROW: { "8.4.0": 117, "9.2.2": 129, "9.3.0": 126, "9.4.0": 126 },
-    LV_STYLE_GRID_COLUMN_ALIGN: { "8.4.0": 120, "9.2.2": 130, "9.3.0": 127, "9.4.0": 127 },
-    LV_STYLE_GRID_ROW_ALIGN: { "8.4.0": 121, "9.2.2": 131, "9.3.0": 128, "9.4.0": 128 },
-    LV_STYLE_GRID_ROW_DSC_ARRAY: { "8.4.0": 119, "9.2.2": 132, "9.3.0": 129, "9.4.0": 129 },
-    LV_STYLE_GRID_COLUMN_DSC_ARRAY: { "8.4.0": 118, "9.2.2": 133, "9.3.0": 130, "9.4.0": 130 },
-    LV_STYLE_GRID_CELL_COLUMN_POS: { "8.4.0": 125, "9.2.2": 134, "9.3.0": 131, "9.4.0": 131 },
-    LV_STYLE_GRID_CELL_COLUMN_SPAN: { "8.4.0": 124, "9.2.2": 135, "9.3.0": 132, "9.4.0": 132 },
-    LV_STYLE_GRID_CELL_X_ALIGN: { "8.4.0": 126, "9.2.2": 136, "9.3.0": 133, "9.4.0": 133 },
-    LV_STYLE_GRID_CELL_ROW_POS: { "8.4.0": 123, "9.2.2": 137, "9.3.0": 134, "9.4.0": 134 },
-    LV_STYLE_GRID_CELL_ROW_SPAN: { "8.4.0": 122, "9.2.2": 138, "9.3.0": 135, "9.4.0": 135 },
-    LV_STYLE_GRID_CELL_Y_ALIGN: { "8.4.0": 127, "9.2.2": 139, "9.3.0": 136, "9.4.0": 136 },
+    LV_STYLE_WIDTH: { "8.4.0": 1, "9.2.2": 1, "9.3.0": 1, "9.4.0": 1, "9.5.0": 1 },
+    LV_STYLE_HEIGHT: { "8.4.0": 4, "9.2.2": 2, "9.3.0": 2, "9.4.0": 2, "9.5.0": 2 },
+    LV_STYLE_LENGTH: { "8.4.0": undefined, "9.2.2": 3, "9.3.0": 3, "9.4.0": 3, "9.5.0": 3 },
+    LV_STYLE_MIN_WIDTH: { "8.4.0": 2, "9.2.2": 4, "9.3.0": 4, "9.4.0": 4, "9.5.0": 8 },
+    LV_STYLE_MAX_WIDTH: { "8.4.0": 3, "9.2.2": 5, "9.3.0": 5, "9.4.0": 5, "9.5.0": 9 },
+    LV_STYLE_MIN_HEIGHT: { "8.4.0": 5, "9.2.2": 6, "9.3.0": 6, "9.4.0": 6, "9.5.0": 10 },
+    LV_STYLE_MAX_HEIGHT: { "8.4.0": 6, "9.2.2": 7, "9.3.0": 7, "9.4.0": 7, "9.5.0": 11 },
+    LV_STYLE_X: { "8.4.0": 7, "9.2.2": 8, "9.3.0": 8, "9.4.0": 8, "9.5.0": 16 },
+    LV_STYLE_Y: { "8.4.0": 8, "9.2.2": 9, "9.3.0": 9, "9.4.0": 9, "9.5.0": 17 },
+    LV_STYLE_ALIGN: { "8.4.0": 9, "9.2.2": 10, "9.3.0": 10, "9.4.0": 10, "9.5.0": 18 },
+    LV_STYLE_RADIUS: { "8.4.0": 11, "9.2.2": 12, "9.3.0": 12, "9.4.0": 12, "9.5.0": 120 },
+    LV_STYLE_RADIAL_OFFSET: { "8.4.0": undefined, "9.2.2": undefined, "9.3.0": 13, "9.4.0": 13, "9.5.0": 14 },
+    LV_STYLE_PAD_TOP: { "8.4.0": 16, "9.2.2": 16, "9.3.0": 16, "9.4.0": 16, "9.5.0": 24 },
+    LV_STYLE_PAD_BOTTOM: { "8.4.0": 17, "9.2.2": 17, "9.3.0": 17, "9.4.0": 17, "9.5.0": 25 },
+    LV_STYLE_PAD_LEFT: { "8.4.0": 18, "9.2.2": 18, "9.3.0": 18, "9.4.0": 18, "9.5.0": 26 },
+    LV_STYLE_PAD_RIGHT: { "8.4.0": 19, "9.2.2": 19, "9.3.0": 19, "9.4.0": 19, "9.5.0": 27 },
+    LV_STYLE_PAD_ROW: { "8.4.0": 20, "9.2.2": 20, "9.3.0": 20, "9.4.0": 20, "9.5.0": 29 },
+    LV_STYLE_PAD_COLUMN: { "8.4.0": 21, "9.2.2": 21, "9.3.0": 21, "9.4.0": 21, "9.5.0": 30 },
+    LV_STYLE_LAYOUT: { "8.4.0": 10, "9.2.2": 22, "9.3.0": 22, "9.4.0": 22, "9.5.0": 132 },
+    LV_STYLE_MARGIN_TOP: { "8.4.0": undefined, "9.2.2": 24, "9.3.0": 24, "9.4.0": 24, "9.5.0": 32 },
+    LV_STYLE_MARGIN_BOTTOM: { "8.4.0": undefined, "9.2.2": 25, "9.3.0": 25, "9.4.0": 25, "9.5.0": 33 },
+    LV_STYLE_MARGIN_LEFT: { "8.4.0": undefined, "9.2.2": 26, "9.3.0": 26, "9.4.0": 26, "9.5.0": 34 },
+    LV_STYLE_MARGIN_RIGHT: { "8.4.0": undefined, "9.2.2": 27, "9.3.0": 27, "9.4.0": 27, "9.5.0": 35 },
+    LV_STYLE_BG_COLOR: { "8.4.0": 32, "9.2.2": 28, "9.3.0": 28, "9.4.0": 28, "9.5.0": 73 },
+    LV_STYLE_BG_OPA: { "8.4.0": 33, "9.2.2": 29, "9.3.0": 29, "9.4.0": 29, "9.5.0": 72 },
+    LV_STYLE_BG_GRAD_DIR: { "8.4.0": 35, "9.2.2": 32, "9.3.0": 32, "9.4.0": 32, "9.5.0": 41 },
+    LV_STYLE_BG_MAIN_STOP: { "8.4.0": 36, "9.2.2": 33, "9.3.0": 33, "9.4.0": 33, "9.5.0": 45 },
+    LV_STYLE_BG_GRAD_STOP: { "8.4.0": 37, "9.2.2": 34, "9.3.0": 34, "9.4.0": 34, "9.5.0": 46 },
+    LV_STYLE_BG_GRAD_COLOR: { "8.4.0": 34, "9.2.2": 35, "9.3.0": 35, "9.4.0": 35, "9.5.0": 44 },
+    LV_STYLE_BG_MAIN_OPA: { "8.4.0": undefined, "9.2.2": 36, "9.3.0": 36, "9.4.0": 36, "9.5.0": 42 },
+    LV_STYLE_BG_GRAD_OPA: { "8.4.0": undefined, "9.2.2": 37, "9.3.0": 37, "9.4.0": 37, "9.5.0": 43 },
+    LV_STYLE_BG_GRAD: { "8.4.0": 38, "9.2.2": 38, "9.3.0": 38, "9.4.0": 38, "9.5.0": 40 },
+    LV_STYLE_BASE_DIR: { "8.4.0": 22, "9.2.2": 39, "9.3.0": 39, "9.4.0": 39, "9.5.0": 129 },
+    LV_STYLE_BG_DITHER_MODE: { "8.4.0": 39, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined, "9.5.0": undefined },
+    LV_STYLE_BG_IMG_SRC: { "8.4.0": 40, "9.2.2": 40, "9.3.0": 40, "9.4.0": 40, "9.5.0": 48 },
+    LV_STYLE_BG_IMG_OPA: { "8.4.0": 41, "9.2.2": 41, "9.3.0": 41, "9.4.0": 41, "9.5.0": 49 },
+    LV_STYLE_BG_IMG_RECOLOR: { "8.4.0": 42, "9.2.2": 42, "9.3.0": 42, "9.4.0": 42, "9.5.0": 52 },
+    LV_STYLE_BG_IMG_RECOLOR_OPA: { "8.4.0": 43, "9.2.2": 43, "9.3.0": 43, "9.4.0": 43, "9.5.0": 50 },
+    LV_STYLE_BG_IMG_TILED: { "8.4.0": 44, "9.2.2": 44, "9.3.0": 44, "9.4.0": 44, "9.5.0": 51 },
+    LV_STYLE_CLIP_CORNER: { "8.4.0": 23, "9.2.2": 45, "9.3.0": 45, "9.4.0": 45, "9.5.0": 128 },
+    LV_STYLE_BORDER_WIDTH: { "8.4.0": 50, "9.2.2": 48, "9.3.0": 48, "9.4.0": 48, "9.5.0": 56 },
+    LV_STYLE_BORDER_COLOR: { "8.4.0": 48, "9.2.2": 49, "9.3.0": 49, "9.4.0": 49, "9.5.0": 57 },
+    LV_STYLE_BORDER_OPA: { "8.4.0": 49, "9.2.2": 50, "9.3.0": 50, "9.4.0": 50, "9.5.0": 58 },
+    LV_STYLE_BORDER_SIDE: { "8.4.0": 51, "9.2.2": 52, "9.3.0": 52, "9.4.0": 52, "9.5.0": 60 },
+    LV_STYLE_BORDER_POST: { "8.4.0": 52, "9.2.2": 53, "9.3.0": 53, "9.4.0": 53, "9.5.0": 59 },
+    LV_STYLE_OUTLINE_WIDTH: { "8.4.0": 53, "9.2.2": 56, "9.3.0": 56, "9.4.0": 56, "9.5.0": 64 },
+    LV_STYLE_OUTLINE_COLOR: { "8.4.0": 54, "9.2.2": 57, "9.3.0": 57, "9.4.0": 57, "9.5.0": 65 },
+    LV_STYLE_OUTLINE_OPA: { "8.4.0": 55, "9.2.2": 58, "9.3.0": 58, "9.4.0": 58, "9.5.0": 66 },
+    LV_STYLE_OUTLINE_PAD: { "8.4.0": 56, "9.2.2": 59, "9.3.0": 59, "9.4.0": 59, "9.5.0": 67 },
+    LV_STYLE_SHADOW_WIDTH: { "8.4.0": 64, "9.2.2": 60, "9.3.0": 60, "9.4.0": 60, "9.5.0": 74 },
+    LV_STYLE_SHADOW_COLOR: { "8.4.0": 68, "9.2.2": 61, "9.3.0": 61, "9.4.0": 61, "9.5.0": 88 },
+    LV_STYLE_SHADOW_OPA: { "8.4.0": 69, "9.2.2": 62, "9.3.0": 62, "9.4.0": 62, "9.5.0": 81 },
+    LV_STYLE_SHADOW_OFS_X: { "8.4.0": 65, "9.2.2": 64, "9.3.0": 64, "9.4.0": 64, "9.5.0": 97 },
+    LV_STYLE_SHADOW_OFS_Y: { "8.4.0": 66, "9.2.2": 65, "9.3.0": 65, "9.4.0": 65, "9.5.0": 98 },
+    LV_STYLE_SHADOW_SPREAD: { "8.4.0": 67, "9.2.2": 66, "9.3.0": 66, "9.4.0": 66, "9.5.0": 99 },
+    LV_STYLE_IMG_OPA: { "8.4.0": 70, "9.2.2": 68, "9.3.0": 68, "9.4.0": 68, "9.5.0": 80 },
+    LV_STYLE_IMG_RECOLOR: { "8.4.0": 71, "9.2.2": 69, "9.3.0": 69, "9.4.0": 69, "9.5.0": 89 },
+    LV_STYLE_IMG_RECOLOR_OPA: { "8.4.0": 72, "9.2.2": 70, "9.3.0": 70, "9.4.0": 70, "9.5.0": 78 },
+    LV_STYLE_LINE_WIDTH: { "8.4.0": 73, "9.2.2": 72, "9.3.0": 72, "9.4.0": 72, "9.5.0": 75 },
+    LV_STYLE_LINE_DASH_WIDTH: { "8.4.0": 74, "9.2.2": 73, "9.3.0": 73, "9.4.0": 73, "9.5.0": 100 },
+    LV_STYLE_LINE_DASH_GAP: { "8.4.0": 75, "9.2.2": 74, "9.3.0": 74, "9.4.0": 74, "9.5.0": 104 },
+    LV_STYLE_LINE_ROUNDED: { "8.4.0": 76, "9.2.2": 75, "9.3.0": 75, "9.4.0": 75, "9.5.0": 105 },
+    LV_STYLE_LINE_COLOR: { "8.4.0": 77, "9.2.2": 76, "9.3.0": 76, "9.4.0": 76, "9.5.0": 90 },
+    LV_STYLE_LINE_OPA: { "8.4.0": 78, "9.2.2": 77, "9.3.0": 77, "9.4.0": 77, "9.5.0": 82 },
+    LV_STYLE_ARC_WIDTH: { "8.4.0": 80, "9.2.2": 80, "9.3.0": 80, "9.4.0": 80, "9.5.0": 76 },
+    LV_STYLE_ARC_ROUNDED: { "8.4.0": 81, "9.2.2": 81, "9.3.0": 81, "9.4.0": 81, "9.5.0": 111 },
+    LV_STYLE_ARC_COLOR: { "8.4.0": 82, "9.2.2": 82, "9.3.0": 82, "9.4.0": 82, "9.5.0": 91 },
+    LV_STYLE_ARC_OPA: { "8.4.0": 83, "9.2.2": 83, "9.3.0": 83, "9.4.0": 83, "9.5.0": 83 },
+    LV_STYLE_ARC_IMG_SRC: { "8.4.0": 84, "9.2.2": 84, "9.3.0": 84, "9.4.0": 84, "9.5.0": 96 },
+    LV_STYLE_TEXT_COLOR: { "8.4.0": 85, "9.2.2": 88, "9.3.0": 88, "9.4.0": 88, "9.5.0": 92 },
+    LV_STYLE_TEXT_OPA: { "8.4.0": 86, "9.2.2": 89, "9.3.0": 89, "9.4.0": 89, "9.5.0": 84 },
+    LV_STYLE_TEXT_FONT: { "8.4.0": 87, "9.2.2": 90, "9.3.0": 90, "9.4.0": 90, "9.5.0": 77 },
+    LV_STYLE_TEXT_LETTER_SPACE: { "8.4.0": 88, "9.2.2": 91, "9.3.0": 91, "9.4.0": 91, "9.5.0": 102 },
+    LV_STYLE_TEXT_LINE_SPACE: { "8.4.0": 89, "9.2.2": 92, "9.3.0": 92, "9.4.0": 92, "9.5.0": 103 },
+    LV_STYLE_TEXT_DECOR: { "8.4.0": 90, "9.2.2": 93, "9.3.0": 93, "9.4.0": 93, "9.5.0": 110 },
+    LV_STYLE_TEXT_ALIGN: { "8.4.0": 91, "9.2.2": 94, "9.3.0": 94, "9.4.0": 94, "9.5.0": 101 },
+    LV_STYLE_OPA: { "8.4.0": 96, "9.2.2": 95, "9.3.0": 98, "9.4.0": 98, "9.5.0": 112 },
+    LV_STYLE_OPA_LAYERED: { "8.4.0": 97, "9.2.2": 96, "9.3.0": 99, "9.4.0": 99, "9.5.0": 113 },
+    LV_STYLE_COLOR_FILTER_DSC: { "8.4.0": 98, "9.2.2": 97, "9.3.0": 100, "9.4.0": 100, "9.5.0": 114 },
+    LV_STYLE_COLOR_FILTER_OPA: { "8.4.0": 99, "9.2.2": 98, "9.3.0": 101, "9.4.0": 101, "9.5.0": 115 },
+    LV_STYLE_ANIM: { "8.4.0": 100, "9.2.2": 99, "9.3.0": 102, "9.4.0": 102, "9.5.0": 116 },
+    LV_STYLE_ANIM_TIME: { "8.4.0": 101, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined, "9.5.0": undefined },
+    LV_STYLE_ANIM_DURATION: { "8.4.0": undefined, "9.2.2": 100, "9.3.0": 103, "9.4.0": 103, "9.5.0": 117 },
+    LV_STYLE_ANIM_SPEED: { "8.4.0": 102, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined, "9.5.0": undefined },
+    LV_STYLE_TRANSITION: { "8.4.0": 103, "9.2.2": 102, "9.3.0": 104, "9.4.0": 104, "9.5.0": 118 },
+    LV_STYLE_BLEND_MODE: { "8.4.0": 104, "9.2.2": 103, "9.3.0": 105, "9.4.0": 105, "9.5.0": 122 },
+    LV_STYLE_TRANSFORM_WIDTH: { "8.4.0": 105, "9.2.2": 104, "9.3.0": 106, "9.4.0": 106, "9.5.0": 4 },
+    LV_STYLE_TRANSFORM_HEIGHT: { "8.4.0": 106, "9.2.2": 105, "9.3.0": 107, "9.4.0": 107, "9.5.0": 5 },
+    LV_STYLE_TRANSLATE_X: { "8.4.0": 107, "9.2.2": 106, "9.3.0": 108, "9.4.0": 108, "9.5.0": 12 },
+    LV_STYLE_TRANSLATE_Y: { "8.4.0": 108, "9.2.2": 107, "9.3.0": 109, "9.4.0": 109, "9.5.0": 13 },
+    LV_STYLE_TRANSFORM_ZOOM: { "8.4.0": 109, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined, "9.5.0": undefined },
+    LV_STYLE_TRANSFORM_SCALE_X: { "8.4.0": undefined, "9.2.2": 108, "9.3.0": 110, "9.4.0": 110, "9.5.0": 152 },
+    LV_STYLE_TRANSFORM_SCALE_Y: { "8.4.0": undefined, "9.2.2": 109, "9.3.0": 111, "9.4.0": 111, "9.5.0": 153 },
+    LV_STYLE_TRANSFORM_ANGLE: { "8.4.0": 110, "9.2.2": undefined, "9.3.0": undefined, "9.4.0": undefined, "9.5.0": undefined },
+    LV_STYLE_TRANSFORM_ROTATION: { "8.4.0": undefined, "9.2.2": 110, "9.3.0": 112, "9.4.0": 112, "9.5.0": 156 },
+    LV_STYLE_TRANSFORM_PIVOT_X: { "8.4.0": 111, "9.2.2": 111, "9.3.0": 113, "9.4.0": 113, "9.5.0": 154 },
+    LV_STYLE_TRANSFORM_PIVOT_Y: { "8.4.0": 112, "9.2.2": 112, "9.3.0": 114, "9.4.0": 114, "9.5.0": 155 },
+    LV_STYLE_TRANSFORM_SKEW_X: { "8.4.0": undefined, "9.2.2": 113, "9.3.0": 115, "9.4.0": 115, "9.5.0": 157 },
+    LV_STYLE_TRANSFORM_SKEW_Y: { "8.4.0": undefined, "9.2.2": 114, "9.3.0": 116, "9.4.0": 116, "9.5.0": 158 },
+    LV_STYLE_FLEX_FLOW: { "8.4.0": 113, "9.2.2": 125, "9.3.0": 122, "9.4.0": 122, "9.5.0": 160 },
+    LV_STYLE_FLEX_MAIN_PLACE: { "8.4.0": 114, "9.2.2": 126, "9.3.0": 123, "9.4.0": 123, "9.5.0": 161 },
+    LV_STYLE_FLEX_CROSS_PLACE: { "8.4.0": 115, "9.2.2": 127, "9.3.0": 124, "9.4.0": 124, "9.5.0": 162 },
+    LV_STYLE_FLEX_TRACK_PLACE: { "8.4.0": 116, "9.2.2": 128, "9.3.0": 125, "9.4.0": 125, "9.5.0": 163 },
+    LV_STYLE_FLEX_GROW: { "8.4.0": 117, "9.2.2": 129, "9.3.0": 126, "9.4.0": 126, "9.5.0": 164 },
+    LV_STYLE_GRID_COLUMN_ALIGN: { "8.4.0": 120, "9.2.2": 130, "9.3.0": 127, "9.4.0": 127, "9.5.0": 168 },
+    LV_STYLE_GRID_ROW_ALIGN: { "8.4.0": 121, "9.2.2": 131, "9.3.0": 128, "9.4.0": 128, "9.5.0": 169 },
+    LV_STYLE_GRID_ROW_DSC_ARRAY: { "8.4.0": 119, "9.2.2": 132, "9.3.0": 129, "9.4.0": 129, "9.5.0": 166 },
+    LV_STYLE_GRID_COLUMN_DSC_ARRAY: { "8.4.0": 118, "9.2.2": 133, "9.3.0": 130, "9.4.0": 130, "9.5.0": 165 },
+    LV_STYLE_GRID_CELL_COLUMN_POS: { "8.4.0": 125, "9.2.2": 134, "9.3.0": 131, "9.4.0": 131, "9.5.0": 170 },
+    LV_STYLE_GRID_CELL_COLUMN_SPAN: { "8.4.0": 124, "9.2.2": 135, "9.3.0": 132, "9.4.0": 132, "9.5.0": 171 },
+    LV_STYLE_GRID_CELL_X_ALIGN: { "8.4.0": 126, "9.2.2": 136, "9.3.0": 133, "9.4.0": 133, "9.5.0": 172 },
+    LV_STYLE_GRID_CELL_ROW_POS: { "8.4.0": 123, "9.2.2": 137, "9.3.0": 134, "9.4.0": 134, "9.5.0": 173 },
+    LV_STYLE_GRID_CELL_ROW_SPAN: { "8.4.0": 122, "9.2.2": 138, "9.3.0": 135, "9.4.0": 135, "9.5.0": 174 },
+    LV_STYLE_GRID_CELL_Y_ALIGN: { "8.4.0": 127, "9.2.2": 139, "9.3.0": 136, "9.4.0": 136, "9.5.0": 175 },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,51 +249,10 @@ export const LVGL_FLAG_CODES_90 = {
 
 export const LV_OBJ_FLAG_ENUM_NAME = "LV_OBJ_FLAG";
 
-////////////////////////////////////////////////////////////////////////////////
-
 export const LVGL_REACTIVE_FLAGS: (keyof typeof LVGL_FLAG_CODES)[] = [
     "HIDDEN",
     "CLICKABLE"
 ];
-
-export const LVGL_STATE_CODES = {
-    CHECKED: 0x0001,
-    DISABLED: 0x0080,
-    FOCUSED: 0x0002,
-    FOCUS_KEY: 0x0004,
-    PRESSED: 0x0020
-};
-
-export const LVGL_STATE_CODES_MORE = {
-    DEFAULT: 0x0000,
-    EDITED: 0x0008,
-    HOVERED: 0x0010,
-    SCROLLED: 0x0040,
-    USER1: 0x1000,
-    USER2: 0x2000,
-    USER3: 0x4000,
-    USER4: 0x8000,
-    ALL: 0xFFFF,
-};
-
-export const LVGL_REACTIVE_STATES: (keyof typeof LVGL_STATE_CODES)[] = [
-    "CHECKED",
-    "DISABLED"
-];
-
-export const LVGL_STYLE_STATES = [
-    "DEFAULT",
-    "CHECKED",
-    "PRESSED",
-    "CHECKED|PRESSED",
-    "DISABLED",
-    "FOCUSED",
-    "FOCUS_KEY",
-    "EDITED",
-    "SCROLLED"
-];
-
-export const LV_STATE_ENUM_NAME = "LV_STATE";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -314,6 +274,84 @@ export const lvglStates = {
 
     ANY: 0xffff // Special value can be used in some functions to target all states
 };
+
+export const lvglStates_V9_5_0 = {
+    DEFAULT: 0x0000, // LV_STATE_DEFAULT
+    CHECKED: 0x0004, // LV_STATE_CHECKED
+    FOCUSED: 0x0008, // LV_STATE_FOCUSED,
+    FOCUS_KEY: 0x0010, // LV_STATE_FOCUS_KEY
+    EDITED: 0x0020, // LV_STATE_EDITED,
+    HOVERED: 0x0040, // LV_STATE_HOVERED
+    PRESSED: 0x0080, // LV_STATE_PRESSED
+    SCROLLED: 0x0100, // LV_STATE_SCROLLED
+    DISABLED: 0x0200, // LV_STATE_DISABLED
+
+    USER_1: 0x1000, // LV_STATE_USER_1,
+    USER_2: 0x2000, // LV_STATE_USER_1,
+    USER_3: 0x4000, // LV_STATE_USER_1,
+    USER_4: 0x8000, // LV_STATE_USER_1,
+
+    ANY: 0xffff // Special value can be used in some functions to target all states
+};
+
+export const LVGL_STATE_CODES = {
+    CHECKED: lvglStates.CHECKED,
+    DISABLED: lvglStates.DISABLED,
+    FOCUSED: lvglStates.FOCUSED,
+    FOCUS_KEY: lvglStates.FOCUS_KEY,
+    PRESSED: lvglStates.PRESSED
+};
+
+export const LVGL_STATE_CODES_MORE = {
+    DEFAULT: lvglStates.DEFAULT,
+    EDITED: lvglStates.EDITED,
+    HOVERED: lvglStates.HOVERED,
+    SCROLLED: lvglStates.SCROLLED,
+    USER1: lvglStates.USER_1,
+    USER2: lvglStates.USER_2,
+    USER3: lvglStates.USER_3,
+    USER4: lvglStates.USER_4,
+    ALL: lvglStates.ANY,
+};
+
+export const LVGL_STATE_CODES_V9_5_0 = {
+    CHECKED: lvglStates_V9_5_0.CHECKED,
+    DISABLED: lvglStates_V9_5_0.DISABLED,
+    FOCUSED: lvglStates_V9_5_0.FOCUSED,
+    FOCUS_KEY: lvglStates_V9_5_0.FOCUS_KEY,
+    PRESSED: lvglStates_V9_5_0.PRESSED
+};
+
+export const LVGL_STATE_CODES_MORE_V9_5_0 = {
+    DEFAULT: lvglStates_V9_5_0.DEFAULT,
+    EDITED: lvglStates_V9_5_0.EDITED,
+    HOVERED: lvglStates_V9_5_0.HOVERED,
+    SCROLLED: lvglStates_V9_5_0.SCROLLED,
+    USER1: lvglStates_V9_5_0.USER_1,
+    USER2: lvglStates_V9_5_0.USER_2,
+    USER3: lvglStates_V9_5_0.USER_3,
+    USER4: lvglStates_V9_5_0.USER_4,
+    ALL: lvglStates_V9_5_0.ANY,
+};
+
+export const LVGL_REACTIVE_STATES: (keyof typeof LVGL_STATE_CODES)[] = [
+    "CHECKED",
+    "DISABLED"
+];
+
+export const LVGL_STYLE_STATES = [
+    "DEFAULT",
+    "CHECKED",
+    "PRESSED",
+    "CHECKED|PRESSED",
+    "DISABLED",
+    "FOCUSED",
+    "FOCUS_KEY",
+    "EDITED",
+    "SCROLLED"
+];
+
+export const LV_STATE_ENUM_NAME = "LV_STATE";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -562,6 +600,82 @@ export const LVGL_EVENTS_V9_3_0 = {
     UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "event" }
 } as WidgetEvents;
 
+export const LVGL_EVENTS_V9_5_0 = {
+    PRESSED: { code: 1, paramExpressionType: "event" },
+    PRESSING: { code: 2, paramExpressionType: "event" },
+    PRESS_LOST: { code: 3, paramExpressionType: "event" },
+    SHORT_CLICKED: { code: 4, paramExpressionType: "event" },
+    SINGLE_CLICKED: { code: 5, paramExpressionType: "event" },
+    DOUBLE_CLICKED: { code: 6, paramExpressionType: "event" },
+    TRIPLE_CLICKED: { code: 7, paramExpressionType: "event" },
+    LONG_PRESSED: { code: 8, paramExpressionType: "event" },
+    LONG_PRESSED_REPEAT: { code: 9, paramExpressionType: "event" },
+    CLICKED: { code: 10, paramExpressionType: "event" },
+    RELEASED: { code: 11, paramExpressionType: "event" },
+    SCROLL_BEGIN: { code: 12, paramExpressionType: "event" },
+    SCROLL_THROW_BEGIN: { code: 13, paramExpressionType: "event" },
+    SCROLL_END: { code: 14, paramExpressionType: "event" },
+    SCROLL: { code: 15, paramExpressionType: "event" },
+    GESTURE: { code: 16, paramExpressionType: "event" },
+    KEY: { code: 17, paramExpressionType: "event" },
+    ROTARY: { code: 18, paramExpressionType: "event" },
+    FOCUSED: { code: 19, paramExpressionType: "event" },
+    DEFOCUSED: { code: 20, paramExpressionType: "event" },
+    LEAVE: { code: 21, paramExpressionType: "event" },
+    HIT_TEST: { code: 22, paramExpressionType: "event" },
+    INDEV_RESET: { code: 23, paramExpressionType: "event" },
+    HOVER_OVER: { code: 24, paramExpressionType: "event" },
+    HOVER_LEAVE: { code: 25, paramExpressionType: "event" },
+
+    COVER_CHECK: { code: 26, paramExpressionType: "event" },
+    REFR_EXT_DRAW_SIZE: { code: 27, paramExpressionType: "event" },
+    DRAW_MAIN_BEGIN: { code: 28, paramExpressionType: "event" },
+    DRAW_MAIN: { code: 29, paramExpressionType: "event" },
+    DRAW_MAIN_END: { code: 30, paramExpressionType: "event" },
+    DRAW_POST_BEGIN: { code: 31, paramExpressionType: "event" },
+    DRAW_POST: { code: 32, paramExpressionType: "event" },
+    DRAW_POST_END: { code: 33, paramExpressionType: "event" },
+    DRAW_TASK_ADDED: { code: 34, paramExpressionType: "event" },
+
+    VALUE_CHANGED: { code: 35, paramExpressionType: "event" },
+    INSERT: { code: 36, paramExpressionType: "event" },
+    REFRESH: { code: 37, paramExpressionType: "event" },
+    READY: { code: 38, paramExpressionType: "event" },
+    CANCEL: { code: 39, paramExpressionType: "event" },
+
+    CREATE: { code: 41, paramExpressionType: "event" },
+    DELETE: { code: 42, paramExpressionType: "event" },
+    CHILD_CHANGED: { code: 43, paramExpressionType: "event" },
+    CHILD_CREATED: { code: 44, paramExpressionType: "event" },
+    CHILD_DELETED: { code: 45, paramExpressionType: "event" },
+    SCREEN_UNLOAD_START: { code: 46, paramExpressionType: "event" },
+    SCREEN_LOAD_START: { code: 47, paramExpressionType: "event" },
+    SCREEN_LOADED: { code: 48, paramExpressionType: "event" },
+    SCREEN_UNLOADED: { code: 49, paramExpressionType: "event" },
+    SIZE_CHANGED: { code: 50, paramExpressionType: "event" },
+    STYLE_CHANGED: { code: 51, paramExpressionType: "event" },
+    LAYOUT_CHANGED: { code: 52, paramExpressionType: "event" },
+    GET_SELF_SIZE: { code: 53, paramExpressionType: "event" },
+
+    INVALIDATE_AREA: { code: 54, paramExpressionType: "event" },
+    RESOLUTION_CHANGED: { code: 55, paramExpressionType: "event" },
+    COLOR_FORMAT_CHANGED: { code: 56, paramExpressionType: "event" },
+    REFR_REQUEST: { code: 57, paramExpressionType: "event" },
+    REFR_START: { code: 58, paramExpressionType: "event" },
+    REFR_READY: { code: 59, paramExpressionType: "event" },
+    RENDER_START: { code: 60, paramExpressionType: "event" },
+    RENDER_READY: { code: 61, paramExpressionType: "event" },
+    FLUSH_START: { code: 62, paramExpressionType: "event" },
+    FLUSH_FINISH: { code: 63, paramExpressionType: "event" },
+    FLUSH_WAIT_START: { code: 64, paramExpressionType: "event" },
+    FLUSH_WAIT_FINISH: { code: 65, paramExpressionType: "event" },
+
+    VSYNC: { code: 67   , paramExpressionType: "event" },
+
+    CHECKED: { code: LV_EVENT_CHECKED, paramExpressionType: "event" },
+    UNCHECKED: { code: LV_EVENT_UNCHECKED, paramExpressionType: "event" }
+} as WidgetEvents;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const CF_ALPHA_1_BIT = 1;
@@ -680,7 +794,6 @@ export const LV_IMAGE_ALIGN = {
     TILE: 12
 };
 
-// _lv_image_align_t
 export const LV_IMG_SIZE_MODE = {
     VIRTUAL: 0,
     REAL: 1
@@ -776,8 +889,8 @@ export const LVGL_CONSTANTS_ALL = {
     LV_IMAGE_ALIGN_STRETCH: 11,
     LV_IMAGE_ALIGN_TILE: 12,
 
-    LV_IMAGE_SIZE_MODE_VIRTUAL: 0,
-    LV_IMAGE_SIZE_MODE_REAL: 1,
+    LV_IMG_SIZE_MODE_VIRTUAL: 0,
+    LV_IMG_SIZE_MODE_REAL: 1,
 
     LV_IMAGEBUTTON_STATE_RELEASED: 0,
     LV_IMAGEBUTTON_STATE_PRESSED: 1,
@@ -820,11 +933,11 @@ export const LVGL_CONSTANTS_ALL = {
     LV_PART_INDICATOR: 0x020000,
     LV_PART_ITEMS: 0x050000,
 
-    LV_STATE_CHECKED: 0x0001,
-    LV_STATE_DISABLED: 0x0080,
-    LV_STATE_FOCUSED: 0x0002,
-    LV_STATE_FOCUS_KEY: 0x0004,
-    LV_STATE_PRESSED: 0x0020,
+    LV_STATE_CHECKED: lvglStates.CHECKED,
+    LV_STATE_DISABLED: lvglStates.DISABLED,
+    LV_STATE_FOCUSED: lvglStates.FOCUSED,
+    LV_STATE_FOCUS_KEY: lvglStates.FOCUS_KEY,
+    LV_STATE_PRESSED: lvglStates.PRESSED,
 
     LV_OBJ_FLAG_HIDDEN: 1 << 0,
     LV_OBJ_FLAG_CLICKABLE: 1 << 1,
@@ -854,4 +967,13 @@ export const LVGL_CONSTANTS_ALL = {
     LV_TEXT_ALIGN_LEFT: 1,
     LV_TEXT_ALIGN_CENTER: 2,
     LV_TEXT_ALIGN_RIGHT: 3,
+};
+
+export const LVGL_CONSTANTS_ALL_95 = {
+    ...LVGL_CONSTANTS_ALL,
+    LV_STATE_CHECKED: lvglStates_V9_5_0.CHECKED,
+    LV_STATE_DISABLED: lvglStates_V9_5_0.DISABLED,
+    LV_STATE_FOCUSED: lvglStates_V9_5_0.FOCUSED,
+    LV_STATE_FOCUS_KEY: lvglStates_V9_5_0.FOCUS_KEY,
+    LV_STATE_PRESSED: lvglStates_V9_5_0.PRESSED
 };

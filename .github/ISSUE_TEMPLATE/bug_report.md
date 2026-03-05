@@ -28,7 +28,7 @@ If applicable, add screenshots to help explain your problem.
 - Version [e.g. 10]
 
 **LVGL version (if used)**
-- 8.4.0, 9.2.2, 9.3.0 or 9.4.0
+- 8.4.0, 9.2.2, 9.3.0, 9.4.0 or 9.5.0
 
 **Additional context**
 Add any other context about the problem here.

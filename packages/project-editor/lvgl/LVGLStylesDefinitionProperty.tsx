@@ -514,6 +514,7 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                     return definedValue !== undefined
                                         ? definedValue
                                         : getStylePropDefaultValue(
+                                              this.context.project,
                                               runtime,
                                               lvglObj,
                                               part,

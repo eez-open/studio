@@ -11,8 +11,10 @@ import {
     text_font_property_info
 } from "project-editor/lvgl/style-catalog";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
-import { lvglStates } from "project-editor/lvgl/lvgl-constants";
+import { lvglStates, lvglStates_V9_5_0 } from "project-editor/lvgl/lvgl-constants";
 import { getLvglParts } from "project-editor/lvgl/lvgl-versions";
+import type { Project } from "project-editor/project/project";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -37,11 +39,13 @@ export function getPartBuildCode(part: string) {
     return "LV_PART_" + part;
 }
 
-export function getStateCode(state: string) {
+export function getStateCode(project: Project, state: string) {
     let result = 0;
 
+    const lvglStatesVar = project.settings.general.lvglVersion == "9.5.0" ? lvglStates_V9_5_0 : lvglStates;
+
     state.split("|").forEach(stateStr => {
-        const stateCode = (lvglStates as any)[stateStr];
+        const stateCode = (lvglStatesVar as any)[stateStr];
         if (stateCode == undefined) {
             console.error("UNEXPECTED!");
             return;
@@ -68,7 +72,7 @@ export function getSelectorCode(
             ? statesStr
                   .split("|")
                   .reduce((previousCode: number, currentStateStr: string) => {
-                      return previousCode | getStateCode(currentStateStr);
+                      return previousCode | getStateCode(ProjectEditor.getProject(object), currentStateStr);
                   }, 0)
             : 0;
 
@@ -111,6 +115,7 @@ export function colorNumToRgb(color: number): string {
 }
 
 export function getStylePropDefaultValue(
+    project: Project,
     runtime: LVGLPageRuntime | undefined,
     lvglObj: number | undefined,
     part: LVGLParts,
@@ -123,7 +128,7 @@ export function getStylePropDefaultValue(
                 let colorNum = runtime.wasm._lvglObjGetStylePropColor(
                     lvglObj,
                     getPartCode(runtime.page, part),
-                    getStateCode(state),
+                    getStateCode(project, state),
                     runtime.getLvglStylePropCode(
                         propertyInfo.lvglStyleProp.code
                     )
@@ -139,7 +144,7 @@ export function getStylePropDefaultValue(
                         runtime.wasm._lvglObjGetStylePropBuiltInFont(
                             lvglObj,
                             getPartCode(runtime.page, part),
-                            getStateCode(state),
+                            getStateCode(project, state),
                             runtime.getLvglStylePropCode(
                                 propertyInfo.lvglStyleProp.code
                             )
@@ -152,7 +157,7 @@ export function getStylePropDefaultValue(
                             runtime.wasm._lvglObjGetStylePropFontAddr(
                                 lvglObj,
                                 getPartCode(runtime.page, part),
-                                getStateCode(state),
+                                getStateCode(project, state),
                                 runtime.getLvglStylePropCode(
                                     propertyInfo.lvglStyleProp.code
                                 )
@@ -166,7 +171,7 @@ export function getStylePropDefaultValue(
                     let num = runtime.wasm._lvglObjGetStylePropNum(
                         lvglObj,
                         getPartCode(runtime.page, part),
-                        getStateCode(state),
+                        getStateCode(project, state),
                         runtime.getLvglStylePropCode(
                             propertyInfo.lvglStyleProp.code
                         )
@@ -179,7 +184,7 @@ export function getStylePropDefaultValue(
                 let num = runtime.wasm._lvglObjGetStylePropNum(
                     lvglObj,
                     getPartCode(runtime.page, part),
-                    getStateCode(state),
+                    getStateCode(project, state),
                     runtime.getLvglStylePropCode(
                         propertyInfo.lvglStyleProp.code
                     )

@@ -236,7 +236,7 @@ export class LVGLTabWidget extends LVGLWidget {
                     code.ifStringNotEqual(new_val, cur_val, () => {
                         code.tickChangeStart();
                         code.callFreeFunction(
-                            "lv_tabview_rename_tab",
+                            code.isLVGLVersion(["8.4.0", "9.2.2", "9.3.0", "9.4.0"]) ? "lv_tabview_rename_tab" : "lv_tabview_set_tab_text",
                             tabview,
                             tabIndex,
                             new_val

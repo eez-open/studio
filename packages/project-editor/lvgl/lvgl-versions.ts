@@ -26,6 +26,7 @@ import {
     LVGL_EVENTS_V8,
     LVGL_EVENTS_V9_2_2,
     LVGL_EVENTS_V9_3_0,
+    LVGL_EVENTS_V9_5_0,
     LVGL_FLAG_CODES,
     LVGL_FLAG_CODES_90,
     LVGL_PARTS_8,
@@ -413,6 +414,12 @@ const versions = {
         ...version_9, 
         wasmFlowRuntime: "project-editor/flow/runtime/wasm/lvgl_runtime_v9.4.0.js",
         LVGL_EVENTS: LVGL_EVENTS_V9_3_0,
+        defaultFontBpp: 8
+    },
+    "9.5.0": {
+        ...version_9, 
+        wasmFlowRuntime: "project-editor/flow/runtime/wasm/lvgl_runtime_v9.5.0.js",
+        LVGL_EVENTS: LVGL_EVENTS_V9_5_0,
         defaultFontBpp: 8
     },
 };

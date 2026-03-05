@@ -7,7 +7,7 @@ import { ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 
-import { lvglStates, ROLLER_MODES } from "project-editor/lvgl/lvgl-constants";
+import { lvglStates, lvglStates_V9_5_0, ROLLER_MODES } from "project-editor/lvgl/lvgl-constants";
 
 import { LVGLWidget } from "./internal";
 import {
@@ -251,7 +251,7 @@ export class LVGLRollerWidget extends LVGLWidget {
                 } else {
                     if (
                         code.callObjectFunction("lv_obj_get_state") &
-                        lvglStates.EDITED
+                        (code.isLVGLVersion(["9.5.0"]) ? lvglStates_V9_5_0.EDITED : lvglStates.EDITED)
                     ) {
                         return;
                     }

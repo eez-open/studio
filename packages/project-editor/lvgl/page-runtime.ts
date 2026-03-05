@@ -51,7 +51,8 @@ import {
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     LVGLStylePropCode,
-    LVGL_CONSTANTS_ALL
+    LVGL_CONSTANTS_ALL,
+    LVGL_CONSTANTS_ALL_95
 } from "project-editor/lvgl/lvgl-constants";
 import {
     BUILT_IN_FONTS,
@@ -130,7 +131,12 @@ export abstract class LVGLPageRuntime {
 
     reset() {
         this.wasm = undefined as any;
-        this.toLVGLCode = new SimulatorLVGLCode(this, LVGL_CONSTANTS_ALL);
+        this.toLVGLCode = new SimulatorLVGLCode(
+            this,
+            this.isLVGLVersion(["9.5.0"])
+                ? LVGL_CONSTANTS_ALL_95
+                : LVGL_CONSTANTS_ALL
+        );
         this.isMounted = false;
         this.bitmapsCache = new Map();
         this.fontsCache = new Map();

@@ -71,7 +71,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v9.4.0/../common/pre.js
+// include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v9.5.0/../common/pre.js
 module["exports"] = function (postWorkerToRendererMessage) {
     var Module = {};
 
@@ -101,7 +101,7 @@ module["exports"] = function (postWorkerToRendererMessage) {
 
 function runWasmModule(Module) {
 
-// end include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v9.4.0/../common/pre.js
+// end include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v9.5.0/../common/pre.js
 
 
 var arguments_ = [];
@@ -624,7 +624,7 @@ function createExportWrapper(name, nargs) {
 var wasmBinaryFile;
 
 function findWasmBinary() {
-  return locateFile('lvgl_runtime_v9.4.0.wasm');
+  return locateFile('lvgl_runtime_v9.5.0.wasm');
 }
 
 function getBinarySync(file) {
@@ -5470,31 +5470,31 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1205016: ($0) => { startToDebuggerMessage($0); },  
- 1205048: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1205123: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1205198: ($0) => { finishToDebuggerMessage($0); },  
- 1205231: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1205261: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1205291: ($0) => { lvglScreenTick($0); },  
- 1205315: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1205355: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1205409: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1205463: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1205516: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1205569: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1205622: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
- 1205674: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1205721: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1205754: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1205790: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1205835: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1205941: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1205977: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1206014: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1206054: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1206111: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1206170: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1208376: ($0) => { startToDebuggerMessage($0); },  
+ 1208408: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1208483: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1208558: ($0) => { finishToDebuggerMessage($0); },  
+ 1208591: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1208621: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1208651: ($0) => { lvglScreenTick($0); },  
+ 1208675: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1208715: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1208769: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1208823: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1208876: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1208929: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1208982: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1209034: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1209081: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1209114: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1209150: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1209195: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1209301: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1209337: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1209374: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1209414: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1209471: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1209530: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5766,6 +5766,7 @@ var _lvglGetTabName = Module['_lvglGetTabName'] = makeInvalidEarlyAccess('_lvglG
 var _lv_tabview_get_tab_bar = Module['_lv_tabview_get_tab_bar'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_bar');
 var _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = makeInvalidEarlyAccess('_lv_obj_get_child_by_type');
 var _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = makeInvalidEarlyAccess('_lvglCreateFreeTypeFont');
+var _lv_freetype_font_create = Module['_lv_freetype_font_create'] = makeInvalidEarlyAccess('_lv_freetype_font_create');
 var _lv_log_add = Module['_lv_log_add'] = makeInvalidEarlyAccess('_lv_log_add');
 var _lvglCreateAnim = Module['_lvglCreateAnim'] = makeInvalidEarlyAccess('_lvglCreateAnim');
 var _lv_anim_init = Module['_lv_anim_init'] = makeInvalidEarlyAccess('_lv_anim_init');
@@ -5814,6 +5815,8 @@ var _lv_ll_get_len = Module['_lv_ll_get_len'] = makeInvalidEarlyAccess('_lv_ll_g
 var _lv_group_get_obj_by_index = Module['_lv_group_get_obj_by_index'] = makeInvalidEarlyAccess('_lv_group_get_obj_by_index');
 var _lv_group_get_count = Module['_lv_group_get_count'] = makeInvalidEarlyAccess('_lv_group_get_count');
 var _lv_group_by_index = Module['_lv_group_by_index'] = makeInvalidEarlyAccess('_lv_group_by_index');
+var _lv_group_set_user_data = Module['_lv_group_set_user_data'] = makeInvalidEarlyAccess('_lv_group_set_user_data');
+var _lv_group_get_user_data = Module['_lv_group_get_user_data'] = makeInvalidEarlyAccess('_lv_group_get_user_data');
 var _lv_obj_get_scroll_left = Module['_lv_obj_get_scroll_left'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_left');
 var _lv_obj_get_scroll_top = Module['_lv_obj_get_scroll_top'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_top');
 var _lv_event_mark_deleted = Module['_lv_event_mark_deleted'] = makeInvalidEarlyAccess('_lv_event_mark_deleted');
@@ -5824,7 +5827,9 @@ var _lv_event_remove_all = Module['_lv_event_remove_all'] = makeInvalidEarlyAcce
 var _lv_event_get_current_target = Module['_lv_event_get_current_target'] = makeInvalidEarlyAccess('_lv_event_get_current_target');
 var _lv_event_get_param = Module['_lv_event_get_param'] = makeInvalidEarlyAccess('_lv_event_get_param');
 var _lv_indev_get_scroll_obj = Module['_lv_indev_get_scroll_obj'] = makeInvalidEarlyAccess('_lv_indev_get_scroll_obj');
+var _lv_obj_is_radio_button = Module['_lv_obj_is_radio_button'] = makeInvalidEarlyAccess('_lv_obj_is_radio_button');
 var _lv_obj_get_child_count = Module['_lv_obj_get_child_count'] = makeInvalidEarlyAccess('_lv_obj_get_child_count');
+var _lv_obj_get_child = Module['_lv_obj_get_child'] = makeInvalidEarlyAccess('_lv_obj_get_child');
 var _lv_obj_mark_layout_as_dirty = Module['_lv_obj_mark_layout_as_dirty'] = makeInvalidEarlyAccess('_lv_obj_mark_layout_as_dirty');
 var _lv_event_get_key = Module['_lv_event_get_key'] = makeInvalidEarlyAccess('_lv_event_get_key');
 var _lv_obj_is_editable = Module['_lv_obj_is_editable'] = makeInvalidEarlyAccess('_lv_obj_is_editable');
@@ -5844,6 +5849,9 @@ var _lv_area_increase = Module['_lv_area_increase'] = makeInvalidEarlyAccess('_l
 var _lv_area_is_in = Module['_lv_area_is_in'] = makeInvalidEarlyAccess('_lv_area_is_in');
 var _lv_event_get_layer = Module['_lv_event_get_layer'] = makeInvalidEarlyAccess('_lv_event_get_layer');
 var _lv_draw_rect_dsc_init = Module['_lv_draw_rect_dsc_init'] = makeInvalidEarlyAccess('_lv_draw_rect_dsc_init');
+var _lv_draw_blur_dsc_init = Module['_lv_draw_blur_dsc_init'] = makeInvalidEarlyAccess('_lv_draw_blur_dsc_init');
+var _lv_obj_init_draw_blur_dsc = Module['_lv_obj_init_draw_blur_dsc'] = makeInvalidEarlyAccess('_lv_obj_init_draw_blur_dsc');
+var _lv_draw_blur = Module['_lv_draw_blur'] = makeInvalidEarlyAccess('_lv_draw_blur');
 var _lv_obj_init_draw_rect_dsc = Module['_lv_obj_init_draw_rect_dsc'] = makeInvalidEarlyAccess('_lv_obj_init_draw_rect_dsc');
 var _lv_draw_rect = Module['_lv_draw_rect'] = makeInvalidEarlyAccess('_lv_draw_rect');
 var _lv_area_get_size = Module['_lv_area_get_size'] = makeInvalidEarlyAccess('_lv_area_get_size');
@@ -5853,7 +5861,6 @@ var _lv_obj_class_init_obj = Module['_lv_obj_class_init_obj'] = makeInvalidEarly
 var _lv_obj_is_layout_positioned = Module['_lv_obj_is_layout_positioned'] = makeInvalidEarlyAccess('_lv_obj_is_layout_positioned');
 var _lv_obj_has_flag_any = Module['_lv_obj_has_flag_any'] = makeInvalidEarlyAccess('_lv_obj_has_flag_any');
 var _lv_obj_set_flag = Module['_lv_obj_set_flag'] = makeInvalidEarlyAccess('_lv_obj_set_flag');
-var _lv_obj_get_child = Module['_lv_obj_get_child'] = makeInvalidEarlyAccess('_lv_obj_get_child');
 var _lv_obj_style_state_compare = Module['_lv_obj_style_state_compare'] = makeInvalidEarlyAccess('_lv_obj_style_state_compare');
 var _lv_obj_update_layer_type = Module['_lv_obj_update_layer_type'] = makeInvalidEarlyAccess('_lv_obj_update_layer_type');
 var _lv_malloc_zeroed = Module['_lv_malloc_zeroed'] = makeInvalidEarlyAccess('_lv_malloc_zeroed');
@@ -5861,6 +5868,7 @@ var _lv_obj_style_create_transition = Module['_lv_obj_style_create_transition'] 
 var _lv_obj_refresh_style = Module['_lv_obj_refresh_style'] = makeInvalidEarlyAccess('_lv_obj_refresh_style');
 var _lv_obj_refresh_ext_draw_size = Module['_lv_obj_refresh_ext_draw_size'] = makeInvalidEarlyAccess('_lv_obj_refresh_ext_draw_size');
 var _lv_obj_set_state = Module['_lv_obj_set_state'] = makeInvalidEarlyAccess('_lv_obj_set_state');
+var _lv_obj_set_radio_button = Module['_lv_obj_set_radio_button'] = makeInvalidEarlyAccess('_lv_obj_set_radio_button');
 var _lv_obj_check_type = Module['_lv_obj_check_type'] = makeInvalidEarlyAccess('_lv_obj_check_type');
 var _lv_obj_has_class = Module['_lv_obj_has_class'] = makeInvalidEarlyAccess('_lv_obj_has_class');
 var _lv_obj_get_class = Module['_lv_obj_get_class'] = makeInvalidEarlyAccess('_lv_obj_get_class');
@@ -5925,16 +5933,21 @@ var _lv_event_get_self_size_info = Module['_lv_event_get_self_size_info'] = make
 var _lv_event_get_hit_test_info = Module['_lv_event_get_hit_test_info'] = makeInvalidEarlyAccess('_lv_event_get_hit_test_info');
 var _lv_event_get_cover_area = Module['_lv_event_get_cover_area'] = makeInvalidEarlyAccess('_lv_event_get_cover_area');
 var _lv_event_set_cover_res = Module['_lv_event_set_cover_res'] = makeInvalidEarlyAccess('_lv_event_set_cover_res');
+var _lv_event_get_prev_state = Module['_lv_event_get_prev_state'] = makeInvalidEarlyAccess('_lv_event_get_prev_state');
 var _lv_obj_get_local_style_prop = Module['_lv_obj_get_local_style_prop'] = makeInvalidEarlyAccess('_lv_obj_get_local_style_prop');
 var _lv_obj_set_style_x = Module['_lv_obj_set_style_x'] = makeInvalidEarlyAccess('_lv_obj_set_style_x');
 var _lv_obj_set_style_y = Module['_lv_obj_set_style_y'] = makeInvalidEarlyAccess('_lv_obj_set_style_y');
 var _lv_obj_set_x = Module['_lv_obj_set_x'] = makeInvalidEarlyAccess('_lv_obj_set_x');
 var _lv_obj_set_y = Module['_lv_obj_set_y'] = makeInvalidEarlyAccess('_lv_obj_set_y');
+var _lv_obj_calc_dynamic_width = Module['_lv_obj_calc_dynamic_width'] = makeInvalidEarlyAccess('_lv_obj_calc_dynamic_width');
+var _lv_obj_get_content_width = Module['_lv_obj_get_content_width'] = makeInvalidEarlyAccess('_lv_obj_get_content_width');
+var _lv_obj_calc_dynamic_height = Module['_lv_obj_calc_dynamic_height'] = makeInvalidEarlyAccess('_lv_obj_calc_dynamic_height');
+var _lv_obj_get_content_height = Module['_lv_obj_get_content_height'] = makeInvalidEarlyAccess('_lv_obj_get_content_height');
 var _lv_obj_refr_size = Module['_lv_obj_refr_size'] = makeInvalidEarlyAccess('_lv_obj_refr_size');
 var _lv_obj_get_content_coords = Module['_lv_obj_get_content_coords'] = makeInvalidEarlyAccess('_lv_obj_get_content_coords');
 var _lv_obj_scrollbar_invalidate = Module['_lv_obj_scrollbar_invalidate'] = makeInvalidEarlyAccess('_lv_obj_scrollbar_invalidate');
-var _lv_obj_get_content_width = Module['_lv_obj_get_content_width'] = makeInvalidEarlyAccess('_lv_obj_get_content_width');
-var _lv_obj_get_content_height = Module['_lv_obj_get_content_height'] = makeInvalidEarlyAccess('_lv_obj_get_content_height');
+var _lv_obj_get_display = Module['_lv_obj_get_display'] = makeInvalidEarlyAccess('_lv_obj_get_display');
+var _lv_display_is_invalidation_enabled = Module['_lv_display_is_invalidation_enabled'] = makeInvalidEarlyAccess('_lv_display_is_invalidation_enabled');
 var _lv_obj_get_coords = Module['_lv_obj_get_coords'] = makeInvalidEarlyAccess('_lv_obj_get_coords');
 var _lv_obj_set_style_width = Module['_lv_obj_set_style_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_width');
 var _lv_obj_set_style_height = Module['_lv_obj_set_style_height'] = makeInvalidEarlyAccess('_lv_obj_set_style_height');
@@ -5945,7 +5958,6 @@ var _lv_obj_set_content_height = Module['_lv_obj_set_content_height'] = makeInva
 var _lv_obj_set_layout = Module['_lv_obj_set_layout'] = makeInvalidEarlyAccess('_lv_obj_set_layout');
 var _lv_obj_set_style_layout = Module['_lv_obj_set_style_layout'] = makeInvalidEarlyAccess('_lv_obj_set_style_layout');
 var _lv_obj_get_screen = Module['_lv_obj_get_screen'] = makeInvalidEarlyAccess('_lv_obj_get_screen');
-var _lv_obj_get_display = Module['_lv_obj_get_display'] = makeInvalidEarlyAccess('_lv_obj_get_display');
 var _lv_display_send_event = Module['_lv_display_send_event'] = makeInvalidEarlyAccess('_lv_display_send_event');
 var _lv_obj_refr_pos = Module['_lv_obj_refr_pos'] = makeInvalidEarlyAccess('_lv_obj_refr_pos');
 var _lv_layout_apply = Module['_lv_layout_apply'] = makeInvalidEarlyAccess('_lv_layout_apply');
@@ -5962,15 +5974,21 @@ var _lv_obj_get_x_aligned = Module['_lv_obj_get_x_aligned'] = makeInvalidEarlyAc
 var _lv_obj_get_y_aligned = Module['_lv_obj_get_y_aligned'] = makeInvalidEarlyAccess('_lv_obj_get_y_aligned');
 var _lv_obj_get_self_width = Module['_lv_obj_get_self_width'] = makeInvalidEarlyAccess('_lv_obj_get_self_width');
 var _lv_obj_get_self_height = Module['_lv_obj_get_self_height'] = makeInvalidEarlyAccess('_lv_obj_get_self_height');
+var _lv_obj_get_style_clamped_width = Module['_lv_obj_get_style_clamped_width'] = makeInvalidEarlyAccess('_lv_obj_get_style_clamped_width');
+var _lv_obj_get_style_clamped_height = Module['_lv_obj_get_style_clamped_height'] = makeInvalidEarlyAccess('_lv_obj_get_style_clamped_height');
+var _lv_obj_is_width_min = Module['_lv_obj_is_width_min'] = makeInvalidEarlyAccess('_lv_obj_is_width_min');
+var _lv_obj_is_height_min = Module['_lv_obj_is_height_min'] = makeInvalidEarlyAccess('_lv_obj_is_height_min');
+var _lv_obj_is_width_max = Module['_lv_obj_is_width_max'] = makeInvalidEarlyAccess('_lv_obj_is_width_max');
+var _lv_obj_is_height_max = Module['_lv_obj_is_height_max'] = makeInvalidEarlyAccess('_lv_obj_is_height_max');
 var _lv_obj_move_to = Module['_lv_obj_move_to'] = makeInvalidEarlyAccess('_lv_obj_move_to');
 var _lv_obj_move_children_by = Module['_lv_obj_move_children_by'] = makeInvalidEarlyAccess('_lv_obj_move_children_by');
 var _lv_obj_transform_point = Module['_lv_obj_transform_point'] = makeInvalidEarlyAccess('_lv_obj_transform_point');
 var _lv_obj_transform_point_array = Module['_lv_obj_transform_point_array'] = makeInvalidEarlyAccess('_lv_obj_transform_point_array');
 var _lv_point_array_transform = Module['_lv_point_array_transform'] = makeInvalidEarlyAccess('_lv_point_array_transform');
 var _lv_obj_get_transformed_area = Module['_lv_obj_get_transformed_area'] = makeInvalidEarlyAccess('_lv_obj_get_transformed_area');
-var _lv_display_is_invalidation_enabled = Module['_lv_display_is_invalidation_enabled'] = makeInvalidEarlyAccess('_lv_display_is_invalidation_enabled');
 var _lv_obj_area_is_visible = Module['_lv_obj_area_is_visible'] = makeInvalidEarlyAccess('_lv_obj_area_is_visible');
 var _lv_inv_area = Module['_lv_inv_area'] = makeInvalidEarlyAccess('_lv_inv_area');
+var _lv_obj_tree_walk = Module['_lv_obj_tree_walk'] = makeInvalidEarlyAccess('_lv_obj_tree_walk');
 var _lv_display_get_screen_active = Module['_lv_display_get_screen_active'] = makeInvalidEarlyAccess('_lv_display_get_screen_active');
 var _lv_display_get_screen_prev = Module['_lv_display_get_screen_prev'] = makeInvalidEarlyAccess('_lv_display_get_screen_prev');
 var _lv_display_get_layer_bottom = Module['_lv_display_get_layer_bottom'] = makeInvalidEarlyAccess('_lv_display_get_layer_bottom');
@@ -5988,6 +6006,9 @@ var _lv_obj_center = Module['_lv_obj_center'] = makeInvalidEarlyAccess('_lv_obj_
 var _lv_obj_set_transform = Module['_lv_obj_set_transform'] = makeInvalidEarlyAccess('_lv_obj_set_transform');
 var _lv_obj_reset_transform = Module['_lv_obj_reset_transform'] = makeInvalidEarlyAccess('_lv_obj_reset_transform');
 var _lv_obj_get_transform = Module['_lv_obj_get_transform'] = makeInvalidEarlyAccess('_lv_obj_get_transform');
+var _lv_layout_get_min_size = Module['_lv_layout_get_min_size'] = makeInvalidEarlyAccess('_lv_layout_get_min_size');
+var _lv_area_is_on = Module['_lv_area_is_on'] = makeInvalidEarlyAccess('_lv_area_is_on');
+var _lv_style_get_prop = Module['_lv_style_get_prop'] = makeInvalidEarlyAccess('_lv_style_get_prop');
 var _lv_obj_get_scroll_snap_x = Module['_lv_obj_get_scroll_snap_x'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_snap_x');
 var _lv_obj_get_scroll_snap_y = Module['_lv_obj_get_scroll_snap_y'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_snap_y');
 var _lv_obj_get_scroll_bottom = Module['_lv_obj_get_scroll_bottom'] = makeInvalidEarlyAccess('_lv_obj_get_scroll_bottom');
@@ -6017,14 +6038,14 @@ var _lv_obj_style_init = Module['_lv_obj_style_init'] = makeInvalidEarlyAccess('
 var _lv_obj_style_deinit = Module['_lv_obj_style_deinit'] = makeInvalidEarlyAccess('_lv_obj_style_deinit');
 var _lv_style_prop_lookup_flags = Module['_lv_style_prop_lookup_flags'] = makeInvalidEarlyAccess('_lv_style_prop_lookup_flags');
 var _lv_style_remove_prop = Module['_lv_style_remove_prop'] = makeInvalidEarlyAccess('_lv_style_remove_prop');
-var _lv_style_reset = Module['_lv_style_reset'] = makeInvalidEarlyAccess('_lv_style_reset');
 var _lv_style_prop_get_default = Module['_lv_style_prop_get_default'] = makeInvalidEarlyAccess('_lv_style_prop_get_default');
 var _lv_obj_replace_style = Module['_lv_obj_replace_style'] = makeInvalidEarlyAccess('_lv_obj_replace_style');
+var _lv_style_reset = Module['_lv_style_reset'] = makeInvalidEarlyAccess('_lv_style_reset');
+var _lv_obj_remove_theme = Module['_lv_obj_remove_theme'] = makeInvalidEarlyAccess('_lv_obj_remove_theme');
 var _lv_obj_report_style_change = Module['_lv_obj_report_style_change'] = makeInvalidEarlyAccess('_lv_obj_report_style_change');
 var _lv_obj_style_set_disabled = Module['_lv_obj_style_set_disabled'] = makeInvalidEarlyAccess('_lv_obj_style_set_disabled');
 var _lv_obj_style_get_disabled = Module['_lv_obj_style_get_disabled'] = makeInvalidEarlyAccess('_lv_obj_style_get_disabled');
 var _lv_obj_has_style_prop = Module['_lv_obj_has_style_prop'] = makeInvalidEarlyAccess('_lv_obj_has_style_prop');
-var _lv_style_get_prop = Module['_lv_style_get_prop'] = makeInvalidEarlyAccess('_lv_style_get_prop');
 var _lv_obj_remove_local_style_prop = Module['_lv_obj_remove_local_style_prop'] = makeInvalidEarlyAccess('_lv_obj_remove_local_style_prop');
 var _lv_color_eq = Module['_lv_color_eq'] = makeInvalidEarlyAccess('_lv_color_eq');
 var _lv_anim_set_start_cb = Module['_lv_anim_set_start_cb'] = makeInvalidEarlyAccess('_lv_anim_set_start_cb');
@@ -6037,6 +6058,12 @@ var _lv_obj_set_style_opa = Module['_lv_obj_set_style_opa'] = makeInvalidEarlyAc
 var _lv_obj_fade_out = Module['_lv_obj_fade_out'] = makeInvalidEarlyAccess('_lv_obj_fade_out');
 var _lv_obj_calculate_style_text_align = Module['_lv_obj_calculate_style_text_align'] = makeInvalidEarlyAccess('_lv_obj_calculate_style_text_align');
 var _lv_bidi_calculate_align = Module['_lv_bidi_calculate_align'] = makeInvalidEarlyAccess('_lv_bidi_calculate_align');
+var _lv_obj_bind_style = Module['_lv_obj_bind_style'] = makeInvalidEarlyAccess('_lv_obj_bind_style');
+var _lv_subject_add_observer_obj = Module['_lv_subject_add_observer_obj'] = makeInvalidEarlyAccess('_lv_subject_add_observer_obj');
+var _lv_subject_get_int = Module['_lv_subject_get_int'] = makeInvalidEarlyAccess('_lv_subject_get_int');
+var _lv_obj_bind_style_prop = Module['_lv_obj_bind_style_prop'] = makeInvalidEarlyAccess('_lv_obj_bind_style_prop');
+var _lv_subject_get_color = Module['_lv_subject_get_color'] = makeInvalidEarlyAccess('_lv_subject_get_color');
+var _lv_subject_get_pointer = Module['_lv_subject_get_pointer'] = makeInvalidEarlyAccess('_lv_subject_get_pointer');
 var _lv_obj_set_style_min_width = Module['_lv_obj_set_style_min_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_min_width');
 var _lv_obj_set_style_max_width = Module['_lv_obj_set_style_max_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_max_width');
 var _lv_obj_set_style_min_height = Module['_lv_obj_set_style_min_height'] = makeInvalidEarlyAccess('_lv_obj_set_style_min_height');
@@ -6117,6 +6144,15 @@ var _lv_obj_set_style_text_align = Module['_lv_obj_set_style_text_align'] = make
 var _lv_obj_set_style_text_outline_stroke_color = Module['_lv_obj_set_style_text_outline_stroke_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_outline_stroke_color');
 var _lv_obj_set_style_text_outline_stroke_width = Module['_lv_obj_set_style_text_outline_stroke_width'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_outline_stroke_width');
 var _lv_obj_set_style_text_outline_stroke_opa = Module['_lv_obj_set_style_text_outline_stroke_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_text_outline_stroke_opa');
+var _lv_obj_set_style_blur_radius = Module['_lv_obj_set_style_blur_radius'] = makeInvalidEarlyAccess('_lv_obj_set_style_blur_radius');
+var _lv_obj_set_style_blur_backdrop = Module['_lv_obj_set_style_blur_backdrop'] = makeInvalidEarlyAccess('_lv_obj_set_style_blur_backdrop');
+var _lv_obj_set_style_blur_quality = Module['_lv_obj_set_style_blur_quality'] = makeInvalidEarlyAccess('_lv_obj_set_style_blur_quality');
+var _lv_obj_set_style_drop_shadow_radius = Module['_lv_obj_set_style_drop_shadow_radius'] = makeInvalidEarlyAccess('_lv_obj_set_style_drop_shadow_radius');
+var _lv_obj_set_style_drop_shadow_offset_x = Module['_lv_obj_set_style_drop_shadow_offset_x'] = makeInvalidEarlyAccess('_lv_obj_set_style_drop_shadow_offset_x');
+var _lv_obj_set_style_drop_shadow_offset_y = Module['_lv_obj_set_style_drop_shadow_offset_y'] = makeInvalidEarlyAccess('_lv_obj_set_style_drop_shadow_offset_y');
+var _lv_obj_set_style_drop_shadow_color = Module['_lv_obj_set_style_drop_shadow_color'] = makeInvalidEarlyAccess('_lv_obj_set_style_drop_shadow_color');
+var _lv_obj_set_style_drop_shadow_opa = Module['_lv_obj_set_style_drop_shadow_opa'] = makeInvalidEarlyAccess('_lv_obj_set_style_drop_shadow_opa');
+var _lv_obj_set_style_drop_shadow_quality = Module['_lv_obj_set_style_drop_shadow_quality'] = makeInvalidEarlyAccess('_lv_obj_set_style_drop_shadow_quality');
 var _lv_obj_set_style_radius = Module['_lv_obj_set_style_radius'] = makeInvalidEarlyAccess('_lv_obj_set_style_radius');
 var _lv_obj_set_style_radial_offset = Module['_lv_obj_set_style_radial_offset'] = makeInvalidEarlyAccess('_lv_obj_set_style_radial_offset');
 var _lv_obj_set_style_clip_corner = Module['_lv_obj_set_style_clip_corner'] = makeInvalidEarlyAccess('_lv_obj_set_style_clip_corner');
@@ -6165,8 +6201,59 @@ var _lv_obj_get_sibling = Module['_lv_obj_get_sibling'] = makeInvalidEarlyAccess
 var _lv_obj_get_sibling_by_type = Module['_lv_obj_get_sibling_by_type'] = makeInvalidEarlyAccess('_lv_obj_get_sibling_by_type');
 var _lv_obj_get_index_by_type = Module['_lv_obj_get_index_by_type'] = makeInvalidEarlyAccess('_lv_obj_get_index_by_type');
 var _lv_obj_get_child_count_by_type = Module['_lv_obj_get_child_count_by_type'] = makeInvalidEarlyAccess('_lv_obj_get_child_count_by_type');
-var _lv_obj_tree_walk = Module['_lv_obj_tree_walk'] = makeInvalidEarlyAccess('_lv_obj_tree_walk');
 var _lv_obj_dump_tree = Module['_lv_obj_dump_tree'] = makeInvalidEarlyAccess('_lv_obj_dump_tree');
+var _lv_subject_init_int = Module['_lv_subject_init_int'] = makeInvalidEarlyAccess('_lv_subject_init_int');
+var _lv_subject_set_int = Module['_lv_subject_set_int'] = makeInvalidEarlyAccess('_lv_subject_set_int');
+var _lv_subject_notify = Module['_lv_subject_notify'] = makeInvalidEarlyAccess('_lv_subject_notify');
+var _lv_subject_get_previous_int = Module['_lv_subject_get_previous_int'] = makeInvalidEarlyAccess('_lv_subject_get_previous_int');
+var _lv_subject_set_min_value_int = Module['_lv_subject_set_min_value_int'] = makeInvalidEarlyAccess('_lv_subject_set_min_value_int');
+var _lv_subject_set_max_value_int = Module['_lv_subject_set_max_value_int'] = makeInvalidEarlyAccess('_lv_subject_set_max_value_int');
+var _lv_subject_init_string = Module['_lv_subject_init_string'] = makeInvalidEarlyAccess('_lv_subject_init_string');
+var _lv_strlcpy = Module['_lv_strlcpy'] = makeInvalidEarlyAccess('_lv_strlcpy');
+var _lv_subject_copy_string = Module['_lv_subject_copy_string'] = makeInvalidEarlyAccess('_lv_subject_copy_string');
+var _lv_strcmp = Module['_lv_strcmp'] = makeInvalidEarlyAccess('_lv_strcmp');
+var _lv_subject_snprintf = Module['_lv_subject_snprintf'] = makeInvalidEarlyAccess('_lv_subject_snprintf');
+var _lv_vsnprintf = Module['_lv_vsnprintf'] = makeInvalidEarlyAccess('_lv_vsnprintf');
+var _lv_subject_get_string = Module['_lv_subject_get_string'] = makeInvalidEarlyAccess('_lv_subject_get_string');
+var _lv_subject_get_previous_string = Module['_lv_subject_get_previous_string'] = makeInvalidEarlyAccess('_lv_subject_get_previous_string');
+var _lv_subject_init_pointer = Module['_lv_subject_init_pointer'] = makeInvalidEarlyAccess('_lv_subject_init_pointer');
+var _lv_subject_set_pointer = Module['_lv_subject_set_pointer'] = makeInvalidEarlyAccess('_lv_subject_set_pointer');
+var _lv_subject_get_previous_pointer = Module['_lv_subject_get_previous_pointer'] = makeInvalidEarlyAccess('_lv_subject_get_previous_pointer');
+var _lv_subject_init_color = Module['_lv_subject_init_color'] = makeInvalidEarlyAccess('_lv_subject_init_color');
+var _lv_subject_set_color = Module['_lv_subject_set_color'] = makeInvalidEarlyAccess('_lv_subject_set_color');
+var _lv_color_black = Module['_lv_color_black'] = makeInvalidEarlyAccess('_lv_color_black');
+var _lv_subject_get_previous_color = Module['_lv_subject_get_previous_color'] = makeInvalidEarlyAccess('_lv_subject_get_previous_color');
+var _lv_subject_init_group = Module['_lv_subject_init_group'] = makeInvalidEarlyAccess('_lv_subject_init_group');
+var _lv_subject_add_observer = Module['_lv_subject_add_observer'] = makeInvalidEarlyAccess('_lv_subject_add_observer');
+var _lv_subject_deinit = Module['_lv_subject_deinit'] = makeInvalidEarlyAccess('_lv_subject_deinit');
+var _lv_observer_remove = Module['_lv_observer_remove'] = makeInvalidEarlyAccess('_lv_observer_remove');
+var _lv_subject_get_group_element = Module['_lv_subject_get_group_element'] = makeInvalidEarlyAccess('_lv_subject_get_group_element');
+var _lv_subject_add_observer_with_target = Module['_lv_subject_add_observer_with_target'] = makeInvalidEarlyAccess('_lv_subject_add_observer_with_target');
+var _lv_obj_remove_from_subject = Module['_lv_obj_remove_from_subject'] = makeInvalidEarlyAccess('_lv_obj_remove_from_subject');
+var _lv_observer_get_target = Module['_lv_observer_get_target'] = makeInvalidEarlyAccess('_lv_observer_get_target');
+var _lv_obj_add_subject_increment_event = Module['_lv_obj_add_subject_increment_event'] = makeInvalidEarlyAccess('_lv_obj_add_subject_increment_event');
+var _lv_obj_set_subject_increment_event_min_value = Module['_lv_obj_set_subject_increment_event_min_value'] = makeInvalidEarlyAccess('_lv_obj_set_subject_increment_event_min_value');
+var _lv_obj_set_subject_increment_event_max_value = Module['_lv_obj_set_subject_increment_event_max_value'] = makeInvalidEarlyAccess('_lv_obj_set_subject_increment_event_max_value');
+var _lv_obj_set_subject_increment_event_rollover = Module['_lv_obj_set_subject_increment_event_rollover'] = makeInvalidEarlyAccess('_lv_obj_set_subject_increment_event_rollover');
+var _lv_obj_add_subject_toggle_event = Module['_lv_obj_add_subject_toggle_event'] = makeInvalidEarlyAccess('_lv_obj_add_subject_toggle_event');
+var _lv_obj_add_subject_set_int_event = Module['_lv_obj_add_subject_set_int_event'] = makeInvalidEarlyAccess('_lv_obj_add_subject_set_int_event');
+var _lv_obj_add_subject_set_string_event = Module['_lv_obj_add_subject_set_string_event'] = makeInvalidEarlyAccess('_lv_obj_add_subject_set_string_event');
+var _lv_strdup = Module['_lv_strdup'] = makeInvalidEarlyAccess('_lv_strdup');
+var _lv_obj_bind_flag_if_eq = Module['_lv_obj_bind_flag_if_eq'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_eq');
+var _lv_obj_bind_flag_if_not_eq = Module['_lv_obj_bind_flag_if_not_eq'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_not_eq');
+var _lv_obj_bind_flag_if_gt = Module['_lv_obj_bind_flag_if_gt'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_gt');
+var _lv_obj_bind_flag_if_ge = Module['_lv_obj_bind_flag_if_ge'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_ge');
+var _lv_obj_bind_flag_if_lt = Module['_lv_obj_bind_flag_if_lt'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_lt');
+var _lv_obj_bind_flag_if_le = Module['_lv_obj_bind_flag_if_le'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_le');
+var _lv_obj_bind_state_if_eq = Module['_lv_obj_bind_state_if_eq'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_eq');
+var _lv_obj_bind_state_if_not_eq = Module['_lv_obj_bind_state_if_not_eq'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_not_eq');
+var _lv_obj_bind_state_if_gt = Module['_lv_obj_bind_state_if_gt'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_gt');
+var _lv_obj_bind_state_if_ge = Module['_lv_obj_bind_state_if_ge'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_ge');
+var _lv_obj_bind_state_if_lt = Module['_lv_obj_bind_state_if_lt'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_lt');
+var _lv_obj_bind_state_if_le = Module['_lv_obj_bind_state_if_le'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_le');
+var _lv_obj_bind_checked = Module['_lv_obj_bind_checked'] = makeInvalidEarlyAccess('_lv_obj_bind_checked');
+var _lv_observer_get_target_obj = Module['_lv_observer_get_target_obj'] = makeInvalidEarlyAccess('_lv_observer_get_target_obj');
+var _lv_observer_get_user_data = Module['_lv_observer_get_user_data'] = makeInvalidEarlyAccess('_lv_observer_get_user_data');
 var _lv_refr_init = Module['_lv_refr_init'] = makeInvalidEarlyAccess('_lv_refr_init');
 var _lv_refr_deinit = Module['_lv_refr_deinit'] = makeInvalidEarlyAccess('_lv_refr_deinit');
 var _lv_refr_now = Module['_lv_refr_now'] = makeInvalidEarlyAccess('_lv_refr_now');
@@ -6175,7 +6262,6 @@ var _lv_obj_redraw = Module['_lv_obj_redraw'] = makeInvalidEarlyAccess('_lv_obj_
 var _lv_obj_refr = Module['_lv_obj_refr'] = makeInvalidEarlyAccess('_lv_obj_refr');
 var _lv_anim_refr_now = Module['_lv_anim_refr_now'] = makeInvalidEarlyAccess('_lv_anim_refr_now');
 var _lv_timer_pause = Module['_lv_timer_pause'] = makeInvalidEarlyAccess('_lv_timer_pause');
-var _lv_area_is_on = Module['_lv_area_is_on'] = makeInvalidEarlyAccess('_lv_area_is_on');
 var _lv_area_join = Module['_lv_area_join'] = makeInvalidEarlyAccess('_lv_area_join');
 var _lv_display_is_double_buffered = Module['_lv_display_is_double_buffered'] = makeInvalidEarlyAccess('_lv_display_is_double_buffered');
 var _lv_ll_is_empty = Module['_lv_ll_is_empty'] = makeInvalidEarlyAccess('_lv_ll_is_empty');
@@ -6200,6 +6286,7 @@ var _lv_display_get_original_vertical_resolution = Module['_lv_display_get_origi
 var _lv_draw_layer_init = Module['_lv_draw_layer_init'] = makeInvalidEarlyAccess('_lv_draw_layer_init');
 var _lv_draw_dispatch_wait_for_request = Module['_lv_draw_dispatch_wait_for_request'] = makeInvalidEarlyAccess('_lv_draw_dispatch_wait_for_request');
 var _lv_draw_dispatch = Module['_lv_draw_dispatch'] = makeInvalidEarlyAccess('_lv_draw_dispatch');
+var _lv_draw_unit_send_event = Module['_lv_draw_unit_send_event'] = makeInvalidEarlyAccess('_lv_draw_unit_send_event');
 var _lv_layer_reset = Module['_lv_layer_reset'] = makeInvalidEarlyAccess('_lv_layer_reset');
 var _lv_color_format_has_alpha = Module['_lv_color_format_has_alpha'] = makeInvalidEarlyAccess('_lv_color_format_has_alpha');
 var _lv_area_move = Module['_lv_area_move'] = makeInvalidEarlyAccess('_lv_area_move');
@@ -6241,6 +6328,7 @@ var _lv_display_set_tile_cnt = Module['_lv_display_set_tile_cnt'] = makeInvalidE
 var _lv_display_get_tile_cnt = Module['_lv_display_get_tile_cnt'] = makeInvalidEarlyAccess('_lv_display_get_tile_cnt');
 var _lv_display_set_antialiasing = Module['_lv_display_set_antialiasing'] = makeInvalidEarlyAccess('_lv_display_set_antialiasing');
 var _lv_display_get_antialiasing = Module['_lv_display_get_antialiasing'] = makeInvalidEarlyAccess('_lv_display_get_antialiasing');
+var _lv_display_get_render_mode = Module['_lv_display_get_render_mode'] = makeInvalidEarlyAccess('_lv_display_get_render_mode');
 var _lv_display_flush_is_last = Module['_lv_display_flush_is_last'] = makeInvalidEarlyAccess('_lv_display_flush_is_last');
 var _lv_display_get_screen_loading = Module['_lv_display_get_screen_loading'] = makeInvalidEarlyAccess('_lv_display_get_screen_loading');
 var _lv_display_get_event_count = Module['_lv_display_get_event_count'] = makeInvalidEarlyAccess('_lv_display_get_event_count');
@@ -6267,6 +6355,7 @@ var _lv_display_get_user_data = Module['_lv_display_get_user_data'] = makeInvali
 var _lv_display_get_driver_data = Module['_lv_display_get_driver_data'] = makeInvalidEarlyAccess('_lv_display_get_driver_data');
 var _lv_display_get_buf_active = Module['_lv_display_get_buf_active'] = makeInvalidEarlyAccess('_lv_display_get_buf_active');
 var _lv_display_rotate_area = Module['_lv_display_rotate_area'] = makeInvalidEarlyAccess('_lv_display_rotate_area');
+var _lv_display_rotate_point = Module['_lv_display_rotate_point'] = makeInvalidEarlyAccess('_lv_display_rotate_point');
 var _lv_display_get_draw_buf_size = Module['_lv_display_get_draw_buf_size'] = makeInvalidEarlyAccess('_lv_display_get_draw_buf_size');
 var _lv_display_get_invalidated_draw_buf_size = Module['_lv_display_get_invalidated_draw_buf_size'] = makeInvalidEarlyAccess('_lv_display_get_invalidated_draw_buf_size');
 var _lv_layer_top = Module['_lv_layer_top'] = makeInvalidEarlyAccess('_lv_layer_top');
@@ -6289,8 +6378,6 @@ var _lv_draw_get_unit_count = Module['_lv_draw_get_unit_count'] = makeInvalidEar
 var _lv_draw_get_available_task = Module['_lv_draw_get_available_task'] = makeInvalidEarlyAccess('_lv_draw_get_available_task');
 var _lv_draw_get_next_available_task = Module['_lv_draw_get_next_available_task'] = makeInvalidEarlyAccess('_lv_draw_get_next_available_task');
 var _lv_draw_get_dependent_count = Module['_lv_draw_get_dependent_count'] = makeInvalidEarlyAccess('_lv_draw_get_dependent_count');
-var _lv_draw_unit_send_event = Module['_lv_draw_unit_send_event'] = makeInvalidEarlyAccess('_lv_draw_unit_send_event');
-var _lv_strcmp = Module['_lv_strcmp'] = makeInvalidEarlyAccess('_lv_strcmp');
 var _lv_color32_make = Module['_lv_color32_make'] = makeInvalidEarlyAccess('_lv_color32_make');
 var _lv_draw_layer_alloc_buf = Module['_lv_draw_layer_alloc_buf'] = makeInvalidEarlyAccess('_lv_draw_layer_alloc_buf');
 var _lv_draw_buf_create = Module['_lv_draw_buf_create'] = makeInvalidEarlyAccess('_lv_draw_buf_create');
@@ -6299,10 +6386,13 @@ var _lv_draw_buf_goto_xy = Module['_lv_draw_buf_goto_xy'] = makeInvalidEarlyAcce
 var _lv_draw_task_get_type = Module['_lv_draw_task_get_type'] = makeInvalidEarlyAccess('_lv_draw_task_get_type');
 var _lv_draw_task_get_draw_dsc = Module['_lv_draw_task_get_draw_dsc'] = makeInvalidEarlyAccess('_lv_draw_task_get_draw_dsc');
 var _lv_draw_task_get_area = Module['_lv_draw_task_get_area'] = makeInvalidEarlyAccess('_lv_draw_task_get_area');
+var _lv_draw_layer_create_drop_shadow = Module['_lv_draw_layer_create_drop_shadow'] = makeInvalidEarlyAccess('_lv_draw_layer_create_drop_shadow');
+var _lv_draw_layer_finish_drop_shadow = Module['_lv_draw_layer_finish_drop_shadow'] = makeInvalidEarlyAccess('_lv_draw_layer_finish_drop_shadow');
 var _lv_draw_arc_dsc_init = Module['_lv_draw_arc_dsc_init'] = makeInvalidEarlyAccess('_lv_draw_arc_dsc_init');
 var _lv_draw_task_get_arc_dsc = Module['_lv_draw_task_get_arc_dsc'] = makeInvalidEarlyAccess('_lv_draw_task_get_arc_dsc');
 var _lv_draw_arc = Module['_lv_draw_arc'] = makeInvalidEarlyAccess('_lv_draw_arc');
 var _lv_draw_arc_get_area = Module['_lv_draw_arc_get_area'] = makeInvalidEarlyAccess('_lv_draw_arc_get_area');
+var _lv_draw_task_get_blur_dsc = Module['_lv_draw_task_get_blur_dsc'] = makeInvalidEarlyAccess('_lv_draw_task_get_blur_dsc');
 var _lv_draw_buf_init_handlers = Module['_lv_draw_buf_init_handlers'] = makeInvalidEarlyAccess('_lv_draw_buf_init_handlers');
 var _lv_draw_buf_init_with_default_handlers = Module['_lv_draw_buf_init_with_default_handlers'] = makeInvalidEarlyAccess('_lv_draw_buf_init_with_default_handlers');
 var _lv_draw_buf_handlers_init = Module['_lv_draw_buf_handlers_init'] = makeInvalidEarlyAccess('_lv_draw_buf_handlers_init');
@@ -6319,18 +6409,14 @@ var _lv_draw_buf_dup = Module['_lv_draw_buf_dup'] = makeInvalidEarlyAccess('_lv_
 var _lv_draw_buf_dup_ex = Module['_lv_draw_buf_dup_ex'] = makeInvalidEarlyAccess('_lv_draw_buf_dup_ex');
 var _lv_draw_buf_adjust_stride = Module['_lv_draw_buf_adjust_stride'] = makeInvalidEarlyAccess('_lv_draw_buf_adjust_stride');
 var _lv_memmove = Module['_lv_memmove'] = makeInvalidEarlyAccess('_lv_memmove');
-var _lv_draw_buf_has_flag = Module['_lv_draw_buf_has_flag'] = makeInvalidEarlyAccess('_lv_draw_buf_has_flag');
 var _lv_draw_buf_premultiply = Module['_lv_draw_buf_premultiply'] = makeInvalidEarlyAccess('_lv_draw_buf_premultiply');
 var _lv_color_premultiply = Module['_lv_color_premultiply'] = makeInvalidEarlyAccess('_lv_color_premultiply');
 var _lv_color16_premultiply = Module['_lv_color16_premultiply'] = makeInvalidEarlyAccess('_lv_color16_premultiply');
 var _lv_draw_buf_set_palette = Module['_lv_draw_buf_set_palette'] = makeInvalidEarlyAccess('_lv_draw_buf_set_palette');
-var _lv_draw_buf_set_flag = Module['_lv_draw_buf_set_flag'] = makeInvalidEarlyAccess('_lv_draw_buf_set_flag');
-var _lv_draw_buf_clear_flag = Module['_lv_draw_buf_clear_flag'] = makeInvalidEarlyAccess('_lv_draw_buf_clear_flag');
 var _lv_draw_buf_from_image = Module['_lv_draw_buf_from_image'] = makeInvalidEarlyAccess('_lv_draw_buf_from_image');
 var _lv_draw_buf_to_image = Module['_lv_draw_buf_to_image'] = makeInvalidEarlyAccess('_lv_draw_buf_to_image');
 var _lv_image_buf_set_palette = Module['_lv_image_buf_set_palette'] = makeInvalidEarlyAccess('_lv_image_buf_set_palette');
 var _lv_image_buf_free = Module['_lv_image_buf_free'] = makeInvalidEarlyAccess('_lv_image_buf_free');
-var _lv_color_black = Module['_lv_color_black'] = makeInvalidEarlyAccess('_lv_color_black');
 var _lv_draw_task_get_image_dsc = Module['_lv_draw_task_get_image_dsc'] = makeInvalidEarlyAccess('_lv_draw_task_get_image_dsc');
 var _lv_image_buf_get_transformed_area = Module['_lv_image_buf_get_transformed_area'] = makeInvalidEarlyAccess('_lv_image_buf_get_transformed_area');
 var _lv_point_transform = Module['_lv_point_transform'] = makeInvalidEarlyAccess('_lv_point_transform');
@@ -6366,6 +6452,7 @@ var _lv_font_glyph_release_draw_data = Module['_lv_font_glyph_release_draw_data'
 var _lv_draw_line_dsc_init = Module['_lv_draw_line_dsc_init'] = makeInvalidEarlyAccess('_lv_draw_line_dsc_init');
 var _lv_draw_task_get_line_dsc = Module['_lv_draw_task_get_line_dsc'] = makeInvalidEarlyAccess('_lv_draw_task_get_line_dsc');
 var _lv_draw_line = Module['_lv_draw_line'] = makeInvalidEarlyAccess('_lv_draw_line');
+var _lv_draw_line_iterate = Module['_lv_draw_line_iterate'] = makeInvalidEarlyAccess('_lv_draw_line_iterate');
 var _lv_draw_task_get_mask_rect_dsc = Module['_lv_draw_task_get_mask_rect_dsc'] = makeInvalidEarlyAccess('_lv_draw_task_get_mask_rect_dsc');
 var _lv_color_white = Module['_lv_color_white'] = makeInvalidEarlyAccess('_lv_color_white');
 var _lv_draw_task_get_fill_dsc = Module['_lv_draw_task_get_fill_dsc'] = makeInvalidEarlyAccess('_lv_draw_task_get_fill_dsc');
@@ -6392,7 +6479,6 @@ var _lv_cache_release = Module['_lv_cache_release'] = makeInvalidEarlyAccess('_l
 var _lv_fs_open = Module['_lv_fs_open'] = makeInvalidEarlyAccess('_lv_fs_open');
 var _lv_fs_seek = Module['_lv_fs_seek'] = makeInvalidEarlyAccess('_lv_fs_seek');
 var _lv_fs_close = Module['_lv_fs_close'] = makeInvalidEarlyAccess('_lv_fs_close');
-var _lv_strdup = Module['_lv_strdup'] = makeInvalidEarlyAccess('_lv_strdup');
 var _lv_cache_add = Module['_lv_cache_add'] = makeInvalidEarlyAccess('_lv_cache_add');
 var _lv_image_cache_is_enabled = Module['_lv_image_cache_is_enabled'] = makeInvalidEarlyAccess('_lv_image_cache_is_enabled');
 var _lv_image_decoder_create = Module['_lv_image_decoder_create'] = makeInvalidEarlyAccess('_lv_image_decoder_create');
@@ -6405,6 +6491,8 @@ var _lv_image_decoder_set_close_cb = Module['_lv_image_decoder_set_close_cb'] = 
 var _lv_image_decoder_add_to_cache = Module['_lv_image_decoder_add_to_cache'] = makeInvalidEarlyAccess('_lv_image_decoder_add_to_cache');
 var _lv_image_decoder_post_process = Module['_lv_image_decoder_post_process'] = makeInvalidEarlyAccess('_lv_image_decoder_post_process');
 var _lv_draw_sw_blend = Module['_lv_draw_sw_blend'] = makeInvalidEarlyAccess('_lv_draw_sw_blend');
+var _lv_draw_sw_blend_color_to_a8 = Module['_lv_draw_sw_blend_color_to_a8'] = makeInvalidEarlyAccess('_lv_draw_sw_blend_color_to_a8');
+var _lv_draw_sw_blend_image_to_a8 = Module['_lv_draw_sw_blend_image_to_a8'] = makeInvalidEarlyAccess('_lv_draw_sw_blend_image_to_a8');
 var _lv_draw_sw_blend_color_to_al88 = Module['_lv_draw_sw_blend_color_to_al88'] = makeInvalidEarlyAccess('_lv_draw_sw_blend_color_to_al88');
 var _lv_draw_sw_blend_image_to_al88 = Module['_lv_draw_sw_blend_image_to_al88'] = makeInvalidEarlyAccess('_lv_draw_sw_blend_image_to_al88');
 var _lv_draw_sw_blend_color_to_argb8888 = Module['_lv_draw_sw_blend_color_to_argb8888'] = makeInvalidEarlyAccess('_lv_draw_sw_blend_color_to_argb8888');
@@ -6427,6 +6515,7 @@ var _lv_draw_sw_register_blend_handler = Module['_lv_draw_sw_register_blend_hand
 var _lv_draw_sw_unregister_blend_handler = Module['_lv_draw_sw_unregister_blend_handler'] = makeInvalidEarlyAccess('_lv_draw_sw_unregister_blend_handler');
 var _lv_draw_sw_get_blend_handler = Module['_lv_draw_sw_get_blend_handler'] = makeInvalidEarlyAccess('_lv_draw_sw_get_blend_handler');
 var _lv_draw_sw_arc = Module['_lv_draw_sw_arc'] = makeInvalidEarlyAccess('_lv_draw_sw_arc');
+var _lv_draw_sw_blur = Module['_lv_draw_sw_blur'] = makeInvalidEarlyAccess('_lv_draw_sw_blur');
 var _lv_draw_sw_border = Module['_lv_draw_sw_border'] = makeInvalidEarlyAccess('_lv_draw_sw_border');
 var _lv_draw_sw_box_shadow = Module['_lv_draw_sw_box_shadow'] = makeInvalidEarlyAccess('_lv_draw_sw_box_shadow');
 var _lv_draw_sw_fill = Module['_lv_draw_sw_fill'] = makeInvalidEarlyAccess('_lv_draw_sw_fill');
@@ -6461,13 +6550,16 @@ var _lv_fs_read = Module['_lv_fs_read'] = makeInvalidEarlyAccess('_lv_fs_read');
 var _lv_font_get_bitmap_fmt_txt = Module['_lv_font_get_bitmap_fmt_txt'] = makeInvalidEarlyAccess('_lv_font_get_bitmap_fmt_txt');
 var _lv_font_get_glyph_dsc_fmt_txt = Module['_lv_font_get_glyph_dsc_fmt_txt'] = makeInvalidEarlyAccess('_lv_font_get_glyph_dsc_fmt_txt');
 var _lv_memcmp = Module['_lv_memcmp'] = makeInvalidEarlyAccess('_lv_memcmp');
+var _lv_utils_bsearch = Module['_lv_utils_bsearch'] = makeInvalidEarlyAccess('_lv_utils_bsearch');
 var _lv_font_get_glyph_static_bitmap = Module['_lv_font_get_glyph_static_bitmap'] = makeInvalidEarlyAccess('_lv_font_get_glyph_static_bitmap');
 var _lv_font_get_glyph_width = Module['_lv_font_get_glyph_width'] = makeInvalidEarlyAccess('_lv_font_get_glyph_width');
 var _lv_font_set_kerning = Module['_lv_font_set_kerning'] = makeInvalidEarlyAccess('_lv_font_set_kerning');
 var _lv_font_get_default = Module['_lv_font_get_default'] = makeInvalidEarlyAccess('_lv_font_get_default');
 var _lv_font_info_is_equal = Module['_lv_font_info_is_equal'] = makeInvalidEarlyAccess('_lv_font_info_is_equal');
 var _lv_font_has_static_bitmap = Module['_lv_font_has_static_bitmap'] = makeInvalidEarlyAccess('_lv_font_has_static_bitmap');
-var _lv_utils_bsearch = Module['_lv_utils_bsearch'] = makeInvalidEarlyAccess('_lv_utils_bsearch');
+var _lv_gridnav_add = Module['_lv_gridnav_add'] = makeInvalidEarlyAccess('_lv_gridnav_add');
+var _lv_gridnav_remove = Module['_lv_gridnav_remove'] = makeInvalidEarlyAccess('_lv_gridnav_remove');
+var _lv_gridnav_set_focused = Module['_lv_gridnav_set_focused'] = makeInvalidEarlyAccess('_lv_gridnav_set_focused');
 var _lv_indev_read_timer_cb = Module['_lv_indev_read_timer_cb'] = makeInvalidEarlyAccess('_lv_indev_read_timer_cb');
 var _lv_indev_read = Module['_lv_indev_read'] = makeInvalidEarlyAccess('_lv_indev_read');
 var _lv_indev_delete = Module['_lv_indev_delete'] = makeInvalidEarlyAccess('_lv_indev_delete');
@@ -6483,6 +6575,8 @@ var _lv_indev_set_long_press_time = Module['_lv_indev_set_long_press_time'] = ma
 var _lv_indev_set_long_press_repeat_time = Module['_lv_indev_set_long_press_repeat_time'] = makeInvalidEarlyAccess('_lv_indev_set_long_press_repeat_time');
 var _lv_indev_set_scroll_limit = Module['_lv_indev_set_scroll_limit'] = makeInvalidEarlyAccess('_lv_indev_set_scroll_limit');
 var _lv_indev_set_scroll_throw = Module['_lv_indev_set_scroll_throw'] = makeInvalidEarlyAccess('_lv_indev_set_scroll_throw');
+var _lv_indev_set_gesture_min_distance = Module['_lv_indev_set_gesture_min_distance'] = makeInvalidEarlyAccess('_lv_indev_set_gesture_min_distance');
+var _lv_indev_set_gesture_min_velocity = Module['_lv_indev_set_gesture_min_velocity'] = makeInvalidEarlyAccess('_lv_indev_set_gesture_min_velocity');
 var _lv_indev_get_user_data = Module['_lv_indev_get_user_data'] = makeInvalidEarlyAccess('_lv_indev_get_user_data');
 var _lv_indev_get_driver_data = Module['_lv_indev_get_driver_data'] = makeInvalidEarlyAccess('_lv_indev_get_driver_data');
 var _lv_indev_get_press_moved = Module['_lv_indev_get_press_moved'] = makeInvalidEarlyAccess('_lv_indev_get_press_moved');
@@ -6506,6 +6600,7 @@ var _lv_indev_get_event_count = Module['_lv_indev_get_event_count'] = makeInvali
 var _lv_indev_get_event_dsc = Module['_lv_indev_get_event_dsc'] = makeInvalidEarlyAccess('_lv_indev_get_event_dsc');
 var _lv_indev_remove_event = Module['_lv_indev_remove_event'] = makeInvalidEarlyAccess('_lv_indev_remove_event');
 var _lv_indev_remove_event_cb_with_user_data = Module['_lv_indev_remove_event_cb_with_user_data'] = makeInvalidEarlyAccess('_lv_indev_remove_event_cb_with_user_data');
+var _lv_indev_set_key_remap_cb = Module['_lv_indev_set_key_remap_cb'] = makeInvalidEarlyAccess('_lv_indev_set_key_remap_cb');
 var _lv_indev_scroll_throw_handler = Module['_lv_indev_scroll_throw_handler'] = makeInvalidEarlyAccess('_lv_indev_scroll_throw_handler');
 var _lv_timer_get_paused = Module['_lv_timer_get_paused'] = makeInvalidEarlyAccess('_lv_timer_get_paused');
 var _lv_indev_scroll_throw_predict = Module['_lv_indev_scroll_throw_predict'] = makeInvalidEarlyAccess('_lv_indev_scroll_throw_predict');
@@ -6520,20 +6615,38 @@ var _lv_obj_set_grid_cell = Module['_lv_obj_set_grid_cell'] = makeInvalidEarlyAc
 var _lv_grid_fr = Module['_lv_grid_fr'] = makeInvalidEarlyAccess('_lv_grid_fr');
 var _lv_layout_init = Module['_lv_layout_init'] = makeInvalidEarlyAccess('_lv_layout_init');
 var _lv_layout_deinit = Module['_lv_layout_deinit'] = makeInvalidEarlyAccess('_lv_layout_deinit');
+var _lv_layout_create = Module['_lv_layout_create'] = makeInvalidEarlyAccess('_lv_layout_create');
 var _lv_layout_register = Module['_lv_layout_register'] = makeInvalidEarlyAccess('_lv_layout_register');
 var _lv_bin_decoder_init = Module['_lv_bin_decoder_init'] = makeInvalidEarlyAccess('_lv_bin_decoder_init');
 var _lv_bin_decoder_info = Module['_lv_bin_decoder_info'] = makeInvalidEarlyAccess('_lv_bin_decoder_info');
 var _lv_bin_decoder_open = Module['_lv_bin_decoder_open'] = makeInvalidEarlyAccess('_lv_bin_decoder_open');
 var _lv_bin_decoder_get_area = Module['_lv_bin_decoder_get_area'] = makeInvalidEarlyAccess('_lv_bin_decoder_get_area');
 var _lv_bin_decoder_close = Module['_lv_bin_decoder_close'] = makeInvalidEarlyAccess('_lv_bin_decoder_close');
+var _lv_freetype_font_create_with_info = Module['_lv_freetype_font_create_with_info'] = makeInvalidEarlyAccess('_lv_freetype_font_create_with_info');
+var _lv_freetype_font_delete = Module['_lv_freetype_font_delete'] = makeInvalidEarlyAccess('_lv_freetype_font_delete');
+var _lv_freetype_init = Module['_lv_freetype_init'] = makeInvalidEarlyAccess('_lv_freetype_init');
+var _lv_freetype_get_context = Module['_lv_freetype_get_context'] = makeInvalidEarlyAccess('_lv_freetype_get_context');
+var _lv_freetype_uninit = Module['_lv_freetype_uninit'] = makeInvalidEarlyAccess('_lv_freetype_uninit');
+var _lv_freetype_init_font_info = Module['_lv_freetype_init_font_info'] = makeInvalidEarlyAccess('_lv_freetype_init_font_info');
 var _free = Module['_free'] = makeInvalidEarlyAccess('_free');
 var _strncmp = Module['_strncmp'] = makeInvalidEarlyAccess('_strncmp');
 var _lv_cache_create = Module['_lv_cache_create'] = makeInvalidEarlyAccess('_lv_cache_create');
 var _lv_cache_set_name = Module['_lv_cache_set_name'] = makeInvalidEarlyAccess('_lv_cache_set_name');
 var _lv_strlen = Module['_lv_strlen'] = makeInvalidEarlyAccess('_lv_strlen');
 var _lv_cache_acquire_or_create = Module['_lv_cache_acquire_or_create'] = makeInvalidEarlyAccess('_lv_cache_acquire_or_create');
+var _lv_freetype_create_glyph_cache = Module['_lv_freetype_create_glyph_cache'] = makeInvalidEarlyAccess('_lv_freetype_create_glyph_cache');
+var _lv_freetype_create_draw_data_outline = Module['_lv_freetype_create_draw_data_outline'] = makeInvalidEarlyAccess('_lv_freetype_create_draw_data_outline');
+var _lv_freetype_create_draw_data_image = Module['_lv_freetype_create_draw_data_image'] = makeInvalidEarlyAccess('_lv_freetype_create_draw_data_image');
+var _lv_freetype_set_cbs_glyph = Module['_lv_freetype_set_cbs_glyph'] = makeInvalidEarlyAccess('_lv_freetype_set_cbs_glyph');
+var _lv_freetype_set_cbs_image_font = Module['_lv_freetype_set_cbs_image_font'] = makeInvalidEarlyAccess('_lv_freetype_set_cbs_image_font');
+var _lv_freetype_set_cbs_outline_font = Module['_lv_freetype_set_cbs_outline_font'] = makeInvalidEarlyAccess('_lv_freetype_set_cbs_outline_font');
 var _lv_cache_entry_get_ref = Module['_lv_cache_entry_get_ref'] = makeInvalidEarlyAccess('_lv_cache_entry_get_ref');
 var _lv_cache_drop = Module['_lv_cache_drop'] = makeInvalidEarlyAccess('_lv_cache_drop');
+var _lv_freetype_italic_transform = Module['_lv_freetype_italic_transform'] = makeInvalidEarlyAccess('_lv_freetype_italic_transform');
+var _lv_freetype_italic_transform_on_pos = Module['_lv_freetype_italic_transform_on_pos'] = makeInvalidEarlyAccess('_lv_freetype_italic_transform_on_pos');
+var _lv_freetype_outline_add_event = Module['_lv_freetype_outline_add_event'] = makeInvalidEarlyAccess('_lv_freetype_outline_add_event');
+var _lv_freetype_outline_get_scale = Module['_lv_freetype_outline_get_scale'] = makeInvalidEarlyAccess('_lv_freetype_outline_get_scale');
+var _lv_freetype_is_outline_font = Module['_lv_freetype_is_outline_font'] = makeInvalidEarlyAccess('_lv_freetype_is_outline_font');
 var _lv_fs_stdio_init = Module['_lv_fs_stdio_init'] = makeInvalidEarlyAccess('_lv_fs_stdio_init');
 var _lv_canvas_get_draw_buf = Module['_lv_canvas_get_draw_buf'] = makeInvalidEarlyAccess('_lv_canvas_get_draw_buf');
 var _lv_image_cache_drop = Module['_lv_image_cache_drop'] = makeInvalidEarlyAccess('_lv_image_cache_drop');
@@ -6561,10 +6674,11 @@ var _lv_color16_luminance = Module['_lv_color16_luminance'] = makeInvalidEarlyAc
 var _lv_color24_luminance = Module['_lv_color24_luminance'] = makeInvalidEarlyAccess('_lv_color24_luminance');
 var _lv_trigo_cos = Module['_lv_trigo_cos'] = makeInvalidEarlyAccess('_lv_trigo_cos');
 var _lv_point_from_precise = Module['_lv_point_from_precise'] = makeInvalidEarlyAccess('_lv_point_from_precise');
+var _lv_sqrt32 = Module['_lv_sqrt32'] = makeInvalidEarlyAccess('_lv_sqrt32');
 var _lv_point_swap = Module['_lv_point_swap'] = makeInvalidEarlyAccess('_lv_point_swap');
 var _lv_fs_get_ext = Module['_lv_fs_get_ext'] = makeInvalidEarlyAccess('_lv_fs_get_ext');
 var _lv_snprintf = Module['_lv_snprintf'] = makeInvalidEarlyAccess('_lv_snprintf');
-var _lv_strlcpy = Module['_lv_strlcpy'] = makeInvalidEarlyAccess('_lv_strlcpy');
+var _lv_deinit = Module['_lv_deinit'] = makeInvalidEarlyAccess('_lv_deinit');
 var _lv_ll_clear_custom = Module['_lv_ll_clear_custom'] = makeInvalidEarlyAccess('_lv_ll_clear_custom');
 var _lv_span_stack_deinit = Module['_lv_span_stack_deinit'] = makeInvalidEarlyAccess('_lv_span_stack_deinit');
 var _lv_theme_default_deinit = Module['_lv_theme_default_deinit'] = makeInvalidEarlyAccess('_lv_theme_default_deinit');
@@ -6597,6 +6711,7 @@ var _lv_image_cache_iter_create = Module['_lv_image_cache_iter_create'] = makeIn
 var _lv_cache_iter_create = Module['_lv_cache_iter_create'] = makeInvalidEarlyAccess('_lv_cache_iter_create');
 var _lv_image_cache_dump = Module['_lv_image_cache_dump'] = makeInvalidEarlyAccess('_lv_image_cache_dump');
 var _lv_iter_inspect = Module['_lv_iter_inspect'] = makeInvalidEarlyAccess('_lv_iter_inspect');
+var _lv_iter_destroy = Module['_lv_iter_destroy'] = makeInvalidEarlyAccess('_lv_iter_destroy');
 var _lv_image_header_cache_resize = Module['_lv_image_header_cache_resize'] = makeInvalidEarlyAccess('_lv_image_header_cache_resize');
 var _lv_image_header_cache_iter_create = Module['_lv_image_header_cache_iter_create'] = makeInvalidEarlyAccess('_lv_image_header_cache_iter_create');
 var _lv_image_header_cache_dump = Module['_lv_image_header_cache_dump'] = makeInvalidEarlyAccess('_lv_image_header_cache_dump');
@@ -6685,6 +6800,7 @@ var _lv_array_shrink = Module['_lv_array_shrink'] = makeInvalidEarlyAccess('_lv_
 var _lv_array_resize = Module['_lv_array_resize'] = makeInvalidEarlyAccess('_lv_array_resize');
 var _lv_array_remove = Module['_lv_array_remove'] = makeInvalidEarlyAccess('_lv_array_remove');
 var _lv_array_at = Module['_lv_array_at'] = makeInvalidEarlyAccess('_lv_array_at');
+var _lv_array_remove_unordered = Module['_lv_array_remove_unordered'] = makeInvalidEarlyAccess('_lv_array_remove_unordered');
 var _lv_array_erase = Module['_lv_array_erase'] = makeInvalidEarlyAccess('_lv_array_erase');
 var _lv_array_concat = Module['_lv_array_concat'] = makeInvalidEarlyAccess('_lv_array_concat');
 var _lv_array_push_back = Module['_lv_array_push_back'] = makeInvalidEarlyAccess('_lv_array_push_back');
@@ -6739,9 +6855,11 @@ var _lv_fs_tell = Module['_lv_fs_tell'] = makeInvalidEarlyAccess('_lv_fs_tell');
 var _lv_fs_get_size = Module['_lv_fs_get_size'] = makeInvalidEarlyAccess('_lv_fs_get_size');
 var _lv_fs_path_get_size = Module['_lv_fs_path_get_size'] = makeInvalidEarlyAccess('_lv_fs_path_get_size');
 var _lv_fs_load_to_buf = Module['_lv_fs_load_to_buf'] = makeInvalidEarlyAccess('_lv_fs_load_to_buf');
+var _lv_fs_load_with_alloc = Module['_lv_fs_load_with_alloc'] = makeInvalidEarlyAccess('_lv_fs_load_with_alloc');
 var _lv_fs_dir_open = Module['_lv_fs_dir_open'] = makeInvalidEarlyAccess('_lv_fs_dir_open');
 var _lv_fs_dir_read = Module['_lv_fs_dir_read'] = makeInvalidEarlyAccess('_lv_fs_dir_read');
 var _lv_fs_dir_close = Module['_lv_fs_dir_close'] = makeInvalidEarlyAccess('_lv_fs_dir_close');
+var _lv_fs_remove_drive = Module['_lv_fs_remove_drive'] = makeInvalidEarlyAccess('_lv_fs_remove_drive');
 var _lv_fs_get_letters = Module['_lv_fs_get_letters'] = makeInvalidEarlyAccess('_lv_fs_get_letters');
 var _lv_fs_up = Module['_lv_fs_up'] = makeInvalidEarlyAccess('_lv_fs_up');
 var _lv_fs_get_last = Module['_lv_fs_get_last'] = makeInvalidEarlyAccess('_lv_fs_get_last');
@@ -6754,14 +6872,12 @@ var _lv_grad_radial_init = Module['_lv_grad_radial_init'] = makeInvalidEarlyAcce
 var _lv_grad_conical_init = Module['_lv_grad_conical_init'] = makeInvalidEarlyAccess('_lv_grad_conical_init');
 var _lv_grad_radial_set_focal = Module['_lv_grad_radial_set_focal'] = makeInvalidEarlyAccess('_lv_grad_radial_set_focal');
 var _lv_iter_get_context = Module['_lv_iter_get_context'] = makeInvalidEarlyAccess('_lv_iter_get_context');
-var _lv_iter_destroy = Module['_lv_iter_destroy'] = makeInvalidEarlyAccess('_lv_iter_destroy');
 var _lv_iter_make_peekable = Module['_lv_iter_make_peekable'] = makeInvalidEarlyAccess('_lv_iter_make_peekable');
 var _lv_iter_next = Module['_lv_iter_next'] = makeInvalidEarlyAccess('_lv_iter_next');
 var _lv_iter_peek = Module['_lv_iter_peek'] = makeInvalidEarlyAccess('_lv_iter_peek');
 var _lv_iter_peek_advance = Module['_lv_iter_peek_advance'] = makeInvalidEarlyAccess('_lv_iter_peek_advance');
 var _lv_iter_peek_reset = Module['_lv_iter_peek_reset'] = makeInvalidEarlyAccess('_lv_iter_peek_reset');
 var _lv_ll_chg_list = Module['_lv_ll_chg_list'] = makeInvalidEarlyAccess('_lv_ll_chg_list');
-var _lv_vsnprintf = Module['_lv_vsnprintf'] = makeInvalidEarlyAccess('_lv_vsnprintf');
 var _fflush = makeInvalidEarlyAccess('_fflush');
 var _lv_log = Module['_lv_log'] = makeInvalidEarlyAccess('_lv_log');
 var _lv_lru_create = Module['_lv_lru_create'] = makeInvalidEarlyAccess('_lv_lru_create');
@@ -6771,12 +6887,17 @@ var _lv_lru_remove_lru_item = Module['_lv_lru_remove_lru_item'] = makeInvalidEar
 var _lv_lru_get = Module['_lv_lru_get'] = makeInvalidEarlyAccess('_lv_lru_get');
 var _lv_lru_remove = Module['_lv_lru_remove'] = makeInvalidEarlyAccess('_lv_lru_remove');
 var _lv_sqrt = Module['_lv_sqrt'] = makeInvalidEarlyAccess('_lv_sqrt');
-var _lv_sqrt32 = Module['_lv_sqrt32'] = makeInvalidEarlyAccess('_lv_sqrt32');
 var _lv_atan2 = Module['_lv_atan2'] = makeInvalidEarlyAccess('_lv_atan2');
 var _lv_pow = Module['_lv_pow'] = makeInvalidEarlyAccess('_lv_pow');
 var _lv_rand = Module['_lv_rand'] = makeInvalidEarlyAccess('_lv_rand');
 var _lv_palette_lighten = Module['_lv_palette_lighten'] = makeInvalidEarlyAccess('_lv_palette_lighten');
 var _lv_palette_darken = Module['_lv_palette_darken'] = makeInvalidEarlyAccess('_lv_palette_darken');
+var _lv_pending_create = Module['_lv_pending_create'] = makeInvalidEarlyAccess('_lv_pending_create');
+var _lv_pending_destroy = Module['_lv_pending_destroy'] = makeInvalidEarlyAccess('_lv_pending_destroy');
+var _lv_pending_remove_all = Module['_lv_pending_remove_all'] = makeInvalidEarlyAccess('_lv_pending_remove_all');
+var _lv_pending_set_free_cb = Module['_lv_pending_set_free_cb'] = makeInvalidEarlyAccess('_lv_pending_set_free_cb');
+var _lv_pending_add = Module['_lv_pending_add'] = makeInvalidEarlyAccess('_lv_pending_add');
+var _lv_pending_swap = Module['_lv_pending_swap'] = makeInvalidEarlyAccess('_lv_pending_swap');
 var _lv_rb_minimum_from = Module['_lv_rb_minimum_from'] = makeInvalidEarlyAccess('_lv_rb_minimum_from');
 var _lv_rb_remove = Module['_lv_rb_remove'] = makeInvalidEarlyAccess('_lv_rb_remove');
 var _lv_rb_drop = Module['_lv_rb_drop'] = makeInvalidEarlyAccess('_lv_rb_drop');
@@ -6875,6 +6996,15 @@ var _lv_style_set_text_align = Module['_lv_style_set_text_align'] = makeInvalidE
 var _lv_style_set_text_outline_stroke_color = Module['_lv_style_set_text_outline_stroke_color'] = makeInvalidEarlyAccess('_lv_style_set_text_outline_stroke_color');
 var _lv_style_set_text_outline_stroke_width = Module['_lv_style_set_text_outline_stroke_width'] = makeInvalidEarlyAccess('_lv_style_set_text_outline_stroke_width');
 var _lv_style_set_text_outline_stroke_opa = Module['_lv_style_set_text_outline_stroke_opa'] = makeInvalidEarlyAccess('_lv_style_set_text_outline_stroke_opa');
+var _lv_style_set_blur_radius = Module['_lv_style_set_blur_radius'] = makeInvalidEarlyAccess('_lv_style_set_blur_radius');
+var _lv_style_set_blur_backdrop = Module['_lv_style_set_blur_backdrop'] = makeInvalidEarlyAccess('_lv_style_set_blur_backdrop');
+var _lv_style_set_blur_quality = Module['_lv_style_set_blur_quality'] = makeInvalidEarlyAccess('_lv_style_set_blur_quality');
+var _lv_style_set_drop_shadow_radius = Module['_lv_style_set_drop_shadow_radius'] = makeInvalidEarlyAccess('_lv_style_set_drop_shadow_radius');
+var _lv_style_set_drop_shadow_offset_x = Module['_lv_style_set_drop_shadow_offset_x'] = makeInvalidEarlyAccess('_lv_style_set_drop_shadow_offset_x');
+var _lv_style_set_drop_shadow_offset_y = Module['_lv_style_set_drop_shadow_offset_y'] = makeInvalidEarlyAccess('_lv_style_set_drop_shadow_offset_y');
+var _lv_style_set_drop_shadow_color = Module['_lv_style_set_drop_shadow_color'] = makeInvalidEarlyAccess('_lv_style_set_drop_shadow_color');
+var _lv_style_set_drop_shadow_opa = Module['_lv_style_set_drop_shadow_opa'] = makeInvalidEarlyAccess('_lv_style_set_drop_shadow_opa');
+var _lv_style_set_drop_shadow_quality = Module['_lv_style_set_drop_shadow_quality'] = makeInvalidEarlyAccess('_lv_style_set_drop_shadow_quality');
 var _lv_style_set_radius = Module['_lv_style_set_radius'] = makeInvalidEarlyAccess('_lv_style_set_radius');
 var _lv_style_set_radial_offset = Module['_lv_style_set_radial_offset'] = makeInvalidEarlyAccess('_lv_style_set_radial_offset');
 var _lv_style_set_clip_corner = Module['_lv_style_set_clip_corner'] = makeInvalidEarlyAccess('_lv_style_set_clip_corner');
@@ -6935,61 +7065,6 @@ var _lv_lock_isr = Module['_lv_lock_isr'] = makeInvalidEarlyAccess('_lv_lock_isr
 var _lv_sleep_ms = Module['_lv_sleep_ms'] = makeInvalidEarlyAccess('_lv_sleep_ms');
 var _lv_delay_ms = Module['_lv_delay_ms'] = makeInvalidEarlyAccess('_lv_delay_ms');
 var _lv_os_get_idle_percent = Module['_lv_os_get_idle_percent'] = makeInvalidEarlyAccess('_lv_os_get_idle_percent');
-var _lv_gridnav_add = Module['_lv_gridnav_add'] = makeInvalidEarlyAccess('_lv_gridnav_add');
-var _lv_gridnav_remove = Module['_lv_gridnav_remove'] = makeInvalidEarlyAccess('_lv_gridnav_remove');
-var _lv_gridnav_set_focused = Module['_lv_gridnav_set_focused'] = makeInvalidEarlyAccess('_lv_gridnav_set_focused');
-var _lv_subject_init_int = Module['_lv_subject_init_int'] = makeInvalidEarlyAccess('_lv_subject_init_int');
-var _lv_subject_set_int = Module['_lv_subject_set_int'] = makeInvalidEarlyAccess('_lv_subject_set_int');
-var _lv_subject_notify = Module['_lv_subject_notify'] = makeInvalidEarlyAccess('_lv_subject_notify');
-var _lv_subject_get_int = Module['_lv_subject_get_int'] = makeInvalidEarlyAccess('_lv_subject_get_int');
-var _lv_subject_get_previous_int = Module['_lv_subject_get_previous_int'] = makeInvalidEarlyAccess('_lv_subject_get_previous_int');
-var _lv_subject_set_min_value_int = Module['_lv_subject_set_min_value_int'] = makeInvalidEarlyAccess('_lv_subject_set_min_value_int');
-var _lv_subject_set_max_value_int = Module['_lv_subject_set_max_value_int'] = makeInvalidEarlyAccess('_lv_subject_set_max_value_int');
-var _lv_subject_init_string = Module['_lv_subject_init_string'] = makeInvalidEarlyAccess('_lv_subject_init_string');
-var _lv_subject_copy_string = Module['_lv_subject_copy_string'] = makeInvalidEarlyAccess('_lv_subject_copy_string');
-var _lv_subject_snprintf = Module['_lv_subject_snprintf'] = makeInvalidEarlyAccess('_lv_subject_snprintf');
-var _lv_subject_get_string = Module['_lv_subject_get_string'] = makeInvalidEarlyAccess('_lv_subject_get_string');
-var _lv_subject_get_previous_string = Module['_lv_subject_get_previous_string'] = makeInvalidEarlyAccess('_lv_subject_get_previous_string');
-var _lv_subject_init_pointer = Module['_lv_subject_init_pointer'] = makeInvalidEarlyAccess('_lv_subject_init_pointer');
-var _lv_subject_set_pointer = Module['_lv_subject_set_pointer'] = makeInvalidEarlyAccess('_lv_subject_set_pointer');
-var _lv_subject_get_pointer = Module['_lv_subject_get_pointer'] = makeInvalidEarlyAccess('_lv_subject_get_pointer');
-var _lv_subject_get_previous_pointer = Module['_lv_subject_get_previous_pointer'] = makeInvalidEarlyAccess('_lv_subject_get_previous_pointer');
-var _lv_subject_init_color = Module['_lv_subject_init_color'] = makeInvalidEarlyAccess('_lv_subject_init_color');
-var _lv_subject_set_color = Module['_lv_subject_set_color'] = makeInvalidEarlyAccess('_lv_subject_set_color');
-var _lv_subject_get_color = Module['_lv_subject_get_color'] = makeInvalidEarlyAccess('_lv_subject_get_color');
-var _lv_subject_get_previous_color = Module['_lv_subject_get_previous_color'] = makeInvalidEarlyAccess('_lv_subject_get_previous_color');
-var _lv_subject_init_group = Module['_lv_subject_init_group'] = makeInvalidEarlyAccess('_lv_subject_init_group');
-var _lv_subject_add_observer_obj = Module['_lv_subject_add_observer_obj'] = makeInvalidEarlyAccess('_lv_subject_add_observer_obj');
-var _lv_subject_add_observer = Module['_lv_subject_add_observer'] = makeInvalidEarlyAccess('_lv_subject_add_observer');
-var _lv_subject_deinit = Module['_lv_subject_deinit'] = makeInvalidEarlyAccess('_lv_subject_deinit');
-var _lv_observer_remove = Module['_lv_observer_remove'] = makeInvalidEarlyAccess('_lv_observer_remove');
-var _lv_subject_get_group_element = Module['_lv_subject_get_group_element'] = makeInvalidEarlyAccess('_lv_subject_get_group_element');
-var _lv_subject_add_observer_with_target = Module['_lv_subject_add_observer_with_target'] = makeInvalidEarlyAccess('_lv_subject_add_observer_with_target');
-var _lv_obj_remove_from_subject = Module['_lv_obj_remove_from_subject'] = makeInvalidEarlyAccess('_lv_obj_remove_from_subject');
-var _lv_observer_get_target = Module['_lv_observer_get_target'] = makeInvalidEarlyAccess('_lv_observer_get_target');
-var _lv_obj_add_subject_increment_event = Module['_lv_obj_add_subject_increment_event'] = makeInvalidEarlyAccess('_lv_obj_add_subject_increment_event');
-var _lv_obj_set_subject_increment_event_min_value = Module['_lv_obj_set_subject_increment_event_min_value'] = makeInvalidEarlyAccess('_lv_obj_set_subject_increment_event_min_value');
-var _lv_obj_set_subject_increment_event_max_value = Module['_lv_obj_set_subject_increment_event_max_value'] = makeInvalidEarlyAccess('_lv_obj_set_subject_increment_event_max_value');
-var _lv_obj_set_subject_increment_event_rollover = Module['_lv_obj_set_subject_increment_event_rollover'] = makeInvalidEarlyAccess('_lv_obj_set_subject_increment_event_rollover');
-var _lv_obj_add_subject_toggle_event = Module['_lv_obj_add_subject_toggle_event'] = makeInvalidEarlyAccess('_lv_obj_add_subject_toggle_event');
-var _lv_obj_add_subject_set_int_event = Module['_lv_obj_add_subject_set_int_event'] = makeInvalidEarlyAccess('_lv_obj_add_subject_set_int_event');
-var _lv_obj_add_subject_set_string_event = Module['_lv_obj_add_subject_set_string_event'] = makeInvalidEarlyAccess('_lv_obj_add_subject_set_string_event');
-var _lv_obj_bind_style = Module['_lv_obj_bind_style'] = makeInvalidEarlyAccess('_lv_obj_bind_style');
-var _lv_obj_bind_flag_if_eq = Module['_lv_obj_bind_flag_if_eq'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_eq');
-var _lv_obj_bind_flag_if_not_eq = Module['_lv_obj_bind_flag_if_not_eq'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_not_eq');
-var _lv_obj_bind_flag_if_gt = Module['_lv_obj_bind_flag_if_gt'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_gt');
-var _lv_obj_bind_flag_if_ge = Module['_lv_obj_bind_flag_if_ge'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_ge');
-var _lv_obj_bind_flag_if_lt = Module['_lv_obj_bind_flag_if_lt'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_lt');
-var _lv_obj_bind_flag_if_le = Module['_lv_obj_bind_flag_if_le'] = makeInvalidEarlyAccess('_lv_obj_bind_flag_if_le');
-var _lv_obj_bind_state_if_eq = Module['_lv_obj_bind_state_if_eq'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_eq');
-var _lv_obj_bind_state_if_not_eq = Module['_lv_obj_bind_state_if_not_eq'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_not_eq');
-var _lv_obj_bind_state_if_gt = Module['_lv_obj_bind_state_if_gt'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_gt');
-var _lv_obj_bind_state_if_ge = Module['_lv_obj_bind_state_if_ge'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_ge');
-var _lv_obj_bind_state_if_lt = Module['_lv_obj_bind_state_if_lt'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_lt');
-var _lv_obj_bind_state_if_le = Module['_lv_obj_bind_state_if_le'] = makeInvalidEarlyAccess('_lv_obj_bind_state_if_le');
-var _lv_obj_bind_checked = Module['_lv_obj_bind_checked'] = makeInvalidEarlyAccess('_lv_obj_bind_checked');
-var _lv_observer_get_target_obj = Module['_lv_observer_get_target_obj'] = makeInvalidEarlyAccess('_lv_observer_get_target_obj');
-var _lv_observer_get_user_data = Module['_lv_observer_get_user_data'] = makeInvalidEarlyAccess('_lv_observer_get_user_data');
 var _lv_zalloc = Module['_lv_zalloc'] = makeInvalidEarlyAccess('_lv_zalloc');
 var _lv_strnlen = Module['_lv_strnlen'] = makeInvalidEarlyAccess('_lv_strnlen');
 var _lv_strncpy = Module['_lv_strncpy'] = makeInvalidEarlyAccess('_lv_strncpy');
@@ -7010,6 +7085,9 @@ var _lv_reallocf = Module['_lv_reallocf'] = makeInvalidEarlyAccess('_lv_reallocf
 var _lv_mem_test = Module['_lv_mem_test'] = makeInvalidEarlyAccess('_lv_mem_test');
 var _lv_mem_monitor = Module['_lv_mem_monitor'] = makeInvalidEarlyAccess('_lv_mem_monitor');
 var _lv_theme_get_from_obj = Module['_lv_theme_get_from_obj'] = makeInvalidEarlyAccess('_lv_theme_get_from_obj');
+var _lv_theme_create = Module['_lv_theme_create'] = makeInvalidEarlyAccess('_lv_theme_create');
+var _lv_theme_delete = Module['_lv_theme_delete'] = makeInvalidEarlyAccess('_lv_theme_delete');
+var _lv_theme_copy = Module['_lv_theme_copy'] = makeInvalidEarlyAccess('_lv_theme_copy');
 var _lv_theme_set_parent = Module['_lv_theme_set_parent'] = makeInvalidEarlyAccess('_lv_theme_set_parent');
 var _lv_theme_set_apply_cb = Module['_lv_theme_set_apply_cb'] = makeInvalidEarlyAccess('_lv_theme_set_apply_cb');
 var _lv_theme_get_font_small = Module['_lv_theme_get_font_small'] = makeInvalidEarlyAccess('_lv_theme_get_font_small');
@@ -7052,6 +7130,7 @@ var _lv_arc_get_bg_angle_end = Module['_lv_arc_get_bg_angle_end'] = makeInvalidE
 var _lv_arc_get_mode = Module['_lv_arc_get_mode'] = makeInvalidEarlyAccess('_lv_arc_get_mode');
 var _lv_arc_get_rotation = Module['_lv_arc_get_rotation'] = makeInvalidEarlyAccess('_lv_arc_get_rotation');
 var _lv_arc_get_knob_offset = Module['_lv_arc_get_knob_offset'] = makeInvalidEarlyAccess('_lv_arc_get_knob_offset');
+var _lv_arc_get_change_rate = Module['_lv_arc_get_change_rate'] = makeInvalidEarlyAccess('_lv_arc_get_change_rate');
 var _lv_arc_bind_value = Module['_lv_arc_bind_value'] = makeInvalidEarlyAccess('_lv_arc_bind_value');
 var _lv_arc_align_obj_to_angle = Module['_lv_arc_align_obj_to_angle'] = makeInvalidEarlyAccess('_lv_arc_align_obj_to_angle');
 var _lv_arc_rotate_obj_to_angle = Module['_lv_arc_rotate_obj_to_angle'] = makeInvalidEarlyAccess('_lv_arc_rotate_obj_to_angle');
@@ -7069,6 +7148,8 @@ var _lv_arclabel_set_center_offset_x = Module['_lv_arclabel_set_center_offset_x'
 var _lv_arclabel_set_center_offset_y = Module['_lv_arclabel_set_center_offset_y'] = makeInvalidEarlyAccess('_lv_arclabel_set_center_offset_y');
 var _lv_arclabel_set_text_vertical_align = Module['_lv_arclabel_set_text_vertical_align'] = makeInvalidEarlyAccess('_lv_arclabel_set_text_vertical_align');
 var _lv_arclabel_set_text_horizontal_align = Module['_lv_arclabel_set_text_horizontal_align'] = makeInvalidEarlyAccess('_lv_arclabel_set_text_horizontal_align');
+var _lv_arclabel_set_overflow = Module['_lv_arclabel_set_overflow'] = makeInvalidEarlyAccess('_lv_arclabel_set_overflow');
+var _lv_arclabel_set_end_overlap = Module['_lv_arclabel_set_end_overlap'] = makeInvalidEarlyAccess('_lv_arclabel_set_end_overlap');
 var _lv_arclabel_get_angle_start = Module['_lv_arclabel_get_angle_start'] = makeInvalidEarlyAccess('_lv_arclabel_get_angle_start');
 var _lv_arclabel_get_angle_size = Module['_lv_arclabel_get_angle_size'] = makeInvalidEarlyAccess('_lv_arclabel_get_angle_size');
 var _lv_arclabel_get_dir = Module['_lv_arclabel_get_dir'] = makeInvalidEarlyAccess('_lv_arclabel_get_dir');
@@ -7078,6 +7159,9 @@ var _lv_arclabel_get_center_offset_x = Module['_lv_arclabel_get_center_offset_x'
 var _lv_arclabel_get_center_offset_y = Module['_lv_arclabel_get_center_offset_y'] = makeInvalidEarlyAccess('_lv_arclabel_get_center_offset_y');
 var _lv_arclabel_get_text_vertical_align = Module['_lv_arclabel_get_text_vertical_align'] = makeInvalidEarlyAccess('_lv_arclabel_get_text_vertical_align');
 var _lv_arclabel_get_text_horizontal_align = Module['_lv_arclabel_get_text_horizontal_align'] = makeInvalidEarlyAccess('_lv_arclabel_get_text_horizontal_align');
+var _lv_arclabel_get_overflow = Module['_lv_arclabel_get_overflow'] = makeInvalidEarlyAccess('_lv_arclabel_get_overflow');
+var _lv_arclabel_get_end_overlap = Module['_lv_arclabel_get_end_overlap'] = makeInvalidEarlyAccess('_lv_arclabel_get_end_overlap');
+var _lv_arclabel_get_text_angle = Module['_lv_arclabel_get_text_angle'] = makeInvalidEarlyAccess('_lv_arclabel_get_text_angle');
 var _lv_bar_get_mode = Module['_lv_bar_get_mode'] = makeInvalidEarlyAccess('_lv_bar_get_mode');
 var _lv_bar_set_min_value = Module['_lv_bar_set_min_value'] = makeInvalidEarlyAccess('_lv_bar_set_min_value');
 var _lv_bar_get_max_value = Module['_lv_bar_get_max_value'] = makeInvalidEarlyAccess('_lv_bar_get_max_value');
@@ -7141,6 +7225,9 @@ var _lv_chart_set_hor_div_line_count = Module['_lv_chart_set_hor_div_line_count'
 var _lv_chart_set_ver_div_line_count = Module['_lv_chart_set_ver_div_line_count'] = makeInvalidEarlyAccess('_lv_chart_set_ver_div_line_count');
 var _lv_chart_get_type = Module['_lv_chart_get_type'] = makeInvalidEarlyAccess('_lv_chart_get_type');
 var _lv_chart_get_point_count = Module['_lv_chart_get_point_count'] = makeInvalidEarlyAccess('_lv_chart_get_point_count');
+var _lv_chart_get_update_mode = Module['_lv_chart_get_update_mode'] = makeInvalidEarlyAccess('_lv_chart_get_update_mode');
+var _lv_chart_get_hor_div_line_count = Module['_lv_chart_get_hor_div_line_count'] = makeInvalidEarlyAccess('_lv_chart_get_hor_div_line_count');
+var _lv_chart_get_ver_div_line_count = Module['_lv_chart_get_ver_div_line_count'] = makeInvalidEarlyAccess('_lv_chart_get_ver_div_line_count');
 var _lv_chart_get_x_start_point = Module['_lv_chart_get_x_start_point'] = makeInvalidEarlyAccess('_lv_chart_get_x_start_point');
 var _lv_chart_add_series = Module['_lv_chart_add_series'] = makeInvalidEarlyAccess('_lv_chart_add_series');
 var _lv_chart_remove_series = Module['_lv_chart_remove_series'] = makeInvalidEarlyAccess('_lv_chart_remove_series');
@@ -7176,6 +7263,7 @@ var _lv_dropdown_open = Module['_lv_dropdown_open'] = makeInvalidEarlyAccess('_l
 var _lv_dropdown_is_open = Module['_lv_dropdown_is_open'] = makeInvalidEarlyAccess('_lv_dropdown_is_open');
 var _lv_dropdown_close = Module['_lv_dropdown_close'] = makeInvalidEarlyAccess('_lv_dropdown_close');
 var _lv_dropdown_set_text = Module['_lv_dropdown_set_text'] = makeInvalidEarlyAccess('_lv_dropdown_set_text');
+var _lv_dropdown_set_text_static = Module['_lv_dropdown_set_text_static'] = makeInvalidEarlyAccess('_lv_dropdown_set_text_static');
 var _lv_dropdown_add_option = Module['_lv_dropdown_add_option'] = makeInvalidEarlyAccess('_lv_dropdown_add_option');
 var _lv_dropdown_set_selected_highlight = Module['_lv_dropdown_set_selected_highlight'] = makeInvalidEarlyAccess('_lv_dropdown_set_selected_highlight');
 var _lv_dropdown_get_text = Module['_lv_dropdown_get_text'] = makeInvalidEarlyAccess('_lv_dropdown_get_text');
@@ -7212,6 +7300,9 @@ var _lv_image_get_antialias = Module['_lv_image_get_antialias'] = makeInvalidEar
 var _lv_image_get_inner_align = Module['_lv_image_get_inner_align'] = makeInvalidEarlyAccess('_lv_image_get_inner_align');
 var _lv_image_get_bitmap_map_src = Module['_lv_image_get_bitmap_map_src'] = makeInvalidEarlyAccess('_lv_image_get_bitmap_map_src');
 var _lv_image_bind_src = Module['_lv_image_bind_src'] = makeInvalidEarlyAccess('_lv_image_bind_src');
+var _lv_imagebutton_set_src_left = Module['_lv_imagebutton_set_src_left'] = makeInvalidEarlyAccess('_lv_imagebutton_set_src_left');
+var _lv_imagebutton_set_src_right = Module['_lv_imagebutton_set_src_right'] = makeInvalidEarlyAccess('_lv_imagebutton_set_src_right');
+var _lv_imagebutton_set_src_mid = Module['_lv_imagebutton_set_src_mid'] = makeInvalidEarlyAccess('_lv_imagebutton_set_src_mid');
 var _lv_imagebutton_set_state = Module['_lv_imagebutton_set_state'] = makeInvalidEarlyAccess('_lv_imagebutton_set_state');
 var _lv_imagebutton_get_src_left = Module['_lv_imagebutton_get_src_left'] = makeInvalidEarlyAccess('_lv_imagebutton_get_src_left');
 var _lv_imagebutton_get_src_middle = Module['_lv_imagebutton_get_src_middle'] = makeInvalidEarlyAccess('_lv_imagebutton_get_src_middle');
@@ -7234,12 +7325,12 @@ var _lv_keyboard_get_map_array = Module['_lv_keyboard_get_map_array'] = makeInva
 var _lv_keyboard_get_selected_button = Module['_lv_keyboard_get_selected_button'] = makeInvalidEarlyAccess('_lv_keyboard_get_selected_button');
 var _lv_keyboard_get_button_text = Module['_lv_keyboard_get_button_text'] = makeInvalidEarlyAccess('_lv_keyboard_get_button_text');
 var _lv_label_set_text_vfmt = Module['_lv_label_set_text_vfmt'] = makeInvalidEarlyAccess('_lv_label_set_text_vfmt');
-var _lv_label_get_letter_on = Module['_lv_label_get_letter_on'] = makeInvalidEarlyAccess('_lv_label_get_letter_on');
 var _lv_label_set_text_selection_start = Module['_lv_label_set_text_selection_start'] = makeInvalidEarlyAccess('_lv_label_set_text_selection_start');
 var _lv_label_set_text_selection_end = Module['_lv_label_set_text_selection_end'] = makeInvalidEarlyAccess('_lv_label_set_text_selection_end');
 var _lv_label_set_recolor = Module['_lv_label_set_recolor'] = makeInvalidEarlyAccess('_lv_label_set_recolor');
 var _lv_label_get_long_mode = Module['_lv_label_get_long_mode'] = makeInvalidEarlyAccess('_lv_label_get_long_mode');
 var _lv_label_get_letter_pos = Module['_lv_label_get_letter_pos'] = makeInvalidEarlyAccess('_lv_label_get_letter_pos');
+var _lv_label_get_letter_on = Module['_lv_label_get_letter_on'] = makeInvalidEarlyAccess('_lv_label_get_letter_on');
 var _lv_label_is_char_under_pos = Module['_lv_label_is_char_under_pos'] = makeInvalidEarlyAccess('_lv_label_is_char_under_pos');
 var _lv_label_get_text_selection_start = Module['_lv_label_get_text_selection_start'] = makeInvalidEarlyAccess('_lv_label_get_text_selection_start');
 var _lv_label_get_text_selection_end = Module['_lv_label_get_text_selection_end'] = makeInvalidEarlyAccess('_lv_label_get_text_selection_end');
@@ -7250,6 +7341,7 @@ var _lv_label_cut_text = Module['_lv_label_cut_text'] = makeInvalidEarlyAccess('
 var _lv_led_on = Module['_lv_led_on'] = makeInvalidEarlyAccess('_lv_led_on');
 var _lv_led_off = Module['_lv_led_off'] = makeInvalidEarlyAccess('_lv_led_off');
 var _lv_led_toggle = Module['_lv_led_toggle'] = makeInvalidEarlyAccess('_lv_led_toggle');
+var _lv_led_get_color = Module['_lv_led_get_color'] = makeInvalidEarlyAccess('_lv_led_get_color');
 var _lv_line_set_points_mutable = Module['_lv_line_set_points_mutable'] = makeInvalidEarlyAccess('_lv_line_set_points_mutable');
 var _lv_line_get_points = Module['_lv_line_get_points'] = makeInvalidEarlyAccess('_lv_line_get_points');
 var _lv_line_get_point_count = Module['_lv_line_get_point_count'] = makeInvalidEarlyAccess('_lv_line_get_point_count');
@@ -7279,9 +7371,12 @@ var _lv_menu_get_main_header_back_button = Module['_lv_menu_get_main_header_back
 var _lv_menu_get_sidebar_header = Module['_lv_menu_get_sidebar_header'] = makeInvalidEarlyAccess('_lv_menu_get_sidebar_header');
 var _lv_menu_get_sidebar_header_back_button = Module['_lv_menu_get_sidebar_header_back_button'] = makeInvalidEarlyAccess('_lv_menu_get_sidebar_header_back_button');
 var _lv_menu_back_button_is_root = Module['_lv_menu_back_button_is_root'] = makeInvalidEarlyAccess('_lv_menu_back_button_is_root');
+var _lv_menu_get_mode_header = Module['_lv_menu_get_mode_header'] = makeInvalidEarlyAccess('_lv_menu_get_mode_header');
+var _lv_menu_get_mode_root_back_button = Module['_lv_menu_get_mode_root_back_button'] = makeInvalidEarlyAccess('_lv_menu_get_mode_root_back_button');
 var _lv_msgbox_add_title = Module['_lv_msgbox_add_title'] = makeInvalidEarlyAccess('_lv_msgbox_add_title');
 var _lv_msgbox_add_header_button = Module['_lv_msgbox_add_header_button'] = makeInvalidEarlyAccess('_lv_msgbox_add_header_button');
 var _lv_msgbox_add_text = Module['_lv_msgbox_add_text'] = makeInvalidEarlyAccess('_lv_msgbox_add_text');
+var _lv_msgbox_add_text_fmt = Module['_lv_msgbox_add_text_fmt'] = makeInvalidEarlyAccess('_lv_msgbox_add_text_fmt');
 var _lv_msgbox_add_footer_button = Module['_lv_msgbox_add_footer_button'] = makeInvalidEarlyAccess('_lv_msgbox_add_footer_button');
 var _lv_msgbox_add_close_button = Module['_lv_msgbox_add_close_button'] = makeInvalidEarlyAccess('_lv_msgbox_add_close_button');
 var _lv_msgbox_get_header = Module['_lv_msgbox_get_header'] = makeInvalidEarlyAccess('_lv_msgbox_get_header');
@@ -7295,12 +7390,12 @@ var _lv_roller_set_visible_row_count = Module['_lv_roller_set_visible_row_count'
 var _lv_roller_get_selected_str = Module['_lv_roller_get_selected_str'] = makeInvalidEarlyAccess('_lv_roller_get_selected_str');
 var _lv_roller_get_option_str = Module['_lv_roller_get_option_str'] = makeInvalidEarlyAccess('_lv_roller_get_option_str');
 var _lv_roller_bind_value = Module['_lv_roller_bind_value'] = makeInvalidEarlyAccess('_lv_roller_bind_value');
+var _lv_scale_set_line_needle_value = Module['_lv_scale_set_line_needle_value'] = makeInvalidEarlyAccess('_lv_scale_set_line_needle_value');
+var _lv_scale_set_image_needle_value = Module['_lv_scale_set_image_needle_value'] = makeInvalidEarlyAccess('_lv_scale_set_image_needle_value');
 var _lv_scale_set_min_value = Module['_lv_scale_set_min_value'] = makeInvalidEarlyAccess('_lv_scale_set_min_value');
 var _lv_scale_set_max_value = Module['_lv_scale_set_max_value'] = makeInvalidEarlyAccess('_lv_scale_set_max_value');
 var _lv_scale_set_angle_range = Module['_lv_scale_set_angle_range'] = makeInvalidEarlyAccess('_lv_scale_set_angle_range');
 var _lv_scale_set_rotation = Module['_lv_scale_set_rotation'] = makeInvalidEarlyAccess('_lv_scale_set_rotation');
-var _lv_scale_set_line_needle_value = Module['_lv_scale_set_line_needle_value'] = makeInvalidEarlyAccess('_lv_scale_set_line_needle_value');
-var _lv_scale_set_image_needle_value = Module['_lv_scale_set_image_needle_value'] = makeInvalidEarlyAccess('_lv_scale_set_image_needle_value');
 var _lv_scale_set_text_src = Module['_lv_scale_set_text_src'] = makeInvalidEarlyAccess('_lv_scale_set_text_src');
 var _lv_scale_set_post_draw = Module['_lv_scale_set_post_draw'] = makeInvalidEarlyAccess('_lv_scale_set_post_draw');
 var _lv_scale_set_draw_ticks_on_top = Module['_lv_scale_set_draw_ticks_on_top'] = makeInvalidEarlyAccess('_lv_scale_set_draw_ticks_on_top');
@@ -7374,7 +7469,16 @@ var _lv_spinbox_set_max_value = Module['_lv_spinbox_set_max_value'] = makeInvali
 var _lv_spinbox_set_cursor_pos = Module['_lv_spinbox_set_cursor_pos'] = makeInvalidEarlyAccess('_lv_spinbox_set_cursor_pos');
 var _lv_spinbox_set_digit_step_direction = Module['_lv_spinbox_set_digit_step_direction'] = makeInvalidEarlyAccess('_lv_spinbox_set_digit_step_direction');
 var _lv_spinbox_get_rollover = Module['_lv_spinbox_get_rollover'] = makeInvalidEarlyAccess('_lv_spinbox_get_rollover');
+var _lv_spinbox_get_digit_count = Module['_lv_spinbox_get_digit_count'] = makeInvalidEarlyAccess('_lv_spinbox_get_digit_count');
+var _lv_spinbox_get_dec_point_pos = Module['_lv_spinbox_get_dec_point_pos'] = makeInvalidEarlyAccess('_lv_spinbox_get_dec_point_pos');
+var _lv_spinbox_get_min_value = Module['_lv_spinbox_get_min_value'] = makeInvalidEarlyAccess('_lv_spinbox_get_min_value');
+var _lv_spinbox_get_max_value = Module['_lv_spinbox_get_max_value'] = makeInvalidEarlyAccess('_lv_spinbox_get_max_value');
+var _lv_spinbox_get_digit_step_direction = Module['_lv_spinbox_get_digit_step_direction'] = makeInvalidEarlyAccess('_lv_spinbox_get_digit_step_direction');
 var _lv_spinbox_bind_value = Module['_lv_spinbox_bind_value'] = makeInvalidEarlyAccess('_lv_spinbox_bind_value');
+var _lv_spinner_set_anim_duration = Module['_lv_spinner_set_anim_duration'] = makeInvalidEarlyAccess('_lv_spinner_set_anim_duration');
+var _lv_spinner_set_arc_sweep = Module['_lv_spinner_set_arc_sweep'] = makeInvalidEarlyAccess('_lv_spinner_set_arc_sweep');
+var _lv_spinner_get_anim_duration = Module['_lv_spinner_get_anim_duration'] = makeInvalidEarlyAccess('_lv_spinner_get_anim_duration');
+var _lv_spinner_get_arc_sweep = Module['_lv_spinner_get_arc_sweep'] = makeInvalidEarlyAccess('_lv_spinner_get_arc_sweep');
 var _lv_switch_set_orientation = Module['_lv_switch_set_orientation'] = makeInvalidEarlyAccess('_lv_switch_set_orientation');
 var _lv_switch_get_orientation = Module['_lv_switch_get_orientation'] = makeInvalidEarlyAccess('_lv_switch_get_orientation');
 var _lv_table_set_cell_value = Module['_lv_table_set_cell_value'] = makeInvalidEarlyAccess('_lv_table_set_cell_value');
@@ -7394,16 +7498,18 @@ var _lv_table_has_cell_ctrl = Module['_lv_table_has_cell_ctrl'] = makeInvalidEar
 var _lv_table_get_selected_cell = Module['_lv_table_get_selected_cell'] = makeInvalidEarlyAccess('_lv_table_get_selected_cell');
 var _lv_table_get_cell_user_data = Module['_lv_table_get_cell_user_data'] = makeInvalidEarlyAccess('_lv_table_get_cell_user_data');
 var _lv_tabview_get_content = Module['_lv_tabview_get_content'] = makeInvalidEarlyAccess('_lv_tabview_get_content');
-var _lv_tabview_rename_tab = Module['_lv_tabview_rename_tab'] = makeInvalidEarlyAccess('_lv_tabview_rename_tab');
+var _lv_tabview_set_tab_text = Module['_lv_tabview_set_tab_text'] = makeInvalidEarlyAccess('_lv_tabview_set_tab_text');
+var _lv_tabview_get_tab_button = Module['_lv_tabview_get_tab_button'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_button');
 var _lv_tabview_get_tab_count = Module['_lv_tabview_get_tab_count'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_count');
 var _lv_tabview_get_tab_active = Module['_lv_tabview_get_tab_active'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_active');
-var _lv_tabview_get_tab_button = Module['_lv_tabview_get_tab_button'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_button');
+var _lv_tabview_get_tab_bar_position = Module['_lv_tabview_get_tab_bar_position'] = makeInvalidEarlyAccess('_lv_tabview_get_tab_bar_position');
 var _lv_textarea_cursor_up = Module['_lv_textarea_cursor_up'] = makeInvalidEarlyAccess('_lv_textarea_cursor_up');
 var _lv_textarea_cursor_down = Module['_lv_textarea_cursor_down'] = makeInvalidEarlyAccess('_lv_textarea_cursor_down');
 var _lv_textarea_delete_char_forward = Module['_lv_textarea_delete_char_forward'] = makeInvalidEarlyAccess('_lv_textarea_delete_char_forward');
 var _lv_textarea_clear_selection = Module['_lv_textarea_clear_selection'] = makeInvalidEarlyAccess('_lv_textarea_clear_selection');
 var _lv_textarea_get_accepted_chars = Module['_lv_textarea_get_accepted_chars'] = makeInvalidEarlyAccess('_lv_textarea_get_accepted_chars');
 var _lv_textarea_set_password_bullet = Module['_lv_textarea_set_password_bullet'] = makeInvalidEarlyAccess('_lv_textarea_set_password_bullet');
+var _lv_textarea_set_accepted_chars_static = Module['_lv_textarea_set_accepted_chars_static'] = makeInvalidEarlyAccess('_lv_textarea_set_accepted_chars_static');
 var _lv_textarea_set_insert_replace = Module['_lv_textarea_set_insert_replace'] = makeInvalidEarlyAccess('_lv_textarea_set_insert_replace');
 var _lv_textarea_set_text_selection = Module['_lv_textarea_set_text_selection'] = makeInvalidEarlyAccess('_lv_textarea_set_text_selection');
 var _lv_textarea_set_password_show_time = Module['_lv_textarea_set_password_show_time'] = makeInvalidEarlyAccess('_lv_textarea_set_password_show_time');
@@ -7721,6 +7827,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_tabview_get_tab_bar'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_bar');
   assert(typeof wasmExports['lv_obj_get_child_by_type'] != 'undefined', 'missing Wasm export: lv_obj_get_child_by_type');
   assert(typeof wasmExports['lvglCreateFreeTypeFont'] != 'undefined', 'missing Wasm export: lvglCreateFreeTypeFont');
+  assert(typeof wasmExports['lv_freetype_font_create'] != 'undefined', 'missing Wasm export: lv_freetype_font_create');
   assert(typeof wasmExports['lv_log_add'] != 'undefined', 'missing Wasm export: lv_log_add');
   assert(typeof wasmExports['lvglCreateAnim'] != 'undefined', 'missing Wasm export: lvglCreateAnim');
   assert(typeof wasmExports['lv_anim_init'] != 'undefined', 'missing Wasm export: lv_anim_init');
@@ -7769,6 +7876,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_group_get_obj_by_index'] != 'undefined', 'missing Wasm export: lv_group_get_obj_by_index');
   assert(typeof wasmExports['lv_group_get_count'] != 'undefined', 'missing Wasm export: lv_group_get_count');
   assert(typeof wasmExports['lv_group_by_index'] != 'undefined', 'missing Wasm export: lv_group_by_index');
+  assert(typeof wasmExports['lv_group_set_user_data'] != 'undefined', 'missing Wasm export: lv_group_set_user_data');
+  assert(typeof wasmExports['lv_group_get_user_data'] != 'undefined', 'missing Wasm export: lv_group_get_user_data');
   assert(typeof wasmExports['lv_obj_get_scroll_left'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_left');
   assert(typeof wasmExports['lv_obj_get_scroll_top'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_top');
   assert(typeof wasmExports['lv_event_mark_deleted'] != 'undefined', 'missing Wasm export: lv_event_mark_deleted');
@@ -7779,7 +7888,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_event_get_current_target'] != 'undefined', 'missing Wasm export: lv_event_get_current_target');
   assert(typeof wasmExports['lv_event_get_param'] != 'undefined', 'missing Wasm export: lv_event_get_param');
   assert(typeof wasmExports['lv_indev_get_scroll_obj'] != 'undefined', 'missing Wasm export: lv_indev_get_scroll_obj');
+  assert(typeof wasmExports['lv_obj_is_radio_button'] != 'undefined', 'missing Wasm export: lv_obj_is_radio_button');
   assert(typeof wasmExports['lv_obj_get_child_count'] != 'undefined', 'missing Wasm export: lv_obj_get_child_count');
+  assert(typeof wasmExports['lv_obj_get_child'] != 'undefined', 'missing Wasm export: lv_obj_get_child');
   assert(typeof wasmExports['lv_obj_mark_layout_as_dirty'] != 'undefined', 'missing Wasm export: lv_obj_mark_layout_as_dirty');
   assert(typeof wasmExports['lv_event_get_key'] != 'undefined', 'missing Wasm export: lv_event_get_key');
   assert(typeof wasmExports['lv_obj_is_editable'] != 'undefined', 'missing Wasm export: lv_obj_is_editable');
@@ -7799,6 +7910,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_area_is_in'] != 'undefined', 'missing Wasm export: lv_area_is_in');
   assert(typeof wasmExports['lv_event_get_layer'] != 'undefined', 'missing Wasm export: lv_event_get_layer');
   assert(typeof wasmExports['lv_draw_rect_dsc_init'] != 'undefined', 'missing Wasm export: lv_draw_rect_dsc_init');
+  assert(typeof wasmExports['lv_draw_blur_dsc_init'] != 'undefined', 'missing Wasm export: lv_draw_blur_dsc_init');
+  assert(typeof wasmExports['lv_obj_init_draw_blur_dsc'] != 'undefined', 'missing Wasm export: lv_obj_init_draw_blur_dsc');
+  assert(typeof wasmExports['lv_draw_blur'] != 'undefined', 'missing Wasm export: lv_draw_blur');
   assert(typeof wasmExports['lv_obj_init_draw_rect_dsc'] != 'undefined', 'missing Wasm export: lv_obj_init_draw_rect_dsc');
   assert(typeof wasmExports['lv_draw_rect'] != 'undefined', 'missing Wasm export: lv_draw_rect');
   assert(typeof wasmExports['lv_area_get_size'] != 'undefined', 'missing Wasm export: lv_area_get_size');
@@ -7808,7 +7922,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_is_layout_positioned'] != 'undefined', 'missing Wasm export: lv_obj_is_layout_positioned');
   assert(typeof wasmExports['lv_obj_has_flag_any'] != 'undefined', 'missing Wasm export: lv_obj_has_flag_any');
   assert(typeof wasmExports['lv_obj_set_flag'] != 'undefined', 'missing Wasm export: lv_obj_set_flag');
-  assert(typeof wasmExports['lv_obj_get_child'] != 'undefined', 'missing Wasm export: lv_obj_get_child');
   assert(typeof wasmExports['lv_obj_style_state_compare'] != 'undefined', 'missing Wasm export: lv_obj_style_state_compare');
   assert(typeof wasmExports['lv_obj_update_layer_type'] != 'undefined', 'missing Wasm export: lv_obj_update_layer_type');
   assert(typeof wasmExports['lv_malloc_zeroed'] != 'undefined', 'missing Wasm export: lv_malloc_zeroed');
@@ -7816,6 +7929,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_refresh_style'] != 'undefined', 'missing Wasm export: lv_obj_refresh_style');
   assert(typeof wasmExports['lv_obj_refresh_ext_draw_size'] != 'undefined', 'missing Wasm export: lv_obj_refresh_ext_draw_size');
   assert(typeof wasmExports['lv_obj_set_state'] != 'undefined', 'missing Wasm export: lv_obj_set_state');
+  assert(typeof wasmExports['lv_obj_set_radio_button'] != 'undefined', 'missing Wasm export: lv_obj_set_radio_button');
   assert(typeof wasmExports['lv_obj_check_type'] != 'undefined', 'missing Wasm export: lv_obj_check_type');
   assert(typeof wasmExports['lv_obj_has_class'] != 'undefined', 'missing Wasm export: lv_obj_has_class');
   assert(typeof wasmExports['lv_obj_get_class'] != 'undefined', 'missing Wasm export: lv_obj_get_class');
@@ -7880,16 +7994,21 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_event_get_hit_test_info'] != 'undefined', 'missing Wasm export: lv_event_get_hit_test_info');
   assert(typeof wasmExports['lv_event_get_cover_area'] != 'undefined', 'missing Wasm export: lv_event_get_cover_area');
   assert(typeof wasmExports['lv_event_set_cover_res'] != 'undefined', 'missing Wasm export: lv_event_set_cover_res');
+  assert(typeof wasmExports['lv_event_get_prev_state'] != 'undefined', 'missing Wasm export: lv_event_get_prev_state');
   assert(typeof wasmExports['lv_obj_get_local_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_get_local_style_prop');
   assert(typeof wasmExports['lv_obj_set_style_x'] != 'undefined', 'missing Wasm export: lv_obj_set_style_x');
   assert(typeof wasmExports['lv_obj_set_style_y'] != 'undefined', 'missing Wasm export: lv_obj_set_style_y');
   assert(typeof wasmExports['lv_obj_set_x'] != 'undefined', 'missing Wasm export: lv_obj_set_x');
   assert(typeof wasmExports['lv_obj_set_y'] != 'undefined', 'missing Wasm export: lv_obj_set_y');
+  assert(typeof wasmExports['lv_obj_calc_dynamic_width'] != 'undefined', 'missing Wasm export: lv_obj_calc_dynamic_width');
+  assert(typeof wasmExports['lv_obj_get_content_width'] != 'undefined', 'missing Wasm export: lv_obj_get_content_width');
+  assert(typeof wasmExports['lv_obj_calc_dynamic_height'] != 'undefined', 'missing Wasm export: lv_obj_calc_dynamic_height');
+  assert(typeof wasmExports['lv_obj_get_content_height'] != 'undefined', 'missing Wasm export: lv_obj_get_content_height');
   assert(typeof wasmExports['lv_obj_refr_size'] != 'undefined', 'missing Wasm export: lv_obj_refr_size');
   assert(typeof wasmExports['lv_obj_get_content_coords'] != 'undefined', 'missing Wasm export: lv_obj_get_content_coords');
   assert(typeof wasmExports['lv_obj_scrollbar_invalidate'] != 'undefined', 'missing Wasm export: lv_obj_scrollbar_invalidate');
-  assert(typeof wasmExports['lv_obj_get_content_width'] != 'undefined', 'missing Wasm export: lv_obj_get_content_width');
-  assert(typeof wasmExports['lv_obj_get_content_height'] != 'undefined', 'missing Wasm export: lv_obj_get_content_height');
+  assert(typeof wasmExports['lv_obj_get_display'] != 'undefined', 'missing Wasm export: lv_obj_get_display');
+  assert(typeof wasmExports['lv_display_is_invalidation_enabled'] != 'undefined', 'missing Wasm export: lv_display_is_invalidation_enabled');
   assert(typeof wasmExports['lv_obj_get_coords'] != 'undefined', 'missing Wasm export: lv_obj_get_coords');
   assert(typeof wasmExports['lv_obj_set_style_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_width');
   assert(typeof wasmExports['lv_obj_set_style_height'] != 'undefined', 'missing Wasm export: lv_obj_set_style_height');
@@ -7900,7 +8019,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_set_layout'] != 'undefined', 'missing Wasm export: lv_obj_set_layout');
   assert(typeof wasmExports['lv_obj_set_style_layout'] != 'undefined', 'missing Wasm export: lv_obj_set_style_layout');
   assert(typeof wasmExports['lv_obj_get_screen'] != 'undefined', 'missing Wasm export: lv_obj_get_screen');
-  assert(typeof wasmExports['lv_obj_get_display'] != 'undefined', 'missing Wasm export: lv_obj_get_display');
   assert(typeof wasmExports['lv_display_send_event'] != 'undefined', 'missing Wasm export: lv_display_send_event');
   assert(typeof wasmExports['lv_obj_refr_pos'] != 'undefined', 'missing Wasm export: lv_obj_refr_pos');
   assert(typeof wasmExports['lv_layout_apply'] != 'undefined', 'missing Wasm export: lv_layout_apply');
@@ -7917,15 +8035,21 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_get_y_aligned'] != 'undefined', 'missing Wasm export: lv_obj_get_y_aligned');
   assert(typeof wasmExports['lv_obj_get_self_width'] != 'undefined', 'missing Wasm export: lv_obj_get_self_width');
   assert(typeof wasmExports['lv_obj_get_self_height'] != 'undefined', 'missing Wasm export: lv_obj_get_self_height');
+  assert(typeof wasmExports['lv_obj_get_style_clamped_width'] != 'undefined', 'missing Wasm export: lv_obj_get_style_clamped_width');
+  assert(typeof wasmExports['lv_obj_get_style_clamped_height'] != 'undefined', 'missing Wasm export: lv_obj_get_style_clamped_height');
+  assert(typeof wasmExports['lv_obj_is_width_min'] != 'undefined', 'missing Wasm export: lv_obj_is_width_min');
+  assert(typeof wasmExports['lv_obj_is_height_min'] != 'undefined', 'missing Wasm export: lv_obj_is_height_min');
+  assert(typeof wasmExports['lv_obj_is_width_max'] != 'undefined', 'missing Wasm export: lv_obj_is_width_max');
+  assert(typeof wasmExports['lv_obj_is_height_max'] != 'undefined', 'missing Wasm export: lv_obj_is_height_max');
   assert(typeof wasmExports['lv_obj_move_to'] != 'undefined', 'missing Wasm export: lv_obj_move_to');
   assert(typeof wasmExports['lv_obj_move_children_by'] != 'undefined', 'missing Wasm export: lv_obj_move_children_by');
   assert(typeof wasmExports['lv_obj_transform_point'] != 'undefined', 'missing Wasm export: lv_obj_transform_point');
   assert(typeof wasmExports['lv_obj_transform_point_array'] != 'undefined', 'missing Wasm export: lv_obj_transform_point_array');
   assert(typeof wasmExports['lv_point_array_transform'] != 'undefined', 'missing Wasm export: lv_point_array_transform');
   assert(typeof wasmExports['lv_obj_get_transformed_area'] != 'undefined', 'missing Wasm export: lv_obj_get_transformed_area');
-  assert(typeof wasmExports['lv_display_is_invalidation_enabled'] != 'undefined', 'missing Wasm export: lv_display_is_invalidation_enabled');
   assert(typeof wasmExports['lv_obj_area_is_visible'] != 'undefined', 'missing Wasm export: lv_obj_area_is_visible');
   assert(typeof wasmExports['lv_inv_area'] != 'undefined', 'missing Wasm export: lv_inv_area');
+  assert(typeof wasmExports['lv_obj_tree_walk'] != 'undefined', 'missing Wasm export: lv_obj_tree_walk');
   assert(typeof wasmExports['lv_display_get_screen_active'] != 'undefined', 'missing Wasm export: lv_display_get_screen_active');
   assert(typeof wasmExports['lv_display_get_screen_prev'] != 'undefined', 'missing Wasm export: lv_display_get_screen_prev');
   assert(typeof wasmExports['lv_display_get_layer_bottom'] != 'undefined', 'missing Wasm export: lv_display_get_layer_bottom');
@@ -7943,6 +8067,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_set_transform'] != 'undefined', 'missing Wasm export: lv_obj_set_transform');
   assert(typeof wasmExports['lv_obj_reset_transform'] != 'undefined', 'missing Wasm export: lv_obj_reset_transform');
   assert(typeof wasmExports['lv_obj_get_transform'] != 'undefined', 'missing Wasm export: lv_obj_get_transform');
+  assert(typeof wasmExports['lv_layout_get_min_size'] != 'undefined', 'missing Wasm export: lv_layout_get_min_size');
+  assert(typeof wasmExports['lv_area_is_on'] != 'undefined', 'missing Wasm export: lv_area_is_on');
+  assert(typeof wasmExports['lv_style_get_prop'] != 'undefined', 'missing Wasm export: lv_style_get_prop');
   assert(typeof wasmExports['lv_obj_get_scroll_snap_x'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_snap_x');
   assert(typeof wasmExports['lv_obj_get_scroll_snap_y'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_snap_y');
   assert(typeof wasmExports['lv_obj_get_scroll_bottom'] != 'undefined', 'missing Wasm export: lv_obj_get_scroll_bottom');
@@ -7972,14 +8099,14 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_style_deinit'] != 'undefined', 'missing Wasm export: lv_obj_style_deinit');
   assert(typeof wasmExports['lv_style_prop_lookup_flags'] != 'undefined', 'missing Wasm export: lv_style_prop_lookup_flags');
   assert(typeof wasmExports['lv_style_remove_prop'] != 'undefined', 'missing Wasm export: lv_style_remove_prop');
-  assert(typeof wasmExports['lv_style_reset'] != 'undefined', 'missing Wasm export: lv_style_reset');
   assert(typeof wasmExports['lv_style_prop_get_default'] != 'undefined', 'missing Wasm export: lv_style_prop_get_default');
   assert(typeof wasmExports['lv_obj_replace_style'] != 'undefined', 'missing Wasm export: lv_obj_replace_style');
+  assert(typeof wasmExports['lv_style_reset'] != 'undefined', 'missing Wasm export: lv_style_reset');
+  assert(typeof wasmExports['lv_obj_remove_theme'] != 'undefined', 'missing Wasm export: lv_obj_remove_theme');
   assert(typeof wasmExports['lv_obj_report_style_change'] != 'undefined', 'missing Wasm export: lv_obj_report_style_change');
   assert(typeof wasmExports['lv_obj_style_set_disabled'] != 'undefined', 'missing Wasm export: lv_obj_style_set_disabled');
   assert(typeof wasmExports['lv_obj_style_get_disabled'] != 'undefined', 'missing Wasm export: lv_obj_style_get_disabled');
   assert(typeof wasmExports['lv_obj_has_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_has_style_prop');
-  assert(typeof wasmExports['lv_style_get_prop'] != 'undefined', 'missing Wasm export: lv_style_get_prop');
   assert(typeof wasmExports['lv_obj_remove_local_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_remove_local_style_prop');
   assert(typeof wasmExports['lv_color_eq'] != 'undefined', 'missing Wasm export: lv_color_eq');
   assert(typeof wasmExports['lv_anim_set_start_cb'] != 'undefined', 'missing Wasm export: lv_anim_set_start_cb');
@@ -7992,6 +8119,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_fade_out'] != 'undefined', 'missing Wasm export: lv_obj_fade_out');
   assert(typeof wasmExports['lv_obj_calculate_style_text_align'] != 'undefined', 'missing Wasm export: lv_obj_calculate_style_text_align');
   assert(typeof wasmExports['lv_bidi_calculate_align'] != 'undefined', 'missing Wasm export: lv_bidi_calculate_align');
+  assert(typeof wasmExports['lv_obj_bind_style'] != 'undefined', 'missing Wasm export: lv_obj_bind_style');
+  assert(typeof wasmExports['lv_subject_add_observer_obj'] != 'undefined', 'missing Wasm export: lv_subject_add_observer_obj');
+  assert(typeof wasmExports['lv_subject_get_int'] != 'undefined', 'missing Wasm export: lv_subject_get_int');
+  assert(typeof wasmExports['lv_obj_bind_style_prop'] != 'undefined', 'missing Wasm export: lv_obj_bind_style_prop');
+  assert(typeof wasmExports['lv_subject_get_color'] != 'undefined', 'missing Wasm export: lv_subject_get_color');
+  assert(typeof wasmExports['lv_subject_get_pointer'] != 'undefined', 'missing Wasm export: lv_subject_get_pointer');
   assert(typeof wasmExports['lv_obj_set_style_min_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_min_width');
   assert(typeof wasmExports['lv_obj_set_style_max_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_max_width');
   assert(typeof wasmExports['lv_obj_set_style_min_height'] != 'undefined', 'missing Wasm export: lv_obj_set_style_min_height');
@@ -8072,6 +8205,15 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_set_style_text_outline_stroke_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_outline_stroke_color');
   assert(typeof wasmExports['lv_obj_set_style_text_outline_stroke_width'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_outline_stroke_width');
   assert(typeof wasmExports['lv_obj_set_style_text_outline_stroke_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_text_outline_stroke_opa');
+  assert(typeof wasmExports['lv_obj_set_style_blur_radius'] != 'undefined', 'missing Wasm export: lv_obj_set_style_blur_radius');
+  assert(typeof wasmExports['lv_obj_set_style_blur_backdrop'] != 'undefined', 'missing Wasm export: lv_obj_set_style_blur_backdrop');
+  assert(typeof wasmExports['lv_obj_set_style_blur_quality'] != 'undefined', 'missing Wasm export: lv_obj_set_style_blur_quality');
+  assert(typeof wasmExports['lv_obj_set_style_drop_shadow_radius'] != 'undefined', 'missing Wasm export: lv_obj_set_style_drop_shadow_radius');
+  assert(typeof wasmExports['lv_obj_set_style_drop_shadow_offset_x'] != 'undefined', 'missing Wasm export: lv_obj_set_style_drop_shadow_offset_x');
+  assert(typeof wasmExports['lv_obj_set_style_drop_shadow_offset_y'] != 'undefined', 'missing Wasm export: lv_obj_set_style_drop_shadow_offset_y');
+  assert(typeof wasmExports['lv_obj_set_style_drop_shadow_color'] != 'undefined', 'missing Wasm export: lv_obj_set_style_drop_shadow_color');
+  assert(typeof wasmExports['lv_obj_set_style_drop_shadow_opa'] != 'undefined', 'missing Wasm export: lv_obj_set_style_drop_shadow_opa');
+  assert(typeof wasmExports['lv_obj_set_style_drop_shadow_quality'] != 'undefined', 'missing Wasm export: lv_obj_set_style_drop_shadow_quality');
   assert(typeof wasmExports['lv_obj_set_style_radius'] != 'undefined', 'missing Wasm export: lv_obj_set_style_radius');
   assert(typeof wasmExports['lv_obj_set_style_radial_offset'] != 'undefined', 'missing Wasm export: lv_obj_set_style_radial_offset');
   assert(typeof wasmExports['lv_obj_set_style_clip_corner'] != 'undefined', 'missing Wasm export: lv_obj_set_style_clip_corner');
@@ -8120,8 +8262,59 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_get_sibling_by_type'] != 'undefined', 'missing Wasm export: lv_obj_get_sibling_by_type');
   assert(typeof wasmExports['lv_obj_get_index_by_type'] != 'undefined', 'missing Wasm export: lv_obj_get_index_by_type');
   assert(typeof wasmExports['lv_obj_get_child_count_by_type'] != 'undefined', 'missing Wasm export: lv_obj_get_child_count_by_type');
-  assert(typeof wasmExports['lv_obj_tree_walk'] != 'undefined', 'missing Wasm export: lv_obj_tree_walk');
   assert(typeof wasmExports['lv_obj_dump_tree'] != 'undefined', 'missing Wasm export: lv_obj_dump_tree');
+  assert(typeof wasmExports['lv_subject_init_int'] != 'undefined', 'missing Wasm export: lv_subject_init_int');
+  assert(typeof wasmExports['lv_subject_set_int'] != 'undefined', 'missing Wasm export: lv_subject_set_int');
+  assert(typeof wasmExports['lv_subject_notify'] != 'undefined', 'missing Wasm export: lv_subject_notify');
+  assert(typeof wasmExports['lv_subject_get_previous_int'] != 'undefined', 'missing Wasm export: lv_subject_get_previous_int');
+  assert(typeof wasmExports['lv_subject_set_min_value_int'] != 'undefined', 'missing Wasm export: lv_subject_set_min_value_int');
+  assert(typeof wasmExports['lv_subject_set_max_value_int'] != 'undefined', 'missing Wasm export: lv_subject_set_max_value_int');
+  assert(typeof wasmExports['lv_subject_init_string'] != 'undefined', 'missing Wasm export: lv_subject_init_string');
+  assert(typeof wasmExports['lv_strlcpy'] != 'undefined', 'missing Wasm export: lv_strlcpy');
+  assert(typeof wasmExports['lv_subject_copy_string'] != 'undefined', 'missing Wasm export: lv_subject_copy_string');
+  assert(typeof wasmExports['lv_strcmp'] != 'undefined', 'missing Wasm export: lv_strcmp');
+  assert(typeof wasmExports['lv_subject_snprintf'] != 'undefined', 'missing Wasm export: lv_subject_snprintf');
+  assert(typeof wasmExports['lv_vsnprintf'] != 'undefined', 'missing Wasm export: lv_vsnprintf');
+  assert(typeof wasmExports['lv_subject_get_string'] != 'undefined', 'missing Wasm export: lv_subject_get_string');
+  assert(typeof wasmExports['lv_subject_get_previous_string'] != 'undefined', 'missing Wasm export: lv_subject_get_previous_string');
+  assert(typeof wasmExports['lv_subject_init_pointer'] != 'undefined', 'missing Wasm export: lv_subject_init_pointer');
+  assert(typeof wasmExports['lv_subject_set_pointer'] != 'undefined', 'missing Wasm export: lv_subject_set_pointer');
+  assert(typeof wasmExports['lv_subject_get_previous_pointer'] != 'undefined', 'missing Wasm export: lv_subject_get_previous_pointer');
+  assert(typeof wasmExports['lv_subject_init_color'] != 'undefined', 'missing Wasm export: lv_subject_init_color');
+  assert(typeof wasmExports['lv_subject_set_color'] != 'undefined', 'missing Wasm export: lv_subject_set_color');
+  assert(typeof wasmExports['lv_color_black'] != 'undefined', 'missing Wasm export: lv_color_black');
+  assert(typeof wasmExports['lv_subject_get_previous_color'] != 'undefined', 'missing Wasm export: lv_subject_get_previous_color');
+  assert(typeof wasmExports['lv_subject_init_group'] != 'undefined', 'missing Wasm export: lv_subject_init_group');
+  assert(typeof wasmExports['lv_subject_add_observer'] != 'undefined', 'missing Wasm export: lv_subject_add_observer');
+  assert(typeof wasmExports['lv_subject_deinit'] != 'undefined', 'missing Wasm export: lv_subject_deinit');
+  assert(typeof wasmExports['lv_observer_remove'] != 'undefined', 'missing Wasm export: lv_observer_remove');
+  assert(typeof wasmExports['lv_subject_get_group_element'] != 'undefined', 'missing Wasm export: lv_subject_get_group_element');
+  assert(typeof wasmExports['lv_subject_add_observer_with_target'] != 'undefined', 'missing Wasm export: lv_subject_add_observer_with_target');
+  assert(typeof wasmExports['lv_obj_remove_from_subject'] != 'undefined', 'missing Wasm export: lv_obj_remove_from_subject');
+  assert(typeof wasmExports['lv_observer_get_target'] != 'undefined', 'missing Wasm export: lv_observer_get_target');
+  assert(typeof wasmExports['lv_obj_add_subject_increment_event'] != 'undefined', 'missing Wasm export: lv_obj_add_subject_increment_event');
+  assert(typeof wasmExports['lv_obj_set_subject_increment_event_min_value'] != 'undefined', 'missing Wasm export: lv_obj_set_subject_increment_event_min_value');
+  assert(typeof wasmExports['lv_obj_set_subject_increment_event_max_value'] != 'undefined', 'missing Wasm export: lv_obj_set_subject_increment_event_max_value');
+  assert(typeof wasmExports['lv_obj_set_subject_increment_event_rollover'] != 'undefined', 'missing Wasm export: lv_obj_set_subject_increment_event_rollover');
+  assert(typeof wasmExports['lv_obj_add_subject_toggle_event'] != 'undefined', 'missing Wasm export: lv_obj_add_subject_toggle_event');
+  assert(typeof wasmExports['lv_obj_add_subject_set_int_event'] != 'undefined', 'missing Wasm export: lv_obj_add_subject_set_int_event');
+  assert(typeof wasmExports['lv_obj_add_subject_set_string_event'] != 'undefined', 'missing Wasm export: lv_obj_add_subject_set_string_event');
+  assert(typeof wasmExports['lv_strdup'] != 'undefined', 'missing Wasm export: lv_strdup');
+  assert(typeof wasmExports['lv_obj_bind_flag_if_eq'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_eq');
+  assert(typeof wasmExports['lv_obj_bind_flag_if_not_eq'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_not_eq');
+  assert(typeof wasmExports['lv_obj_bind_flag_if_gt'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_gt');
+  assert(typeof wasmExports['lv_obj_bind_flag_if_ge'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_ge');
+  assert(typeof wasmExports['lv_obj_bind_flag_if_lt'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_lt');
+  assert(typeof wasmExports['lv_obj_bind_flag_if_le'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_le');
+  assert(typeof wasmExports['lv_obj_bind_state_if_eq'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_eq');
+  assert(typeof wasmExports['lv_obj_bind_state_if_not_eq'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_not_eq');
+  assert(typeof wasmExports['lv_obj_bind_state_if_gt'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_gt');
+  assert(typeof wasmExports['lv_obj_bind_state_if_ge'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_ge');
+  assert(typeof wasmExports['lv_obj_bind_state_if_lt'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_lt');
+  assert(typeof wasmExports['lv_obj_bind_state_if_le'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_le');
+  assert(typeof wasmExports['lv_obj_bind_checked'] != 'undefined', 'missing Wasm export: lv_obj_bind_checked');
+  assert(typeof wasmExports['lv_observer_get_target_obj'] != 'undefined', 'missing Wasm export: lv_observer_get_target_obj');
+  assert(typeof wasmExports['lv_observer_get_user_data'] != 'undefined', 'missing Wasm export: lv_observer_get_user_data');
   assert(typeof wasmExports['lv_refr_init'] != 'undefined', 'missing Wasm export: lv_refr_init');
   assert(typeof wasmExports['lv_refr_deinit'] != 'undefined', 'missing Wasm export: lv_refr_deinit');
   assert(typeof wasmExports['lv_refr_now'] != 'undefined', 'missing Wasm export: lv_refr_now');
@@ -8130,7 +8323,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_obj_refr'] != 'undefined', 'missing Wasm export: lv_obj_refr');
   assert(typeof wasmExports['lv_anim_refr_now'] != 'undefined', 'missing Wasm export: lv_anim_refr_now');
   assert(typeof wasmExports['lv_timer_pause'] != 'undefined', 'missing Wasm export: lv_timer_pause');
-  assert(typeof wasmExports['lv_area_is_on'] != 'undefined', 'missing Wasm export: lv_area_is_on');
   assert(typeof wasmExports['lv_area_join'] != 'undefined', 'missing Wasm export: lv_area_join');
   assert(typeof wasmExports['lv_display_is_double_buffered'] != 'undefined', 'missing Wasm export: lv_display_is_double_buffered');
   assert(typeof wasmExports['lv_ll_is_empty'] != 'undefined', 'missing Wasm export: lv_ll_is_empty');
@@ -8155,6 +8347,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_draw_layer_init'] != 'undefined', 'missing Wasm export: lv_draw_layer_init');
   assert(typeof wasmExports['lv_draw_dispatch_wait_for_request'] != 'undefined', 'missing Wasm export: lv_draw_dispatch_wait_for_request');
   assert(typeof wasmExports['lv_draw_dispatch'] != 'undefined', 'missing Wasm export: lv_draw_dispatch');
+  assert(typeof wasmExports['lv_draw_unit_send_event'] != 'undefined', 'missing Wasm export: lv_draw_unit_send_event');
   assert(typeof wasmExports['lv_layer_reset'] != 'undefined', 'missing Wasm export: lv_layer_reset');
   assert(typeof wasmExports['lv_color_format_has_alpha'] != 'undefined', 'missing Wasm export: lv_color_format_has_alpha');
   assert(typeof wasmExports['lv_area_move'] != 'undefined', 'missing Wasm export: lv_area_move');
@@ -8196,6 +8389,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_display_get_tile_cnt'] != 'undefined', 'missing Wasm export: lv_display_get_tile_cnt');
   assert(typeof wasmExports['lv_display_set_antialiasing'] != 'undefined', 'missing Wasm export: lv_display_set_antialiasing');
   assert(typeof wasmExports['lv_display_get_antialiasing'] != 'undefined', 'missing Wasm export: lv_display_get_antialiasing');
+  assert(typeof wasmExports['lv_display_get_render_mode'] != 'undefined', 'missing Wasm export: lv_display_get_render_mode');
   assert(typeof wasmExports['lv_display_flush_is_last'] != 'undefined', 'missing Wasm export: lv_display_flush_is_last');
   assert(typeof wasmExports['lv_display_get_screen_loading'] != 'undefined', 'missing Wasm export: lv_display_get_screen_loading');
   assert(typeof wasmExports['lv_display_get_event_count'] != 'undefined', 'missing Wasm export: lv_display_get_event_count');
@@ -8222,6 +8416,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_display_get_driver_data'] != 'undefined', 'missing Wasm export: lv_display_get_driver_data');
   assert(typeof wasmExports['lv_display_get_buf_active'] != 'undefined', 'missing Wasm export: lv_display_get_buf_active');
   assert(typeof wasmExports['lv_display_rotate_area'] != 'undefined', 'missing Wasm export: lv_display_rotate_area');
+  assert(typeof wasmExports['lv_display_rotate_point'] != 'undefined', 'missing Wasm export: lv_display_rotate_point');
   assert(typeof wasmExports['lv_display_get_draw_buf_size'] != 'undefined', 'missing Wasm export: lv_display_get_draw_buf_size');
   assert(typeof wasmExports['lv_display_get_invalidated_draw_buf_size'] != 'undefined', 'missing Wasm export: lv_display_get_invalidated_draw_buf_size');
   assert(typeof wasmExports['lv_layer_top'] != 'undefined', 'missing Wasm export: lv_layer_top');
@@ -8244,8 +8439,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_draw_get_available_task'] != 'undefined', 'missing Wasm export: lv_draw_get_available_task');
   assert(typeof wasmExports['lv_draw_get_next_available_task'] != 'undefined', 'missing Wasm export: lv_draw_get_next_available_task');
   assert(typeof wasmExports['lv_draw_get_dependent_count'] != 'undefined', 'missing Wasm export: lv_draw_get_dependent_count');
-  assert(typeof wasmExports['lv_draw_unit_send_event'] != 'undefined', 'missing Wasm export: lv_draw_unit_send_event');
-  assert(typeof wasmExports['lv_strcmp'] != 'undefined', 'missing Wasm export: lv_strcmp');
   assert(typeof wasmExports['lv_color32_make'] != 'undefined', 'missing Wasm export: lv_color32_make');
   assert(typeof wasmExports['lv_draw_layer_alloc_buf'] != 'undefined', 'missing Wasm export: lv_draw_layer_alloc_buf');
   assert(typeof wasmExports['lv_draw_buf_create'] != 'undefined', 'missing Wasm export: lv_draw_buf_create');
@@ -8254,10 +8447,13 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_draw_task_get_type'] != 'undefined', 'missing Wasm export: lv_draw_task_get_type');
   assert(typeof wasmExports['lv_draw_task_get_draw_dsc'] != 'undefined', 'missing Wasm export: lv_draw_task_get_draw_dsc');
   assert(typeof wasmExports['lv_draw_task_get_area'] != 'undefined', 'missing Wasm export: lv_draw_task_get_area');
+  assert(typeof wasmExports['lv_draw_layer_create_drop_shadow'] != 'undefined', 'missing Wasm export: lv_draw_layer_create_drop_shadow');
+  assert(typeof wasmExports['lv_draw_layer_finish_drop_shadow'] != 'undefined', 'missing Wasm export: lv_draw_layer_finish_drop_shadow');
   assert(typeof wasmExports['lv_draw_arc_dsc_init'] != 'undefined', 'missing Wasm export: lv_draw_arc_dsc_init');
   assert(typeof wasmExports['lv_draw_task_get_arc_dsc'] != 'undefined', 'missing Wasm export: lv_draw_task_get_arc_dsc');
   assert(typeof wasmExports['lv_draw_arc'] != 'undefined', 'missing Wasm export: lv_draw_arc');
   assert(typeof wasmExports['lv_draw_arc_get_area'] != 'undefined', 'missing Wasm export: lv_draw_arc_get_area');
+  assert(typeof wasmExports['lv_draw_task_get_blur_dsc'] != 'undefined', 'missing Wasm export: lv_draw_task_get_blur_dsc');
   assert(typeof wasmExports['lv_draw_buf_init_handlers'] != 'undefined', 'missing Wasm export: lv_draw_buf_init_handlers');
   assert(typeof wasmExports['lv_draw_buf_init_with_default_handlers'] != 'undefined', 'missing Wasm export: lv_draw_buf_init_with_default_handlers');
   assert(typeof wasmExports['lv_draw_buf_handlers_init'] != 'undefined', 'missing Wasm export: lv_draw_buf_handlers_init');
@@ -8274,18 +8470,14 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_draw_buf_dup_ex'] != 'undefined', 'missing Wasm export: lv_draw_buf_dup_ex');
   assert(typeof wasmExports['lv_draw_buf_adjust_stride'] != 'undefined', 'missing Wasm export: lv_draw_buf_adjust_stride');
   assert(typeof wasmExports['lv_memmove'] != 'undefined', 'missing Wasm export: lv_memmove');
-  assert(typeof wasmExports['lv_draw_buf_has_flag'] != 'undefined', 'missing Wasm export: lv_draw_buf_has_flag');
   assert(typeof wasmExports['lv_draw_buf_premultiply'] != 'undefined', 'missing Wasm export: lv_draw_buf_premultiply');
   assert(typeof wasmExports['lv_color_premultiply'] != 'undefined', 'missing Wasm export: lv_color_premultiply');
   assert(typeof wasmExports['lv_color16_premultiply'] != 'undefined', 'missing Wasm export: lv_color16_premultiply');
   assert(typeof wasmExports['lv_draw_buf_set_palette'] != 'undefined', 'missing Wasm export: lv_draw_buf_set_palette');
-  assert(typeof wasmExports['lv_draw_buf_set_flag'] != 'undefined', 'missing Wasm export: lv_draw_buf_set_flag');
-  assert(typeof wasmExports['lv_draw_buf_clear_flag'] != 'undefined', 'missing Wasm export: lv_draw_buf_clear_flag');
   assert(typeof wasmExports['lv_draw_buf_from_image'] != 'undefined', 'missing Wasm export: lv_draw_buf_from_image');
   assert(typeof wasmExports['lv_draw_buf_to_image'] != 'undefined', 'missing Wasm export: lv_draw_buf_to_image');
   assert(typeof wasmExports['lv_image_buf_set_palette'] != 'undefined', 'missing Wasm export: lv_image_buf_set_palette');
   assert(typeof wasmExports['lv_image_buf_free'] != 'undefined', 'missing Wasm export: lv_image_buf_free');
-  assert(typeof wasmExports['lv_color_black'] != 'undefined', 'missing Wasm export: lv_color_black');
   assert(typeof wasmExports['lv_draw_task_get_image_dsc'] != 'undefined', 'missing Wasm export: lv_draw_task_get_image_dsc');
   assert(typeof wasmExports['lv_image_buf_get_transformed_area'] != 'undefined', 'missing Wasm export: lv_image_buf_get_transformed_area');
   assert(typeof wasmExports['lv_point_transform'] != 'undefined', 'missing Wasm export: lv_point_transform');
@@ -8321,6 +8513,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_draw_line_dsc_init'] != 'undefined', 'missing Wasm export: lv_draw_line_dsc_init');
   assert(typeof wasmExports['lv_draw_task_get_line_dsc'] != 'undefined', 'missing Wasm export: lv_draw_task_get_line_dsc');
   assert(typeof wasmExports['lv_draw_line'] != 'undefined', 'missing Wasm export: lv_draw_line');
+  assert(typeof wasmExports['lv_draw_line_iterate'] != 'undefined', 'missing Wasm export: lv_draw_line_iterate');
   assert(typeof wasmExports['lv_draw_task_get_mask_rect_dsc'] != 'undefined', 'missing Wasm export: lv_draw_task_get_mask_rect_dsc');
   assert(typeof wasmExports['lv_color_white'] != 'undefined', 'missing Wasm export: lv_color_white');
   assert(typeof wasmExports['lv_draw_task_get_fill_dsc'] != 'undefined', 'missing Wasm export: lv_draw_task_get_fill_dsc');
@@ -8347,7 +8540,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_fs_open'] != 'undefined', 'missing Wasm export: lv_fs_open');
   assert(typeof wasmExports['lv_fs_seek'] != 'undefined', 'missing Wasm export: lv_fs_seek');
   assert(typeof wasmExports['lv_fs_close'] != 'undefined', 'missing Wasm export: lv_fs_close');
-  assert(typeof wasmExports['lv_strdup'] != 'undefined', 'missing Wasm export: lv_strdup');
   assert(typeof wasmExports['lv_cache_add'] != 'undefined', 'missing Wasm export: lv_cache_add');
   assert(typeof wasmExports['lv_image_cache_is_enabled'] != 'undefined', 'missing Wasm export: lv_image_cache_is_enabled');
   assert(typeof wasmExports['lv_image_decoder_create'] != 'undefined', 'missing Wasm export: lv_image_decoder_create');
@@ -8360,6 +8552,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_image_decoder_add_to_cache'] != 'undefined', 'missing Wasm export: lv_image_decoder_add_to_cache');
   assert(typeof wasmExports['lv_image_decoder_post_process'] != 'undefined', 'missing Wasm export: lv_image_decoder_post_process');
   assert(typeof wasmExports['lv_draw_sw_blend'] != 'undefined', 'missing Wasm export: lv_draw_sw_blend');
+  assert(typeof wasmExports['lv_draw_sw_blend_color_to_a8'] != 'undefined', 'missing Wasm export: lv_draw_sw_blend_color_to_a8');
+  assert(typeof wasmExports['lv_draw_sw_blend_image_to_a8'] != 'undefined', 'missing Wasm export: lv_draw_sw_blend_image_to_a8');
   assert(typeof wasmExports['lv_draw_sw_blend_color_to_al88'] != 'undefined', 'missing Wasm export: lv_draw_sw_blend_color_to_al88');
   assert(typeof wasmExports['lv_draw_sw_blend_image_to_al88'] != 'undefined', 'missing Wasm export: lv_draw_sw_blend_image_to_al88');
   assert(typeof wasmExports['lv_draw_sw_blend_color_to_argb8888'] != 'undefined', 'missing Wasm export: lv_draw_sw_blend_color_to_argb8888');
@@ -8382,6 +8576,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_draw_sw_unregister_blend_handler'] != 'undefined', 'missing Wasm export: lv_draw_sw_unregister_blend_handler');
   assert(typeof wasmExports['lv_draw_sw_get_blend_handler'] != 'undefined', 'missing Wasm export: lv_draw_sw_get_blend_handler');
   assert(typeof wasmExports['lv_draw_sw_arc'] != 'undefined', 'missing Wasm export: lv_draw_sw_arc');
+  assert(typeof wasmExports['lv_draw_sw_blur'] != 'undefined', 'missing Wasm export: lv_draw_sw_blur');
   assert(typeof wasmExports['lv_draw_sw_border'] != 'undefined', 'missing Wasm export: lv_draw_sw_border');
   assert(typeof wasmExports['lv_draw_sw_box_shadow'] != 'undefined', 'missing Wasm export: lv_draw_sw_box_shadow');
   assert(typeof wasmExports['lv_draw_sw_fill'] != 'undefined', 'missing Wasm export: lv_draw_sw_fill');
@@ -8416,13 +8611,16 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_font_get_bitmap_fmt_txt'] != 'undefined', 'missing Wasm export: lv_font_get_bitmap_fmt_txt');
   assert(typeof wasmExports['lv_font_get_glyph_dsc_fmt_txt'] != 'undefined', 'missing Wasm export: lv_font_get_glyph_dsc_fmt_txt');
   assert(typeof wasmExports['lv_memcmp'] != 'undefined', 'missing Wasm export: lv_memcmp');
+  assert(typeof wasmExports['lv_utils_bsearch'] != 'undefined', 'missing Wasm export: lv_utils_bsearch');
   assert(typeof wasmExports['lv_font_get_glyph_static_bitmap'] != 'undefined', 'missing Wasm export: lv_font_get_glyph_static_bitmap');
   assert(typeof wasmExports['lv_font_get_glyph_width'] != 'undefined', 'missing Wasm export: lv_font_get_glyph_width');
   assert(typeof wasmExports['lv_font_set_kerning'] != 'undefined', 'missing Wasm export: lv_font_set_kerning');
   assert(typeof wasmExports['lv_font_get_default'] != 'undefined', 'missing Wasm export: lv_font_get_default');
   assert(typeof wasmExports['lv_font_info_is_equal'] != 'undefined', 'missing Wasm export: lv_font_info_is_equal');
   assert(typeof wasmExports['lv_font_has_static_bitmap'] != 'undefined', 'missing Wasm export: lv_font_has_static_bitmap');
-  assert(typeof wasmExports['lv_utils_bsearch'] != 'undefined', 'missing Wasm export: lv_utils_bsearch');
+  assert(typeof wasmExports['lv_gridnav_add'] != 'undefined', 'missing Wasm export: lv_gridnav_add');
+  assert(typeof wasmExports['lv_gridnav_remove'] != 'undefined', 'missing Wasm export: lv_gridnav_remove');
+  assert(typeof wasmExports['lv_gridnav_set_focused'] != 'undefined', 'missing Wasm export: lv_gridnav_set_focused');
   assert(typeof wasmExports['lv_indev_read_timer_cb'] != 'undefined', 'missing Wasm export: lv_indev_read_timer_cb');
   assert(typeof wasmExports['lv_indev_read'] != 'undefined', 'missing Wasm export: lv_indev_read');
   assert(typeof wasmExports['lv_indev_delete'] != 'undefined', 'missing Wasm export: lv_indev_delete');
@@ -8438,6 +8636,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_indev_set_long_press_repeat_time'] != 'undefined', 'missing Wasm export: lv_indev_set_long_press_repeat_time');
   assert(typeof wasmExports['lv_indev_set_scroll_limit'] != 'undefined', 'missing Wasm export: lv_indev_set_scroll_limit');
   assert(typeof wasmExports['lv_indev_set_scroll_throw'] != 'undefined', 'missing Wasm export: lv_indev_set_scroll_throw');
+  assert(typeof wasmExports['lv_indev_set_gesture_min_distance'] != 'undefined', 'missing Wasm export: lv_indev_set_gesture_min_distance');
+  assert(typeof wasmExports['lv_indev_set_gesture_min_velocity'] != 'undefined', 'missing Wasm export: lv_indev_set_gesture_min_velocity');
   assert(typeof wasmExports['lv_indev_get_user_data'] != 'undefined', 'missing Wasm export: lv_indev_get_user_data');
   assert(typeof wasmExports['lv_indev_get_driver_data'] != 'undefined', 'missing Wasm export: lv_indev_get_driver_data');
   assert(typeof wasmExports['lv_indev_get_press_moved'] != 'undefined', 'missing Wasm export: lv_indev_get_press_moved');
@@ -8461,6 +8661,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_indev_get_event_dsc'] != 'undefined', 'missing Wasm export: lv_indev_get_event_dsc');
   assert(typeof wasmExports['lv_indev_remove_event'] != 'undefined', 'missing Wasm export: lv_indev_remove_event');
   assert(typeof wasmExports['lv_indev_remove_event_cb_with_user_data'] != 'undefined', 'missing Wasm export: lv_indev_remove_event_cb_with_user_data');
+  assert(typeof wasmExports['lv_indev_set_key_remap_cb'] != 'undefined', 'missing Wasm export: lv_indev_set_key_remap_cb');
   assert(typeof wasmExports['lv_indev_scroll_throw_handler'] != 'undefined', 'missing Wasm export: lv_indev_scroll_throw_handler');
   assert(typeof wasmExports['lv_timer_get_paused'] != 'undefined', 'missing Wasm export: lv_timer_get_paused');
   assert(typeof wasmExports['lv_indev_scroll_throw_predict'] != 'undefined', 'missing Wasm export: lv_indev_scroll_throw_predict');
@@ -8475,20 +8676,38 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_grid_fr'] != 'undefined', 'missing Wasm export: lv_grid_fr');
   assert(typeof wasmExports['lv_layout_init'] != 'undefined', 'missing Wasm export: lv_layout_init');
   assert(typeof wasmExports['lv_layout_deinit'] != 'undefined', 'missing Wasm export: lv_layout_deinit');
+  assert(typeof wasmExports['lv_layout_create'] != 'undefined', 'missing Wasm export: lv_layout_create');
   assert(typeof wasmExports['lv_layout_register'] != 'undefined', 'missing Wasm export: lv_layout_register');
   assert(typeof wasmExports['lv_bin_decoder_init'] != 'undefined', 'missing Wasm export: lv_bin_decoder_init');
   assert(typeof wasmExports['lv_bin_decoder_info'] != 'undefined', 'missing Wasm export: lv_bin_decoder_info');
   assert(typeof wasmExports['lv_bin_decoder_open'] != 'undefined', 'missing Wasm export: lv_bin_decoder_open');
   assert(typeof wasmExports['lv_bin_decoder_get_area'] != 'undefined', 'missing Wasm export: lv_bin_decoder_get_area');
   assert(typeof wasmExports['lv_bin_decoder_close'] != 'undefined', 'missing Wasm export: lv_bin_decoder_close');
+  assert(typeof wasmExports['lv_freetype_font_create_with_info'] != 'undefined', 'missing Wasm export: lv_freetype_font_create_with_info');
+  assert(typeof wasmExports['lv_freetype_font_delete'] != 'undefined', 'missing Wasm export: lv_freetype_font_delete');
+  assert(typeof wasmExports['lv_freetype_init'] != 'undefined', 'missing Wasm export: lv_freetype_init');
+  assert(typeof wasmExports['lv_freetype_get_context'] != 'undefined', 'missing Wasm export: lv_freetype_get_context');
+  assert(typeof wasmExports['lv_freetype_uninit'] != 'undefined', 'missing Wasm export: lv_freetype_uninit');
+  assert(typeof wasmExports['lv_freetype_init_font_info'] != 'undefined', 'missing Wasm export: lv_freetype_init_font_info');
   assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
   assert(typeof wasmExports['strncmp'] != 'undefined', 'missing Wasm export: strncmp');
   assert(typeof wasmExports['lv_cache_create'] != 'undefined', 'missing Wasm export: lv_cache_create');
   assert(typeof wasmExports['lv_cache_set_name'] != 'undefined', 'missing Wasm export: lv_cache_set_name');
   assert(typeof wasmExports['lv_strlen'] != 'undefined', 'missing Wasm export: lv_strlen');
   assert(typeof wasmExports['lv_cache_acquire_or_create'] != 'undefined', 'missing Wasm export: lv_cache_acquire_or_create');
+  assert(typeof wasmExports['lv_freetype_create_glyph_cache'] != 'undefined', 'missing Wasm export: lv_freetype_create_glyph_cache');
+  assert(typeof wasmExports['lv_freetype_create_draw_data_outline'] != 'undefined', 'missing Wasm export: lv_freetype_create_draw_data_outline');
+  assert(typeof wasmExports['lv_freetype_create_draw_data_image'] != 'undefined', 'missing Wasm export: lv_freetype_create_draw_data_image');
+  assert(typeof wasmExports['lv_freetype_set_cbs_glyph'] != 'undefined', 'missing Wasm export: lv_freetype_set_cbs_glyph');
+  assert(typeof wasmExports['lv_freetype_set_cbs_image_font'] != 'undefined', 'missing Wasm export: lv_freetype_set_cbs_image_font');
+  assert(typeof wasmExports['lv_freetype_set_cbs_outline_font'] != 'undefined', 'missing Wasm export: lv_freetype_set_cbs_outline_font');
   assert(typeof wasmExports['lv_cache_entry_get_ref'] != 'undefined', 'missing Wasm export: lv_cache_entry_get_ref');
   assert(typeof wasmExports['lv_cache_drop'] != 'undefined', 'missing Wasm export: lv_cache_drop');
+  assert(typeof wasmExports['lv_freetype_italic_transform'] != 'undefined', 'missing Wasm export: lv_freetype_italic_transform');
+  assert(typeof wasmExports['lv_freetype_italic_transform_on_pos'] != 'undefined', 'missing Wasm export: lv_freetype_italic_transform_on_pos');
+  assert(typeof wasmExports['lv_freetype_outline_add_event'] != 'undefined', 'missing Wasm export: lv_freetype_outline_add_event');
+  assert(typeof wasmExports['lv_freetype_outline_get_scale'] != 'undefined', 'missing Wasm export: lv_freetype_outline_get_scale');
+  assert(typeof wasmExports['lv_freetype_is_outline_font'] != 'undefined', 'missing Wasm export: lv_freetype_is_outline_font');
   assert(typeof wasmExports['lv_fs_stdio_init'] != 'undefined', 'missing Wasm export: lv_fs_stdio_init');
   assert(typeof wasmExports['lv_canvas_get_draw_buf'] != 'undefined', 'missing Wasm export: lv_canvas_get_draw_buf');
   assert(typeof wasmExports['lv_image_cache_drop'] != 'undefined', 'missing Wasm export: lv_image_cache_drop');
@@ -8516,10 +8735,11 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_color24_luminance'] != 'undefined', 'missing Wasm export: lv_color24_luminance');
   assert(typeof wasmExports['lv_trigo_cos'] != 'undefined', 'missing Wasm export: lv_trigo_cos');
   assert(typeof wasmExports['lv_point_from_precise'] != 'undefined', 'missing Wasm export: lv_point_from_precise');
+  assert(typeof wasmExports['lv_sqrt32'] != 'undefined', 'missing Wasm export: lv_sqrt32');
   assert(typeof wasmExports['lv_point_swap'] != 'undefined', 'missing Wasm export: lv_point_swap');
   assert(typeof wasmExports['lv_fs_get_ext'] != 'undefined', 'missing Wasm export: lv_fs_get_ext');
   assert(typeof wasmExports['lv_snprintf'] != 'undefined', 'missing Wasm export: lv_snprintf');
-  assert(typeof wasmExports['lv_strlcpy'] != 'undefined', 'missing Wasm export: lv_strlcpy');
+  assert(typeof wasmExports['lv_deinit'] != 'undefined', 'missing Wasm export: lv_deinit');
   assert(typeof wasmExports['lv_ll_clear_custom'] != 'undefined', 'missing Wasm export: lv_ll_clear_custom');
   assert(typeof wasmExports['lv_span_stack_deinit'] != 'undefined', 'missing Wasm export: lv_span_stack_deinit');
   assert(typeof wasmExports['lv_theme_default_deinit'] != 'undefined', 'missing Wasm export: lv_theme_default_deinit');
@@ -8552,6 +8772,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_cache_iter_create'] != 'undefined', 'missing Wasm export: lv_cache_iter_create');
   assert(typeof wasmExports['lv_image_cache_dump'] != 'undefined', 'missing Wasm export: lv_image_cache_dump');
   assert(typeof wasmExports['lv_iter_inspect'] != 'undefined', 'missing Wasm export: lv_iter_inspect');
+  assert(typeof wasmExports['lv_iter_destroy'] != 'undefined', 'missing Wasm export: lv_iter_destroy');
   assert(typeof wasmExports['lv_image_header_cache_resize'] != 'undefined', 'missing Wasm export: lv_image_header_cache_resize');
   assert(typeof wasmExports['lv_image_header_cache_iter_create'] != 'undefined', 'missing Wasm export: lv_image_header_cache_iter_create');
   assert(typeof wasmExports['lv_image_header_cache_dump'] != 'undefined', 'missing Wasm export: lv_image_header_cache_dump');
@@ -8640,6 +8861,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_array_resize'] != 'undefined', 'missing Wasm export: lv_array_resize');
   assert(typeof wasmExports['lv_array_remove'] != 'undefined', 'missing Wasm export: lv_array_remove');
   assert(typeof wasmExports['lv_array_at'] != 'undefined', 'missing Wasm export: lv_array_at');
+  assert(typeof wasmExports['lv_array_remove_unordered'] != 'undefined', 'missing Wasm export: lv_array_remove_unordered');
   assert(typeof wasmExports['lv_array_erase'] != 'undefined', 'missing Wasm export: lv_array_erase');
   assert(typeof wasmExports['lv_array_concat'] != 'undefined', 'missing Wasm export: lv_array_concat');
   assert(typeof wasmExports['lv_array_push_back'] != 'undefined', 'missing Wasm export: lv_array_push_back');
@@ -8694,9 +8916,11 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_fs_get_size'] != 'undefined', 'missing Wasm export: lv_fs_get_size');
   assert(typeof wasmExports['lv_fs_path_get_size'] != 'undefined', 'missing Wasm export: lv_fs_path_get_size');
   assert(typeof wasmExports['lv_fs_load_to_buf'] != 'undefined', 'missing Wasm export: lv_fs_load_to_buf');
+  assert(typeof wasmExports['lv_fs_load_with_alloc'] != 'undefined', 'missing Wasm export: lv_fs_load_with_alloc');
   assert(typeof wasmExports['lv_fs_dir_open'] != 'undefined', 'missing Wasm export: lv_fs_dir_open');
   assert(typeof wasmExports['lv_fs_dir_read'] != 'undefined', 'missing Wasm export: lv_fs_dir_read');
   assert(typeof wasmExports['lv_fs_dir_close'] != 'undefined', 'missing Wasm export: lv_fs_dir_close');
+  assert(typeof wasmExports['lv_fs_remove_drive'] != 'undefined', 'missing Wasm export: lv_fs_remove_drive');
   assert(typeof wasmExports['lv_fs_get_letters'] != 'undefined', 'missing Wasm export: lv_fs_get_letters');
   assert(typeof wasmExports['lv_fs_up'] != 'undefined', 'missing Wasm export: lv_fs_up');
   assert(typeof wasmExports['lv_fs_get_last'] != 'undefined', 'missing Wasm export: lv_fs_get_last');
@@ -8709,14 +8933,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_grad_conical_init'] != 'undefined', 'missing Wasm export: lv_grad_conical_init');
   assert(typeof wasmExports['lv_grad_radial_set_focal'] != 'undefined', 'missing Wasm export: lv_grad_radial_set_focal');
   assert(typeof wasmExports['lv_iter_get_context'] != 'undefined', 'missing Wasm export: lv_iter_get_context');
-  assert(typeof wasmExports['lv_iter_destroy'] != 'undefined', 'missing Wasm export: lv_iter_destroy');
   assert(typeof wasmExports['lv_iter_make_peekable'] != 'undefined', 'missing Wasm export: lv_iter_make_peekable');
   assert(typeof wasmExports['lv_iter_next'] != 'undefined', 'missing Wasm export: lv_iter_next');
   assert(typeof wasmExports['lv_iter_peek'] != 'undefined', 'missing Wasm export: lv_iter_peek');
   assert(typeof wasmExports['lv_iter_peek_advance'] != 'undefined', 'missing Wasm export: lv_iter_peek_advance');
   assert(typeof wasmExports['lv_iter_peek_reset'] != 'undefined', 'missing Wasm export: lv_iter_peek_reset');
   assert(typeof wasmExports['lv_ll_chg_list'] != 'undefined', 'missing Wasm export: lv_ll_chg_list');
-  assert(typeof wasmExports['lv_vsnprintf'] != 'undefined', 'missing Wasm export: lv_vsnprintf');
   assert(typeof wasmExports['fflush'] != 'undefined', 'missing Wasm export: fflush');
   assert(typeof wasmExports['lv_log'] != 'undefined', 'missing Wasm export: lv_log');
   assert(typeof wasmExports['lv_lru_create'] != 'undefined', 'missing Wasm export: lv_lru_create');
@@ -8726,12 +8948,17 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_lru_get'] != 'undefined', 'missing Wasm export: lv_lru_get');
   assert(typeof wasmExports['lv_lru_remove'] != 'undefined', 'missing Wasm export: lv_lru_remove');
   assert(typeof wasmExports['lv_sqrt'] != 'undefined', 'missing Wasm export: lv_sqrt');
-  assert(typeof wasmExports['lv_sqrt32'] != 'undefined', 'missing Wasm export: lv_sqrt32');
   assert(typeof wasmExports['lv_atan2'] != 'undefined', 'missing Wasm export: lv_atan2');
   assert(typeof wasmExports['lv_pow'] != 'undefined', 'missing Wasm export: lv_pow');
   assert(typeof wasmExports['lv_rand'] != 'undefined', 'missing Wasm export: lv_rand');
   assert(typeof wasmExports['lv_palette_lighten'] != 'undefined', 'missing Wasm export: lv_palette_lighten');
   assert(typeof wasmExports['lv_palette_darken'] != 'undefined', 'missing Wasm export: lv_palette_darken');
+  assert(typeof wasmExports['lv_pending_create'] != 'undefined', 'missing Wasm export: lv_pending_create');
+  assert(typeof wasmExports['lv_pending_destroy'] != 'undefined', 'missing Wasm export: lv_pending_destroy');
+  assert(typeof wasmExports['lv_pending_remove_all'] != 'undefined', 'missing Wasm export: lv_pending_remove_all');
+  assert(typeof wasmExports['lv_pending_set_free_cb'] != 'undefined', 'missing Wasm export: lv_pending_set_free_cb');
+  assert(typeof wasmExports['lv_pending_add'] != 'undefined', 'missing Wasm export: lv_pending_add');
+  assert(typeof wasmExports['lv_pending_swap'] != 'undefined', 'missing Wasm export: lv_pending_swap');
   assert(typeof wasmExports['lv_rb_minimum_from'] != 'undefined', 'missing Wasm export: lv_rb_minimum_from');
   assert(typeof wasmExports['lv_rb_remove'] != 'undefined', 'missing Wasm export: lv_rb_remove');
   assert(typeof wasmExports['lv_rb_drop'] != 'undefined', 'missing Wasm export: lv_rb_drop');
@@ -8830,6 +9057,15 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_style_set_text_outline_stroke_color'] != 'undefined', 'missing Wasm export: lv_style_set_text_outline_stroke_color');
   assert(typeof wasmExports['lv_style_set_text_outline_stroke_width'] != 'undefined', 'missing Wasm export: lv_style_set_text_outline_stroke_width');
   assert(typeof wasmExports['lv_style_set_text_outline_stroke_opa'] != 'undefined', 'missing Wasm export: lv_style_set_text_outline_stroke_opa');
+  assert(typeof wasmExports['lv_style_set_blur_radius'] != 'undefined', 'missing Wasm export: lv_style_set_blur_radius');
+  assert(typeof wasmExports['lv_style_set_blur_backdrop'] != 'undefined', 'missing Wasm export: lv_style_set_blur_backdrop');
+  assert(typeof wasmExports['lv_style_set_blur_quality'] != 'undefined', 'missing Wasm export: lv_style_set_blur_quality');
+  assert(typeof wasmExports['lv_style_set_drop_shadow_radius'] != 'undefined', 'missing Wasm export: lv_style_set_drop_shadow_radius');
+  assert(typeof wasmExports['lv_style_set_drop_shadow_offset_x'] != 'undefined', 'missing Wasm export: lv_style_set_drop_shadow_offset_x');
+  assert(typeof wasmExports['lv_style_set_drop_shadow_offset_y'] != 'undefined', 'missing Wasm export: lv_style_set_drop_shadow_offset_y');
+  assert(typeof wasmExports['lv_style_set_drop_shadow_color'] != 'undefined', 'missing Wasm export: lv_style_set_drop_shadow_color');
+  assert(typeof wasmExports['lv_style_set_drop_shadow_opa'] != 'undefined', 'missing Wasm export: lv_style_set_drop_shadow_opa');
+  assert(typeof wasmExports['lv_style_set_drop_shadow_quality'] != 'undefined', 'missing Wasm export: lv_style_set_drop_shadow_quality');
   assert(typeof wasmExports['lv_style_set_radius'] != 'undefined', 'missing Wasm export: lv_style_set_radius');
   assert(typeof wasmExports['lv_style_set_radial_offset'] != 'undefined', 'missing Wasm export: lv_style_set_radial_offset');
   assert(typeof wasmExports['lv_style_set_clip_corner'] != 'undefined', 'missing Wasm export: lv_style_set_clip_corner');
@@ -8890,61 +9126,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_sleep_ms'] != 'undefined', 'missing Wasm export: lv_sleep_ms');
   assert(typeof wasmExports['lv_delay_ms'] != 'undefined', 'missing Wasm export: lv_delay_ms');
   assert(typeof wasmExports['lv_os_get_idle_percent'] != 'undefined', 'missing Wasm export: lv_os_get_idle_percent');
-  assert(typeof wasmExports['lv_gridnav_add'] != 'undefined', 'missing Wasm export: lv_gridnav_add');
-  assert(typeof wasmExports['lv_gridnav_remove'] != 'undefined', 'missing Wasm export: lv_gridnav_remove');
-  assert(typeof wasmExports['lv_gridnav_set_focused'] != 'undefined', 'missing Wasm export: lv_gridnav_set_focused');
-  assert(typeof wasmExports['lv_subject_init_int'] != 'undefined', 'missing Wasm export: lv_subject_init_int');
-  assert(typeof wasmExports['lv_subject_set_int'] != 'undefined', 'missing Wasm export: lv_subject_set_int');
-  assert(typeof wasmExports['lv_subject_notify'] != 'undefined', 'missing Wasm export: lv_subject_notify');
-  assert(typeof wasmExports['lv_subject_get_int'] != 'undefined', 'missing Wasm export: lv_subject_get_int');
-  assert(typeof wasmExports['lv_subject_get_previous_int'] != 'undefined', 'missing Wasm export: lv_subject_get_previous_int');
-  assert(typeof wasmExports['lv_subject_set_min_value_int'] != 'undefined', 'missing Wasm export: lv_subject_set_min_value_int');
-  assert(typeof wasmExports['lv_subject_set_max_value_int'] != 'undefined', 'missing Wasm export: lv_subject_set_max_value_int');
-  assert(typeof wasmExports['lv_subject_init_string'] != 'undefined', 'missing Wasm export: lv_subject_init_string');
-  assert(typeof wasmExports['lv_subject_copy_string'] != 'undefined', 'missing Wasm export: lv_subject_copy_string');
-  assert(typeof wasmExports['lv_subject_snprintf'] != 'undefined', 'missing Wasm export: lv_subject_snprintf');
-  assert(typeof wasmExports['lv_subject_get_string'] != 'undefined', 'missing Wasm export: lv_subject_get_string');
-  assert(typeof wasmExports['lv_subject_get_previous_string'] != 'undefined', 'missing Wasm export: lv_subject_get_previous_string');
-  assert(typeof wasmExports['lv_subject_init_pointer'] != 'undefined', 'missing Wasm export: lv_subject_init_pointer');
-  assert(typeof wasmExports['lv_subject_set_pointer'] != 'undefined', 'missing Wasm export: lv_subject_set_pointer');
-  assert(typeof wasmExports['lv_subject_get_pointer'] != 'undefined', 'missing Wasm export: lv_subject_get_pointer');
-  assert(typeof wasmExports['lv_subject_get_previous_pointer'] != 'undefined', 'missing Wasm export: lv_subject_get_previous_pointer');
-  assert(typeof wasmExports['lv_subject_init_color'] != 'undefined', 'missing Wasm export: lv_subject_init_color');
-  assert(typeof wasmExports['lv_subject_set_color'] != 'undefined', 'missing Wasm export: lv_subject_set_color');
-  assert(typeof wasmExports['lv_subject_get_color'] != 'undefined', 'missing Wasm export: lv_subject_get_color');
-  assert(typeof wasmExports['lv_subject_get_previous_color'] != 'undefined', 'missing Wasm export: lv_subject_get_previous_color');
-  assert(typeof wasmExports['lv_subject_init_group'] != 'undefined', 'missing Wasm export: lv_subject_init_group');
-  assert(typeof wasmExports['lv_subject_add_observer_obj'] != 'undefined', 'missing Wasm export: lv_subject_add_observer_obj');
-  assert(typeof wasmExports['lv_subject_add_observer'] != 'undefined', 'missing Wasm export: lv_subject_add_observer');
-  assert(typeof wasmExports['lv_subject_deinit'] != 'undefined', 'missing Wasm export: lv_subject_deinit');
-  assert(typeof wasmExports['lv_observer_remove'] != 'undefined', 'missing Wasm export: lv_observer_remove');
-  assert(typeof wasmExports['lv_subject_get_group_element'] != 'undefined', 'missing Wasm export: lv_subject_get_group_element');
-  assert(typeof wasmExports['lv_subject_add_observer_with_target'] != 'undefined', 'missing Wasm export: lv_subject_add_observer_with_target');
-  assert(typeof wasmExports['lv_obj_remove_from_subject'] != 'undefined', 'missing Wasm export: lv_obj_remove_from_subject');
-  assert(typeof wasmExports['lv_observer_get_target'] != 'undefined', 'missing Wasm export: lv_observer_get_target');
-  assert(typeof wasmExports['lv_obj_add_subject_increment_event'] != 'undefined', 'missing Wasm export: lv_obj_add_subject_increment_event');
-  assert(typeof wasmExports['lv_obj_set_subject_increment_event_min_value'] != 'undefined', 'missing Wasm export: lv_obj_set_subject_increment_event_min_value');
-  assert(typeof wasmExports['lv_obj_set_subject_increment_event_max_value'] != 'undefined', 'missing Wasm export: lv_obj_set_subject_increment_event_max_value');
-  assert(typeof wasmExports['lv_obj_set_subject_increment_event_rollover'] != 'undefined', 'missing Wasm export: lv_obj_set_subject_increment_event_rollover');
-  assert(typeof wasmExports['lv_obj_add_subject_toggle_event'] != 'undefined', 'missing Wasm export: lv_obj_add_subject_toggle_event');
-  assert(typeof wasmExports['lv_obj_add_subject_set_int_event'] != 'undefined', 'missing Wasm export: lv_obj_add_subject_set_int_event');
-  assert(typeof wasmExports['lv_obj_add_subject_set_string_event'] != 'undefined', 'missing Wasm export: lv_obj_add_subject_set_string_event');
-  assert(typeof wasmExports['lv_obj_bind_style'] != 'undefined', 'missing Wasm export: lv_obj_bind_style');
-  assert(typeof wasmExports['lv_obj_bind_flag_if_eq'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_eq');
-  assert(typeof wasmExports['lv_obj_bind_flag_if_not_eq'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_not_eq');
-  assert(typeof wasmExports['lv_obj_bind_flag_if_gt'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_gt');
-  assert(typeof wasmExports['lv_obj_bind_flag_if_ge'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_ge');
-  assert(typeof wasmExports['lv_obj_bind_flag_if_lt'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_lt');
-  assert(typeof wasmExports['lv_obj_bind_flag_if_le'] != 'undefined', 'missing Wasm export: lv_obj_bind_flag_if_le');
-  assert(typeof wasmExports['lv_obj_bind_state_if_eq'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_eq');
-  assert(typeof wasmExports['lv_obj_bind_state_if_not_eq'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_not_eq');
-  assert(typeof wasmExports['lv_obj_bind_state_if_gt'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_gt');
-  assert(typeof wasmExports['lv_obj_bind_state_if_ge'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_ge');
-  assert(typeof wasmExports['lv_obj_bind_state_if_lt'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_lt');
-  assert(typeof wasmExports['lv_obj_bind_state_if_le'] != 'undefined', 'missing Wasm export: lv_obj_bind_state_if_le');
-  assert(typeof wasmExports['lv_obj_bind_checked'] != 'undefined', 'missing Wasm export: lv_obj_bind_checked');
-  assert(typeof wasmExports['lv_observer_get_target_obj'] != 'undefined', 'missing Wasm export: lv_observer_get_target_obj');
-  assert(typeof wasmExports['lv_observer_get_user_data'] != 'undefined', 'missing Wasm export: lv_observer_get_user_data');
   assert(typeof wasmExports['lv_zalloc'] != 'undefined', 'missing Wasm export: lv_zalloc');
   assert(typeof wasmExports['lv_strnlen'] != 'undefined', 'missing Wasm export: lv_strnlen');
   assert(typeof wasmExports['lv_strncpy'] != 'undefined', 'missing Wasm export: lv_strncpy');
@@ -8965,6 +9146,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_mem_test'] != 'undefined', 'missing Wasm export: lv_mem_test');
   assert(typeof wasmExports['lv_mem_monitor'] != 'undefined', 'missing Wasm export: lv_mem_monitor');
   assert(typeof wasmExports['lv_theme_get_from_obj'] != 'undefined', 'missing Wasm export: lv_theme_get_from_obj');
+  assert(typeof wasmExports['lv_theme_create'] != 'undefined', 'missing Wasm export: lv_theme_create');
+  assert(typeof wasmExports['lv_theme_delete'] != 'undefined', 'missing Wasm export: lv_theme_delete');
+  assert(typeof wasmExports['lv_theme_copy'] != 'undefined', 'missing Wasm export: lv_theme_copy');
   assert(typeof wasmExports['lv_theme_set_parent'] != 'undefined', 'missing Wasm export: lv_theme_set_parent');
   assert(typeof wasmExports['lv_theme_set_apply_cb'] != 'undefined', 'missing Wasm export: lv_theme_set_apply_cb');
   assert(typeof wasmExports['lv_theme_get_font_small'] != 'undefined', 'missing Wasm export: lv_theme_get_font_small');
@@ -9007,6 +9191,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_arc_get_mode'] != 'undefined', 'missing Wasm export: lv_arc_get_mode');
   assert(typeof wasmExports['lv_arc_get_rotation'] != 'undefined', 'missing Wasm export: lv_arc_get_rotation');
   assert(typeof wasmExports['lv_arc_get_knob_offset'] != 'undefined', 'missing Wasm export: lv_arc_get_knob_offset');
+  assert(typeof wasmExports['lv_arc_get_change_rate'] != 'undefined', 'missing Wasm export: lv_arc_get_change_rate');
   assert(typeof wasmExports['lv_arc_bind_value'] != 'undefined', 'missing Wasm export: lv_arc_bind_value');
   assert(typeof wasmExports['lv_arc_align_obj_to_angle'] != 'undefined', 'missing Wasm export: lv_arc_align_obj_to_angle');
   assert(typeof wasmExports['lv_arc_rotate_obj_to_angle'] != 'undefined', 'missing Wasm export: lv_arc_rotate_obj_to_angle');
@@ -9024,6 +9209,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_arclabel_set_center_offset_y'] != 'undefined', 'missing Wasm export: lv_arclabel_set_center_offset_y');
   assert(typeof wasmExports['lv_arclabel_set_text_vertical_align'] != 'undefined', 'missing Wasm export: lv_arclabel_set_text_vertical_align');
   assert(typeof wasmExports['lv_arclabel_set_text_horizontal_align'] != 'undefined', 'missing Wasm export: lv_arclabel_set_text_horizontal_align');
+  assert(typeof wasmExports['lv_arclabel_set_overflow'] != 'undefined', 'missing Wasm export: lv_arclabel_set_overflow');
+  assert(typeof wasmExports['lv_arclabel_set_end_overlap'] != 'undefined', 'missing Wasm export: lv_arclabel_set_end_overlap');
   assert(typeof wasmExports['lv_arclabel_get_angle_start'] != 'undefined', 'missing Wasm export: lv_arclabel_get_angle_start');
   assert(typeof wasmExports['lv_arclabel_get_angle_size'] != 'undefined', 'missing Wasm export: lv_arclabel_get_angle_size');
   assert(typeof wasmExports['lv_arclabel_get_dir'] != 'undefined', 'missing Wasm export: lv_arclabel_get_dir');
@@ -9033,6 +9220,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_arclabel_get_center_offset_y'] != 'undefined', 'missing Wasm export: lv_arclabel_get_center_offset_y');
   assert(typeof wasmExports['lv_arclabel_get_text_vertical_align'] != 'undefined', 'missing Wasm export: lv_arclabel_get_text_vertical_align');
   assert(typeof wasmExports['lv_arclabel_get_text_horizontal_align'] != 'undefined', 'missing Wasm export: lv_arclabel_get_text_horizontal_align');
+  assert(typeof wasmExports['lv_arclabel_get_overflow'] != 'undefined', 'missing Wasm export: lv_arclabel_get_overflow');
+  assert(typeof wasmExports['lv_arclabel_get_end_overlap'] != 'undefined', 'missing Wasm export: lv_arclabel_get_end_overlap');
+  assert(typeof wasmExports['lv_arclabel_get_text_angle'] != 'undefined', 'missing Wasm export: lv_arclabel_get_text_angle');
   assert(typeof wasmExports['lv_bar_get_mode'] != 'undefined', 'missing Wasm export: lv_bar_get_mode');
   assert(typeof wasmExports['lv_bar_set_min_value'] != 'undefined', 'missing Wasm export: lv_bar_set_min_value');
   assert(typeof wasmExports['lv_bar_get_max_value'] != 'undefined', 'missing Wasm export: lv_bar_get_max_value');
@@ -9096,6 +9286,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_chart_set_ver_div_line_count'] != 'undefined', 'missing Wasm export: lv_chart_set_ver_div_line_count');
   assert(typeof wasmExports['lv_chart_get_type'] != 'undefined', 'missing Wasm export: lv_chart_get_type');
   assert(typeof wasmExports['lv_chart_get_point_count'] != 'undefined', 'missing Wasm export: lv_chart_get_point_count');
+  assert(typeof wasmExports['lv_chart_get_update_mode'] != 'undefined', 'missing Wasm export: lv_chart_get_update_mode');
+  assert(typeof wasmExports['lv_chart_get_hor_div_line_count'] != 'undefined', 'missing Wasm export: lv_chart_get_hor_div_line_count');
+  assert(typeof wasmExports['lv_chart_get_ver_div_line_count'] != 'undefined', 'missing Wasm export: lv_chart_get_ver_div_line_count');
   assert(typeof wasmExports['lv_chart_get_x_start_point'] != 'undefined', 'missing Wasm export: lv_chart_get_x_start_point');
   assert(typeof wasmExports['lv_chart_add_series'] != 'undefined', 'missing Wasm export: lv_chart_add_series');
   assert(typeof wasmExports['lv_chart_remove_series'] != 'undefined', 'missing Wasm export: lv_chart_remove_series');
@@ -9131,6 +9324,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_dropdown_is_open'] != 'undefined', 'missing Wasm export: lv_dropdown_is_open');
   assert(typeof wasmExports['lv_dropdown_close'] != 'undefined', 'missing Wasm export: lv_dropdown_close');
   assert(typeof wasmExports['lv_dropdown_set_text'] != 'undefined', 'missing Wasm export: lv_dropdown_set_text');
+  assert(typeof wasmExports['lv_dropdown_set_text_static'] != 'undefined', 'missing Wasm export: lv_dropdown_set_text_static');
   assert(typeof wasmExports['lv_dropdown_add_option'] != 'undefined', 'missing Wasm export: lv_dropdown_add_option');
   assert(typeof wasmExports['lv_dropdown_set_selected_highlight'] != 'undefined', 'missing Wasm export: lv_dropdown_set_selected_highlight');
   assert(typeof wasmExports['lv_dropdown_get_text'] != 'undefined', 'missing Wasm export: lv_dropdown_get_text');
@@ -9167,6 +9361,9 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_image_get_inner_align'] != 'undefined', 'missing Wasm export: lv_image_get_inner_align');
   assert(typeof wasmExports['lv_image_get_bitmap_map_src'] != 'undefined', 'missing Wasm export: lv_image_get_bitmap_map_src');
   assert(typeof wasmExports['lv_image_bind_src'] != 'undefined', 'missing Wasm export: lv_image_bind_src');
+  assert(typeof wasmExports['lv_imagebutton_set_src_left'] != 'undefined', 'missing Wasm export: lv_imagebutton_set_src_left');
+  assert(typeof wasmExports['lv_imagebutton_set_src_right'] != 'undefined', 'missing Wasm export: lv_imagebutton_set_src_right');
+  assert(typeof wasmExports['lv_imagebutton_set_src_mid'] != 'undefined', 'missing Wasm export: lv_imagebutton_set_src_mid');
   assert(typeof wasmExports['lv_imagebutton_set_state'] != 'undefined', 'missing Wasm export: lv_imagebutton_set_state');
   assert(typeof wasmExports['lv_imagebutton_get_src_left'] != 'undefined', 'missing Wasm export: lv_imagebutton_get_src_left');
   assert(typeof wasmExports['lv_imagebutton_get_src_middle'] != 'undefined', 'missing Wasm export: lv_imagebutton_get_src_middle');
@@ -9189,12 +9386,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_keyboard_get_selected_button'] != 'undefined', 'missing Wasm export: lv_keyboard_get_selected_button');
   assert(typeof wasmExports['lv_keyboard_get_button_text'] != 'undefined', 'missing Wasm export: lv_keyboard_get_button_text');
   assert(typeof wasmExports['lv_label_set_text_vfmt'] != 'undefined', 'missing Wasm export: lv_label_set_text_vfmt');
-  assert(typeof wasmExports['lv_label_get_letter_on'] != 'undefined', 'missing Wasm export: lv_label_get_letter_on');
   assert(typeof wasmExports['lv_label_set_text_selection_start'] != 'undefined', 'missing Wasm export: lv_label_set_text_selection_start');
   assert(typeof wasmExports['lv_label_set_text_selection_end'] != 'undefined', 'missing Wasm export: lv_label_set_text_selection_end');
   assert(typeof wasmExports['lv_label_set_recolor'] != 'undefined', 'missing Wasm export: lv_label_set_recolor');
   assert(typeof wasmExports['lv_label_get_long_mode'] != 'undefined', 'missing Wasm export: lv_label_get_long_mode');
   assert(typeof wasmExports['lv_label_get_letter_pos'] != 'undefined', 'missing Wasm export: lv_label_get_letter_pos');
+  assert(typeof wasmExports['lv_label_get_letter_on'] != 'undefined', 'missing Wasm export: lv_label_get_letter_on');
   assert(typeof wasmExports['lv_label_is_char_under_pos'] != 'undefined', 'missing Wasm export: lv_label_is_char_under_pos');
   assert(typeof wasmExports['lv_label_get_text_selection_start'] != 'undefined', 'missing Wasm export: lv_label_get_text_selection_start');
   assert(typeof wasmExports['lv_label_get_text_selection_end'] != 'undefined', 'missing Wasm export: lv_label_get_text_selection_end');
@@ -9205,6 +9402,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_led_on'] != 'undefined', 'missing Wasm export: lv_led_on');
   assert(typeof wasmExports['lv_led_off'] != 'undefined', 'missing Wasm export: lv_led_off');
   assert(typeof wasmExports['lv_led_toggle'] != 'undefined', 'missing Wasm export: lv_led_toggle');
+  assert(typeof wasmExports['lv_led_get_color'] != 'undefined', 'missing Wasm export: lv_led_get_color');
   assert(typeof wasmExports['lv_line_set_points_mutable'] != 'undefined', 'missing Wasm export: lv_line_set_points_mutable');
   assert(typeof wasmExports['lv_line_get_points'] != 'undefined', 'missing Wasm export: lv_line_get_points');
   assert(typeof wasmExports['lv_line_get_point_count'] != 'undefined', 'missing Wasm export: lv_line_get_point_count');
@@ -9234,9 +9432,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_menu_get_sidebar_header'] != 'undefined', 'missing Wasm export: lv_menu_get_sidebar_header');
   assert(typeof wasmExports['lv_menu_get_sidebar_header_back_button'] != 'undefined', 'missing Wasm export: lv_menu_get_sidebar_header_back_button');
   assert(typeof wasmExports['lv_menu_back_button_is_root'] != 'undefined', 'missing Wasm export: lv_menu_back_button_is_root');
+  assert(typeof wasmExports['lv_menu_get_mode_header'] != 'undefined', 'missing Wasm export: lv_menu_get_mode_header');
+  assert(typeof wasmExports['lv_menu_get_mode_root_back_button'] != 'undefined', 'missing Wasm export: lv_menu_get_mode_root_back_button');
   assert(typeof wasmExports['lv_msgbox_add_title'] != 'undefined', 'missing Wasm export: lv_msgbox_add_title');
   assert(typeof wasmExports['lv_msgbox_add_header_button'] != 'undefined', 'missing Wasm export: lv_msgbox_add_header_button');
   assert(typeof wasmExports['lv_msgbox_add_text'] != 'undefined', 'missing Wasm export: lv_msgbox_add_text');
+  assert(typeof wasmExports['lv_msgbox_add_text_fmt'] != 'undefined', 'missing Wasm export: lv_msgbox_add_text_fmt');
   assert(typeof wasmExports['lv_msgbox_add_footer_button'] != 'undefined', 'missing Wasm export: lv_msgbox_add_footer_button');
   assert(typeof wasmExports['lv_msgbox_add_close_button'] != 'undefined', 'missing Wasm export: lv_msgbox_add_close_button');
   assert(typeof wasmExports['lv_msgbox_get_header'] != 'undefined', 'missing Wasm export: lv_msgbox_get_header');
@@ -9250,12 +9451,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_roller_get_selected_str'] != 'undefined', 'missing Wasm export: lv_roller_get_selected_str');
   assert(typeof wasmExports['lv_roller_get_option_str'] != 'undefined', 'missing Wasm export: lv_roller_get_option_str');
   assert(typeof wasmExports['lv_roller_bind_value'] != 'undefined', 'missing Wasm export: lv_roller_bind_value');
+  assert(typeof wasmExports['lv_scale_set_line_needle_value'] != 'undefined', 'missing Wasm export: lv_scale_set_line_needle_value');
+  assert(typeof wasmExports['lv_scale_set_image_needle_value'] != 'undefined', 'missing Wasm export: lv_scale_set_image_needle_value');
   assert(typeof wasmExports['lv_scale_set_min_value'] != 'undefined', 'missing Wasm export: lv_scale_set_min_value');
   assert(typeof wasmExports['lv_scale_set_max_value'] != 'undefined', 'missing Wasm export: lv_scale_set_max_value');
   assert(typeof wasmExports['lv_scale_set_angle_range'] != 'undefined', 'missing Wasm export: lv_scale_set_angle_range');
   assert(typeof wasmExports['lv_scale_set_rotation'] != 'undefined', 'missing Wasm export: lv_scale_set_rotation');
-  assert(typeof wasmExports['lv_scale_set_line_needle_value'] != 'undefined', 'missing Wasm export: lv_scale_set_line_needle_value');
-  assert(typeof wasmExports['lv_scale_set_image_needle_value'] != 'undefined', 'missing Wasm export: lv_scale_set_image_needle_value');
   assert(typeof wasmExports['lv_scale_set_text_src'] != 'undefined', 'missing Wasm export: lv_scale_set_text_src');
   assert(typeof wasmExports['lv_scale_set_post_draw'] != 'undefined', 'missing Wasm export: lv_scale_set_post_draw');
   assert(typeof wasmExports['lv_scale_set_draw_ticks_on_top'] != 'undefined', 'missing Wasm export: lv_scale_set_draw_ticks_on_top');
@@ -9329,7 +9530,16 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_spinbox_set_cursor_pos'] != 'undefined', 'missing Wasm export: lv_spinbox_set_cursor_pos');
   assert(typeof wasmExports['lv_spinbox_set_digit_step_direction'] != 'undefined', 'missing Wasm export: lv_spinbox_set_digit_step_direction');
   assert(typeof wasmExports['lv_spinbox_get_rollover'] != 'undefined', 'missing Wasm export: lv_spinbox_get_rollover');
+  assert(typeof wasmExports['lv_spinbox_get_digit_count'] != 'undefined', 'missing Wasm export: lv_spinbox_get_digit_count');
+  assert(typeof wasmExports['lv_spinbox_get_dec_point_pos'] != 'undefined', 'missing Wasm export: lv_spinbox_get_dec_point_pos');
+  assert(typeof wasmExports['lv_spinbox_get_min_value'] != 'undefined', 'missing Wasm export: lv_spinbox_get_min_value');
+  assert(typeof wasmExports['lv_spinbox_get_max_value'] != 'undefined', 'missing Wasm export: lv_spinbox_get_max_value');
+  assert(typeof wasmExports['lv_spinbox_get_digit_step_direction'] != 'undefined', 'missing Wasm export: lv_spinbox_get_digit_step_direction');
   assert(typeof wasmExports['lv_spinbox_bind_value'] != 'undefined', 'missing Wasm export: lv_spinbox_bind_value');
+  assert(typeof wasmExports['lv_spinner_set_anim_duration'] != 'undefined', 'missing Wasm export: lv_spinner_set_anim_duration');
+  assert(typeof wasmExports['lv_spinner_set_arc_sweep'] != 'undefined', 'missing Wasm export: lv_spinner_set_arc_sweep');
+  assert(typeof wasmExports['lv_spinner_get_anim_duration'] != 'undefined', 'missing Wasm export: lv_spinner_get_anim_duration');
+  assert(typeof wasmExports['lv_spinner_get_arc_sweep'] != 'undefined', 'missing Wasm export: lv_spinner_get_arc_sweep');
   assert(typeof wasmExports['lv_switch_set_orientation'] != 'undefined', 'missing Wasm export: lv_switch_set_orientation');
   assert(typeof wasmExports['lv_switch_get_orientation'] != 'undefined', 'missing Wasm export: lv_switch_get_orientation');
   assert(typeof wasmExports['lv_table_set_cell_value'] != 'undefined', 'missing Wasm export: lv_table_set_cell_value');
@@ -9349,16 +9559,18 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_table_get_selected_cell'] != 'undefined', 'missing Wasm export: lv_table_get_selected_cell');
   assert(typeof wasmExports['lv_table_get_cell_user_data'] != 'undefined', 'missing Wasm export: lv_table_get_cell_user_data');
   assert(typeof wasmExports['lv_tabview_get_content'] != 'undefined', 'missing Wasm export: lv_tabview_get_content');
-  assert(typeof wasmExports['lv_tabview_rename_tab'] != 'undefined', 'missing Wasm export: lv_tabview_rename_tab');
+  assert(typeof wasmExports['lv_tabview_set_tab_text'] != 'undefined', 'missing Wasm export: lv_tabview_set_tab_text');
+  assert(typeof wasmExports['lv_tabview_get_tab_button'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_button');
   assert(typeof wasmExports['lv_tabview_get_tab_count'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_count');
   assert(typeof wasmExports['lv_tabview_get_tab_active'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_active');
-  assert(typeof wasmExports['lv_tabview_get_tab_button'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_button');
+  assert(typeof wasmExports['lv_tabview_get_tab_bar_position'] != 'undefined', 'missing Wasm export: lv_tabview_get_tab_bar_position');
   assert(typeof wasmExports['lv_textarea_cursor_up'] != 'undefined', 'missing Wasm export: lv_textarea_cursor_up');
   assert(typeof wasmExports['lv_textarea_cursor_down'] != 'undefined', 'missing Wasm export: lv_textarea_cursor_down');
   assert(typeof wasmExports['lv_textarea_delete_char_forward'] != 'undefined', 'missing Wasm export: lv_textarea_delete_char_forward');
   assert(typeof wasmExports['lv_textarea_clear_selection'] != 'undefined', 'missing Wasm export: lv_textarea_clear_selection');
   assert(typeof wasmExports['lv_textarea_get_accepted_chars'] != 'undefined', 'missing Wasm export: lv_textarea_get_accepted_chars');
   assert(typeof wasmExports['lv_textarea_set_password_bullet'] != 'undefined', 'missing Wasm export: lv_textarea_set_password_bullet');
+  assert(typeof wasmExports['lv_textarea_set_accepted_chars_static'] != 'undefined', 'missing Wasm export: lv_textarea_set_accepted_chars_static');
   assert(typeof wasmExports['lv_textarea_set_insert_replace'] != 'undefined', 'missing Wasm export: lv_textarea_set_insert_replace');
   assert(typeof wasmExports['lv_textarea_set_text_selection'] != 'undefined', 'missing Wasm export: lv_textarea_set_text_selection');
   assert(typeof wasmExports['lv_textarea_set_password_show_time'] != 'undefined', 'missing Wasm export: lv_textarea_set_password_show_time');
@@ -9672,6 +9884,7 @@ function assignWasmExports(wasmExports) {
   _lv_tabview_get_tab_bar = Module['_lv_tabview_get_tab_bar'] = createExportWrapper('lv_tabview_get_tab_bar', 1);
   _lv_obj_get_child_by_type = Module['_lv_obj_get_child_by_type'] = createExportWrapper('lv_obj_get_child_by_type', 3);
   _lvglCreateFreeTypeFont = Module['_lvglCreateFreeTypeFont'] = createExportWrapper('lvglCreateFreeTypeFont', 4);
+  _lv_freetype_font_create = Module['_lv_freetype_font_create'] = createExportWrapper('lv_freetype_font_create', 4);
   _lv_log_add = Module['_lv_log_add'] = createExportWrapper('lv_log_add', 6);
   _lvglCreateAnim = Module['_lvglCreateAnim'] = createExportWrapper('lvglCreateAnim', 6);
   _lv_anim_init = Module['_lv_anim_init'] = createExportWrapper('lv_anim_init', 1);
@@ -9720,6 +9933,8 @@ function assignWasmExports(wasmExports) {
   _lv_group_get_obj_by_index = Module['_lv_group_get_obj_by_index'] = createExportWrapper('lv_group_get_obj_by_index', 2);
   _lv_group_get_count = Module['_lv_group_get_count'] = createExportWrapper('lv_group_get_count', 0);
   _lv_group_by_index = Module['_lv_group_by_index'] = createExportWrapper('lv_group_by_index', 1);
+  _lv_group_set_user_data = Module['_lv_group_set_user_data'] = createExportWrapper('lv_group_set_user_data', 2);
+  _lv_group_get_user_data = Module['_lv_group_get_user_data'] = createExportWrapper('lv_group_get_user_data', 1);
   _lv_obj_get_scroll_left = Module['_lv_obj_get_scroll_left'] = createExportWrapper('lv_obj_get_scroll_left', 1);
   _lv_obj_get_scroll_top = Module['_lv_obj_get_scroll_top'] = createExportWrapper('lv_obj_get_scroll_top', 1);
   _lv_event_mark_deleted = Module['_lv_event_mark_deleted'] = createExportWrapper('lv_event_mark_deleted', 1);
@@ -9730,7 +9945,9 @@ function assignWasmExports(wasmExports) {
   _lv_event_get_current_target = Module['_lv_event_get_current_target'] = createExportWrapper('lv_event_get_current_target', 1);
   _lv_event_get_param = Module['_lv_event_get_param'] = createExportWrapper('lv_event_get_param', 1);
   _lv_indev_get_scroll_obj = Module['_lv_indev_get_scroll_obj'] = createExportWrapper('lv_indev_get_scroll_obj', 1);
+  _lv_obj_is_radio_button = Module['_lv_obj_is_radio_button'] = createExportWrapper('lv_obj_is_radio_button', 1);
   _lv_obj_get_child_count = Module['_lv_obj_get_child_count'] = createExportWrapper('lv_obj_get_child_count', 1);
+  _lv_obj_get_child = Module['_lv_obj_get_child'] = createExportWrapper('lv_obj_get_child', 2);
   _lv_obj_mark_layout_as_dirty = Module['_lv_obj_mark_layout_as_dirty'] = createExportWrapper('lv_obj_mark_layout_as_dirty', 1);
   _lv_event_get_key = Module['_lv_event_get_key'] = createExportWrapper('lv_event_get_key', 1);
   _lv_obj_is_editable = Module['_lv_obj_is_editable'] = createExportWrapper('lv_obj_is_editable', 1);
@@ -9750,6 +9967,9 @@ function assignWasmExports(wasmExports) {
   _lv_area_is_in = Module['_lv_area_is_in'] = createExportWrapper('lv_area_is_in', 3);
   _lv_event_get_layer = Module['_lv_event_get_layer'] = createExportWrapper('lv_event_get_layer', 1);
   _lv_draw_rect_dsc_init = Module['_lv_draw_rect_dsc_init'] = createExportWrapper('lv_draw_rect_dsc_init', 1);
+  _lv_draw_blur_dsc_init = Module['_lv_draw_blur_dsc_init'] = createExportWrapper('lv_draw_blur_dsc_init', 1);
+  _lv_obj_init_draw_blur_dsc = Module['_lv_obj_init_draw_blur_dsc'] = createExportWrapper('lv_obj_init_draw_blur_dsc', 3);
+  _lv_draw_blur = Module['_lv_draw_blur'] = createExportWrapper('lv_draw_blur', 3);
   _lv_obj_init_draw_rect_dsc = Module['_lv_obj_init_draw_rect_dsc'] = createExportWrapper('lv_obj_init_draw_rect_dsc', 3);
   _lv_draw_rect = Module['_lv_draw_rect'] = createExportWrapper('lv_draw_rect', 3);
   _lv_area_get_size = Module['_lv_area_get_size'] = createExportWrapper('lv_area_get_size', 1);
@@ -9759,7 +9979,6 @@ function assignWasmExports(wasmExports) {
   _lv_obj_is_layout_positioned = Module['_lv_obj_is_layout_positioned'] = createExportWrapper('lv_obj_is_layout_positioned', 1);
   _lv_obj_has_flag_any = Module['_lv_obj_has_flag_any'] = createExportWrapper('lv_obj_has_flag_any', 2);
   _lv_obj_set_flag = Module['_lv_obj_set_flag'] = createExportWrapper('lv_obj_set_flag', 3);
-  _lv_obj_get_child = Module['_lv_obj_get_child'] = createExportWrapper('lv_obj_get_child', 2);
   _lv_obj_style_state_compare = Module['_lv_obj_style_state_compare'] = createExportWrapper('lv_obj_style_state_compare', 3);
   _lv_obj_update_layer_type = Module['_lv_obj_update_layer_type'] = createExportWrapper('lv_obj_update_layer_type', 1);
   _lv_malloc_zeroed = Module['_lv_malloc_zeroed'] = createExportWrapper('lv_malloc_zeroed', 1);
@@ -9767,6 +9986,7 @@ function assignWasmExports(wasmExports) {
   _lv_obj_refresh_style = Module['_lv_obj_refresh_style'] = createExportWrapper('lv_obj_refresh_style', 3);
   _lv_obj_refresh_ext_draw_size = Module['_lv_obj_refresh_ext_draw_size'] = createExportWrapper('lv_obj_refresh_ext_draw_size', 1);
   _lv_obj_set_state = Module['_lv_obj_set_state'] = createExportWrapper('lv_obj_set_state', 3);
+  _lv_obj_set_radio_button = Module['_lv_obj_set_radio_button'] = createExportWrapper('lv_obj_set_radio_button', 2);
   _lv_obj_check_type = Module['_lv_obj_check_type'] = createExportWrapper('lv_obj_check_type', 2);
   _lv_obj_has_class = Module['_lv_obj_has_class'] = createExportWrapper('lv_obj_has_class', 2);
   _lv_obj_get_class = Module['_lv_obj_get_class'] = createExportWrapper('lv_obj_get_class', 1);
@@ -9831,16 +10051,21 @@ function assignWasmExports(wasmExports) {
   _lv_event_get_hit_test_info = Module['_lv_event_get_hit_test_info'] = createExportWrapper('lv_event_get_hit_test_info', 1);
   _lv_event_get_cover_area = Module['_lv_event_get_cover_area'] = createExportWrapper('lv_event_get_cover_area', 1);
   _lv_event_set_cover_res = Module['_lv_event_set_cover_res'] = createExportWrapper('lv_event_set_cover_res', 2);
+  _lv_event_get_prev_state = Module['_lv_event_get_prev_state'] = createExportWrapper('lv_event_get_prev_state', 1);
   _lv_obj_get_local_style_prop = Module['_lv_obj_get_local_style_prop'] = createExportWrapper('lv_obj_get_local_style_prop', 4);
   _lv_obj_set_style_x = Module['_lv_obj_set_style_x'] = createExportWrapper('lv_obj_set_style_x', 3);
   _lv_obj_set_style_y = Module['_lv_obj_set_style_y'] = createExportWrapper('lv_obj_set_style_y', 3);
   _lv_obj_set_x = Module['_lv_obj_set_x'] = createExportWrapper('lv_obj_set_x', 2);
   _lv_obj_set_y = Module['_lv_obj_set_y'] = createExportWrapper('lv_obj_set_y', 2);
+  _lv_obj_calc_dynamic_width = Module['_lv_obj_calc_dynamic_width'] = createExportWrapper('lv_obj_calc_dynamic_width', 2);
+  _lv_obj_get_content_width = Module['_lv_obj_get_content_width'] = createExportWrapper('lv_obj_get_content_width', 1);
+  _lv_obj_calc_dynamic_height = Module['_lv_obj_calc_dynamic_height'] = createExportWrapper('lv_obj_calc_dynamic_height', 2);
+  _lv_obj_get_content_height = Module['_lv_obj_get_content_height'] = createExportWrapper('lv_obj_get_content_height', 1);
   _lv_obj_refr_size = Module['_lv_obj_refr_size'] = createExportWrapper('lv_obj_refr_size', 1);
   _lv_obj_get_content_coords = Module['_lv_obj_get_content_coords'] = createExportWrapper('lv_obj_get_content_coords', 2);
   _lv_obj_scrollbar_invalidate = Module['_lv_obj_scrollbar_invalidate'] = createExportWrapper('lv_obj_scrollbar_invalidate', 1);
-  _lv_obj_get_content_width = Module['_lv_obj_get_content_width'] = createExportWrapper('lv_obj_get_content_width', 1);
-  _lv_obj_get_content_height = Module['_lv_obj_get_content_height'] = createExportWrapper('lv_obj_get_content_height', 1);
+  _lv_obj_get_display = Module['_lv_obj_get_display'] = createExportWrapper('lv_obj_get_display', 1);
+  _lv_display_is_invalidation_enabled = Module['_lv_display_is_invalidation_enabled'] = createExportWrapper('lv_display_is_invalidation_enabled', 1);
   _lv_obj_get_coords = Module['_lv_obj_get_coords'] = createExportWrapper('lv_obj_get_coords', 2);
   _lv_obj_set_style_width = Module['_lv_obj_set_style_width'] = createExportWrapper('lv_obj_set_style_width', 3);
   _lv_obj_set_style_height = Module['_lv_obj_set_style_height'] = createExportWrapper('lv_obj_set_style_height', 3);
@@ -9851,7 +10076,6 @@ function assignWasmExports(wasmExports) {
   _lv_obj_set_layout = Module['_lv_obj_set_layout'] = createExportWrapper('lv_obj_set_layout', 2);
   _lv_obj_set_style_layout = Module['_lv_obj_set_style_layout'] = createExportWrapper('lv_obj_set_style_layout', 3);
   _lv_obj_get_screen = Module['_lv_obj_get_screen'] = createExportWrapper('lv_obj_get_screen', 1);
-  _lv_obj_get_display = Module['_lv_obj_get_display'] = createExportWrapper('lv_obj_get_display', 1);
   _lv_display_send_event = Module['_lv_display_send_event'] = createExportWrapper('lv_display_send_event', 3);
   _lv_obj_refr_pos = Module['_lv_obj_refr_pos'] = createExportWrapper('lv_obj_refr_pos', 1);
   _lv_layout_apply = Module['_lv_layout_apply'] = createExportWrapper('lv_layout_apply', 1);
@@ -9868,15 +10092,21 @@ function assignWasmExports(wasmExports) {
   _lv_obj_get_y_aligned = Module['_lv_obj_get_y_aligned'] = createExportWrapper('lv_obj_get_y_aligned', 1);
   _lv_obj_get_self_width = Module['_lv_obj_get_self_width'] = createExportWrapper('lv_obj_get_self_width', 1);
   _lv_obj_get_self_height = Module['_lv_obj_get_self_height'] = createExportWrapper('lv_obj_get_self_height', 1);
+  _lv_obj_get_style_clamped_width = Module['_lv_obj_get_style_clamped_width'] = createExportWrapper('lv_obj_get_style_clamped_width', 1);
+  _lv_obj_get_style_clamped_height = Module['_lv_obj_get_style_clamped_height'] = createExportWrapper('lv_obj_get_style_clamped_height', 1);
+  _lv_obj_is_width_min = Module['_lv_obj_is_width_min'] = createExportWrapper('lv_obj_is_width_min', 1);
+  _lv_obj_is_height_min = Module['_lv_obj_is_height_min'] = createExportWrapper('lv_obj_is_height_min', 1);
+  _lv_obj_is_width_max = Module['_lv_obj_is_width_max'] = createExportWrapper('lv_obj_is_width_max', 1);
+  _lv_obj_is_height_max = Module['_lv_obj_is_height_max'] = createExportWrapper('lv_obj_is_height_max', 1);
   _lv_obj_move_to = Module['_lv_obj_move_to'] = createExportWrapper('lv_obj_move_to', 3);
   _lv_obj_move_children_by = Module['_lv_obj_move_children_by'] = createExportWrapper('lv_obj_move_children_by', 4);
   _lv_obj_transform_point = Module['_lv_obj_transform_point'] = createExportWrapper('lv_obj_transform_point', 3);
   _lv_obj_transform_point_array = Module['_lv_obj_transform_point_array'] = createExportWrapper('lv_obj_transform_point_array', 4);
   _lv_point_array_transform = Module['_lv_point_array_transform'] = createExportWrapper('lv_point_array_transform', 7);
   _lv_obj_get_transformed_area = Module['_lv_obj_get_transformed_area'] = createExportWrapper('lv_obj_get_transformed_area', 3);
-  _lv_display_is_invalidation_enabled = Module['_lv_display_is_invalidation_enabled'] = createExportWrapper('lv_display_is_invalidation_enabled', 1);
   _lv_obj_area_is_visible = Module['_lv_obj_area_is_visible'] = createExportWrapper('lv_obj_area_is_visible', 2);
   _lv_inv_area = Module['_lv_inv_area'] = createExportWrapper('lv_inv_area', 2);
+  _lv_obj_tree_walk = Module['_lv_obj_tree_walk'] = createExportWrapper('lv_obj_tree_walk', 3);
   _lv_display_get_screen_active = Module['_lv_display_get_screen_active'] = createExportWrapper('lv_display_get_screen_active', 1);
   _lv_display_get_screen_prev = Module['_lv_display_get_screen_prev'] = createExportWrapper('lv_display_get_screen_prev', 1);
   _lv_display_get_layer_bottom = Module['_lv_display_get_layer_bottom'] = createExportWrapper('lv_display_get_layer_bottom', 1);
@@ -9894,6 +10124,9 @@ function assignWasmExports(wasmExports) {
   _lv_obj_set_transform = Module['_lv_obj_set_transform'] = createExportWrapper('lv_obj_set_transform', 2);
   _lv_obj_reset_transform = Module['_lv_obj_reset_transform'] = createExportWrapper('lv_obj_reset_transform', 1);
   _lv_obj_get_transform = Module['_lv_obj_get_transform'] = createExportWrapper('lv_obj_get_transform', 1);
+  _lv_layout_get_min_size = Module['_lv_layout_get_min_size'] = createExportWrapper('lv_layout_get_min_size', 3);
+  _lv_area_is_on = Module['_lv_area_is_on'] = createExportWrapper('lv_area_is_on', 2);
+  _lv_style_get_prop = Module['_lv_style_get_prop'] = createExportWrapper('lv_style_get_prop', 3);
   _lv_obj_get_scroll_snap_x = Module['_lv_obj_get_scroll_snap_x'] = createExportWrapper('lv_obj_get_scroll_snap_x', 1);
   _lv_obj_get_scroll_snap_y = Module['_lv_obj_get_scroll_snap_y'] = createExportWrapper('lv_obj_get_scroll_snap_y', 1);
   _lv_obj_get_scroll_bottom = Module['_lv_obj_get_scroll_bottom'] = createExportWrapper('lv_obj_get_scroll_bottom', 1);
@@ -9923,14 +10156,14 @@ function assignWasmExports(wasmExports) {
   _lv_obj_style_deinit = Module['_lv_obj_style_deinit'] = createExportWrapper('lv_obj_style_deinit', 0);
   _lv_style_prop_lookup_flags = Module['_lv_style_prop_lookup_flags'] = createExportWrapper('lv_style_prop_lookup_flags', 1);
   _lv_style_remove_prop = Module['_lv_style_remove_prop'] = createExportWrapper('lv_style_remove_prop', 2);
-  _lv_style_reset = Module['_lv_style_reset'] = createExportWrapper('lv_style_reset', 1);
   _lv_style_prop_get_default = Module['_lv_style_prop_get_default'] = createExportWrapper('lv_style_prop_get_default', 2);
   _lv_obj_replace_style = Module['_lv_obj_replace_style'] = createExportWrapper('lv_obj_replace_style', 4);
+  _lv_style_reset = Module['_lv_style_reset'] = createExportWrapper('lv_style_reset', 1);
+  _lv_obj_remove_theme = Module['_lv_obj_remove_theme'] = createExportWrapper('lv_obj_remove_theme', 2);
   _lv_obj_report_style_change = Module['_lv_obj_report_style_change'] = createExportWrapper('lv_obj_report_style_change', 1);
   _lv_obj_style_set_disabled = Module['_lv_obj_style_set_disabled'] = createExportWrapper('lv_obj_style_set_disabled', 4);
   _lv_obj_style_get_disabled = Module['_lv_obj_style_get_disabled'] = createExportWrapper('lv_obj_style_get_disabled', 3);
   _lv_obj_has_style_prop = Module['_lv_obj_has_style_prop'] = createExportWrapper('lv_obj_has_style_prop', 3);
-  _lv_style_get_prop = Module['_lv_style_get_prop'] = createExportWrapper('lv_style_get_prop', 3);
   _lv_obj_remove_local_style_prop = Module['_lv_obj_remove_local_style_prop'] = createExportWrapper('lv_obj_remove_local_style_prop', 3);
   _lv_color_eq = Module['_lv_color_eq'] = createExportWrapper('lv_color_eq', 2);
   _lv_anim_set_start_cb = Module['_lv_anim_set_start_cb'] = createExportWrapper('lv_anim_set_start_cb', 2);
@@ -9943,6 +10176,12 @@ function assignWasmExports(wasmExports) {
   _lv_obj_fade_out = Module['_lv_obj_fade_out'] = createExportWrapper('lv_obj_fade_out', 3);
   _lv_obj_calculate_style_text_align = Module['_lv_obj_calculate_style_text_align'] = createExportWrapper('lv_obj_calculate_style_text_align', 3);
   _lv_bidi_calculate_align = Module['_lv_bidi_calculate_align'] = createExportWrapper('lv_bidi_calculate_align', 3);
+  _lv_obj_bind_style = Module['_lv_obj_bind_style'] = createExportWrapper('lv_obj_bind_style', 5);
+  _lv_subject_add_observer_obj = Module['_lv_subject_add_observer_obj'] = createExportWrapper('lv_subject_add_observer_obj', 4);
+  _lv_subject_get_int = Module['_lv_subject_get_int'] = createExportWrapper('lv_subject_get_int', 1);
+  _lv_obj_bind_style_prop = Module['_lv_obj_bind_style_prop'] = createExportWrapper('lv_obj_bind_style_prop', 4);
+  _lv_subject_get_color = Module['_lv_subject_get_color'] = createExportWrapper('lv_subject_get_color', 2);
+  _lv_subject_get_pointer = Module['_lv_subject_get_pointer'] = createExportWrapper('lv_subject_get_pointer', 1);
   _lv_obj_set_style_min_width = Module['_lv_obj_set_style_min_width'] = createExportWrapper('lv_obj_set_style_min_width', 3);
   _lv_obj_set_style_max_width = Module['_lv_obj_set_style_max_width'] = createExportWrapper('lv_obj_set_style_max_width', 3);
   _lv_obj_set_style_min_height = Module['_lv_obj_set_style_min_height'] = createExportWrapper('lv_obj_set_style_min_height', 3);
@@ -10023,6 +10262,15 @@ function assignWasmExports(wasmExports) {
   _lv_obj_set_style_text_outline_stroke_color = Module['_lv_obj_set_style_text_outline_stroke_color'] = createExportWrapper('lv_obj_set_style_text_outline_stroke_color', 3);
   _lv_obj_set_style_text_outline_stroke_width = Module['_lv_obj_set_style_text_outline_stroke_width'] = createExportWrapper('lv_obj_set_style_text_outline_stroke_width', 3);
   _lv_obj_set_style_text_outline_stroke_opa = Module['_lv_obj_set_style_text_outline_stroke_opa'] = createExportWrapper('lv_obj_set_style_text_outline_stroke_opa', 3);
+  _lv_obj_set_style_blur_radius = Module['_lv_obj_set_style_blur_radius'] = createExportWrapper('lv_obj_set_style_blur_radius', 3);
+  _lv_obj_set_style_blur_backdrop = Module['_lv_obj_set_style_blur_backdrop'] = createExportWrapper('lv_obj_set_style_blur_backdrop', 3);
+  _lv_obj_set_style_blur_quality = Module['_lv_obj_set_style_blur_quality'] = createExportWrapper('lv_obj_set_style_blur_quality', 3);
+  _lv_obj_set_style_drop_shadow_radius = Module['_lv_obj_set_style_drop_shadow_radius'] = createExportWrapper('lv_obj_set_style_drop_shadow_radius', 3);
+  _lv_obj_set_style_drop_shadow_offset_x = Module['_lv_obj_set_style_drop_shadow_offset_x'] = createExportWrapper('lv_obj_set_style_drop_shadow_offset_x', 3);
+  _lv_obj_set_style_drop_shadow_offset_y = Module['_lv_obj_set_style_drop_shadow_offset_y'] = createExportWrapper('lv_obj_set_style_drop_shadow_offset_y', 3);
+  _lv_obj_set_style_drop_shadow_color = Module['_lv_obj_set_style_drop_shadow_color'] = createExportWrapper('lv_obj_set_style_drop_shadow_color', 3);
+  _lv_obj_set_style_drop_shadow_opa = Module['_lv_obj_set_style_drop_shadow_opa'] = createExportWrapper('lv_obj_set_style_drop_shadow_opa', 3);
+  _lv_obj_set_style_drop_shadow_quality = Module['_lv_obj_set_style_drop_shadow_quality'] = createExportWrapper('lv_obj_set_style_drop_shadow_quality', 3);
   _lv_obj_set_style_radius = Module['_lv_obj_set_style_radius'] = createExportWrapper('lv_obj_set_style_radius', 3);
   _lv_obj_set_style_radial_offset = Module['_lv_obj_set_style_radial_offset'] = createExportWrapper('lv_obj_set_style_radial_offset', 3);
   _lv_obj_set_style_clip_corner = Module['_lv_obj_set_style_clip_corner'] = createExportWrapper('lv_obj_set_style_clip_corner', 3);
@@ -10071,8 +10319,59 @@ function assignWasmExports(wasmExports) {
   _lv_obj_get_sibling_by_type = Module['_lv_obj_get_sibling_by_type'] = createExportWrapper('lv_obj_get_sibling_by_type', 3);
   _lv_obj_get_index_by_type = Module['_lv_obj_get_index_by_type'] = createExportWrapper('lv_obj_get_index_by_type', 2);
   _lv_obj_get_child_count_by_type = Module['_lv_obj_get_child_count_by_type'] = createExportWrapper('lv_obj_get_child_count_by_type', 2);
-  _lv_obj_tree_walk = Module['_lv_obj_tree_walk'] = createExportWrapper('lv_obj_tree_walk', 3);
   _lv_obj_dump_tree = Module['_lv_obj_dump_tree'] = createExportWrapper('lv_obj_dump_tree', 1);
+  _lv_subject_init_int = Module['_lv_subject_init_int'] = createExportWrapper('lv_subject_init_int', 2);
+  _lv_subject_set_int = Module['_lv_subject_set_int'] = createExportWrapper('lv_subject_set_int', 2);
+  _lv_subject_notify = Module['_lv_subject_notify'] = createExportWrapper('lv_subject_notify', 1);
+  _lv_subject_get_previous_int = Module['_lv_subject_get_previous_int'] = createExportWrapper('lv_subject_get_previous_int', 1);
+  _lv_subject_set_min_value_int = Module['_lv_subject_set_min_value_int'] = createExportWrapper('lv_subject_set_min_value_int', 2);
+  _lv_subject_set_max_value_int = Module['_lv_subject_set_max_value_int'] = createExportWrapper('lv_subject_set_max_value_int', 2);
+  _lv_subject_init_string = Module['_lv_subject_init_string'] = createExportWrapper('lv_subject_init_string', 5);
+  _lv_strlcpy = Module['_lv_strlcpy'] = createExportWrapper('lv_strlcpy', 3);
+  _lv_subject_copy_string = Module['_lv_subject_copy_string'] = createExportWrapper('lv_subject_copy_string', 2);
+  _lv_strcmp = Module['_lv_strcmp'] = createExportWrapper('lv_strcmp', 2);
+  _lv_subject_snprintf = Module['_lv_subject_snprintf'] = createExportWrapper('lv_subject_snprintf', 3);
+  _lv_vsnprintf = Module['_lv_vsnprintf'] = createExportWrapper('lv_vsnprintf', 4);
+  _lv_subject_get_string = Module['_lv_subject_get_string'] = createExportWrapper('lv_subject_get_string', 1);
+  _lv_subject_get_previous_string = Module['_lv_subject_get_previous_string'] = createExportWrapper('lv_subject_get_previous_string', 1);
+  _lv_subject_init_pointer = Module['_lv_subject_init_pointer'] = createExportWrapper('lv_subject_init_pointer', 2);
+  _lv_subject_set_pointer = Module['_lv_subject_set_pointer'] = createExportWrapper('lv_subject_set_pointer', 2);
+  _lv_subject_get_previous_pointer = Module['_lv_subject_get_previous_pointer'] = createExportWrapper('lv_subject_get_previous_pointer', 1);
+  _lv_subject_init_color = Module['_lv_subject_init_color'] = createExportWrapper('lv_subject_init_color', 2);
+  _lv_subject_set_color = Module['_lv_subject_set_color'] = createExportWrapper('lv_subject_set_color', 2);
+  _lv_color_black = Module['_lv_color_black'] = createExportWrapper('lv_color_black', 1);
+  _lv_subject_get_previous_color = Module['_lv_subject_get_previous_color'] = createExportWrapper('lv_subject_get_previous_color', 2);
+  _lv_subject_init_group = Module['_lv_subject_init_group'] = createExportWrapper('lv_subject_init_group', 3);
+  _lv_subject_add_observer = Module['_lv_subject_add_observer'] = createExportWrapper('lv_subject_add_observer', 3);
+  _lv_subject_deinit = Module['_lv_subject_deinit'] = createExportWrapper('lv_subject_deinit', 1);
+  _lv_observer_remove = Module['_lv_observer_remove'] = createExportWrapper('lv_observer_remove', 1);
+  _lv_subject_get_group_element = Module['_lv_subject_get_group_element'] = createExportWrapper('lv_subject_get_group_element', 2);
+  _lv_subject_add_observer_with_target = Module['_lv_subject_add_observer_with_target'] = createExportWrapper('lv_subject_add_observer_with_target', 4);
+  _lv_obj_remove_from_subject = Module['_lv_obj_remove_from_subject'] = createExportWrapper('lv_obj_remove_from_subject', 2);
+  _lv_observer_get_target = Module['_lv_observer_get_target'] = createExportWrapper('lv_observer_get_target', 1);
+  _lv_obj_add_subject_increment_event = Module['_lv_obj_add_subject_increment_event'] = createExportWrapper('lv_obj_add_subject_increment_event', 4);
+  _lv_obj_set_subject_increment_event_min_value = Module['_lv_obj_set_subject_increment_event_min_value'] = createExportWrapper('lv_obj_set_subject_increment_event_min_value', 3);
+  _lv_obj_set_subject_increment_event_max_value = Module['_lv_obj_set_subject_increment_event_max_value'] = createExportWrapper('lv_obj_set_subject_increment_event_max_value', 3);
+  _lv_obj_set_subject_increment_event_rollover = Module['_lv_obj_set_subject_increment_event_rollover'] = createExportWrapper('lv_obj_set_subject_increment_event_rollover', 3);
+  _lv_obj_add_subject_toggle_event = Module['_lv_obj_add_subject_toggle_event'] = createExportWrapper('lv_obj_add_subject_toggle_event', 3);
+  _lv_obj_add_subject_set_int_event = Module['_lv_obj_add_subject_set_int_event'] = createExportWrapper('lv_obj_add_subject_set_int_event', 4);
+  _lv_obj_add_subject_set_string_event = Module['_lv_obj_add_subject_set_string_event'] = createExportWrapper('lv_obj_add_subject_set_string_event', 4);
+  _lv_strdup = Module['_lv_strdup'] = createExportWrapper('lv_strdup', 1);
+  _lv_obj_bind_flag_if_eq = Module['_lv_obj_bind_flag_if_eq'] = createExportWrapper('lv_obj_bind_flag_if_eq', 4);
+  _lv_obj_bind_flag_if_not_eq = Module['_lv_obj_bind_flag_if_not_eq'] = createExportWrapper('lv_obj_bind_flag_if_not_eq', 4);
+  _lv_obj_bind_flag_if_gt = Module['_lv_obj_bind_flag_if_gt'] = createExportWrapper('lv_obj_bind_flag_if_gt', 4);
+  _lv_obj_bind_flag_if_ge = Module['_lv_obj_bind_flag_if_ge'] = createExportWrapper('lv_obj_bind_flag_if_ge', 4);
+  _lv_obj_bind_flag_if_lt = Module['_lv_obj_bind_flag_if_lt'] = createExportWrapper('lv_obj_bind_flag_if_lt', 4);
+  _lv_obj_bind_flag_if_le = Module['_lv_obj_bind_flag_if_le'] = createExportWrapper('lv_obj_bind_flag_if_le', 4);
+  _lv_obj_bind_state_if_eq = Module['_lv_obj_bind_state_if_eq'] = createExportWrapper('lv_obj_bind_state_if_eq', 4);
+  _lv_obj_bind_state_if_not_eq = Module['_lv_obj_bind_state_if_not_eq'] = createExportWrapper('lv_obj_bind_state_if_not_eq', 4);
+  _lv_obj_bind_state_if_gt = Module['_lv_obj_bind_state_if_gt'] = createExportWrapper('lv_obj_bind_state_if_gt', 4);
+  _lv_obj_bind_state_if_ge = Module['_lv_obj_bind_state_if_ge'] = createExportWrapper('lv_obj_bind_state_if_ge', 4);
+  _lv_obj_bind_state_if_lt = Module['_lv_obj_bind_state_if_lt'] = createExportWrapper('lv_obj_bind_state_if_lt', 4);
+  _lv_obj_bind_state_if_le = Module['_lv_obj_bind_state_if_le'] = createExportWrapper('lv_obj_bind_state_if_le', 4);
+  _lv_obj_bind_checked = Module['_lv_obj_bind_checked'] = createExportWrapper('lv_obj_bind_checked', 2);
+  _lv_observer_get_target_obj = Module['_lv_observer_get_target_obj'] = createExportWrapper('lv_observer_get_target_obj', 1);
+  _lv_observer_get_user_data = Module['_lv_observer_get_user_data'] = createExportWrapper('lv_observer_get_user_data', 1);
   _lv_refr_init = Module['_lv_refr_init'] = createExportWrapper('lv_refr_init', 0);
   _lv_refr_deinit = Module['_lv_refr_deinit'] = createExportWrapper('lv_refr_deinit', 0);
   _lv_refr_now = Module['_lv_refr_now'] = createExportWrapper('lv_refr_now', 1);
@@ -10081,7 +10380,6 @@ function assignWasmExports(wasmExports) {
   _lv_obj_refr = Module['_lv_obj_refr'] = createExportWrapper('lv_obj_refr', 2);
   _lv_anim_refr_now = Module['_lv_anim_refr_now'] = createExportWrapper('lv_anim_refr_now', 0);
   _lv_timer_pause = Module['_lv_timer_pause'] = createExportWrapper('lv_timer_pause', 1);
-  _lv_area_is_on = Module['_lv_area_is_on'] = createExportWrapper('lv_area_is_on', 2);
   _lv_area_join = Module['_lv_area_join'] = createExportWrapper('lv_area_join', 3);
   _lv_display_is_double_buffered = Module['_lv_display_is_double_buffered'] = createExportWrapper('lv_display_is_double_buffered', 1);
   _lv_ll_is_empty = Module['_lv_ll_is_empty'] = createExportWrapper('lv_ll_is_empty', 1);
@@ -10106,6 +10404,7 @@ function assignWasmExports(wasmExports) {
   _lv_draw_layer_init = Module['_lv_draw_layer_init'] = createExportWrapper('lv_draw_layer_init', 4);
   _lv_draw_dispatch_wait_for_request = Module['_lv_draw_dispatch_wait_for_request'] = createExportWrapper('lv_draw_dispatch_wait_for_request', 0);
   _lv_draw_dispatch = Module['_lv_draw_dispatch'] = createExportWrapper('lv_draw_dispatch', 0);
+  _lv_draw_unit_send_event = Module['_lv_draw_unit_send_event'] = createExportWrapper('lv_draw_unit_send_event', 3);
   _lv_layer_reset = Module['_lv_layer_reset'] = createExportWrapper('lv_layer_reset', 1);
   _lv_color_format_has_alpha = Module['_lv_color_format_has_alpha'] = createExportWrapper('lv_color_format_has_alpha', 1);
   _lv_area_move = Module['_lv_area_move'] = createExportWrapper('lv_area_move', 3);
@@ -10147,6 +10446,7 @@ function assignWasmExports(wasmExports) {
   _lv_display_get_tile_cnt = Module['_lv_display_get_tile_cnt'] = createExportWrapper('lv_display_get_tile_cnt', 1);
   _lv_display_set_antialiasing = Module['_lv_display_set_antialiasing'] = createExportWrapper('lv_display_set_antialiasing', 2);
   _lv_display_get_antialiasing = Module['_lv_display_get_antialiasing'] = createExportWrapper('lv_display_get_antialiasing', 1);
+  _lv_display_get_render_mode = Module['_lv_display_get_render_mode'] = createExportWrapper('lv_display_get_render_mode', 1);
   _lv_display_flush_is_last = Module['_lv_display_flush_is_last'] = createExportWrapper('lv_display_flush_is_last', 1);
   _lv_display_get_screen_loading = Module['_lv_display_get_screen_loading'] = createExportWrapper('lv_display_get_screen_loading', 1);
   _lv_display_get_event_count = Module['_lv_display_get_event_count'] = createExportWrapper('lv_display_get_event_count', 1);
@@ -10173,6 +10473,7 @@ function assignWasmExports(wasmExports) {
   _lv_display_get_driver_data = Module['_lv_display_get_driver_data'] = createExportWrapper('lv_display_get_driver_data', 1);
   _lv_display_get_buf_active = Module['_lv_display_get_buf_active'] = createExportWrapper('lv_display_get_buf_active', 1);
   _lv_display_rotate_area = Module['_lv_display_rotate_area'] = createExportWrapper('lv_display_rotate_area', 2);
+  _lv_display_rotate_point = Module['_lv_display_rotate_point'] = createExportWrapper('lv_display_rotate_point', 2);
   _lv_display_get_draw_buf_size = Module['_lv_display_get_draw_buf_size'] = createExportWrapper('lv_display_get_draw_buf_size', 1);
   _lv_display_get_invalidated_draw_buf_size = Module['_lv_display_get_invalidated_draw_buf_size'] = createExportWrapper('lv_display_get_invalidated_draw_buf_size', 3);
   _lv_layer_top = Module['_lv_layer_top'] = createExportWrapper('lv_layer_top', 0);
@@ -10195,8 +10496,6 @@ function assignWasmExports(wasmExports) {
   _lv_draw_get_available_task = Module['_lv_draw_get_available_task'] = createExportWrapper('lv_draw_get_available_task', 3);
   _lv_draw_get_next_available_task = Module['_lv_draw_get_next_available_task'] = createExportWrapper('lv_draw_get_next_available_task', 3);
   _lv_draw_get_dependent_count = Module['_lv_draw_get_dependent_count'] = createExportWrapper('lv_draw_get_dependent_count', 1);
-  _lv_draw_unit_send_event = Module['_lv_draw_unit_send_event'] = createExportWrapper('lv_draw_unit_send_event', 3);
-  _lv_strcmp = Module['_lv_strcmp'] = createExportWrapper('lv_strcmp', 2);
   _lv_color32_make = Module['_lv_color32_make'] = createExportWrapper('lv_color32_make', 5);
   _lv_draw_layer_alloc_buf = Module['_lv_draw_layer_alloc_buf'] = createExportWrapper('lv_draw_layer_alloc_buf', 1);
   _lv_draw_buf_create = Module['_lv_draw_buf_create'] = createExportWrapper('lv_draw_buf_create', 4);
@@ -10205,10 +10504,13 @@ function assignWasmExports(wasmExports) {
   _lv_draw_task_get_type = Module['_lv_draw_task_get_type'] = createExportWrapper('lv_draw_task_get_type', 1);
   _lv_draw_task_get_draw_dsc = Module['_lv_draw_task_get_draw_dsc'] = createExportWrapper('lv_draw_task_get_draw_dsc', 1);
   _lv_draw_task_get_area = Module['_lv_draw_task_get_area'] = createExportWrapper('lv_draw_task_get_area', 2);
+  _lv_draw_layer_create_drop_shadow = Module['_lv_draw_layer_create_drop_shadow'] = createExportWrapper('lv_draw_layer_create_drop_shadow', 3);
+  _lv_draw_layer_finish_drop_shadow = Module['_lv_draw_layer_finish_drop_shadow'] = createExportWrapper('lv_draw_layer_finish_drop_shadow', 2);
   _lv_draw_arc_dsc_init = Module['_lv_draw_arc_dsc_init'] = createExportWrapper('lv_draw_arc_dsc_init', 1);
   _lv_draw_task_get_arc_dsc = Module['_lv_draw_task_get_arc_dsc'] = createExportWrapper('lv_draw_task_get_arc_dsc', 1);
   _lv_draw_arc = Module['_lv_draw_arc'] = createExportWrapper('lv_draw_arc', 2);
   _lv_draw_arc_get_area = Module['_lv_draw_arc_get_area'] = createExportWrapper('lv_draw_arc_get_area', 8);
+  _lv_draw_task_get_blur_dsc = Module['_lv_draw_task_get_blur_dsc'] = createExportWrapper('lv_draw_task_get_blur_dsc', 1);
   _lv_draw_buf_init_handlers = Module['_lv_draw_buf_init_handlers'] = createExportWrapper('lv_draw_buf_init_handlers', 0);
   _lv_draw_buf_init_with_default_handlers = Module['_lv_draw_buf_init_with_default_handlers'] = createExportWrapper('lv_draw_buf_init_with_default_handlers', 1);
   _lv_draw_buf_handlers_init = Module['_lv_draw_buf_handlers_init'] = createExportWrapper('lv_draw_buf_handlers_init', 8);
@@ -10225,18 +10527,14 @@ function assignWasmExports(wasmExports) {
   _lv_draw_buf_dup_ex = Module['_lv_draw_buf_dup_ex'] = createExportWrapper('lv_draw_buf_dup_ex', 2);
   _lv_draw_buf_adjust_stride = Module['_lv_draw_buf_adjust_stride'] = createExportWrapper('lv_draw_buf_adjust_stride', 2);
   _lv_memmove = Module['_lv_memmove'] = createExportWrapper('lv_memmove', 3);
-  _lv_draw_buf_has_flag = Module['_lv_draw_buf_has_flag'] = createExportWrapper('lv_draw_buf_has_flag', 2);
   _lv_draw_buf_premultiply = Module['_lv_draw_buf_premultiply'] = createExportWrapper('lv_draw_buf_premultiply', 1);
   _lv_color_premultiply = Module['_lv_color_premultiply'] = createExportWrapper('lv_color_premultiply', 1);
   _lv_color16_premultiply = Module['_lv_color16_premultiply'] = createExportWrapper('lv_color16_premultiply', 2);
   _lv_draw_buf_set_palette = Module['_lv_draw_buf_set_palette'] = createExportWrapper('lv_draw_buf_set_palette', 3);
-  _lv_draw_buf_set_flag = Module['_lv_draw_buf_set_flag'] = createExportWrapper('lv_draw_buf_set_flag', 2);
-  _lv_draw_buf_clear_flag = Module['_lv_draw_buf_clear_flag'] = createExportWrapper('lv_draw_buf_clear_flag', 2);
   _lv_draw_buf_from_image = Module['_lv_draw_buf_from_image'] = createExportWrapper('lv_draw_buf_from_image', 2);
   _lv_draw_buf_to_image = Module['_lv_draw_buf_to_image'] = createExportWrapper('lv_draw_buf_to_image', 2);
   _lv_image_buf_set_palette = Module['_lv_image_buf_set_palette'] = createExportWrapper('lv_image_buf_set_palette', 3);
   _lv_image_buf_free = Module['_lv_image_buf_free'] = createExportWrapper('lv_image_buf_free', 1);
-  _lv_color_black = Module['_lv_color_black'] = createExportWrapper('lv_color_black', 1);
   _lv_draw_task_get_image_dsc = Module['_lv_draw_task_get_image_dsc'] = createExportWrapper('lv_draw_task_get_image_dsc', 1);
   _lv_image_buf_get_transformed_area = Module['_lv_image_buf_get_transformed_area'] = createExportWrapper('lv_image_buf_get_transformed_area', 7);
   _lv_point_transform = Module['_lv_point_transform'] = createExportWrapper('lv_point_transform', 6);
@@ -10244,9 +10542,9 @@ function assignWasmExports(wasmExports) {
   _lv_image_decoder_get_info = Module['_lv_image_decoder_get_info'] = createExportWrapper('lv_image_decoder_get_info', 2);
   _lv_image_decoder_open = Module['_lv_image_decoder_open'] = createExportWrapper('lv_image_decoder_open', 3);
   _lv_image_decoder_close = Module['_lv_image_decoder_close'] = createExportWrapper('lv_image_decoder_close', 1);
-  _lv_draw_image_normal_helper = Module['_lv_draw_image_normal_helper'] = createExportWrapper('lv_draw_image_normal_helper', 4);
+  _lv_draw_image_normal_helper = Module['_lv_draw_image_normal_helper'] = createExportWrapper('lv_draw_image_normal_helper', 5);
   _lv_image_decoder_get_area = Module['_lv_image_decoder_get_area'] = createExportWrapper('lv_image_decoder_get_area', 3);
-  _lv_draw_image_tiled_helper = Module['_lv_draw_image_tiled_helper'] = createExportWrapper('lv_draw_image_tiled_helper', 4);
+  _lv_draw_image_tiled_helper = Module['_lv_draw_image_tiled_helper'] = createExportWrapper('lv_draw_image_tiled_helper', 5);
   _lv_draw_letter_dsc_init = Module['_lv_draw_letter_dsc_init'] = createExportWrapper('lv_draw_letter_dsc_init', 1);
   _lv_draw_label_dsc_init = Module['_lv_draw_label_dsc_init'] = createExportWrapper('lv_draw_label_dsc_init', 1);
   _lv_draw_glyph_dsc_init = Module['_lv_draw_glyph_dsc_init'] = createExportWrapper('lv_draw_glyph_dsc_init', 1);
@@ -10272,6 +10570,7 @@ function assignWasmExports(wasmExports) {
   _lv_draw_line_dsc_init = Module['_lv_draw_line_dsc_init'] = createExportWrapper('lv_draw_line_dsc_init', 1);
   _lv_draw_task_get_line_dsc = Module['_lv_draw_task_get_line_dsc'] = createExportWrapper('lv_draw_task_get_line_dsc', 1);
   _lv_draw_line = Module['_lv_draw_line'] = createExportWrapper('lv_draw_line', 2);
+  _lv_draw_line_iterate = Module['_lv_draw_line_iterate'] = createExportWrapper('lv_draw_line_iterate', 3);
   _lv_draw_task_get_mask_rect_dsc = Module['_lv_draw_task_get_mask_rect_dsc'] = createExportWrapper('lv_draw_task_get_mask_rect_dsc', 1);
   _lv_color_white = Module['_lv_color_white'] = createExportWrapper('lv_color_white', 1);
   _lv_draw_task_get_fill_dsc = Module['_lv_draw_task_get_fill_dsc'] = createExportWrapper('lv_draw_task_get_fill_dsc', 1);
@@ -10298,7 +10597,6 @@ function assignWasmExports(wasmExports) {
   _lv_fs_open = Module['_lv_fs_open'] = createExportWrapper('lv_fs_open', 3);
   _lv_fs_seek = Module['_lv_fs_seek'] = createExportWrapper('lv_fs_seek', 3);
   _lv_fs_close = Module['_lv_fs_close'] = createExportWrapper('lv_fs_close', 1);
-  _lv_strdup = Module['_lv_strdup'] = createExportWrapper('lv_strdup', 1);
   _lv_cache_add = Module['_lv_cache_add'] = createExportWrapper('lv_cache_add', 3);
   _lv_image_cache_is_enabled = Module['_lv_image_cache_is_enabled'] = createExportWrapper('lv_image_cache_is_enabled', 0);
   _lv_image_decoder_create = Module['_lv_image_decoder_create'] = createExportWrapper('lv_image_decoder_create', 0);
@@ -10311,6 +10609,8 @@ function assignWasmExports(wasmExports) {
   _lv_image_decoder_add_to_cache = Module['_lv_image_decoder_add_to_cache'] = createExportWrapper('lv_image_decoder_add_to_cache', 4);
   _lv_image_decoder_post_process = Module['_lv_image_decoder_post_process'] = createExportWrapper('lv_image_decoder_post_process', 2);
   _lv_draw_sw_blend = Module['_lv_draw_sw_blend'] = createExportWrapper('lv_draw_sw_blend', 2);
+  _lv_draw_sw_blend_color_to_a8 = Module['_lv_draw_sw_blend_color_to_a8'] = createExportWrapper('lv_draw_sw_blend_color_to_a8', 1);
+  _lv_draw_sw_blend_image_to_a8 = Module['_lv_draw_sw_blend_image_to_a8'] = createExportWrapper('lv_draw_sw_blend_image_to_a8', 1);
   _lv_draw_sw_blend_color_to_al88 = Module['_lv_draw_sw_blend_color_to_al88'] = createExportWrapper('lv_draw_sw_blend_color_to_al88', 1);
   _lv_draw_sw_blend_image_to_al88 = Module['_lv_draw_sw_blend_image_to_al88'] = createExportWrapper('lv_draw_sw_blend_image_to_al88', 1);
   _lv_draw_sw_blend_color_to_argb8888 = Module['_lv_draw_sw_blend_color_to_argb8888'] = createExportWrapper('lv_draw_sw_blend_color_to_argb8888', 1);
@@ -10333,6 +10633,7 @@ function assignWasmExports(wasmExports) {
   _lv_draw_sw_unregister_blend_handler = Module['_lv_draw_sw_unregister_blend_handler'] = createExportWrapper('lv_draw_sw_unregister_blend_handler', 1);
   _lv_draw_sw_get_blend_handler = Module['_lv_draw_sw_get_blend_handler'] = createExportWrapper('lv_draw_sw_get_blend_handler', 1);
   _lv_draw_sw_arc = Module['_lv_draw_sw_arc'] = createExportWrapper('lv_draw_sw_arc', 3);
+  _lv_draw_sw_blur = Module['_lv_draw_sw_blur'] = createExportWrapper('lv_draw_sw_blur', 3);
   _lv_draw_sw_border = Module['_lv_draw_sw_border'] = createExportWrapper('lv_draw_sw_border', 3);
   _lv_draw_sw_box_shadow = Module['_lv_draw_sw_box_shadow'] = createExportWrapper('lv_draw_sw_box_shadow', 3);
   _lv_draw_sw_fill = Module['_lv_draw_sw_fill'] = createExportWrapper('lv_draw_sw_fill', 3);
@@ -10367,13 +10668,16 @@ function assignWasmExports(wasmExports) {
   _lv_font_get_bitmap_fmt_txt = Module['_lv_font_get_bitmap_fmt_txt'] = createExportWrapper('lv_font_get_bitmap_fmt_txt', 2);
   _lv_font_get_glyph_dsc_fmt_txt = Module['_lv_font_get_glyph_dsc_fmt_txt'] = createExportWrapper('lv_font_get_glyph_dsc_fmt_txt', 4);
   _lv_memcmp = Module['_lv_memcmp'] = createExportWrapper('lv_memcmp', 3);
+  _lv_utils_bsearch = Module['_lv_utils_bsearch'] = createExportWrapper('lv_utils_bsearch', 5);
   _lv_font_get_glyph_static_bitmap = Module['_lv_font_get_glyph_static_bitmap'] = createExportWrapper('lv_font_get_glyph_static_bitmap', 1);
   _lv_font_get_glyph_width = Module['_lv_font_get_glyph_width'] = createExportWrapper('lv_font_get_glyph_width', 3);
   _lv_font_set_kerning = Module['_lv_font_set_kerning'] = createExportWrapper('lv_font_set_kerning', 2);
   _lv_font_get_default = Module['_lv_font_get_default'] = createExportWrapper('lv_font_get_default', 0);
   _lv_font_info_is_equal = Module['_lv_font_info_is_equal'] = createExportWrapper('lv_font_info_is_equal', 2);
   _lv_font_has_static_bitmap = Module['_lv_font_has_static_bitmap'] = createExportWrapper('lv_font_has_static_bitmap', 1);
-  _lv_utils_bsearch = Module['_lv_utils_bsearch'] = createExportWrapper('lv_utils_bsearch', 5);
+  _lv_gridnav_add = Module['_lv_gridnav_add'] = createExportWrapper('lv_gridnav_add', 2);
+  _lv_gridnav_remove = Module['_lv_gridnav_remove'] = createExportWrapper('lv_gridnav_remove', 1);
+  _lv_gridnav_set_focused = Module['_lv_gridnav_set_focused'] = createExportWrapper('lv_gridnav_set_focused', 3);
   _lv_indev_read_timer_cb = Module['_lv_indev_read_timer_cb'] = createExportWrapper('lv_indev_read_timer_cb', 1);
   _lv_indev_read = Module['_lv_indev_read'] = createExportWrapper('lv_indev_read', 1);
   _lv_indev_delete = Module['_lv_indev_delete'] = createExportWrapper('lv_indev_delete', 1);
@@ -10389,6 +10693,8 @@ function assignWasmExports(wasmExports) {
   _lv_indev_set_long_press_repeat_time = Module['_lv_indev_set_long_press_repeat_time'] = createExportWrapper('lv_indev_set_long_press_repeat_time', 2);
   _lv_indev_set_scroll_limit = Module['_lv_indev_set_scroll_limit'] = createExportWrapper('lv_indev_set_scroll_limit', 2);
   _lv_indev_set_scroll_throw = Module['_lv_indev_set_scroll_throw'] = createExportWrapper('lv_indev_set_scroll_throw', 2);
+  _lv_indev_set_gesture_min_distance = Module['_lv_indev_set_gesture_min_distance'] = createExportWrapper('lv_indev_set_gesture_min_distance', 2);
+  _lv_indev_set_gesture_min_velocity = Module['_lv_indev_set_gesture_min_velocity'] = createExportWrapper('lv_indev_set_gesture_min_velocity', 2);
   _lv_indev_get_user_data = Module['_lv_indev_get_user_data'] = createExportWrapper('lv_indev_get_user_data', 1);
   _lv_indev_get_driver_data = Module['_lv_indev_get_driver_data'] = createExportWrapper('lv_indev_get_driver_data', 1);
   _lv_indev_get_press_moved = Module['_lv_indev_get_press_moved'] = createExportWrapper('lv_indev_get_press_moved', 1);
@@ -10412,6 +10718,7 @@ function assignWasmExports(wasmExports) {
   _lv_indev_get_event_dsc = Module['_lv_indev_get_event_dsc'] = createExportWrapper('lv_indev_get_event_dsc', 2);
   _lv_indev_remove_event = Module['_lv_indev_remove_event'] = createExportWrapper('lv_indev_remove_event', 2);
   _lv_indev_remove_event_cb_with_user_data = Module['_lv_indev_remove_event_cb_with_user_data'] = createExportWrapper('lv_indev_remove_event_cb_with_user_data', 3);
+  _lv_indev_set_key_remap_cb = Module['_lv_indev_set_key_remap_cb'] = createExportWrapper('lv_indev_set_key_remap_cb', 2);
   _lv_indev_scroll_throw_handler = Module['_lv_indev_scroll_throw_handler'] = createExportWrapper('lv_indev_scroll_throw_handler', 1);
   _lv_timer_get_paused = Module['_lv_timer_get_paused'] = createExportWrapper('lv_timer_get_paused', 1);
   _lv_indev_scroll_throw_predict = Module['_lv_indev_scroll_throw_predict'] = createExportWrapper('lv_indev_scroll_throw_predict', 2);
@@ -10426,20 +10733,38 @@ function assignWasmExports(wasmExports) {
   _lv_grid_fr = Module['_lv_grid_fr'] = createExportWrapper('lv_grid_fr', 1);
   _lv_layout_init = Module['_lv_layout_init'] = createExportWrapper('lv_layout_init', 0);
   _lv_layout_deinit = Module['_lv_layout_deinit'] = createExportWrapper('lv_layout_deinit', 0);
+  _lv_layout_create = Module['_lv_layout_create'] = createExportWrapper('lv_layout_create', 2);
   _lv_layout_register = Module['_lv_layout_register'] = createExportWrapper('lv_layout_register', 2);
   _lv_bin_decoder_init = Module['_lv_bin_decoder_init'] = createExportWrapper('lv_bin_decoder_init', 0);
   _lv_bin_decoder_info = Module['_lv_bin_decoder_info'] = createExportWrapper('lv_bin_decoder_info', 3);
   _lv_bin_decoder_open = Module['_lv_bin_decoder_open'] = createExportWrapper('lv_bin_decoder_open', 2);
   _lv_bin_decoder_get_area = Module['_lv_bin_decoder_get_area'] = createExportWrapper('lv_bin_decoder_get_area', 4);
   _lv_bin_decoder_close = Module['_lv_bin_decoder_close'] = createExportWrapper('lv_bin_decoder_close', 2);
+  _lv_freetype_font_create_with_info = Module['_lv_freetype_font_create_with_info'] = createExportWrapper('lv_freetype_font_create_with_info', 1);
+  _lv_freetype_font_delete = Module['_lv_freetype_font_delete'] = createExportWrapper('lv_freetype_font_delete', 1);
+  _lv_freetype_init = Module['_lv_freetype_init'] = createExportWrapper('lv_freetype_init', 1);
+  _lv_freetype_get_context = Module['_lv_freetype_get_context'] = createExportWrapper('lv_freetype_get_context', 0);
+  _lv_freetype_uninit = Module['_lv_freetype_uninit'] = createExportWrapper('lv_freetype_uninit', 0);
+  _lv_freetype_init_font_info = Module['_lv_freetype_init_font_info'] = createExportWrapper('lv_freetype_init_font_info', 1);
   _free = Module['_free'] = createExportWrapper('free', 1);
   _strncmp = Module['_strncmp'] = createExportWrapper('strncmp', 3);
   _lv_cache_create = Module['_lv_cache_create'] = createExportWrapper('lv_cache_create', 4);
   _lv_cache_set_name = Module['_lv_cache_set_name'] = createExportWrapper('lv_cache_set_name', 2);
   _lv_strlen = Module['_lv_strlen'] = createExportWrapper('lv_strlen', 1);
   _lv_cache_acquire_or_create = Module['_lv_cache_acquire_or_create'] = createExportWrapper('lv_cache_acquire_or_create', 3);
+  _lv_freetype_create_glyph_cache = Module['_lv_freetype_create_glyph_cache'] = createExportWrapper('lv_freetype_create_glyph_cache', 1);
+  _lv_freetype_create_draw_data_outline = Module['_lv_freetype_create_draw_data_outline'] = createExportWrapper('lv_freetype_create_draw_data_outline', 1);
+  _lv_freetype_create_draw_data_image = Module['_lv_freetype_create_draw_data_image'] = createExportWrapper('lv_freetype_create_draw_data_image', 1);
+  _lv_freetype_set_cbs_glyph = Module['_lv_freetype_set_cbs_glyph'] = createExportWrapper('lv_freetype_set_cbs_glyph', 1);
+  _lv_freetype_set_cbs_image_font = Module['_lv_freetype_set_cbs_image_font'] = createExportWrapper('lv_freetype_set_cbs_image_font', 1);
+  _lv_freetype_set_cbs_outline_font = Module['_lv_freetype_set_cbs_outline_font'] = createExportWrapper('lv_freetype_set_cbs_outline_font', 1);
   _lv_cache_entry_get_ref = Module['_lv_cache_entry_get_ref'] = createExportWrapper('lv_cache_entry_get_ref', 1);
   _lv_cache_drop = Module['_lv_cache_drop'] = createExportWrapper('lv_cache_drop', 3);
+  _lv_freetype_italic_transform = Module['_lv_freetype_italic_transform'] = createExportWrapper('lv_freetype_italic_transform', 1);
+  _lv_freetype_italic_transform_on_pos = Module['_lv_freetype_italic_transform_on_pos'] = createExportWrapper('lv_freetype_italic_transform_on_pos', 1);
+  _lv_freetype_outline_add_event = Module['_lv_freetype_outline_add_event'] = createExportWrapper('lv_freetype_outline_add_event', 3);
+  _lv_freetype_outline_get_scale = Module['_lv_freetype_outline_get_scale'] = createExportWrapper('lv_freetype_outline_get_scale', 1);
+  _lv_freetype_is_outline_font = Module['_lv_freetype_is_outline_font'] = createExportWrapper('lv_freetype_is_outline_font', 1);
   _lv_fs_stdio_init = Module['_lv_fs_stdio_init'] = createExportWrapper('lv_fs_stdio_init', 0);
   _lv_canvas_get_draw_buf = Module['_lv_canvas_get_draw_buf'] = createExportWrapper('lv_canvas_get_draw_buf', 1);
   _lv_image_cache_drop = Module['_lv_image_cache_drop'] = createExportWrapper('lv_image_cache_drop', 1);
@@ -10467,10 +10792,11 @@ function assignWasmExports(wasmExports) {
   _lv_color24_luminance = Module['_lv_color24_luminance'] = createExportWrapper('lv_color24_luminance', 1);
   _lv_trigo_cos = Module['_lv_trigo_cos'] = createExportWrapper('lv_trigo_cos', 1);
   _lv_point_from_precise = Module['_lv_point_from_precise'] = createExportWrapper('lv_point_from_precise', 2);
+  _lv_sqrt32 = Module['_lv_sqrt32'] = createExportWrapper('lv_sqrt32', 1);
   _lv_point_swap = Module['_lv_point_swap'] = createExportWrapper('lv_point_swap', 2);
   _lv_fs_get_ext = Module['_lv_fs_get_ext'] = createExportWrapper('lv_fs_get_ext', 1);
   _lv_snprintf = Module['_lv_snprintf'] = createExportWrapper('lv_snprintf', 4);
-  _lv_strlcpy = Module['_lv_strlcpy'] = createExportWrapper('lv_strlcpy', 3);
+  _lv_deinit = Module['_lv_deinit'] = createExportWrapper('lv_deinit', 0);
   _lv_ll_clear_custom = Module['_lv_ll_clear_custom'] = createExportWrapper('lv_ll_clear_custom', 2);
   _lv_span_stack_deinit = Module['_lv_span_stack_deinit'] = createExportWrapper('lv_span_stack_deinit', 0);
   _lv_theme_default_deinit = Module['_lv_theme_default_deinit'] = createExportWrapper('lv_theme_default_deinit', 0);
@@ -10503,6 +10829,7 @@ function assignWasmExports(wasmExports) {
   _lv_cache_iter_create = Module['_lv_cache_iter_create'] = createExportWrapper('lv_cache_iter_create', 1);
   _lv_image_cache_dump = Module['_lv_image_cache_dump'] = createExportWrapper('lv_image_cache_dump', 0);
   _lv_iter_inspect = Module['_lv_iter_inspect'] = createExportWrapper('lv_iter_inspect', 2);
+  _lv_iter_destroy = Module['_lv_iter_destroy'] = createExportWrapper('lv_iter_destroy', 1);
   _lv_image_header_cache_resize = Module['_lv_image_header_cache_resize'] = createExportWrapper('lv_image_header_cache_resize', 2);
   _lv_image_header_cache_iter_create = Module['_lv_image_header_cache_iter_create'] = createExportWrapper('lv_image_header_cache_iter_create', 0);
   _lv_image_header_cache_dump = Module['_lv_image_header_cache_dump'] = createExportWrapper('lv_image_header_cache_dump', 0);
@@ -10591,6 +10918,7 @@ function assignWasmExports(wasmExports) {
   _lv_array_resize = Module['_lv_array_resize'] = createExportWrapper('lv_array_resize', 2);
   _lv_array_remove = Module['_lv_array_remove'] = createExportWrapper('lv_array_remove', 2);
   _lv_array_at = Module['_lv_array_at'] = createExportWrapper('lv_array_at', 2);
+  _lv_array_remove_unordered = Module['_lv_array_remove_unordered'] = createExportWrapper('lv_array_remove_unordered', 2);
   _lv_array_erase = Module['_lv_array_erase'] = createExportWrapper('lv_array_erase', 3);
   _lv_array_concat = Module['_lv_array_concat'] = createExportWrapper('lv_array_concat', 2);
   _lv_array_push_back = Module['_lv_array_push_back'] = createExportWrapper('lv_array_push_back', 2);
@@ -10645,9 +10973,11 @@ function assignWasmExports(wasmExports) {
   _lv_fs_get_size = Module['_lv_fs_get_size'] = createExportWrapper('lv_fs_get_size', 2);
   _lv_fs_path_get_size = Module['_lv_fs_path_get_size'] = createExportWrapper('lv_fs_path_get_size', 2);
   _lv_fs_load_to_buf = Module['_lv_fs_load_to_buf'] = createExportWrapper('lv_fs_load_to_buf', 3);
+  _lv_fs_load_with_alloc = Module['_lv_fs_load_with_alloc'] = createExportWrapper('lv_fs_load_with_alloc', 2);
   _lv_fs_dir_open = Module['_lv_fs_dir_open'] = createExportWrapper('lv_fs_dir_open', 2);
   _lv_fs_dir_read = Module['_lv_fs_dir_read'] = createExportWrapper('lv_fs_dir_read', 3);
   _lv_fs_dir_close = Module['_lv_fs_dir_close'] = createExportWrapper('lv_fs_dir_close', 1);
+  _lv_fs_remove_drive = Module['_lv_fs_remove_drive'] = createExportWrapper('lv_fs_remove_drive', 1);
   _lv_fs_get_letters = Module['_lv_fs_get_letters'] = createExportWrapper('lv_fs_get_letters', 1);
   _lv_fs_up = Module['_lv_fs_up'] = createExportWrapper('lv_fs_up', 1);
   _lv_fs_get_last = Module['_lv_fs_get_last'] = createExportWrapper('lv_fs_get_last', 1);
@@ -10660,14 +10990,12 @@ function assignWasmExports(wasmExports) {
   _lv_grad_conical_init = Module['_lv_grad_conical_init'] = createExportWrapper('lv_grad_conical_init', 6);
   _lv_grad_radial_set_focal = Module['_lv_grad_radial_set_focal'] = createExportWrapper('lv_grad_radial_set_focal', 4);
   _lv_iter_get_context = Module['_lv_iter_get_context'] = createExportWrapper('lv_iter_get_context', 1);
-  _lv_iter_destroy = Module['_lv_iter_destroy'] = createExportWrapper('lv_iter_destroy', 1);
   _lv_iter_make_peekable = Module['_lv_iter_make_peekable'] = createExportWrapper('lv_iter_make_peekable', 2);
   _lv_iter_next = Module['_lv_iter_next'] = createExportWrapper('lv_iter_next', 2);
   _lv_iter_peek = Module['_lv_iter_peek'] = createExportWrapper('lv_iter_peek', 2);
   _lv_iter_peek_advance = Module['_lv_iter_peek_advance'] = createExportWrapper('lv_iter_peek_advance', 1);
   _lv_iter_peek_reset = Module['_lv_iter_peek_reset'] = createExportWrapper('lv_iter_peek_reset', 1);
   _lv_ll_chg_list = Module['_lv_ll_chg_list'] = createExportWrapper('lv_ll_chg_list', 4);
-  _lv_vsnprintf = Module['_lv_vsnprintf'] = createExportWrapper('lv_vsnprintf', 4);
   _fflush = createExportWrapper('fflush', 1);
   _lv_log = Module['_lv_log'] = createExportWrapper('lv_log', 2);
   _lv_lru_create = Module['_lv_lru_create'] = createExportWrapper('lv_lru_create', 4);
@@ -10677,12 +11005,17 @@ function assignWasmExports(wasmExports) {
   _lv_lru_get = Module['_lv_lru_get'] = createExportWrapper('lv_lru_get', 4);
   _lv_lru_remove = Module['_lv_lru_remove'] = createExportWrapper('lv_lru_remove', 3);
   _lv_sqrt = Module['_lv_sqrt'] = createExportWrapper('lv_sqrt', 3);
-  _lv_sqrt32 = Module['_lv_sqrt32'] = createExportWrapper('lv_sqrt32', 1);
   _lv_atan2 = Module['_lv_atan2'] = createExportWrapper('lv_atan2', 2);
   _lv_pow = Module['_lv_pow'] = createExportWrapper('lv_pow', 2);
   _lv_rand = Module['_lv_rand'] = createExportWrapper('lv_rand', 2);
   _lv_palette_lighten = Module['_lv_palette_lighten'] = createExportWrapper('lv_palette_lighten', 3);
   _lv_palette_darken = Module['_lv_palette_darken'] = createExportWrapper('lv_palette_darken', 3);
+  _lv_pending_create = Module['_lv_pending_create'] = createExportWrapper('lv_pending_create', 2);
+  _lv_pending_destroy = Module['_lv_pending_destroy'] = createExportWrapper('lv_pending_destroy', 1);
+  _lv_pending_remove_all = Module['_lv_pending_remove_all'] = createExportWrapper('lv_pending_remove_all', 1);
+  _lv_pending_set_free_cb = Module['_lv_pending_set_free_cb'] = createExportWrapper('lv_pending_set_free_cb', 3);
+  _lv_pending_add = Module['_lv_pending_add'] = createExportWrapper('lv_pending_add', 2);
+  _lv_pending_swap = Module['_lv_pending_swap'] = createExportWrapper('lv_pending_swap', 1);
   _lv_rb_minimum_from = Module['_lv_rb_minimum_from'] = createExportWrapper('lv_rb_minimum_from', 1);
   _lv_rb_remove = Module['_lv_rb_remove'] = createExportWrapper('lv_rb_remove', 2);
   _lv_rb_drop = Module['_lv_rb_drop'] = createExportWrapper('lv_rb_drop', 2);
@@ -10781,6 +11114,15 @@ function assignWasmExports(wasmExports) {
   _lv_style_set_text_outline_stroke_color = Module['_lv_style_set_text_outline_stroke_color'] = createExportWrapper('lv_style_set_text_outline_stroke_color', 2);
   _lv_style_set_text_outline_stroke_width = Module['_lv_style_set_text_outline_stroke_width'] = createExportWrapper('lv_style_set_text_outline_stroke_width', 2);
   _lv_style_set_text_outline_stroke_opa = Module['_lv_style_set_text_outline_stroke_opa'] = createExportWrapper('lv_style_set_text_outline_stroke_opa', 2);
+  _lv_style_set_blur_radius = Module['_lv_style_set_blur_radius'] = createExportWrapper('lv_style_set_blur_radius', 2);
+  _lv_style_set_blur_backdrop = Module['_lv_style_set_blur_backdrop'] = createExportWrapper('lv_style_set_blur_backdrop', 2);
+  _lv_style_set_blur_quality = Module['_lv_style_set_blur_quality'] = createExportWrapper('lv_style_set_blur_quality', 2);
+  _lv_style_set_drop_shadow_radius = Module['_lv_style_set_drop_shadow_radius'] = createExportWrapper('lv_style_set_drop_shadow_radius', 2);
+  _lv_style_set_drop_shadow_offset_x = Module['_lv_style_set_drop_shadow_offset_x'] = createExportWrapper('lv_style_set_drop_shadow_offset_x', 2);
+  _lv_style_set_drop_shadow_offset_y = Module['_lv_style_set_drop_shadow_offset_y'] = createExportWrapper('lv_style_set_drop_shadow_offset_y', 2);
+  _lv_style_set_drop_shadow_color = Module['_lv_style_set_drop_shadow_color'] = createExportWrapper('lv_style_set_drop_shadow_color', 2);
+  _lv_style_set_drop_shadow_opa = Module['_lv_style_set_drop_shadow_opa'] = createExportWrapper('lv_style_set_drop_shadow_opa', 2);
+  _lv_style_set_drop_shadow_quality = Module['_lv_style_set_drop_shadow_quality'] = createExportWrapper('lv_style_set_drop_shadow_quality', 2);
   _lv_style_set_radius = Module['_lv_style_set_radius'] = createExportWrapper('lv_style_set_radius', 2);
   _lv_style_set_radial_offset = Module['_lv_style_set_radial_offset'] = createExportWrapper('lv_style_set_radial_offset', 2);
   _lv_style_set_clip_corner = Module['_lv_style_set_clip_corner'] = createExportWrapper('lv_style_set_clip_corner', 2);
@@ -10841,61 +11183,6 @@ function assignWasmExports(wasmExports) {
   _lv_sleep_ms = Module['_lv_sleep_ms'] = createExportWrapper('lv_sleep_ms', 1);
   _lv_delay_ms = Module['_lv_delay_ms'] = createExportWrapper('lv_delay_ms', 1);
   _lv_os_get_idle_percent = Module['_lv_os_get_idle_percent'] = createExportWrapper('lv_os_get_idle_percent', 0);
-  _lv_gridnav_add = Module['_lv_gridnav_add'] = createExportWrapper('lv_gridnav_add', 2);
-  _lv_gridnav_remove = Module['_lv_gridnav_remove'] = createExportWrapper('lv_gridnav_remove', 1);
-  _lv_gridnav_set_focused = Module['_lv_gridnav_set_focused'] = createExportWrapper('lv_gridnav_set_focused', 3);
-  _lv_subject_init_int = Module['_lv_subject_init_int'] = createExportWrapper('lv_subject_init_int', 2);
-  _lv_subject_set_int = Module['_lv_subject_set_int'] = createExportWrapper('lv_subject_set_int', 2);
-  _lv_subject_notify = Module['_lv_subject_notify'] = createExportWrapper('lv_subject_notify', 1);
-  _lv_subject_get_int = Module['_lv_subject_get_int'] = createExportWrapper('lv_subject_get_int', 1);
-  _lv_subject_get_previous_int = Module['_lv_subject_get_previous_int'] = createExportWrapper('lv_subject_get_previous_int', 1);
-  _lv_subject_set_min_value_int = Module['_lv_subject_set_min_value_int'] = createExportWrapper('lv_subject_set_min_value_int', 2);
-  _lv_subject_set_max_value_int = Module['_lv_subject_set_max_value_int'] = createExportWrapper('lv_subject_set_max_value_int', 2);
-  _lv_subject_init_string = Module['_lv_subject_init_string'] = createExportWrapper('lv_subject_init_string', 5);
-  _lv_subject_copy_string = Module['_lv_subject_copy_string'] = createExportWrapper('lv_subject_copy_string', 2);
-  _lv_subject_snprintf = Module['_lv_subject_snprintf'] = createExportWrapper('lv_subject_snprintf', 3);
-  _lv_subject_get_string = Module['_lv_subject_get_string'] = createExportWrapper('lv_subject_get_string', 1);
-  _lv_subject_get_previous_string = Module['_lv_subject_get_previous_string'] = createExportWrapper('lv_subject_get_previous_string', 1);
-  _lv_subject_init_pointer = Module['_lv_subject_init_pointer'] = createExportWrapper('lv_subject_init_pointer', 2);
-  _lv_subject_set_pointer = Module['_lv_subject_set_pointer'] = createExportWrapper('lv_subject_set_pointer', 2);
-  _lv_subject_get_pointer = Module['_lv_subject_get_pointer'] = createExportWrapper('lv_subject_get_pointer', 1);
-  _lv_subject_get_previous_pointer = Module['_lv_subject_get_previous_pointer'] = createExportWrapper('lv_subject_get_previous_pointer', 1);
-  _lv_subject_init_color = Module['_lv_subject_init_color'] = createExportWrapper('lv_subject_init_color', 2);
-  _lv_subject_set_color = Module['_lv_subject_set_color'] = createExportWrapper('lv_subject_set_color', 2);
-  _lv_subject_get_color = Module['_lv_subject_get_color'] = createExportWrapper('lv_subject_get_color', 2);
-  _lv_subject_get_previous_color = Module['_lv_subject_get_previous_color'] = createExportWrapper('lv_subject_get_previous_color', 2);
-  _lv_subject_init_group = Module['_lv_subject_init_group'] = createExportWrapper('lv_subject_init_group', 3);
-  _lv_subject_add_observer_obj = Module['_lv_subject_add_observer_obj'] = createExportWrapper('lv_subject_add_observer_obj', 4);
-  _lv_subject_add_observer = Module['_lv_subject_add_observer'] = createExportWrapper('lv_subject_add_observer', 3);
-  _lv_subject_deinit = Module['_lv_subject_deinit'] = createExportWrapper('lv_subject_deinit', 1);
-  _lv_observer_remove = Module['_lv_observer_remove'] = createExportWrapper('lv_observer_remove', 1);
-  _lv_subject_get_group_element = Module['_lv_subject_get_group_element'] = createExportWrapper('lv_subject_get_group_element', 2);
-  _lv_subject_add_observer_with_target = Module['_lv_subject_add_observer_with_target'] = createExportWrapper('lv_subject_add_observer_with_target', 4);
-  _lv_obj_remove_from_subject = Module['_lv_obj_remove_from_subject'] = createExportWrapper('lv_obj_remove_from_subject', 2);
-  _lv_observer_get_target = Module['_lv_observer_get_target'] = createExportWrapper('lv_observer_get_target', 1);
-  _lv_obj_add_subject_increment_event = Module['_lv_obj_add_subject_increment_event'] = createExportWrapper('lv_obj_add_subject_increment_event', 4);
-  _lv_obj_set_subject_increment_event_min_value = Module['_lv_obj_set_subject_increment_event_min_value'] = createExportWrapper('lv_obj_set_subject_increment_event_min_value', 3);
-  _lv_obj_set_subject_increment_event_max_value = Module['_lv_obj_set_subject_increment_event_max_value'] = createExportWrapper('lv_obj_set_subject_increment_event_max_value', 3);
-  _lv_obj_set_subject_increment_event_rollover = Module['_lv_obj_set_subject_increment_event_rollover'] = createExportWrapper('lv_obj_set_subject_increment_event_rollover', 3);
-  _lv_obj_add_subject_toggle_event = Module['_lv_obj_add_subject_toggle_event'] = createExportWrapper('lv_obj_add_subject_toggle_event', 3);
-  _lv_obj_add_subject_set_int_event = Module['_lv_obj_add_subject_set_int_event'] = createExportWrapper('lv_obj_add_subject_set_int_event', 4);
-  _lv_obj_add_subject_set_string_event = Module['_lv_obj_add_subject_set_string_event'] = createExportWrapper('lv_obj_add_subject_set_string_event', 4);
-  _lv_obj_bind_style = Module['_lv_obj_bind_style'] = createExportWrapper('lv_obj_bind_style', 5);
-  _lv_obj_bind_flag_if_eq = Module['_lv_obj_bind_flag_if_eq'] = createExportWrapper('lv_obj_bind_flag_if_eq', 4);
-  _lv_obj_bind_flag_if_not_eq = Module['_lv_obj_bind_flag_if_not_eq'] = createExportWrapper('lv_obj_bind_flag_if_not_eq', 4);
-  _lv_obj_bind_flag_if_gt = Module['_lv_obj_bind_flag_if_gt'] = createExportWrapper('lv_obj_bind_flag_if_gt', 4);
-  _lv_obj_bind_flag_if_ge = Module['_lv_obj_bind_flag_if_ge'] = createExportWrapper('lv_obj_bind_flag_if_ge', 4);
-  _lv_obj_bind_flag_if_lt = Module['_lv_obj_bind_flag_if_lt'] = createExportWrapper('lv_obj_bind_flag_if_lt', 4);
-  _lv_obj_bind_flag_if_le = Module['_lv_obj_bind_flag_if_le'] = createExportWrapper('lv_obj_bind_flag_if_le', 4);
-  _lv_obj_bind_state_if_eq = Module['_lv_obj_bind_state_if_eq'] = createExportWrapper('lv_obj_bind_state_if_eq', 4);
-  _lv_obj_bind_state_if_not_eq = Module['_lv_obj_bind_state_if_not_eq'] = createExportWrapper('lv_obj_bind_state_if_not_eq', 4);
-  _lv_obj_bind_state_if_gt = Module['_lv_obj_bind_state_if_gt'] = createExportWrapper('lv_obj_bind_state_if_gt', 4);
-  _lv_obj_bind_state_if_ge = Module['_lv_obj_bind_state_if_ge'] = createExportWrapper('lv_obj_bind_state_if_ge', 4);
-  _lv_obj_bind_state_if_lt = Module['_lv_obj_bind_state_if_lt'] = createExportWrapper('lv_obj_bind_state_if_lt', 4);
-  _lv_obj_bind_state_if_le = Module['_lv_obj_bind_state_if_le'] = createExportWrapper('lv_obj_bind_state_if_le', 4);
-  _lv_obj_bind_checked = Module['_lv_obj_bind_checked'] = createExportWrapper('lv_obj_bind_checked', 2);
-  _lv_observer_get_target_obj = Module['_lv_observer_get_target_obj'] = createExportWrapper('lv_observer_get_target_obj', 1);
-  _lv_observer_get_user_data = Module['_lv_observer_get_user_data'] = createExportWrapper('lv_observer_get_user_data', 1);
   _lv_zalloc = Module['_lv_zalloc'] = createExportWrapper('lv_zalloc', 1);
   _lv_strnlen = Module['_lv_strnlen'] = createExportWrapper('lv_strnlen', 2);
   _lv_strncpy = Module['_lv_strncpy'] = createExportWrapper('lv_strncpy', 3);
@@ -10916,6 +11203,9 @@ function assignWasmExports(wasmExports) {
   _lv_mem_test = Module['_lv_mem_test'] = createExportWrapper('lv_mem_test', 0);
   _lv_mem_monitor = Module['_lv_mem_monitor'] = createExportWrapper('lv_mem_monitor', 1);
   _lv_theme_get_from_obj = Module['_lv_theme_get_from_obj'] = createExportWrapper('lv_theme_get_from_obj', 1);
+  _lv_theme_create = Module['_lv_theme_create'] = createExportWrapper('lv_theme_create', 0);
+  _lv_theme_delete = Module['_lv_theme_delete'] = createExportWrapper('lv_theme_delete', 1);
+  _lv_theme_copy = Module['_lv_theme_copy'] = createExportWrapper('lv_theme_copy', 2);
   _lv_theme_set_parent = Module['_lv_theme_set_parent'] = createExportWrapper('lv_theme_set_parent', 2);
   _lv_theme_set_apply_cb = Module['_lv_theme_set_apply_cb'] = createExportWrapper('lv_theme_set_apply_cb', 2);
   _lv_theme_get_font_small = Module['_lv_theme_get_font_small'] = createExportWrapper('lv_theme_get_font_small', 1);
@@ -10958,6 +11248,7 @@ function assignWasmExports(wasmExports) {
   _lv_arc_get_mode = Module['_lv_arc_get_mode'] = createExportWrapper('lv_arc_get_mode', 1);
   _lv_arc_get_rotation = Module['_lv_arc_get_rotation'] = createExportWrapper('lv_arc_get_rotation', 1);
   _lv_arc_get_knob_offset = Module['_lv_arc_get_knob_offset'] = createExportWrapper('lv_arc_get_knob_offset', 1);
+  _lv_arc_get_change_rate = Module['_lv_arc_get_change_rate'] = createExportWrapper('lv_arc_get_change_rate', 1);
   _lv_arc_bind_value = Module['_lv_arc_bind_value'] = createExportWrapper('lv_arc_bind_value', 2);
   _lv_arc_align_obj_to_angle = Module['_lv_arc_align_obj_to_angle'] = createExportWrapper('lv_arc_align_obj_to_angle', 3);
   _lv_arc_rotate_obj_to_angle = Module['_lv_arc_rotate_obj_to_angle'] = createExportWrapper('lv_arc_rotate_obj_to_angle', 3);
@@ -10975,6 +11266,8 @@ function assignWasmExports(wasmExports) {
   _lv_arclabel_set_center_offset_y = Module['_lv_arclabel_set_center_offset_y'] = createExportWrapper('lv_arclabel_set_center_offset_y', 2);
   _lv_arclabel_set_text_vertical_align = Module['_lv_arclabel_set_text_vertical_align'] = createExportWrapper('lv_arclabel_set_text_vertical_align', 2);
   _lv_arclabel_set_text_horizontal_align = Module['_lv_arclabel_set_text_horizontal_align'] = createExportWrapper('lv_arclabel_set_text_horizontal_align', 2);
+  _lv_arclabel_set_overflow = Module['_lv_arclabel_set_overflow'] = createExportWrapper('lv_arclabel_set_overflow', 2);
+  _lv_arclabel_set_end_overlap = Module['_lv_arclabel_set_end_overlap'] = createExportWrapper('lv_arclabel_set_end_overlap', 2);
   _lv_arclabel_get_angle_start = Module['_lv_arclabel_get_angle_start'] = createExportWrapper('lv_arclabel_get_angle_start', 1);
   _lv_arclabel_get_angle_size = Module['_lv_arclabel_get_angle_size'] = createExportWrapper('lv_arclabel_get_angle_size', 1);
   _lv_arclabel_get_dir = Module['_lv_arclabel_get_dir'] = createExportWrapper('lv_arclabel_get_dir', 1);
@@ -10984,6 +11277,9 @@ function assignWasmExports(wasmExports) {
   _lv_arclabel_get_center_offset_y = Module['_lv_arclabel_get_center_offset_y'] = createExportWrapper('lv_arclabel_get_center_offset_y', 1);
   _lv_arclabel_get_text_vertical_align = Module['_lv_arclabel_get_text_vertical_align'] = createExportWrapper('lv_arclabel_get_text_vertical_align', 1);
   _lv_arclabel_get_text_horizontal_align = Module['_lv_arclabel_get_text_horizontal_align'] = createExportWrapper('lv_arclabel_get_text_horizontal_align', 1);
+  _lv_arclabel_get_overflow = Module['_lv_arclabel_get_overflow'] = createExportWrapper('lv_arclabel_get_overflow', 1);
+  _lv_arclabel_get_end_overlap = Module['_lv_arclabel_get_end_overlap'] = createExportWrapper('lv_arclabel_get_end_overlap', 1);
+  _lv_arclabel_get_text_angle = Module['_lv_arclabel_get_text_angle'] = createExportWrapper('lv_arclabel_get_text_angle', 1);
   _lv_bar_get_mode = Module['_lv_bar_get_mode'] = createExportWrapper('lv_bar_get_mode', 1);
   _lv_bar_set_min_value = Module['_lv_bar_set_min_value'] = createExportWrapper('lv_bar_set_min_value', 2);
   _lv_bar_get_max_value = Module['_lv_bar_get_max_value'] = createExportWrapper('lv_bar_get_max_value', 1);
@@ -11047,6 +11343,9 @@ function assignWasmExports(wasmExports) {
   _lv_chart_set_ver_div_line_count = Module['_lv_chart_set_ver_div_line_count'] = createExportWrapper('lv_chart_set_ver_div_line_count', 2);
   _lv_chart_get_type = Module['_lv_chart_get_type'] = createExportWrapper('lv_chart_get_type', 1);
   _lv_chart_get_point_count = Module['_lv_chart_get_point_count'] = createExportWrapper('lv_chart_get_point_count', 1);
+  _lv_chart_get_update_mode = Module['_lv_chart_get_update_mode'] = createExportWrapper('lv_chart_get_update_mode', 1);
+  _lv_chart_get_hor_div_line_count = Module['_lv_chart_get_hor_div_line_count'] = createExportWrapper('lv_chart_get_hor_div_line_count', 1);
+  _lv_chart_get_ver_div_line_count = Module['_lv_chart_get_ver_div_line_count'] = createExportWrapper('lv_chart_get_ver_div_line_count', 1);
   _lv_chart_get_x_start_point = Module['_lv_chart_get_x_start_point'] = createExportWrapper('lv_chart_get_x_start_point', 2);
   _lv_chart_add_series = Module['_lv_chart_add_series'] = createExportWrapper('lv_chart_add_series', 3);
   _lv_chart_remove_series = Module['_lv_chart_remove_series'] = createExportWrapper('lv_chart_remove_series', 2);
@@ -11082,6 +11381,7 @@ function assignWasmExports(wasmExports) {
   _lv_dropdown_is_open = Module['_lv_dropdown_is_open'] = createExportWrapper('lv_dropdown_is_open', 1);
   _lv_dropdown_close = Module['_lv_dropdown_close'] = createExportWrapper('lv_dropdown_close', 1);
   _lv_dropdown_set_text = Module['_lv_dropdown_set_text'] = createExportWrapper('lv_dropdown_set_text', 2);
+  _lv_dropdown_set_text_static = Module['_lv_dropdown_set_text_static'] = createExportWrapper('lv_dropdown_set_text_static', 2);
   _lv_dropdown_add_option = Module['_lv_dropdown_add_option'] = createExportWrapper('lv_dropdown_add_option', 3);
   _lv_dropdown_set_selected_highlight = Module['_lv_dropdown_set_selected_highlight'] = createExportWrapper('lv_dropdown_set_selected_highlight', 2);
   _lv_dropdown_get_text = Module['_lv_dropdown_get_text'] = createExportWrapper('lv_dropdown_get_text', 1);
@@ -11118,6 +11418,9 @@ function assignWasmExports(wasmExports) {
   _lv_image_get_inner_align = Module['_lv_image_get_inner_align'] = createExportWrapper('lv_image_get_inner_align', 1);
   _lv_image_get_bitmap_map_src = Module['_lv_image_get_bitmap_map_src'] = createExportWrapper('lv_image_get_bitmap_map_src', 1);
   _lv_image_bind_src = Module['_lv_image_bind_src'] = createExportWrapper('lv_image_bind_src', 2);
+  _lv_imagebutton_set_src_left = Module['_lv_imagebutton_set_src_left'] = createExportWrapper('lv_imagebutton_set_src_left', 3);
+  _lv_imagebutton_set_src_right = Module['_lv_imagebutton_set_src_right'] = createExportWrapper('lv_imagebutton_set_src_right', 3);
+  _lv_imagebutton_set_src_mid = Module['_lv_imagebutton_set_src_mid'] = createExportWrapper('lv_imagebutton_set_src_mid', 3);
   _lv_imagebutton_set_state = Module['_lv_imagebutton_set_state'] = createExportWrapper('lv_imagebutton_set_state', 2);
   _lv_imagebutton_get_src_left = Module['_lv_imagebutton_get_src_left'] = createExportWrapper('lv_imagebutton_get_src_left', 2);
   _lv_imagebutton_get_src_middle = Module['_lv_imagebutton_get_src_middle'] = createExportWrapper('lv_imagebutton_get_src_middle', 2);
@@ -11140,12 +11443,12 @@ function assignWasmExports(wasmExports) {
   _lv_keyboard_get_selected_button = Module['_lv_keyboard_get_selected_button'] = createExportWrapper('lv_keyboard_get_selected_button', 1);
   _lv_keyboard_get_button_text = Module['_lv_keyboard_get_button_text'] = createExportWrapper('lv_keyboard_get_button_text', 2);
   _lv_label_set_text_vfmt = Module['_lv_label_set_text_vfmt'] = createExportWrapper('lv_label_set_text_vfmt', 3);
-  _lv_label_get_letter_on = Module['_lv_label_get_letter_on'] = createExportWrapper('lv_label_get_letter_on', 3);
   _lv_label_set_text_selection_start = Module['_lv_label_set_text_selection_start'] = createExportWrapper('lv_label_set_text_selection_start', 2);
   _lv_label_set_text_selection_end = Module['_lv_label_set_text_selection_end'] = createExportWrapper('lv_label_set_text_selection_end', 2);
   _lv_label_set_recolor = Module['_lv_label_set_recolor'] = createExportWrapper('lv_label_set_recolor', 2);
   _lv_label_get_long_mode = Module['_lv_label_get_long_mode'] = createExportWrapper('lv_label_get_long_mode', 1);
   _lv_label_get_letter_pos = Module['_lv_label_get_letter_pos'] = createExportWrapper('lv_label_get_letter_pos', 3);
+  _lv_label_get_letter_on = Module['_lv_label_get_letter_on'] = createExportWrapper('lv_label_get_letter_on', 3);
   _lv_label_is_char_under_pos = Module['_lv_label_is_char_under_pos'] = createExportWrapper('lv_label_is_char_under_pos', 2);
   _lv_label_get_text_selection_start = Module['_lv_label_get_text_selection_start'] = createExportWrapper('lv_label_get_text_selection_start', 1);
   _lv_label_get_text_selection_end = Module['_lv_label_get_text_selection_end'] = createExportWrapper('lv_label_get_text_selection_end', 1);
@@ -11156,6 +11459,7 @@ function assignWasmExports(wasmExports) {
   _lv_led_on = Module['_lv_led_on'] = createExportWrapper('lv_led_on', 1);
   _lv_led_off = Module['_lv_led_off'] = createExportWrapper('lv_led_off', 1);
   _lv_led_toggle = Module['_lv_led_toggle'] = createExportWrapper('lv_led_toggle', 1);
+  _lv_led_get_color = Module['_lv_led_get_color'] = createExportWrapper('lv_led_get_color', 2);
   _lv_line_set_points_mutable = Module['_lv_line_set_points_mutable'] = createExportWrapper('lv_line_set_points_mutable', 3);
   _lv_line_get_points = Module['_lv_line_get_points'] = createExportWrapper('lv_line_get_points', 1);
   _lv_line_get_point_count = Module['_lv_line_get_point_count'] = createExportWrapper('lv_line_get_point_count', 1);
@@ -11185,9 +11489,12 @@ function assignWasmExports(wasmExports) {
   _lv_menu_get_sidebar_header = Module['_lv_menu_get_sidebar_header'] = createExportWrapper('lv_menu_get_sidebar_header', 1);
   _lv_menu_get_sidebar_header_back_button = Module['_lv_menu_get_sidebar_header_back_button'] = createExportWrapper('lv_menu_get_sidebar_header_back_button', 1);
   _lv_menu_back_button_is_root = Module['_lv_menu_back_button_is_root'] = createExportWrapper('lv_menu_back_button_is_root', 2);
+  _lv_menu_get_mode_header = Module['_lv_menu_get_mode_header'] = createExportWrapper('lv_menu_get_mode_header', 1);
+  _lv_menu_get_mode_root_back_button = Module['_lv_menu_get_mode_root_back_button'] = createExportWrapper('lv_menu_get_mode_root_back_button', 1);
   _lv_msgbox_add_title = Module['_lv_msgbox_add_title'] = createExportWrapper('lv_msgbox_add_title', 2);
   _lv_msgbox_add_header_button = Module['_lv_msgbox_add_header_button'] = createExportWrapper('lv_msgbox_add_header_button', 2);
   _lv_msgbox_add_text = Module['_lv_msgbox_add_text'] = createExportWrapper('lv_msgbox_add_text', 2);
+  _lv_msgbox_add_text_fmt = Module['_lv_msgbox_add_text_fmt'] = createExportWrapper('lv_msgbox_add_text_fmt', 3);
   _lv_msgbox_add_footer_button = Module['_lv_msgbox_add_footer_button'] = createExportWrapper('lv_msgbox_add_footer_button', 2);
   _lv_msgbox_add_close_button = Module['_lv_msgbox_add_close_button'] = createExportWrapper('lv_msgbox_add_close_button', 1);
   _lv_msgbox_get_header = Module['_lv_msgbox_get_header'] = createExportWrapper('lv_msgbox_get_header', 1);
@@ -11201,12 +11508,12 @@ function assignWasmExports(wasmExports) {
   _lv_roller_get_selected_str = Module['_lv_roller_get_selected_str'] = createExportWrapper('lv_roller_get_selected_str', 3);
   _lv_roller_get_option_str = Module['_lv_roller_get_option_str'] = createExportWrapper('lv_roller_get_option_str', 4);
   _lv_roller_bind_value = Module['_lv_roller_bind_value'] = createExportWrapper('lv_roller_bind_value', 2);
+  _lv_scale_set_line_needle_value = Module['_lv_scale_set_line_needle_value'] = createExportWrapper('lv_scale_set_line_needle_value', 4);
+  _lv_scale_set_image_needle_value = Module['_lv_scale_set_image_needle_value'] = createExportWrapper('lv_scale_set_image_needle_value', 3);
   _lv_scale_set_min_value = Module['_lv_scale_set_min_value'] = createExportWrapper('lv_scale_set_min_value', 2);
   _lv_scale_set_max_value = Module['_lv_scale_set_max_value'] = createExportWrapper('lv_scale_set_max_value', 2);
   _lv_scale_set_angle_range = Module['_lv_scale_set_angle_range'] = createExportWrapper('lv_scale_set_angle_range', 2);
   _lv_scale_set_rotation = Module['_lv_scale_set_rotation'] = createExportWrapper('lv_scale_set_rotation', 2);
-  _lv_scale_set_line_needle_value = Module['_lv_scale_set_line_needle_value'] = createExportWrapper('lv_scale_set_line_needle_value', 4);
-  _lv_scale_set_image_needle_value = Module['_lv_scale_set_image_needle_value'] = createExportWrapper('lv_scale_set_image_needle_value', 3);
   _lv_scale_set_text_src = Module['_lv_scale_set_text_src'] = createExportWrapper('lv_scale_set_text_src', 2);
   _lv_scale_set_post_draw = Module['_lv_scale_set_post_draw'] = createExportWrapper('lv_scale_set_post_draw', 2);
   _lv_scale_set_draw_ticks_on_top = Module['_lv_scale_set_draw_ticks_on_top'] = createExportWrapper('lv_scale_set_draw_ticks_on_top', 2);
@@ -11280,7 +11587,16 @@ function assignWasmExports(wasmExports) {
   _lv_spinbox_set_cursor_pos = Module['_lv_spinbox_set_cursor_pos'] = createExportWrapper('lv_spinbox_set_cursor_pos', 2);
   _lv_spinbox_set_digit_step_direction = Module['_lv_spinbox_set_digit_step_direction'] = createExportWrapper('lv_spinbox_set_digit_step_direction', 2);
   _lv_spinbox_get_rollover = Module['_lv_spinbox_get_rollover'] = createExportWrapper('lv_spinbox_get_rollover', 1);
+  _lv_spinbox_get_digit_count = Module['_lv_spinbox_get_digit_count'] = createExportWrapper('lv_spinbox_get_digit_count', 1);
+  _lv_spinbox_get_dec_point_pos = Module['_lv_spinbox_get_dec_point_pos'] = createExportWrapper('lv_spinbox_get_dec_point_pos', 1);
+  _lv_spinbox_get_min_value = Module['_lv_spinbox_get_min_value'] = createExportWrapper('lv_spinbox_get_min_value', 1);
+  _lv_spinbox_get_max_value = Module['_lv_spinbox_get_max_value'] = createExportWrapper('lv_spinbox_get_max_value', 1);
+  _lv_spinbox_get_digit_step_direction = Module['_lv_spinbox_get_digit_step_direction'] = createExportWrapper('lv_spinbox_get_digit_step_direction', 1);
   _lv_spinbox_bind_value = Module['_lv_spinbox_bind_value'] = createExportWrapper('lv_spinbox_bind_value', 2);
+  _lv_spinner_set_anim_duration = Module['_lv_spinner_set_anim_duration'] = createExportWrapper('lv_spinner_set_anim_duration', 2);
+  _lv_spinner_set_arc_sweep = Module['_lv_spinner_set_arc_sweep'] = createExportWrapper('lv_spinner_set_arc_sweep', 2);
+  _lv_spinner_get_anim_duration = Module['_lv_spinner_get_anim_duration'] = createExportWrapper('lv_spinner_get_anim_duration', 1);
+  _lv_spinner_get_arc_sweep = Module['_lv_spinner_get_arc_sweep'] = createExportWrapper('lv_spinner_get_arc_sweep', 1);
   _lv_switch_set_orientation = Module['_lv_switch_set_orientation'] = createExportWrapper('lv_switch_set_orientation', 2);
   _lv_switch_get_orientation = Module['_lv_switch_get_orientation'] = createExportWrapper('lv_switch_get_orientation', 1);
   _lv_table_set_cell_value = Module['_lv_table_set_cell_value'] = createExportWrapper('lv_table_set_cell_value', 4);
@@ -11300,16 +11616,18 @@ function assignWasmExports(wasmExports) {
   _lv_table_get_selected_cell = Module['_lv_table_get_selected_cell'] = createExportWrapper('lv_table_get_selected_cell', 3);
   _lv_table_get_cell_user_data = Module['_lv_table_get_cell_user_data'] = createExportWrapper('lv_table_get_cell_user_data', 3);
   _lv_tabview_get_content = Module['_lv_tabview_get_content'] = createExportWrapper('lv_tabview_get_content', 1);
-  _lv_tabview_rename_tab = Module['_lv_tabview_rename_tab'] = createExportWrapper('lv_tabview_rename_tab', 3);
+  _lv_tabview_set_tab_text = Module['_lv_tabview_set_tab_text'] = createExportWrapper('lv_tabview_set_tab_text', 3);
+  _lv_tabview_get_tab_button = Module['_lv_tabview_get_tab_button'] = createExportWrapper('lv_tabview_get_tab_button', 2);
   _lv_tabview_get_tab_count = Module['_lv_tabview_get_tab_count'] = createExportWrapper('lv_tabview_get_tab_count', 1);
   _lv_tabview_get_tab_active = Module['_lv_tabview_get_tab_active'] = createExportWrapper('lv_tabview_get_tab_active', 1);
-  _lv_tabview_get_tab_button = Module['_lv_tabview_get_tab_button'] = createExportWrapper('lv_tabview_get_tab_button', 2);
+  _lv_tabview_get_tab_bar_position = Module['_lv_tabview_get_tab_bar_position'] = createExportWrapper('lv_tabview_get_tab_bar_position', 1);
   _lv_textarea_cursor_up = Module['_lv_textarea_cursor_up'] = createExportWrapper('lv_textarea_cursor_up', 1);
   _lv_textarea_cursor_down = Module['_lv_textarea_cursor_down'] = createExportWrapper('lv_textarea_cursor_down', 1);
   _lv_textarea_delete_char_forward = Module['_lv_textarea_delete_char_forward'] = createExportWrapper('lv_textarea_delete_char_forward', 1);
   _lv_textarea_clear_selection = Module['_lv_textarea_clear_selection'] = createExportWrapper('lv_textarea_clear_selection', 1);
   _lv_textarea_get_accepted_chars = Module['_lv_textarea_get_accepted_chars'] = createExportWrapper('lv_textarea_get_accepted_chars', 1);
   _lv_textarea_set_password_bullet = Module['_lv_textarea_set_password_bullet'] = createExportWrapper('lv_textarea_set_password_bullet', 2);
+  _lv_textarea_set_accepted_chars_static = Module['_lv_textarea_set_accepted_chars_static'] = createExportWrapper('lv_textarea_set_accepted_chars_static', 2);
   _lv_textarea_set_insert_replace = Module['_lv_textarea_set_insert_replace'] = createExportWrapper('lv_textarea_set_insert_replace', 2);
   _lv_textarea_set_text_selection = Module['_lv_textarea_set_text_selection'] = createExportWrapper('lv_textarea_set_text_selection', 2);
   _lv_textarea_set_password_show_time = Module['_lv_textarea_set_password_show_time'] = createExportWrapper('lv_textarea_set_password_show_time', 2);
@@ -11562,7 +11880,7 @@ run();
 
 // end include: postamble.js
 
-// include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v9.4.0/../common/post.js
+// include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v9.5.0/../common/post.js
 }
-// end include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v9.4.0/../common/post.js
+// end include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v9.5.0/../common/post.js
 

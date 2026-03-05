@@ -84,9 +84,10 @@ import {
 } from "project-editor/lvgl/lvgl-versions";
 import {
     LVGL_FLAG_CODES,
+    LVGL_REACTIVE_FLAGS,
     LVGL_STATE_CODES,
-    LVGL_REACTIVE_STATES,
-    LVGL_REACTIVE_FLAGS
+    LVGL_STATE_CODES_V9_5_0,
+    LVGL_REACTIVE_STATES
 } from "project-editor/lvgl/lvgl-constants";
 import { LVGLPropertyInfo } from "project-editor/lvgl/style-catalog";
 
@@ -1947,7 +1948,7 @@ export class LVGLWidget extends Widget {
             if (code.lvglBuild) {
                 states = added.map(state => "LV_STATE_" + state).join("|");
             } else {
-                states = getCode(added, LVGL_STATE_CODES);
+                states = getCode(added, code.isLVGLVersion(["9.5.0"]) ? LVGL_STATE_CODES_V9_5_0 : LVGL_STATE_CODES);
             }            
             code.callObjectFunction("lv_obj_add_state", states);
         }

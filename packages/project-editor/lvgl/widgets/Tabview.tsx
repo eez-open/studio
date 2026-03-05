@@ -90,6 +90,9 @@ export class LVGLTabviewWidget extends LVGLWidget {
             object: LVGLTabviewWidget,
             jsObject: Partial<LVGLTabviewWidget>
         ) => {
+            if (jsObject.selectedTab == undefined) {
+                jsObject.selectedTab = "0";
+            }
             if (jsObject.selectedTabType == undefined) {
                 jsObject.selectedTabType = "literal";
             }

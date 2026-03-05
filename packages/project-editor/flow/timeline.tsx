@@ -2935,6 +2935,7 @@ export function getTimelineProperty(
             );
             if (value == undefined) {
                 value = getStylePropDefaultValue(
+                    ProjectEditor.getProject(widget),
                     page._lvglRuntime,
                     widget._lvglObj,
                     "MAIN",
