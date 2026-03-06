@@ -279,7 +279,7 @@ export class BuildEezFlowLite {
                 );
                 if (connectionLineTrue.length > 0) {
                     for (const connectionLine of connectionLineTrue) {
-                        genFlowCode(connectionLine.targetComponent);
+                        this.genFlowCode(build, connectionLine.targetComponent, flow);
                     }
                 } else {
                     build.line("// pass");
@@ -289,7 +289,7 @@ export class BuildEezFlowLite {
                     build.line("} else {");
                     build.indent();
                     for (const connectionLine of connectionLineFalse) {
-                        genFlowCode(connectionLine.targetComponent);
+                        this.genFlowCode(build, connectionLine.targetComponent, flow);
                     }
                 }
                 build.blockEnd("}");
@@ -320,7 +320,7 @@ export class BuildEezFlowLite {
                     );
 
                     for (const connectionLine of connectionLines) {
-                        genFlowCode(connectionLine.targetComponent);
+                        this.genFlowCode(build, connectionLine.targetComponent, flow);
                     }
 
                     if (test_index == component.tests.length - 1) {

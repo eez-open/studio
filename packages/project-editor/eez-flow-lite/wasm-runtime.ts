@@ -240,7 +240,6 @@ export abstract class EezFlowLiteWasmRuntime extends RuntimeBase {
             if (action) {
                 this.executeAction(action, flowState, component);
             }
-            return;
         } else if (component instanceof EndActionComponent) {
             if (flowState.parentFlowState) {
                 runInAction(() => (flowState.isFinished = true));
