@@ -997,6 +997,19 @@ export const pad_right_property_info: LVGLPropertyInfo = {
         extDraw: false
     }
 };
+const pad_radial_property_info: LVGLPropertyInfo = {
+    name: "pad_radial",
+    displayName: "Pad Radial",
+    type: PropertyType.Number,
+    lvglStyleProp: {
+        code: LVGL_STYLE_PROP_CODES.LV_STYLE_PAD_RADIAL,
+        description: "Pad text labels away from the scale ticks.",
+        defaultValue: "0",
+        inherited: false,
+        layout: false,
+        extDraw: false
+    }
+};
 const pad_row_property_info: LVGLPropertyInfo = {
     name: "pad_row",
     displayName: "Pad Row",
@@ -2635,6 +2648,7 @@ export const lvglProperties: LVGLPropertiesGroup[] = [
             pad_bottom_property_info,
             pad_left_property_info,
             pad_right_property_info,
+            pad_radial_property_info,
             pad_row_property_info,
             pad_column_property_info
         ]
