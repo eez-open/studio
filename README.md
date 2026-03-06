@@ -67,33 +67,6 @@ EEZ Studio is a free and open source cross-platform low-code visual tool for des
 
 ---
 
-New functionality is under development thanks to the sponsorship of the [NGI0 PET](https://nlnet.nl/project/EEZ-DIB/) and [NGI0 Entrust](https://nlnet.nl/project/EEZ-Studio/#ack) funds from NLnet. The following milestones have been achieved so far:
-
--   [M1](https://github.com/eez-open/studio/issues/102) - Visual editor
--   [M2](https://github.com/eez-open/studio/issues/103) - Interpreter for PC
--   [M3](https://github.com/eez-open/studio/issues/104) - Interpreter for BB3
--   [M4](https://github.com/eez-open/studio/issues/134) - Debugger for PC
--   [M5](https://github.com/eez-open/studio/issues/135) - Debugger for BB3
--   [M6](https://github.com/eez-open/studio/releases/tag/0.9.90) - EEZ flow engine unification
--   [M7](https://github.com/eez-open/studio/releases/tag/v0.9.91) - Multilanguage support in project
--   [M8](https://github.com/eez-open/studio/releases/tag/v0.9.92) - Widgets advanced control
--   [M9](https://github.com/eez-open/studio/releases/tag/v0.9.93) - Project templates
--   [M10](https://github.com/eez-open/studio/releases/tag/v0.9.94) - Gitea.io integration
--   [M11](https://github.com/eez-open/studio/releases/tag/v0.9.95) - New EEZ Flow extensions
--   [M12](https://github.com/eez-open/studio/releases/tag/v0.9.96) - LVGL integration
--   [M13](https://github.com/eez-open/studio/releases/tag/v0.9.98) - Standalone Flow dashboard
--   [M14](https://github.com/eez-open/studio/releases/tag/v0.9.99) - Home page modifications and enhancements
--   [M15](https://github.com/eez-open/studio/releases/tag/v0.10.1) - Enhancements (more examples, extension manager, MQTT)
--   [M16](https://github.com/eez-open/studio/releases/tag/v0.10.2) - Online help, enhancements, bug fixing for “Actions”
--   [M17](https://github.com/eez-open/studio/releases/tag/v0.10.3) - Online help, enhancements, bug fixing for “Widgets”
--   [M18](https://github.com/eez-open/studio/releases/tag/v0.12.0) - Simultaneous control of multiple instruments
--   [M19](https://github.com/eez-open/studio/releases/tag/v0.13.0) - Support for non-SCPI instruments and devices
--   [M20](https://github.com/eez-open/studio/releases/tag/v0.14.0) - Hybrid table/tree/grid widget
--   [M21](https://github.com/eez-open/studio/releases/tag/v0.15.0) - Project scrapbook
--   [M22](https://github.com/eez-open/studio/releases/tag/v0.16.0) - Improvement of session-centric work with instruments and data management
--   [M23](https://github.com/eez-open/studio/releases/tag/v0.17.0) - Multimedia support / Support for networking / other Instruments related
----
-
 ## Installation
 
 64-bit OS is required in all cases.
@@ -245,3 +218,9 @@ The default created database as well as its location can be changed later throug
 -   Linux: `~/.config/eezstudio/extensions`
 -   Mac: `~/Library/Application\ Support/eezstudio/extensions`
 -   Windows: `%appdata%\eezstudio\extensions`
+
+---
+
+This work is financed by [NLnet](https://nlnet.nl/project/BB3-CM5/) foundation
+
+![nlnet](docs/images/nlnet-logo.png)
