@@ -43,7 +43,10 @@ export function getAllComponentClasses(
                     isProperSubclassOf(
                         objectClassInfo.objectClass.classInfo,
                         ProjectEditor.WidgetClass.classInfo
-                    ))
+                    )) ||
+                // Extension components only for LVGL Project (registered via public API) have "/" in their name
+                (projectStore.projectTypeTraits.isLVGL &&
+                    objectClassInfo.name.includes("/"))
             );
         }
 

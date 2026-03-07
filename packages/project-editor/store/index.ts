@@ -31,16 +31,19 @@ import {
 } from "project-editor/core/object";
 import { CurrentSearch, startNewSearch } from "project-editor/core/search";
 
-import type { DataContext } from "project-editor/features/variable/variable";
+import type {
+    DataContext,
+    IStructure,
+    IStructureField,
+    IEnum,
+    IEnumMember
+} from "project-editor/features/variable/variable";
 
 import type { RuntimeBase } from "project-editor/flow/runtime/runtime";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-import type {
-    ExtensionDirective,
-    Project
-} from "project-editor/project/project";
+import type {Project} from "project-editor/project/project";
 
 import {
     findPropertyByNameInObject,
@@ -138,6 +141,16 @@ interface ExtensionContent {
         name: string;
         type: IObjectVariableType;
     }[];
+
+    structureVariableTypes: {
+        name: string;
+        type: IStructure;
+    }[];
+
+    enumsVariableTypes: {
+        name: string;
+        type: IEnum;
+    }[];
 }
 
 type ProjectStoreContext =
@@ -197,6 +210,8 @@ export class ProjectStore {
     extensionNames: string[];
     objectVariableTypes = new Map<string, IObjectVariableType>();
     importedActionComponentClasses = new Map<string, typeof ActionComponent>();
+    importedStructureVariableTypes = new Map<string, IStructure>();
+    importedEnumVariableTypes = new Map<string, IEnum>();
 
     objectCollapsedStore = observable.box<
         { object: IEezObject; collapsed: Set<IEezObject> }[]
@@ -1246,7 +1261,7 @@ export class ProjectStore {
         // Also exit full simulator mode if active
         if (this.layoutModels.isDockerSimulatorMode) {
             this.onExitFullSimulatorMode();
-        }        
+        }
     }
 
     async setEditorMode(force: boolean = false) {
@@ -1402,84 +1417,144 @@ export class ProjectStore {
 
     buildImportedExtensions(project: Project) {
         // build importedExtensionToExtensionContent
-        const importedExtensionToExtensionContent = new Map<
-            ExtensionDirective,
-            ExtensionContent
-        >();
+        const seenExtensionNames = new Set<string>();
+        const extensionNamesToProcess: string[] = [];
 
-        const extensionDirectives = project.settings?.general?.extensions;
-        if (extensionDirectives) {
-            for (const extensionDirective of extensionDirectives) {
-                if (extensionDirective.extensionName) {
-                    const extension = extensions.get(
-                        extensionDirective.extensionName
-                    );
-
-                    if (!extension) {
-                        continue;
-                    }
-
-                    if (!extension.eezFlowExtensionInit) {
-                        continue;
-                    }
-
-                    try {
-                        const extensionContent: ExtensionContent = {
-                            extensionName: extension.name,
-                            actionComponentClasses: [],
-                            objectVariableTypes: []
-                        };
-
-                        extension.eezFlowExtensionInit({
-                            registerActionComponent: (
-                                actionComponentDefinition: IActionComponentDefinition
-                            ) => {
-                                const { className, actionComponentClass } =
-                                    ProjectEditor.createActionComponentClass(
-                                        actionComponentDefinition,
-                                        `${extension.name}/${actionComponentDefinition.name}`
-                                    );
-
-                                if (!className || !actionComponentClass) {
-                                    throw new Error(
-                                        `Failed to create action component class for "${extension.name}/${actionComponentDefinition.name}"`
-                                    );
-                                }
-
-                                extensionContent.actionComponentClasses.push({
-                                    className,
-                                    actionComponentClass
-                                });
-                            },
-
-                            registerObjectVariableType: (
-                                name: string,
-                                objectVariableType: IObjectVariableType
-                            ) => {
-                                extensionContent.objectVariableTypes.push({
-                                    name: `${extension.name}/${name}`,
-                                    type: createObjectVariableType(
-                                        objectVariableType
-                                    )
-                                });
-                            },
-
-                            showGenericDialog,
-
-                            validators: {
-                                required: validators.required,
-                                rangeInclusive: validators.rangeInclusive
-                            }
-                        });
-
-                        importedExtensionToExtensionContent.set(
-                            extensionDirective,
-                            extensionContent
-                        );
-                    } catch (err) {
-                        console.error(err);
+        const collectFrom = (p: Project) => {
+            const exts = p.settings?.general?.extensions;
+            if (exts) {
+                for (const ext of exts) {
+                    if (
+                        ext.extensionName &&
+                        !seenExtensionNames.has(ext.extensionName)
+                    ) {
+                        seenExtensionNames.add(ext.extensionName);
+                        extensionNamesToProcess.push(ext.extensionName);
                     }
                 }
+            }
+        };
+
+        collectFrom(project);
+        for (const openProj of this.openProjectsManager.openProjects) {
+            collectFrom(openProj.project);
+        }
+
+        // build extensionContentByName
+        const extensionContentByName = new Map<string, ExtensionContent>();
+
+        for (const extensionName of extensionNamesToProcess) {
+            const extension = extensions.get(extensionName);
+
+            if (!extension) {
+                continue;
+            }
+
+            if (!extension.eezFlowExtensionInit) {
+                continue;
+            }
+
+            try {
+                const extensionContent: ExtensionContent = {
+                    extensionName: extension.name,
+                    actionComponentClasses: [],
+                    objectVariableTypes: [],
+                    structureVariableTypes: [],
+                    enumsVariableTypes: []
+                };
+
+                extension.eezFlowExtensionInit({
+                    registerActionComponent: (
+                        actionComponentDefinition: IActionComponentDefinition
+                    ) => {
+                        const { className, actionComponentClass } =
+                            ProjectEditor.createActionComponentClass(
+                                actionComponentDefinition,
+                                `${extension.name}/${actionComponentDefinition.name}`
+                            );
+
+                        if (!className || !actionComponentClass) {
+                            throw new Error(
+                                `Failed to create action component class for "${extension.name}/${actionComponentDefinition.name}"`
+                            );
+                        }
+
+                        extensionContent.actionComponentClasses.push({
+                            className,
+                            actionComponentClass
+                        });
+                    },
+
+                    registerObjectVariableType: (
+                        name: string,
+                        objectVariableType: IObjectVariableType
+                    ) => {
+                        extensionContent.objectVariableTypes.push({
+                            name: `${extension.name}/${name}`,
+                            type: createObjectVariableType(
+                                objectVariableType
+                            )
+                        });
+                    },
+
+                    registerStructureVariableType: (structure: {
+                        name: string;
+                        fields: { name: string; type: string }[];
+                    }) => {
+                        const fullName = `${extension.name}/${structure.name}`;
+                        const fields = structure.fields as IStructureField[];
+                        extensionContent.structureVariableTypes.push({
+                            name: fullName,
+                            type: {
+                                name: fullName,
+                                fields,
+                                get fieldsMap() {
+                                    const map = new Map<
+                                        string,
+                                        IStructureField
+                                    >();
+                                    for (const f of fields) {
+                                        map.set(f.name, f);
+                                    }
+                                    return map;
+                                }
+                            }
+                        });
+                    },
+
+                    registerEnumVariableType: (enumDef: {
+                        name: string;
+                        members: { name: string; value: number }[];
+                    }) => {
+                        const fullName = `${extension.name}/${enumDef.name}`;
+                        const members = enumDef.members as IEnumMember[];
+                        extensionContent.enumsVariableTypes.push({
+                            name: fullName,
+                            type: {
+                                name: fullName,
+                                members,
+                                get membersMap() {
+                                    const map = new Map<string, IEnumMember>();
+                                    for (const m of members) {
+                                        map.set(m.name, m);
+                                    }
+                                    return map;
+                                }
+                            }
+                        });
+                    },
+
+                    showGenericDialog,
+
+                    validators: {
+                        required: validators.required,
+                        rangeInclusive: validators.rangeInclusive
+                    }
+                });
+
+                extensionContentByName.set(extensionName, extensionContent);
+            } catch (err) {
+                console.error(err);
             }
         }
 
@@ -1496,7 +1571,7 @@ export class ProjectStore {
         }
 
         // insert object variable types from imported extensions
-        for (const extensionContent of importedExtensionToExtensionContent.values()) {
+        for (const extensionContent of extensionContentByName.values()) {
             for (const objectVariableType of extensionContent.objectVariableTypes) {
                 this.objectVariableTypes.set(
                     objectVariableType.name,
@@ -1514,7 +1589,7 @@ export class ProjectStore {
         >();
 
         // insert action component classes from imported extensions
-        for (const extensionContent of importedExtensionToExtensionContent.values()) {
+        for (const extensionContent of extensionContentByName.values()) {
             for (const actionComponentClass of extensionContent.actionComponentClasses) {
                 this.importedActionComponentClasses.set(
                     actionComponentClass.className,
@@ -1522,7 +1597,33 @@ export class ProjectStore {
                 );
             }
         }
+
+        //
+        // build importedStructureVariableTypes
+        //
+        this.importedStructureVariableTypes = new Map<string, IStructure>();
+
+        for (const extensionContent of extensionContentByName.values()) {
+            for (const structure of extensionContent.structureVariableTypes) {
+                this.importedStructureVariableTypes.set(
+                    structure.name,
+                    structure.type
+                );
+            }
+        }
+
+        //
+        // build importedEnumVariableTypes
+        //
+        this.importedEnumVariableTypes = new Map<string, IEnum>();
+
+        for (const extensionContent of extensionContentByName.values()) {
+            for (const enumDef of extensionContent.enumsVariableTypes) {
+                this.importedEnumVariableTypes.set(enumDef.name, enumDef.type);
+            }
+        }
     }
+
 
     getClassByName(className: string) {
         return this.importedActionComponentClasses.get(className);

@@ -196,6 +196,8 @@ export class OpenProjectsManager {
             this.openProjects = [...map.values()];
         });
 
+        this.projectStore.buildImportedExtensions(project);
+
         //this._dumpOpenProjects();
 
         return project;
