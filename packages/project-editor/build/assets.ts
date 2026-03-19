@@ -177,6 +177,8 @@ export class Assets {
         [componentType: number]: string;
     } = {};
 
+    nativeExtensionComponents: { componentType: number; className: string }[] = [];
+
     isUsingCrypyoSha256: boolean = false;
 
     lvglBuild: LVGLBuild;
@@ -1810,6 +1812,14 @@ export async function buildAssets(
 
             if (
                 !sectionNames ||
+                sectionNames.indexOf("LVGL_EXT_COMPONENT_DECL") !== -1
+            ) {
+                result.LVGL_EXT_COMPONENT_DECL =
+                    await assets.lvglBuild.buildExtComponentDecl();
+            }
+
+            if (
+                !sectionNames ||
                 sectionNames.indexOf("LVGL_ACTIONS_ARRAY_DEF") !== -1
             ) {
                 result.LVGL_ACTIONS_ARRAY_DEF =
@@ -1873,7 +1883,7 @@ export async function buildAssets(
 
     // build eez-gui-lite source code
     if (sectionNames!.indexOf("EEZ_GUI_LITE_DECL") !== -1 || sectionNames!.indexOf("EEZ_GUI_LITE_DEF") !== -1) {
-        const buildEezGuiLite = new BuildEezGuiLite(assets); 
+        const buildEezGuiLite = new BuildEezGuiLite(assets);
         if (sectionNames!.indexOf("EEZ_GUI_LITE_DECL") !== -1) {
             result.EEZ_GUI_LITE_DECL = buildEezGuiLite.buildDecl();
         }

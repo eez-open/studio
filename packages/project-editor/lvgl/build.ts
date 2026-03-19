@@ -68,6 +68,12 @@ interface UpdateColorCallbackForUserWidget {
     updateColorsForPage: UpdateColorCallbackForPage;
 }
 
+// Converts an extension component class nameto a valid C identifier
+function extComponentFunctionName(className: string): string {
+    const sanitized = className.replace(/[^a-zA-Z0-9]/g, "_");
+    return `eez_flow_ext_${sanitized}`;
+}
+
 export class LVGLBuild extends Build {
     project: Project;
 
@@ -2121,6 +2127,20 @@ export class LVGLBuild extends Build {
 
         if (
             this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
+            this.assets.nativeExtensionComponents.length > 0
+        ) {
+            build.line("// Register native extension components");
+            for (const ext of this.assets.nativeExtensionComponents) {
+                const fnName = extComponentFunctionName(ext.className);
+                build.line(
+                    `eez_flow_register_ext_component(${ext.componentType}, ${fnName});`
+                );
+            }
+            build.line("");
+        }
+
+        if (
+            this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
             this.styles.length > 0
         ) {
             build.line("// Initialize styles");
@@ -2673,6 +2693,24 @@ extern ext_font_desc_t fonts[];
                     build.line("");
                 }
             }
+        }
+
+        return this.result;
+    }
+
+    async buildExtComponentDecl() {
+        if (!this.project.projectTypeTraits.hasFlowSupport) {
+            return "";
+        }
+
+        this.startBuild();
+        const build = this;
+
+        for (const ext of this.assets.nativeExtensionComponents) {
+            const fnName = extComponentFunctionName(ext.className);
+            build.line(
+                `extern void ${fnName}(void *flowState, unsigned componentIndex);`
+            );
         }
 
         return this.result;

@@ -118,6 +118,19 @@ function getComponentIdOfComponent(assets: Assets, component: Component) {
                 assets.dashboardComponentClassNameToComponentIdMap[name] =
                     flowComponentId;
                 assets.dashboardComponentTypeToNameMap[flowComponentId] = name;
+
+                if (
+                    classInfo.isNative &&
+                    assets.projectStore.projectTypeTraits.isLVGL &&
+                    !assets.nativeExtensionComponents.find(
+                        c => c.componentType === flowComponentId
+                    )
+                ) {
+                    assets.nativeExtensionComponents.push({
+                        componentType: flowComponentId!,
+                        className: name
+                    });
+                }
             }
         } else {
             console.error("UNEXPECTED!");
@@ -755,9 +768,15 @@ export function buildFlowStructs(assets: Assets) {
 
     const defs = [];
 
+    // Combine project-defined and imported (extension) structures
+    const allStructures = [
+        ...assets.projectStore.project.variables.structures,
+        ...assets.projectStore.importedStructureVariableTypes.values()
+    ];
+
     // enum FlowStructures
     const structureEnumItems = [];
-    for (const structure of assets.projectStore.project.variables.structures) {
+    for (const structure of allStructures) {
         structureEnumItems.push(
             `${TAB}${getName(
                 "FLOW_STRUCTURE_",
@@ -777,7 +796,7 @@ export function buildFlowStructs(assets: Assets) {
 
     // enum FlowArrayOfStructures
     const arrayOfStructureEnumItems = [];
-    for (const structure of assets.projectStore.project.variables.structures) {
+    for (const structure of allStructures) {
         arrayOfStructureEnumItems.push(
             `${TAB}${getName(
                 "FLOW_ARRAY_OF_STRUCTURE_",
@@ -796,7 +815,7 @@ export function buildFlowStructs(assets: Assets) {
         );
     }
 
-    for (const structure of assets.projectStore.project.variables.structures) {
+    for (const structure of allStructures) {
         const fieldEnumItems = [];
         for (const field of structure.fields) {
             fieldEnumItems.push(
@@ -1030,8 +1049,14 @@ export function buildFlowStructValues(assets: Assets) {
         );
     }
 
-    for (const structure of assets.projectStore.project.variables.structures) {
-        buildStructure(structure);
+    // Include both project-defined and imported (extension) structures
+    const allStructuresForValues = [
+        ...assets.projectStore.project.variables.structures,
+        ...assets.projectStore.importedStructureVariableTypes.values()
+    ];
+
+    for (const structure of allStructuresForValues) {
+        buildStructure(structure as Structure);
     }
 
     return build.result;

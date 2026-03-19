@@ -2638,6 +2638,7 @@ void eez_flow_delete_screen(int16_t screenId);
 bool eez_flow_is_screen_created(int16_t screenId);
 void eez_flow_delete_screen_on_unload(int screenIndex);
 void flowOnPageLoaded(unsigned pageIndex);
+void eez_flow_register_ext_component(unsigned componentType, void (*fn)(void *flowState, unsigned componentIndex));
 void *getFlowState(void *flowState, unsigned userWidgetComponentIndexOrPageIndex);
 void deletePageFlowState(unsigned pageIndex);
 void flowPropagateValue(void *flowState, unsigned componentIndex, unsigned outputIndex);

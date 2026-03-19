@@ -312,6 +312,11 @@ export interface IActionComponentDefinition {
     migrateProperties?: (component: IActionComponent) => void;
 
     execute?: (context: IDashboardComponentContext) => void;
+
+    // If true, the build generates an extern C prototype and a registerComponent()
+    // call. The user provides the implementation in their firmware project.
+    // Generated function: void eez_flow_ext_<sanitized_name>(FlowState*, unsigned)
+    isNative?: boolean;
 }
 
 interface IMessageFromWorker {
@@ -933,10 +938,34 @@ export interface IDashboardComponentContext {
     throwError: (errorMessage: string) => void;
 }
 
+export interface IStructureField {
+    name: string;
+    type: ValueType;
+}
+
+export interface IStructureDefinition {
+    name: string;
+    fields: IStructureField[];
+}
+
+export interface IEnumMember {
+    name: string;
+    value: number;
+}
+
+export interface IEnumDefinition {
+    name: string;
+    members: IEnumMember[];
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export interface IEezFlowEditor {
     registerActionComponent(definition: IActionComponentDefinition): void;
+
+    registerStructureVariableType(structure: IStructureDefinition): void;
+
+    registerEnumVariableType(enumDef: IEnumDefinition): void;
 
     registerObjectVariableType(
         name: string,
