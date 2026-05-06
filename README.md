@@ -79,6 +79,18 @@ If you encounter a problem running the .AppImage version on your Linux distribut
 
 ### Mac
 
+Depending on your preference, choose one of the following installation methods:
+
+**Homebrew**
+
+If you have [Homebrew](https://brew.sh) installed, you can install EEZ Studio using:
+
+```
+brew install --cask eez-studio
+```
+
+**Manual installation**
+
 Download `eezstudio-mac.zip`, unpack and move `eezstudio.app` to Applications.
 
 ### Windows
