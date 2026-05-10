@@ -35,7 +35,7 @@ import { IMPORT_AS_PREFIX, findVariable } from "project-editor/project/assets";
 
 export function buildExpression(
     assets: Assets,
-    dataBuffer: DataBuffer,
+    dataBuffer: DataBuffer | undefined,
     component: Component,
     expression: string
 ) {
@@ -81,14 +81,18 @@ export function buildExpression(
 
     instructions.push(makeEndInstruction());
 
-    instructions.forEach(instruction =>
-        dataBuffer.writeUint16NonAligned(instruction)
-    );
+    if (dataBuffer) {
+        instructions.forEach(instruction =>
+            dataBuffer.writeUint16NonAligned(instruction)
+        );
+    }
+
+    return instructions;
 }
 
 export function buildAssignableExpression(
     assets: Assets,
-    dataBuffer: DataBuffer,
+    dataBuffer: DataBuffer | undefined,
     component: Component,
     expression: string
 ) {
@@ -137,9 +141,13 @@ export function buildAssignableExpression(
         ...makeEndInstructionWithType(assets, rootNode.valueType)
     );
 
-    instructions.forEach(instruction =>
-        dataBuffer.writeUint16NonAligned(instruction)
-    );
+    if (dataBuffer) {
+        instructions.forEach(instruction =>
+            dataBuffer.writeUint16NonAligned(instruction)
+        );
+    }
+
+    return instructions;
 }
 
 function buildExpressionNode(

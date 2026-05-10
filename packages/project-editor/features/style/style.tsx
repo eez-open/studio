@@ -64,6 +64,7 @@ import {
 } from "project-editor/flow/component";
 import { checkExpression } from "project-editor/flow/expression";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import { ColorFormat } from "./color-format";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1747,8 +1748,17 @@ export class Style extends EezObject {
         return getStyleProperty(this, "direction");
     }
 
+    getColorStyleProperty(propertyName: string) {
+        const color = getStyleProperty(this, propertyName);
+        if (color == undefined || color == "transparent" || color == "rgba(0, 0, 0, 0)") {
+            return color;
+        }
+        const colorFormat = ColorFormat.parse(color, ProjectEditor.getProject(this));
+        return colorFormat.getHexString();
+    }
+
     get colorProperty(): string {
-        return getStyleProperty(this, "color");
+        return this.getColorStyleProperty("color");
     }
 
     get color16(): number {
@@ -1756,7 +1766,7 @@ export class Style extends EezObject {
     }
 
     get backgroundColorProperty(): string {
-        return getStyleProperty(this, "backgroundColor");
+        return this.getColorStyleProperty("backgroundColor");
     }
 
     get backgroundColor16(): number {
@@ -1768,7 +1778,7 @@ export class Style extends EezObject {
     }
 
     get activeColorProperty(): string {
-        return getStyleProperty(this, "activeColor");
+        return this.getColorStyleProperty("activeColor");
     }
 
     get activeColor16(): number {
@@ -1776,7 +1786,7 @@ export class Style extends EezObject {
     }
 
     get activeBackgroundColorProperty(): string {
-        return getStyleProperty(this, "activeBackgroundColor");
+        return this.getColorStyleProperty("activeBackgroundColor");
     }
 
     get activeBackgroundColor16(): number {
@@ -1784,7 +1794,7 @@ export class Style extends EezObject {
     }
 
     get focusColorProperty(): string {
-        return getStyleProperty(this, "focusColor");
+        return this.getColorStyleProperty("focusColor");
     }
 
     get focusColor16(): number {
@@ -1792,7 +1802,7 @@ export class Style extends EezObject {
     }
 
     get focusBackgroundColorProperty(): string {
-        return getStyleProperty(this, "focusBackgroundColor");
+        return this.getColorStyleProperty("focusBackgroundColor");
     }
 
     get focusBackgroundColor16(): number {
@@ -1800,7 +1810,7 @@ export class Style extends EezObject {
     }
 
     get borderColorProperty(): string {
-        return getStyleProperty(this, "borderColor");
+        return this.getColorStyleProperty("borderColor");
     }
 
     get borderColor16(): number {

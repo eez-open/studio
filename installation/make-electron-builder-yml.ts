@@ -14,11 +14,18 @@ async function getExtraResource() {
         to: path.basename(extraResourcePath)
     }));
 
-    let eezframeworkAmalgamation = (
+    let eezFrameworkAmalgamation = (
         await fs.promises.readdir("./resources/eez-framework-amalgamation")
     ).map(file => ({
         from: "./resources/eez-framework-amalgamation/" + file,
         to: "eez-framework-amalgamation/" + file
+    }));
+
+    let eezGuiLite = (
+        await fs.promises.readdir("./resources/eez-gui-lite")
+    ).map(file => ({
+        from: "./resources/eez-gui-lite/" + file,
+        to: "eez-gui-lite/" + file
     }));
 
     let dockerBuild = (
@@ -30,7 +37,8 @@ async function getExtraResource() {
 
     return [
         ...extraResources,
-        ...eezframeworkAmalgamation,
+        ...eezFrameworkAmalgamation,
+        ...eezGuiLite,
         ...dockerBuild,
         ...[
             {

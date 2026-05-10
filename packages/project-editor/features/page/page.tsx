@@ -3,8 +3,6 @@ import { observable, computed, makeObservable } from "mobx";
 import classNames from "classnames";
 import { observer } from "mobx-react";
 
-import { to16bitsColor } from "eez-studio-shared/color";
-
 import {
     IEezObject,
     EezObject,
@@ -70,7 +68,7 @@ import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/component-
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import { drawBackground } from "project-editor/flow/editor/eez-gui-draw";
+import * as eezGuiDraw from "project-editor/flow/editor/eez-gui-draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
@@ -533,21 +531,24 @@ export class Page extends Flow {
         beforeLoadHook: (page: Page, jsObject: any, project: Project) => {
             // MIGRATION TO LOW RES
             if ((window as any).__eezProjectMigration) {
-                if (!jsObject.isUsedAsUserWidget) {
-                    jsObject.width = __eezProjectMigration.displayTargetWidth;
-                    jsObject.height = __eezProjectMigration.displayTargetHeight;
-                } else {
-                    jsObject.width = Math.floor(
-                        (jsObject.width *
-                            __eezProjectMigration.displayTargetWidth) /
+                jsObject.left = Math.floor(
+                    (jsObject.left * __eezProjectMigration.displayTargetWidth) /
                         __eezProjectMigration.displaySourceWidth
-                    );
-                    jsObject.height = Math.floor(
-                        (jsObject.height *
-                            __eezProjectMigration.displayTargetHeight) /
+                );
+                jsObject.top = Math.floor(
+                    (jsObject.top * __eezProjectMigration.displayTargetHeight) /
                         __eezProjectMigration.displaySourceHeight
-                    );
-                }
+                );
+                jsObject.width = Math.floor(
+                    (jsObject.width *
+                        __eezProjectMigration.displayTargetWidth) /
+                        __eezProjectMigration.displaySourceWidth
+                );
+                jsObject.height = Math.floor(
+                    (jsObject.height *
+                        __eezProjectMigration.displayTargetHeight) /
+                        __eezProjectMigration.displaySourceHeight
+                );
             }
 
             if (jsObject.widgets) {
@@ -1025,7 +1026,8 @@ export class Page extends Flow {
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
                         if (pageStyle) {
-                            drawBackground(
+                            eezGuiDraw.setProject(flowContext.projectStore.project);
+                            eezGuiDraw.drawBackground(
                                 ctx,
                                 0,
                                 0,
@@ -1099,7 +1101,7 @@ export class Page extends Flow {
             );
 
             if (pageStyle && pageStyle.backgroundColorProperty) {
-                style.backgroundColor = to16bitsColor(
+                style.backgroundColor = ProjectEditor.getProject(this).toColorBpp(
                     getThemedColor(
                         flowContext.projectStore,
                         pageStyle.backgroundColorProperty

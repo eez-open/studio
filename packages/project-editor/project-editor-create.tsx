@@ -78,7 +78,12 @@ import {
     SelectWidget
 } from "project-editor/flow/components/widgets";
 import "project-editor/flow/components/widgets/dashboard";
-import "project-editor/flow/components/widgets/eez-gui";
+import {
+    TextWidget,
+    MultilineTextWidget,
+    ButtonWidget,
+    BarGraphWidget
+} from "project-editor/flow/components/widgets/eez-gui";
 import {
     LVGLWidget,
     LVGLScreenWidget,
@@ -150,9 +155,9 @@ export async function createProjectEditor(
     //     displayTargetWidth: 800,
     //     displayTargetHeight: 480,
     //     fonts: {
-    //         Oswald_9: "Oswald_12",
-    //         Oswald_12: "Oswald_17",
-    //         Oswald_17: "Oswald_24"
+    //         // Oswald_9: "Oswald_12",
+    //         // Oswald_12: "Oswald_17",
+    //         // Oswald_17: "Oswald_24"
     //     }
     // };
 
@@ -190,6 +195,10 @@ export async function createProjectEditor(
         SelectWidgetClass: SelectWidget,
         ContainerWidgetClass: ContainerWidget,
         ListWidgetClass: ListWidget,
+        TextWidgetClass: TextWidget,
+        MultilineTextWidgetClass: MultilineTextWidget,
+        ButtonWidgetClass: ButtonWidget,
+        BarGraphWidgetClass: BarGraphWidget,
         OutputActionComponentClass: OutputActionComponent,
         CallActionActionComponentClass: CallActionActionComponent,
         VariableClass: Variable,

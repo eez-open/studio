@@ -44,12 +44,11 @@ import { getThemedColor } from "project-editor/features/style/theme";
 import { showGenericDialog } from "project-editor/core/util";
 
 import { MultipleAbsoluteFileInput } from "project-editor/ui-components/FileInput";
-import { getProject, findStyle } from "project-editor/project/project";
+import { findStyle } from "project-editor/project/project";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import {
-    BitmapColorFormat,
     isDashboardProject,
     isEezGuiLiteProject,
     isLVGLProject,
@@ -544,7 +543,7 @@ export class Bitmap extends EezObject {
         return this._imageElement;
     }
 
-    getBitmapData(bpp: number) {
+    getBitmapData(bpp: number, bitmapColorFormat: string) {
         const image = this.imageElement;
         if (!(image instanceof HTMLImageElement)) {
             return image;
@@ -576,9 +575,7 @@ export class Bitmap extends EezObject {
 
         let pixels = new Uint8Array(bytesPerPixel * image.width * image.height);
 
-        const rgb =
-            getProject(this).projectTypeTraits.bitmapColorFormat ==
-            BitmapColorFormat.RGB;
+        const rgb = bitmapColorFormat === "BGR" ? false : true;
 
         for (let i = 0; i < 4 * image.width * image.height; i += 4) {
             let r = imageData[i];
@@ -628,7 +625,7 @@ export class Bitmap extends EezObject {
     }
 
     get bitmapData() {
-        return this.getBitmapData(this.bpp);
+        return this.getBitmapData(this.bpp, ProjectEditor.getProject(this).settings.general.bitmapColorFormat);
     }
 
     async getEmbeddedImage() {
@@ -784,12 +781,20 @@ export interface BitmapData {
 
 export function getBitmapData(
     bitmap: Bitmap,
-    bppOverride?: number
+    bppOverride?: number,
+    bitmapColorFormatOverride?: string
 ): BitmapData {
     const bitmapData =
-        bppOverride != undefined
-            ? bitmap.getBitmapData(bppOverride)
+        bppOverride != undefined || bitmapColorFormatOverride != undefined
+            ? bitmap.getBitmapData(
+                    bppOverride != undefined ? bppOverride : bitmap.bpp,
+                    bitmapColorFormatOverride != undefined
+                        ? bitmapColorFormatOverride
+                        : ProjectEditor.getProject(bitmap).settings.general
+                            .bitmapColorFormat
+                )
             : bitmap.bitmapData;
+
 
     if (bitmapData) {
         return bitmapData;
@@ -806,12 +811,19 @@ export function getBitmapData(
 // this function makes sure that bitmap is eventually loaded
 export async function getBitmapDataAsync(
     bitmap: Bitmap,
-    bppOverride?: number
+    bppOverride?: number,
+    bitmapColorFormatOverride?: string
 ): Promise<BitmapData> {
     while (true) {
         const bitmapData =
-            bppOverride != undefined
-                ? bitmap.getBitmapData(bppOverride)
+            bppOverride != undefined || bitmapColorFormatOverride != undefined
+                ? bitmap.getBitmapData(
+                      bppOverride != undefined ? bppOverride : bitmap.bpp,
+                      bitmapColorFormatOverride != undefined
+                          ? bitmapColorFormatOverride
+                          : ProjectEditor.getProject(bitmap).settings.general
+                                .bitmapColorFormat
+                  )
                 : bitmap.bitmapData;
         if (bitmapData) {
             return bitmapData;

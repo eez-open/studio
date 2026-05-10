@@ -234,10 +234,13 @@ typedef struct {
 typedef struct {
     eezgui_widget_t base;
     uint16_t text;
+    uint16_t is_enabled;
+    uint16_t disabled_style;
 } eezgui_button_t;
 
 typedef struct {
     eezgui_widget_state_t base_state;
+    bool is_enabled;
     char text[];
 } eezgui_button_state_t;
 

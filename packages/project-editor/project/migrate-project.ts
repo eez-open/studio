@@ -7,6 +7,7 @@ import {
     ProjectVersion
 } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { escapeCString } from "project-editor/lvgl/widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -189,6 +190,41 @@ function addFlowSupport(project: Project) {
             native: true
         });
     });
+
+
+    if (project.projectTypeTraits.isFirmware) {
+        for (const object of visitObjects(project)) {
+            if (object instanceof ProjectEditor.TextWidgetClass || object instanceof ProjectEditor.MultilineTextWidgetClass || object instanceof ProjectEditor.ButtonWidgetClass) {
+                if (object.text && !object.data) {
+                    projectStore.updateObject(object, {
+                        data: escapeCString(object.text),
+                        text: undefined
+                    });
+                }
+            } else if (object instanceof ProjectEditor.BarGraphWidgetClass) {
+                if (object.min == undefined) {
+                    object.min = "0";
+                }
+                if (object.max == undefined) {
+                    object.max = "100";
+                }
+                if (object.refreshRate == undefined) {
+                    object.refreshRate = "250";
+                }
+            } else if (object instanceof ProjectEditor.VariableClass) {
+                if (object.type == "string" && object.defaultValue != undefined) {
+                    object.defaultValue = escapeCString(object.defaultValue);
+                } else if (object.type == "integer" || object.type == "float" || object.type.startsWith("enum:")) {
+                    object.description = object.description ? object.description += "\n" + object.defaultValue : object.defaultValue;
+                    object.defaultValue = "0";
+                } else if (object.type.startsWith("array:") || (object as any).type == "array") {
+                    object.type = "array:any";
+                    object.description = object.description ? object.description += "\n" + object.defaultValue : object.defaultValue;
+                    object.defaultValue = "null";
+                }
+            }
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

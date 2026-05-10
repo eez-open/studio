@@ -59,7 +59,7 @@ import {
     getEnumTypeNameFromVariable,
     isEnumVariable
 } from "project-editor/features/variable/value-type";
-import * as draw from "project-editor/flow/editor/eez-gui-draw";
+import * as eezGuiDraw from "project-editor/flow/editor/eez-gui-draw";
 
 import {
     Widget,
@@ -343,7 +343,6 @@ export class ContainerWidget extends Widget {
                 disabled: (containerWidget: ContainerWidget) => {
                     const project = ProjectEditor.getProject(containerWidget);
                     return (
-                        project.projectTypeTraits.hasFlowSupport ||
                         project.projectTypeTraits.isDashboard
                     );
                 }
@@ -761,7 +760,8 @@ export class ContainerWidget extends Widget {
                         width={containerWidth}
                         height={containerHeight}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            draw.drawBackground(
+                            eezGuiDraw.setProject(flowContext.projectStore.project);
+                            eezGuiDraw.drawBackground(
                                 ctx,
                                 0,
                                 0,
@@ -1550,7 +1550,8 @@ export class SelectWidget extends Widget {
                         width={width}
                         height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            draw.drawBackground(
+                            eezGuiDraw.setProject(flowContext.projectStore.project);
+                            eezGuiDraw.drawBackground(
                                 ctx,
                                 0,
                                 0,
@@ -2010,7 +2011,8 @@ export class UserWidgetWidget extends Widget {
                         width={width}
                         height={height}
                         draw={(ctx: CanvasRenderingContext2D) => {
-                            draw.drawBackground(
+                            eezGuiDraw.setProject(flowContext.projectStore.project);
+                            eezGuiDraw.drawBackground(
                                 ctx,
                                 0,
                                 0,

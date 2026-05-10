@@ -1753,6 +1753,8 @@ var _setWidgetStyle = Module['_setWidgetStyle'] = makeInvalidEarlyAccess('_setWi
 var _setWidgetVisible = Module['_setWidgetVisible'] = makeInvalidEarlyAccess('_setWidgetVisible');
 var _setTextWidgetText = Module['_setTextWidgetText'] = makeInvalidEarlyAccess('_setTextWidgetText');
 var _setButtonWidgetText = Module['_setButtonWidgetText'] = makeInvalidEarlyAccess('_setButtonWidgetText');
+var _setButtonWidgetEnabled = Module['_setButtonWidgetEnabled'] = makeInvalidEarlyAccess('_setButtonWidgetEnabled');
+var _setButtonWidgetDisabledStyle = Module['_setButtonWidgetDisabledStyle'] = makeInvalidEarlyAccess('_setButtonWidgetDisabledStyle');
 var _setSwitchWidgetChecked = Module['_setSwitchWidgetChecked'] = makeInvalidEarlyAccess('_setSwitchWidgetChecked');
 var _startPage = Module['_startPage'] = makeInvalidEarlyAccess('_startPage');
 var _eezgui_start_page = Module['_eezgui_start_page'] = makeInvalidEarlyAccess('_eezgui_start_page');
@@ -1830,6 +1832,8 @@ var _offsetofWidgetStyle = Module['_offsetofWidgetStyle'] = makeInvalidEarlyAcce
 var _offsetofWidgetVisible = Module['_offsetofWidgetVisible'] = makeInvalidEarlyAccess('_offsetofWidgetVisible');
 var _offsetofTextWidgetText = Module['_offsetofTextWidgetText'] = makeInvalidEarlyAccess('_offsetofTextWidgetText');
 var _offsetofButtonWidgetText = Module['_offsetofButtonWidgetText'] = makeInvalidEarlyAccess('_offsetofButtonWidgetText');
+var _offsetofButtonWidgetEnabled = Module['_offsetofButtonWidgetEnabled'] = makeInvalidEarlyAccess('_offsetofButtonWidgetEnabled');
+var _offsetofButtonWidgetDisabledStyle = Module['_offsetofButtonWidgetDisabledStyle'] = makeInvalidEarlyAccess('_offsetofButtonWidgetDisabledStyle');
 var _offsetofSwitchWidgetChecked = Module['_offsetofSwitchWidgetChecked'] = makeInvalidEarlyAccess('_offsetofSwitchWidgetChecked');
 var _getWidgetFlagClickable = Module['_getWidgetFlagClickable'] = makeInvalidEarlyAccess('_getWidgetFlagClickable');
 var _getStyleFlagHorzAlignLeft = Module['_getStyleFlagHorzAlignLeft'] = makeInvalidEarlyAccess('_getStyleFlagHorzAlignLeft');
@@ -1885,6 +1889,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['setWidgetVisible'] != 'undefined', 'missing Wasm export: setWidgetVisible');
   assert(typeof wasmExports['setTextWidgetText'] != 'undefined', 'missing Wasm export: setTextWidgetText');
   assert(typeof wasmExports['setButtonWidgetText'] != 'undefined', 'missing Wasm export: setButtonWidgetText');
+  assert(typeof wasmExports['setButtonWidgetEnabled'] != 'undefined', 'missing Wasm export: setButtonWidgetEnabled');
+  assert(typeof wasmExports['setButtonWidgetDisabledStyle'] != 'undefined', 'missing Wasm export: setButtonWidgetDisabledStyle');
   assert(typeof wasmExports['setSwitchWidgetChecked'] != 'undefined', 'missing Wasm export: setSwitchWidgetChecked');
   assert(typeof wasmExports['startPage'] != 'undefined', 'missing Wasm export: startPage');
   assert(typeof wasmExports['eezgui_start_page'] != 'undefined', 'missing Wasm export: eezgui_start_page');
@@ -1962,6 +1968,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['offsetofWidgetVisible'] != 'undefined', 'missing Wasm export: offsetofWidgetVisible');
   assert(typeof wasmExports['offsetofTextWidgetText'] != 'undefined', 'missing Wasm export: offsetofTextWidgetText');
   assert(typeof wasmExports['offsetofButtonWidgetText'] != 'undefined', 'missing Wasm export: offsetofButtonWidgetText');
+  assert(typeof wasmExports['offsetofButtonWidgetEnabled'] != 'undefined', 'missing Wasm export: offsetofButtonWidgetEnabled');
+  assert(typeof wasmExports['offsetofButtonWidgetDisabledStyle'] != 'undefined', 'missing Wasm export: offsetofButtonWidgetDisabledStyle');
   assert(typeof wasmExports['offsetofSwitchWidgetChecked'] != 'undefined', 'missing Wasm export: offsetofSwitchWidgetChecked');
   assert(typeof wasmExports['getWidgetFlagClickable'] != 'undefined', 'missing Wasm export: getWidgetFlagClickable');
   assert(typeof wasmExports['getStyleFlagHorzAlignLeft'] != 'undefined', 'missing Wasm export: getStyleFlagHorzAlignLeft');
@@ -2014,6 +2022,8 @@ function assignWasmExports(wasmExports) {
   _setWidgetVisible = Module['_setWidgetVisible'] = createExportWrapper('setWidgetVisible', 2);
   _setTextWidgetText = Module['_setTextWidgetText'] = createExportWrapper('setTextWidgetText', 2);
   _setButtonWidgetText = Module['_setButtonWidgetText'] = createExportWrapper('setButtonWidgetText', 2);
+  _setButtonWidgetEnabled = Module['_setButtonWidgetEnabled'] = createExportWrapper('setButtonWidgetEnabled', 2);
+  _setButtonWidgetDisabledStyle = Module['_setButtonWidgetDisabledStyle'] = createExportWrapper('setButtonWidgetDisabledStyle', 2);
   _setSwitchWidgetChecked = Module['_setSwitchWidgetChecked'] = createExportWrapper('setSwitchWidgetChecked', 2);
   _startPage = Module['_startPage'] = createExportWrapper('startPage', 2);
   _eezgui_start_page = Module['_eezgui_start_page'] = createExportWrapper('eezgui_start_page', 4);
@@ -2091,6 +2101,8 @@ function assignWasmExports(wasmExports) {
   _offsetofWidgetVisible = Module['_offsetofWidgetVisible'] = createExportWrapper('offsetofWidgetVisible', 0);
   _offsetofTextWidgetText = Module['_offsetofTextWidgetText'] = createExportWrapper('offsetofTextWidgetText', 0);
   _offsetofButtonWidgetText = Module['_offsetofButtonWidgetText'] = createExportWrapper('offsetofButtonWidgetText', 0);
+  _offsetofButtonWidgetEnabled = Module['_offsetofButtonWidgetEnabled'] = createExportWrapper('offsetofButtonWidgetEnabled', 0);
+  _offsetofButtonWidgetDisabledStyle = Module['_offsetofButtonWidgetDisabledStyle'] = createExportWrapper('offsetofButtonWidgetDisabledStyle', 0);
   _offsetofSwitchWidgetChecked = Module['_offsetofSwitchWidgetChecked'] = createExportWrapper('offsetofSwitchWidgetChecked', 0);
   _getWidgetFlagClickable = Module['_getWidgetFlagClickable'] = createExportWrapper('getWidgetFlagClickable', 0);
   _getStyleFlagHorzAlignLeft = Module['_getStyleFlagHorzAlignLeft'] = createExportWrapper('getStyleFlagHorzAlignLeft', 0);

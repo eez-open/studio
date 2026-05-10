@@ -9,10 +9,11 @@ import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { isObjectExists } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import { Style } from "./style";
-import { drawText } from "project-editor/flow/editor/eez-gui-draw";
+import * as eezGuiDraw from "project-editor/flow/editor/eez-gui-draw";
 import { LVGLStylesNavigation } from "project-editor/lvgl/style";
 
 import { StylesTreeNavigation } from "project-editor/features/style/StylesTreeNavigation";
+import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -92,6 +93,7 @@ const StylesNavigation = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 export function drawStylePreview(
+    project: Project,
     canvas: HTMLCanvasElement,
     style: Style,
     text: string,
@@ -100,8 +102,11 @@ export function drawStylePreview(
     let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
     if (ctx) {
         ctx.save();
+
+        eezGuiDraw.setProject(project);
+
         if (style.blinkProperty) {
-            drawText(
+            eezGuiDraw.drawText(
                 ctx,
                 text,
                 0,
@@ -113,7 +118,7 @@ export function drawStylePreview(
             );
         } else {
             if (canvas.width > canvas.height) {
-                drawText(
+                eezGuiDraw.drawText(
                     ctx,
                     text,
                     0,
@@ -123,7 +128,7 @@ export function drawStylePreview(
                     style,
                     false
                 );
-                drawText(
+                eezGuiDraw.drawText(
                     ctx,
                     text,
                     canvas.width / 2 + 4,
@@ -134,7 +139,7 @@ export function drawStylePreview(
                     true
                 );
             } else {
-                drawText(
+                eezGuiDraw.drawText(
                     ctx,
                     text,
                     0,
@@ -144,7 +149,7 @@ export function drawStylePreview(
                     style,
                     false
                 );
-                drawText(
+                eezGuiDraw.drawText(
                     ctx,
                     text,
                     0,
@@ -241,7 +246,7 @@ const StyleEditor = observer(
                 let canvas = document.createElement("canvas");
                 canvas.width = width;
                 canvas.height = height;
-                drawStylePreview(canvas, style, text, this.inverse);
+                drawStylePreview(this.context.project, canvas, style, text, this.inverse);
 
                 return (
                     <img

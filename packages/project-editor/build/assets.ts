@@ -92,6 +92,7 @@ import type { AssetsMap } from "eez-studio-types";
 import { isDashboardProject } from "project-editor/project/project-type-traits";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import { BuildEezGuiLite } from "project-editor/eez-gui-lite/build";
+import { ColorFormat } from "project-editor/features/style/color-format";
 
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
@@ -101,6 +102,8 @@ export class Assets {
     projects: Project[];
 
     globalVariables: Variable[];
+    nativeGlobalVariables: Variable[];
+
     actions: Action[];
     pages: (Page | undefined)[];
     styles: Style[];
@@ -343,6 +346,7 @@ export class Assets {
             // than native
             ...nativeVariables
         ];
+        this.nativeGlobalVariables = nativeVariables;
 
         //
         // actions
@@ -616,36 +620,80 @@ export class Assets {
         return this.getAssetIndex(object, propertyName, findPage, this.pages);
     }
 
+    styleCache: any;
+
     doGetStyleIndex(
         project: Project,
         styleNameOrObject: string | Style
     ): number {
-        if (typeof styleNameOrObject === "string") {
-            const styleName = styleNameOrObject;
+        const find = () => {
+            if (typeof styleNameOrObject === "string") {
+                const styleName = styleNameOrObject;
 
-            for (let i = 0; i < this.styles.length; i++) {
-                const style = this.styles[i];
-                if (style && style.name == styleName) {
-                    return this.projectStore.masterProject ? -(i + 1) : i + 1;
+                for (let i = 0; i < this.styles.length; i++) {
+                    const style = this.styles[i];
+                    if (style && style.name == styleName) {
+                        return this.projectStore.masterProject ? -(i + 1) : i + 1;
+                    }
                 }
-            }
 
-            const style = findStyle(project, styleName);
-            if (style) {
-                if (style.id != undefined) {
-                    return style.id;
+                const style = findStyle(project, styleName);
+                if (style) {
+                    if (style.id != undefined) {
+                        return style.id;
+                    }
+
+                    const isMasterProjectStyle =
+                        this.projectStore.masterProject &&
+                        getProject(style) == this.projectStore.masterProject;
+                    if (isMasterProjectStyle) {
+                        this.projectStore.outputSectionsStore.write(
+                            Section.OUTPUT,
+                            MessageType.WARNING,
+                            `master project style without ID can not be used`,
+                            style
+                        );
+                    } else {
+                        this.styles.push(style);
+                        return this.projectStore.masterProject
+                            ? -this.styles.length
+                            : this.styles.length;
+                    }
+                }
+            } else {
+                const style = styleNameOrObject;
+
+                const parentStyle = style.parentStyle;
+                if (parentStyle) {
+                    if (style.compareTo(parentStyle)) {
+                        if (style.id != undefined) {
+                            return style.id;
+                        }
+                        return this.doGetStyleIndex(project, parentStyle.name);
+                    }
+                }
+
+                for (let i = 0; i < this.styles.length; i++) {
+                    const s = this.styles[i];
+                    if (s && style.compareTo(s)) {
+                        return this.projectStore.masterProject ? -(i + 1) : i + 1;
+                    }
                 }
 
                 const isMasterProjectStyle =
                     this.projectStore.masterProject &&
                     getProject(style) == this.projectStore.masterProject;
                 if (isMasterProjectStyle) {
-                    this.projectStore.outputSectionsStore.write(
-                        Section.OUTPUT,
-                        MessageType.WARNING,
-                        `master project style without ID can not be used`,
-                        style
-                    );
+                    if (style.id) {
+                        return style.id;
+                    } else {
+                        this.projectStore.outputSectionsStore.write(
+                            Section.OUTPUT,
+                            MessageType.WARNING,
+                            `master project style without ID can not be used`,
+                            style
+                        );
+                    }
                 } else {
                     this.styles.push(style);
                     return this.projectStore.masterProject
@@ -653,49 +701,30 @@ export class Assets {
                         : this.styles.length;
                 }
             }
-        } else {
-            const style = styleNameOrObject;
 
-            const parentStyle = style.parentStyle;
-            if (parentStyle) {
-                if (style.compareTo(parentStyle)) {
-                    if (style.id != undefined) {
-                        return style.id;
-                    }
-                    return this.doGetStyleIndex(project, parentStyle.name);
-                }
-            }
-
-            for (let i = 0; i < this.styles.length; i++) {
-                const s = this.styles[i];
-                if (s && style.compareTo(s)) {
-                    return this.projectStore.masterProject ? -(i + 1) : i + 1;
-                }
-            }
-
-            const isMasterProjectStyle =
-                this.projectStore.masterProject &&
-                getProject(style) == this.projectStore.masterProject;
-            if (isMasterProjectStyle) {
-                if (style.id) {
-                    return style.id;
-                } else {
-                    this.projectStore.outputSectionsStore.write(
-                        Section.OUTPUT,
-                        MessageType.WARNING,
-                        `master project style without ID can not be used`,
-                        style
-                    );
-                }
-            } else {
-                this.styles.push(style);
-                return this.projectStore.masterProject
-                    ? -this.styles.length
-                    : this.styles.length;
-            }
+            return 0;
         }
 
-        return 0;
+        if (!this.styleCache) {
+            this.styleCache = new Map();
+        }
+
+        let projectMap = this.styleCache.get(project);
+        if (!projectMap) {
+            projectMap = new Map();
+            this.styleCache.set(project, projectMap);
+        }
+
+        let styleIndex = projectMap.get(styleNameOrObject);
+        if (styleIndex != undefined) {
+            return styleIndex;
+        }
+
+        styleIndex = find();
+
+        projectMap.set(styleNameOrObject, styleIndex);
+
+        return styleIndex;
     }
 
     getStyleIndex(object: any, propertyName: string): number {
@@ -851,6 +880,12 @@ export class Assets {
             | "borderColor"
     ) {
         let color = getStyleProperty(style, propertyName, false);
+        if (color != "transparent") {
+            const colorFormat = ColorFormat.parse(color, this.projectStore.project);
+            if (!colorFormat.isUsingThemeColor) {
+                color = colorFormat.getHexString();
+            }
+        }
         return this.getColorIndexFromColorValue(color);
     }
 
@@ -1095,6 +1130,15 @@ export class Assets {
             flowState.flowWidgetDataIndexes.set(path, index);
             flowState.flowWidgetFromDataIndex.set(index, widget);
         }
+
+        if (this.projectStore.projectTypeTraits.isFirmware) {
+            let expression = getProperty(widget, propertyName).trim();
+            const globalVariableIndex = this.nativeGlobalVariables.findIndex(globalVariable => globalVariable.name == expression);
+            if (globalVariableIndex != -1) {
+                return globalVariableIndex + 1;
+            }
+        }
+
         return -(index + 1);
     }
 
@@ -1397,9 +1441,9 @@ function buildHeaderData(
     dataBuffer.writeUint8Array(tag);
 
     // projectMajorVersion
-    dataBuffer.writeUint8(3); // PROJECT MAJOR VERSION: 3
+    dataBuffer.writeUint8(3);
     // projectMinorVersion
-    dataBuffer.writeUint8(0); // PROJECT MINOR VERSION: 0
+    dataBuffer.writeUint8(assets.projectStore.project.settings.general.colorBpp == "16" ? 0 : 1);
 
     // assetsType
     dataBuffer.writeUint8(assets.projectStore.projectTypeTraits.id);
@@ -1448,7 +1492,10 @@ function buildLanguages(assets: Assets, dataBuffer: DataBuffer) {
     );
 }
 
-export async function buildGuiAssetsData(assets: Assets) {
+export async function buildGuiAssetsData(
+    assets: Assets,
+    option: "check" | "buildAssets" | "buildFiles"
+) {
     const dataBuffer = new DataBuffer(assets.utf8Support);
 
     // settings
@@ -1465,7 +1512,7 @@ export async function buildGuiAssetsData(assets: Assets) {
         // fonts
         await buildGuiFontsData(assets, dataBuffer);
         // bitmaps
-        await buildGuiBitmapsData(assets, dataBuffer);
+        await buildGuiBitmapsData(assets, dataBuffer, option);
     }
     // colorsDefinition
     buildGuiColors(assets, dataBuffer);
@@ -1657,7 +1704,7 @@ export async function buildAssets(
     ) {
         // build all assets as single data chunk
         const { uncompressedData, compressedData } = await buildGuiAssetsData(
-            assets
+            assets, option
         );
 
         if (option != "buildAssets") {

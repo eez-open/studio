@@ -10,8 +10,6 @@ import classNames from "classnames";
 
 import QRC from "../qrcodegen";
 
-import { to16bitsColor } from "eez-studio-shared/color";
-
 import {
     registerClass,
     PropertyType,
@@ -1871,7 +1869,7 @@ export class QRCodeDashboardWidget extends Widget {
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         super.styleHook(style, flowContext);
 
-        style.backgroundColor = to16bitsColor(
+        style.backgroundColor = ProjectEditor.getProject(this).toColorBpp(
             this.style.backgroundColorProperty
         );
     }
@@ -1910,8 +1908,8 @@ export class QRCodeDashboardWidget extends Widget {
         const svg = QRCodeDashboardWidget.toSvgString(
             qr0,
             1,
-            to16bitsColor(this.style.backgroundColorProperty),
-            to16bitsColor(this.style.colorProperty)
+            flowContext.projectStore.project.toColorBpp(this.style.backgroundColorProperty),
+            flowContext.projectStore.project.toColorBpp(this.style.colorProperty)
         );
 
         return (

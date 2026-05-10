@@ -335,7 +335,7 @@ export function isEncodingInAnyGroup(
 }
 
 export function formatEncoding(encoding: number) {
-    return `${formatNumber(encoding, 10, 4)}/0x${formatNumber(
+    return `${formatNumber(encoding, 10, 6)}/0x${formatNumber(
         encoding,
         16,
         4

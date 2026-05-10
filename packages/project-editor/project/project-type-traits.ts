@@ -8,11 +8,6 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export enum BitmapColorFormat {
-    RGB,
-    BGR
-}
-
 export enum RuntimeType {
     NONE,
     WASM,
@@ -74,12 +69,6 @@ class ProjectTypeTraits {
 
     get runtimeType() {
         return RuntimeType.NONE;
-    }
-
-    get bitmapColorFormat() {
-        return this.project.settings.general.colorFormat === "BGR"
-            ? BitmapColorFormat.BGR
-            : BitmapColorFormat.RGB;
     }
 
     get hasDisplaySizeProperty() {

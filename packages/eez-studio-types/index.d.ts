@@ -766,6 +766,8 @@ export interface IWasmFlowRuntime {
     _setWidgetVisible(widgetPtr: number, isVisible: number): void;
     _setTextWidgetText(widgetPtr: number, textProp: number): void;
     _setButtonWidgetText(widgetPtr: number, textProp: number): void;
+    _setButtonWidgetEnabled(widgetPtr: number, isEnabled: number): void;
+    _setButtonWidgetDisabledStyle(widgetPtr: number, disabledStyle: number): void;
     _setSwitchWidgetChecked(widgetPtr: number, isCheckedProp: number): void;
 
     // EEZ-GUI Lite — page rendering

@@ -55,6 +55,7 @@ interface BuildWidget {
     varName: string;
     buildStyle?: BuildStyle;
     widgets?: BuildWidget[]; // for SelectWidget and ContainerWidget
+    buildDisabledStyle?: BuildStyle; // for ButtonWidget
 }
 
 interface WidgetProperty {
@@ -316,6 +317,27 @@ export class BuildEezGuiLite {
                                 widget.text || widget.data || "",
                                 "string"
                             );
+                            if (widget.enabled) {
+                                this.addWidgetProperty(
+                                    widget,
+                                    widget.enabled,
+                                    "boolean"
+                                );
+
+                                // disabledStyle
+                                const styleIndex =
+                                    this.assets.getStyleIndex(
+                                        widget,
+                                        "disabledStyle"
+                                    ) - 1;
+                                if (
+                                    styleIndex >= 0 &&
+                                    styleIndex < buildStyles.length
+                                ) {
+                                    buildWidget.buildDisabledStyle = buildStyles[styleIndex];
+                                    buildStyles[styleIndex].isUsed = true;
+                                }                                
+                            }
                         } else if (widget instanceof SwitchWidget) {
                             this.addWidgetProperty(
                                 widget,
@@ -1030,6 +1052,26 @@ export class BuildEezGuiLite {
                                 "string"
                             )},`
                         );
+
+                        if (buildWidget.widget.enabled) {
+                            build.line(
+                                `.is_enabled = ${this.addWidgetProperty(
+                                    buildWidget.widget,
+                                    buildWidget.widget.enabled,
+                                    "boolean"
+                                )},`
+                            );
+
+                            if (buildWidget.buildDisabledStyle) {
+                                build.line(
+                                    `.disabled_style = ${buildWidget.buildDisabledStyle.styleName},`
+                                );
+                            } else {
+                                build.line(
+                                    `.disabled_style = ${this.buildStyles[0].styleName},`
+                                );
+                            }                        
+                        }
                     } else if (buildWidget.widget instanceof SwitchWidget) {
                         build.line(
                             `.is_checked = ${this.addWidgetProperty(

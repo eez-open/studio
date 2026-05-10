@@ -772,6 +772,15 @@ export class EezGuiLiteRuntime {
                 const textValue = widget.text || widget.data || "";
                 const textProp = this.addStrProp(textValue);
                 this.wasm._setButtonWidgetText(widgetPtr, textProp);
+                if (widget.enabled) {
+                    const enabledProp = this.addBoolProp(widget.enabled);
+                    this.wasm._setButtonWidgetEnabled(widgetPtr, enabledProp);
+
+                    this.wasm._setButtonWidgetDisabledStyle(
+                        widgetPtr,
+                        this.getStyleIndex(widget.disabledStyle)
+                    );                    
+                }
             } else if (widget instanceof RectangleWidget) {
                 widgetPtr = this.wasm._allocRectangleWidget();
                 this.setupWidgetBase(widgetPtr, widget);

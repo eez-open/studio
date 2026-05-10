@@ -3,11 +3,7 @@ import { observable, action, IObservableValue, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
 
-import {
-    drawGlyph,
-    setBackColor,
-    setColor
-} from "project-editor/flow/editor/eez-gui-draw";
+import * as eezGuiDraw from "project-editor/flow/editor/eez-gui-draw";
 
 import { getId } from "project-editor/core/object";
 import { getAncestorOfType, getLabel, IPanel } from "project-editor/store";
@@ -18,6 +14,7 @@ import { SearchInput } from "eez-studio-ui/search-input";
 import { Font, Glyph } from "project-editor/features/font/font";
 import { ProjectContext } from "project-editor/project/context";
 import { settingsController } from "home/settings";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export const Glyphs = observer(
     class Glyphs
@@ -236,15 +233,17 @@ export const GlyphComponent = observer(
             canvas.height = glyph.font.height || 1;
             let ctx = canvas.getContext("2d")!;
 
+            eezGuiDraw.setProject(ProjectEditor.getProject(glyph));
+
             if (settingsController.isDarkTheme) {
-                setColor("white");
-                setBackColor("black");
+                eezGuiDraw.setColor("white");
+                eezGuiDraw.setBackColor("black");
             } else {
-                setColor("black");
-                setBackColor("white");
+                eezGuiDraw.setColor("black");
+                eezGuiDraw.setBackColor("white");
             }
 
-            drawGlyph(ctx, -glyph.x, 0, glyph.encoding, glyph.font);
+            eezGuiDraw.drawGlyph(ctx, -glyph.x, 0, glyph.encoding, glyph.font);
 
             if (this.refDiv.current) {
                 if (this.refDiv.current.children[0]) {
@@ -268,6 +267,10 @@ export const GlyphComponent = observer(
 
         render() {
             const { glyph, isSelected, onSelect, onDoubleClick } = this.props;
+
+            // Access glyphBitmap so MobX tracks it as a dependency and re-renders
+            // when pixels change (which then triggers componentDidUpdate → setCanvas).
+            void glyph.glyphBitmap;
 
             return (
                 <li

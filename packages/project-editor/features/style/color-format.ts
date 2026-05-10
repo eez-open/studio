@@ -18,6 +18,8 @@ export enum ColorFormatType {
     HTML_NAME = "html_name", // html color name
     DARKEN = "darken", // darken(c, level)
     LIGHTEN = "lighten", // lighten(c, level)
+    RGB = "rgb", // rgb(r, g, b)
+    RGBA = "rgba", // rgba(r, g, b, a)
     UNKNOWN = "unknown"
 }
 
@@ -120,11 +122,13 @@ export class ColorFormat {
     // HEX_HASH / HEX_0X: case style
     hexUpperCase: boolean = true;
 
-    // RGB format details
+    // RGB/RGBA format details
     rgbSeparator: string = ", ";
     rFormat: NumberFormat = "decimal";
     gFormat: NumberFormat = "decimal";
     bFormat: NumberFormat = "decimal";
+    aFormat: NumberFormat = "decimal";
+    a: number = 1;
 
     // HSL format details
     hslSeparator: string = ", ";
@@ -182,6 +186,19 @@ export class ColorFormat {
                 cf.b = parsed.b;
             }
             return cf;
+        }
+
+        // 2.5) rgb(r, g, b) and rgba(r, g, b, a) for firmware mode
+        if (project.projectTypeTraits?.isFirmware) {
+            const rgbMatch = input.match(/^rgb\s*\(\s*(.*?)\s*\)$/i);
+            if (rgbMatch) {
+                return cf.parseRgb(rgbMatch[1], false);
+            }
+
+            const rgbaMatch = input.match(/^rgba\s*\(\s*(.*?)\s*\)$/i);
+            if (rgbaMatch) {
+                return cf.parseRgb(rgbaMatch[1], true);
+            }
         }
 
         // 3) darken(c, level)
@@ -313,6 +330,65 @@ export class ColorFormat {
             this.b = Math.round(
                 innerRgb.b + (255 - innerRgb.b) * fraction
             );
+        }
+
+        return this;
+    }
+
+    private parseRgb(argsStr: string, isRgba: boolean): ColorFormat {
+        this.formatType = isRgba ? ColorFormatType.RGBA : ColorFormatType.RGB;
+        this.rgbSeparator = detectSeparator(argsStr);
+
+        const args = splitFunctionArgs(argsStr);
+        const expectedArgs = isRgba ? 4 : 3;
+        if (args.length !== expectedArgs) {
+            this.formatType = ColorFormatType.UNKNOWN;
+            return this;
+        }
+
+        // Parse r, g, b
+        const rParsed = parseComponentValue(args[0]);
+        const gParsed = parseComponentValue(args[1]);
+        const bParsed = parseComponentValue(args[2]);
+
+        if (!rParsed || !gParsed || !bParsed) {
+            this.formatType = ColorFormatType.UNKNOWN;
+            return this;
+        }
+
+        this.rFormat = rParsed.format;
+        this.gFormat = gParsed.format;
+        this.bFormat = bParsed.format;
+
+        // Normalize to 0-255 range
+        const rNormalized = this.rFormat === "percent" ? (rParsed.value / 100) * 255 : rParsed.value;
+        const gNormalized = this.gFormat === "percent" ? (gParsed.value / 100) * 255 : gParsed.value;
+        const bNormalized = this.bFormat === "percent" ? (bParsed.value / 100) * 255 : bParsed.value;
+
+        if (isRgba) {
+            // Parse alpha
+            const aParsed = parseComponentValue(args[3]);
+            if (!aParsed) {
+                this.formatType = ColorFormatType.UNKNOWN;
+                return this;
+            }
+
+            this.aFormat = aParsed.format;
+            // Normalize alpha to 0-1 range
+            const aNormalized = this.aFormat === "percent" ? aParsed.value / 100 : aParsed.value;
+            this.a = Math.max(0, Math.min(1, aNormalized));
+
+            // Convert rgba to rgb by blending with black (0, 0, 0)
+            // result = foreground * alpha + background * (1 - alpha)
+            // Since background is black (0, 0, 0): result = foreground * alpha
+            this.r = Math.round(rNormalized * this.a);
+            this.g = Math.round(gNormalized * this.a);
+            this.b = Math.round(bNormalized * this.a);
+        } else {
+            this.a = 1;
+            this.r = Math.round(Math.max(0, Math.min(255, rNormalized)));
+            this.g = Math.round(Math.max(0, Math.min(255, gNormalized)));
+            this.b = Math.round(Math.max(0, Math.min(255, bNormalized)));
         }
 
         return this;
@@ -487,6 +563,12 @@ export class ColorFormat {
             case ColorFormatType.LIGHTEN:
                 return this.toDarkenLightenString("lighten");
 
+            case ColorFormatType.RGB:
+                return this.toRgbString();
+
+            case ColorFormatType.RGBA:
+                return this.toRgbaString();
+
             default:
                 return this.toHexHash();
         }
@@ -525,6 +607,45 @@ export class ColorFormat {
         return `${fn}(${colorStr}${this.darkenLightenSeparator}${levelStr})`;
     }
 
+    private toRgbString(): string {
+        const rStr = this.formatComponentValue(this.r, this.rFormat);
+        const gStr = this.formatComponentValue(this.g, this.gFormat);
+        const bStr = this.formatComponentValue(this.b, this.bFormat);
+        return `rgb(${rStr}${this.rgbSeparator}${gStr}${this.rgbSeparator}${bStr})`;
+    }
+
+    private toRgbaString(): string {
+        const rStr = this.formatComponentValue(this.r, this.rFormat);
+        const gStr = this.formatComponentValue(this.g, this.gFormat);
+        const bStr = this.formatComponentValue(this.b, this.bFormat);
+        const aStr = this.formatAlphaValue(this.a, this.aFormat);
+        return `rgba(${rStr}${this.rgbSeparator}${gStr}${this.rgbSeparator}${bStr}${this.rgbSeparator}${aStr})`;
+    }
+
+    private formatComponentValue(value: number, format: NumberFormat): string {
+        switch (format) {
+            case "percent":
+                return Math.round((value / 255) * 100) + "%";
+            case "hex":
+                return "0x" + value.toString(16).padStart(2, "0");
+            case "decimal":
+            default:
+                return String(Math.round(value));
+        }
+    }
+
+    private formatAlphaValue(alpha: number, format: NumberFormat): string {
+        switch (format) {
+            case "percent":
+                return Math.round(alpha * 100) + "%";
+            case "hex":
+                return "0x" + Math.round(alpha * 255).toString(16).padStart(2, "0");
+            case "decimal":
+            default:
+                return alpha.toFixed(2);
+        }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Clone
     ////////////////////////////////////////////////////////////////////////////
@@ -540,6 +661,8 @@ export class ColorFormat {
         cf.rFormat = this.rFormat;
         cf.gFormat = this.gFormat;
         cf.bFormat = this.bFormat;
+        cf.aFormat = this.aFormat;
+        cf.a = this.a;
         cf.hslSeparator = this.hslSeparator;
         cf.name = this.name;
         cf.innerColor = this.innerColor ? this.innerColor.clone() : null;
