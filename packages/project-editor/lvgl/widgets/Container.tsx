@@ -5,21 +5,23 @@ import {
     IMessage,
     MessageType,
     makeDerivedClassInfo,
-    LVGLParts
+    LVGLParts,
+    PropertyType
 } from "project-editor/core/object";
 
-import { ProjectType } from "project-editor/project/project";
+import { findLvglStyle, ProjectType } from "project-editor/project/project";
 
 import { LVGLTabviewWidget, LVGLTabWidget, LVGLWidget } from "./internal";
 import { getDropdown, getTabview } from "../widget-common";
 import { getProjectStore, Message } from "project-editor/store";
-import { getLvglParts } from "../lvgl-versions";
+import { getLvglParts, getLvglStylePropName } from "../lvgl-versions";
 import { Rect } from "eez-studio-shared/geometry";
 import { AutoSize } from "project-editor/flow/component";
 import { IResizeHandler } from "project-editor/flow/flow-interfaces";
 import {
     bg_opa_property_info,
     border_width_property_info,
+    LVGLPropertyInfo,
     pad_bottom_property_info,
     pad_left_property_info,
     pad_right_property_info,
@@ -27,6 +29,7 @@ import {
     radius_property_info
 } from "../style-catalog";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +58,15 @@ export class LVGLContainerWidget extends LVGLWidget {
 
         componentPaletteGroupName: "!1Basic",
 
-        properties: [],
+        properties: [
+            {
+                name: "containerVersion",
+                type: PropertyType.Number,
+                hideInPropertyGrid: true,
+                hideInDocumentation: "all"
+            }
+        ],
+
 
         defaultValue: {
             left: 0,
@@ -141,6 +152,8 @@ export class LVGLContainerWidget extends LVGLWidget {
         }
     });
 
+    containerVersion: number;
+
     override makeEditable() {
         super.makeEditable();
 
@@ -212,6 +225,35 @@ export class LVGLContainerWidget extends LVGLWidget {
         return super.getResizeHandlers();
     }
 
+    isStyleOverriden(propertyInfo: LVGLPropertyInfo) {
+        if (this.localStyles.getPropertyValue(propertyInfo, "MAIN", "DEFAULT") != undefined) {
+            return true;
+        }
+
+        if (this.useStyle) {
+            const lvglStyle = findLvglStyle(ProjectEditor.getProject(this), this.useStyle);
+            if (lvglStyle) {
+                if (lvglStyle.fullDefinition?.["MAIN"]?.["DEFAULT"]?.[propertyInfo.name] != undefined) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    buildStyleIfNotOverriden(code: LVGLCode, propertyInfo: LVGLPropertyInfo) {
+        if (!this.isStyleOverriden(propertyInfo)) {
+            const stylePropName = getLvglStylePropName(code.project, propertyInfo.name);
+
+            code.callObjectFunction(
+                `lv_obj_set_style_${stylePropName}`,
+                0,
+                code.or(code.constant("LV_PART_MAIN"), code.constant("LV_STATE_DEFAULT"))
+            );
+        }
+    }
+
     override toLVGLCode(code: LVGLCode) {
         const tabview = getTabview(this);
         if (tabview) {
@@ -238,12 +280,14 @@ export class LVGLContainerWidget extends LVGLWidget {
 
         code.createObject(`lv_obj_create`);
 
-        this.buildStyleIfNotDefinedInCode(code, pad_left_property_info);
-        this.buildStyleIfNotDefinedInCode(code, pad_top_property_info);
-        this.buildStyleIfNotDefinedInCode(code, pad_right_property_info);
-        this.buildStyleIfNotDefinedInCode(code, pad_bottom_property_info);
-        this.buildStyleIfNotDefinedInCode(code, bg_opa_property_info);
-        this.buildStyleIfNotDefinedInCode(code, border_width_property_info);
-        this.buildStyleIfNotDefinedInCode(code, radius_property_info);
+        if (this.containerVersion !== 1) {
+            this.buildStyleIfNotOverriden(code, pad_left_property_info);
+            this.buildStyleIfNotOverriden(code, pad_top_property_info);
+            this.buildStyleIfNotOverriden(code, pad_right_property_info);
+            this.buildStyleIfNotOverriden(code, pad_bottom_property_info);
+            this.buildStyleIfNotOverriden(code, bg_opa_property_info);
+            this.buildStyleIfNotOverriden(code, border_width_property_info);
+            this.buildStyleIfNotOverriden(code, radius_property_info);
+        }
     }
 }

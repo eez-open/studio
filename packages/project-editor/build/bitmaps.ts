@@ -17,7 +17,10 @@ export function buildGuiBitmapsEnum(assets: Assets) {
     return `enum BitmapsEnum {\n${bitmaps.join(",\n")}\n};`;
 }
 
-async function buildGuiBitmaps(assets: Assets) {
+async function buildGuiBitmaps(
+    assets: Assets,
+    option: "check" | "buildAssets" | "buildFiles"
+) {
     if (assets.bitmaps.length === 0) {
         return null;
     }
@@ -30,10 +33,23 @@ async function buildGuiBitmaps(assets: Assets) {
         pixels: Uint8Array;
     }[] = [];
 
-    Promise.all(assets.bitmaps.map(bitmap => getBitmapDataAsync(bitmap)));
+    const bitmapColorFormat =
+        option == "buildAssets"
+            ? "RGB"
+            : assets.projectStore.project.settings.general.bitmapColorFormat;
+
+    Promise.all(
+        assets.bitmaps.map(bitmap =>
+            getBitmapDataAsync(bitmap, undefined, bitmapColorFormat)
+        )
+    );
 
     for (let i = 0; i < assets.bitmaps.length; i++) {
-        const bitmapsData = await getBitmapDataAsync(assets.bitmaps[i]);
+        const bitmapsData = await getBitmapDataAsync(
+            assets.bitmaps[i],
+            undefined,
+            bitmapColorFormat
+        );
 
         bitmaps.push({
             name: assets.bitmaps[i].name,
@@ -49,9 +65,10 @@ async function buildGuiBitmaps(assets: Assets) {
 
 export async function buildGuiBitmapsData(
     assets: Assets,
-    dataBuffer: DataBuffer
+    dataBuffer: DataBuffer,
+    option: "check" | "buildAssets" | "buildFiles"
 ) {
-    const bitmaps = await buildGuiBitmaps(assets);
+    const bitmaps = await buildGuiBitmaps(assets, option);
 
     dataBuffer.writeArray(bitmaps || [], bitmap => {
         dataBuffer.writeInt16(bitmap.width);

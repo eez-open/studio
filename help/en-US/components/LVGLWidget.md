@@ -198,6 +198,10 @@ Focused via keypad or encoder but not via touchpad/mouse
 
 Being pressed.
 
+## Hovered
+
+Hover over Widget.
+
 ## Use style
 
 Here we can select one of the globally defined Styles so that the Widget uses that Style.

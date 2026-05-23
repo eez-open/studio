@@ -54,7 +54,6 @@ import {
 } from "project-editor/store";
 import {
     isEezFlowLiteProject,
-    isEezGuiLiteProject,
     isLVGLProject,
     isNotDashboardProject,
     isNotLVGLProject,
@@ -169,7 +168,7 @@ import {
     wireSourceChanged
 } from "project-editor/store/serialization";
 import { StylePropertyUI } from "project-editor/features/style/StylePropertyUI";
-import { findVariable } from "project-editor/project/project";
+import { findVariable, ProjectType } from "project-editor/project/project";
 import type { Action } from "project-editor/features/action/action";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2939,15 +2938,17 @@ export class Widget extends Component {
 
             const classInfo = getClassInfo(object);
 
-            if (
-                classInfo.widgetEvents &&
-                typeof classInfo.widgetEvents == "object"
-            ) {
+            if (classInfo.widgetEvents) {
+                let widgetEvents;
+                if (typeof classInfo.widgetEvents == "object") {
+                    widgetEvents = classInfo.widgetEvents;
+                } else {
+                    widgetEvents = classInfo.widgetEvents(object);
+                }
+
                 if (jsObject.action) {
-                    for (const eventName of Object.keys(
-                        classInfo.widgetEvents
-                    )) {
-                        const eventDef = classInfo.widgetEvents[eventName];
+                    for (const eventName of Object.keys(widgetEvents)) {
+                        const eventDef = widgetEvents[eventName];
                         if (eventDef.oldName == "action") {
                             if (
                                 !jsObject.eventHandlers.find(
@@ -2972,10 +2973,8 @@ export class Widget extends Component {
 
                 if (jsObject.asOutputProperties?.length > 0) {
                     for (const asOutputProperty of jsObject.asOutputProperties) {
-                        for (const eventName of Object.keys(
-                            classInfo.widgetEvents
-                        )) {
-                            const eventDef = classInfo.widgetEvents[eventName];
+                        for (const eventName of Object.keys(widgetEvents)) {
+                            const eventDef = widgetEvents[eventName];
                             if (eventDef.oldName == asOutputProperty) {
                                 if (
                                     !jsObject.eventHandlers.find(
@@ -3355,7 +3354,8 @@ export class Widget extends Component {
         },
 
         widgetEvents: (object: Widget) => {
-            if (isEezGuiLiteProject(object)) {
+            const project = ProjectEditor.getProject(object);
+            if (project.settings?.general?.projectType == ProjectType.EEZ_GUI_LITE) {
                 const widgetEvents: WidgetEvents = {
                     PRESSED: {
                         code: 0,

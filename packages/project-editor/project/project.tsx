@@ -80,6 +80,7 @@ import { isArray } from "eez-studio-shared/util";
 import type { CommandsProtocolType } from "eez-studio-shared/extensions/extension";
 import type { LVGLGroups } from "project-editor/lvgl/groups";
 import { settingsController } from "home/settings";
+import { to16bitsColor } from "eez-studio-shared/color";
 
 export * from "project-editor/project/assets";
 export * from "project-editor/project/helper";
@@ -788,7 +789,8 @@ export class General extends EezObject {
     circularDisplay: boolean;
     displayBorderRadius: number;
     darkTheme: boolean;
-    colorFormat: string;
+    colorBpp: string;
+    bitmapColorFormat: string;
     //css: string;
 
     icon: string;
@@ -999,7 +1001,20 @@ export class General extends EezObject {
                 disabled: isNotLVGLProject
             },
             {
-                name: "colorFormat",
+                name: "colorBpp",
+                displayName: "Color BPP",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "16", label: "16 bit" },
+                    { id: "32", label: "32 bit" }
+                ],
+                disabled: (general: General) => {
+                    const project = getProject(general);
+                    return !project.projectTypeTraits.isFirmware;
+                }
+            },
+            {
+                name: "bitmapColorFormat",
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: "RGB", label: "RGB" },
@@ -1228,18 +1243,25 @@ export class General extends EezObject {
                 }
             }
 
-            if (jsObject.colorFormat == undefined) {
+            if (jsObject.colorBpp == undefined) {
+                jsObject.colorBpp = "16";
+            }
+
+            if (jsObject.colorFormat != undefined) {
+                jsObject.bitmapColorFormat = jsObject.colorFormat;
+            }
+            if (jsObject.bitmapColorFormat == undefined) {
                 if (
                     jsObject.projectType == ProjectType.FIRMWARE ||
                     jsObject.projectType == ProjectType.FIRMWARE_MODULE ||
                     jsObject.projectType == ProjectType.RESOURCE ||
                     jsObject.projectType == ProjectType.APPLET
                 ) {
-                    jsObject.colorFormat = jsObject.flowSupport ? "RGB" : "BGR";
+                    jsObject.bitmapColorFormat = jsObject.flowSupport ? "RGB" : "BGR";
                 } else if (jsObject.projectType == ProjectType.LVGL) {
-                    jsObject.colorFormat = "BGR";
+                    jsObject.bitmapColorFormat = "BGR";
                 } else {
-                    jsObject.colorFormat = "RGB";
+                    jsObject.bitmapColorFormat = "RGB";
                 }
             }
 
@@ -1307,7 +1329,8 @@ export class General extends EezObject {
             circularDisplay: observable,
             displayBorderRadius: observable,
             darkTheme: observable,
-            colorFormat: observable,
+            colorBpp: observable,
+            bitmapColorFormat: observable,
             description: observable,
             image: observable,
             keywords: observable,
@@ -1989,6 +2012,14 @@ export class Project extends EezObject {
         }
 
         return colors;
+    }
+
+    toColorBpp(colorStr: string) {
+        if (this.projectTypeTraits.isFirmware && this.settings.general.colorBpp == "16") {
+            return to16bitsColor(colorStr);
+        } else {
+            return colorStr;
+        }
     }
 
     enableTabs(projectType?: ProjectType, flowSupport?: boolean) {

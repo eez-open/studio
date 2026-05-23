@@ -1,5 +1,29 @@
 # PROPERTIES
 
+## Left
+
+X position of the component in relation to the page or parent widget. It is set in pixels.
+
+Hint: when setting the value of this property (as well as the `Top`, `Width` and `Height` properties), simple mathematical expressions can be used. When we enter an expression and press enter, the expression will be evaluated and the result set as the value of this property. It is allowed to use `+`, `-`, `*` and `/` operators in expressions. Brackets can also be used.
+
+Examples of such mathematical expressions: `18 + 36`, `50 + 32 * 6`, `(100 - 32) / 2`.
+
+## Top
+
+Y position of the component in relation to the page or parent widget. It is set in pixels.
+
+## Width
+
+The width of the component. It is set in pixels.
+
+## Height
+
+The height of the component. It is set in pixels.
+
+## Absolute pos.
+
+The absolute position of the component in relation to the page. This property is read-only.
+
 ## Resizing
 
 If the page where this Widget is located has the "Scale to fit" option enabled, then this option can be used to control how the position and size of the widget will be calculated when scaling the page:

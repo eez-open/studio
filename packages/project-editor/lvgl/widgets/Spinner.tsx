@@ -69,5 +69,14 @@ export class LVGLSpinnerWidget extends LVGLWidget {
             const ARC_LENGTH = 60;
             code.createObject(`lv_spinner_create`, SPIN_TIME, ARC_LENGTH);
         }
+
+        // do not animate spinner when in editor mode
+        if (code.pageRuntime && code.pageRuntime.isEditor) {
+            if (code.isV9) {
+                code.callFreeFunction(`lv_anim_delete_all`);
+            } else {
+                code.callFreeFunction(`lv_anim_del_all`);
+            }
+        }
     }
 }

@@ -22,13 +22,10 @@ import { ProjectContext } from "project-editor/project/context";
 import { IFieldComponentProps } from "eez-studio-ui/generic-dialog";
 import { SearchInput } from "eez-studio-ui/search-input";
 
-import {
-    drawGlyph2,
-    setBackColor,
-    setColor
-} from "project-editor/flow/editor/eez-gui-draw";
+import * as eezGuiDraw from "project-editor/flow/editor/eez-gui-draw";
 import { formatEncoding } from "project-editor/features/font/utils";
 import { settingsController } from "home/settings";
+import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -343,6 +340,7 @@ export const Glyphs = observer(
                                         rowHeight={GLYPH_HEIGHT}
                                         itemData={
                                             {
+                                                project: this.context.project,
                                                 columnCount: this.columnCount,
                                                 fontExtract:
                                                     this.props.fontExtract,
@@ -383,6 +381,7 @@ export const Glyph = observer(
         rowIndex: number;
         style: React.CSSProperties;
         data: {
+            project: Project,
             columnCount: number;
             fontExtract: IFontExtract;
             selectedEncoding: IObservableValue<number | undefined>;
@@ -397,15 +396,17 @@ export const Glyph = observer(
 
         const encoding = data.fontExtract.allEncodings[index];
 
+        eezGuiDraw.setProject(data.project);
+
         if (settingsController.isDarkTheme) {
-            setColor("white");
-            setBackColor("black");
+            eezGuiDraw.setColor("white");
+            eezGuiDraw.setBackColor("black");
         } else {
-            setColor("black");
-            setBackColor("white");
+            eezGuiDraw.setColor("black");
+            eezGuiDraw.setBackColor("white");
         }
 
-        const canvas = drawGlyph2(encoding, data.fontExtract);
+        const canvas = eezGuiDraw.drawGlyph2(encoding, data.fontExtract);
 
         return (
             <div className="glyph" style={style}>

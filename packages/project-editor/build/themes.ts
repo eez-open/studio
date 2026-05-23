@@ -1,4 +1,4 @@
-import { strToColor16 } from "eez-studio-shared/color";
+import { strToColor16, strToColor32 } from "eez-studio-shared/color";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import {
     Theme,
@@ -46,7 +46,11 @@ export function buildGuiColorsEnum(assets: Assets) {
 
 export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
     function buildColor(color: string) {
-        dataBuffer.writeUint16(strToColor16(color));
+        if (assets.projectStore.project.settings.general.colorBpp == "16") {
+            dataBuffer.writeUint16(strToColor16(color));
+        } else {
+            dataBuffer.writeUint32(strToColor32(color));
+        }
     }
 
     function buildTheme(theme: Theme) {

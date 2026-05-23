@@ -46,6 +46,14 @@ List of actions to be executed. The following actions are available:
   - *Object*: The object to get the y coordinate
   - *Store result into*: The variable to store the y coordinate
 
+- **Obj Get Display X**: Get the x coordinate of the object, relative to the display origin
+  - *Object*: The object to get the x coordinate
+  - *Store result into*: The variable to store the x coordinate
+
+- **Obj Get Display Y**: Get the y coordinate of the object, relative to the display origin
+  - *Object*: The object to get the y coordinate
+  - *Store result into*: The variable to store the y coordinate
+
 - **Obj Set Width**: Set the width of the object
   - *Object*: The object to set the width
   - *Width*: The width to set

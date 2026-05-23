@@ -14,9 +14,17 @@ Not only the end, but also the start value of the bar can be set, which changes 
 
 The minimum value that `Value` and `Value start` can contain.
 
+## Min type
+
+Select between `Literal` and `Expression`. If `Expression` is selected then `Min` can be evaluated from the expression.
+
 ## Max
 
 The maximum value that `Value` and `Value start` can contain.
+
+## Max type
+
+Select between `Literal` and `Expression`. If `Expression` is selected then `Max` can be evaluated from the expression.
 
 ## Mode
 
@@ -34,6 +42,10 @@ The end value on the bar.
 
 Select between `Literal` and `Expression`. If `Expression` is selected then `Value` can be evaluated from the expression.
 
+## Preview value
+
+This is an optional property. If specified then the value of the bar in the project editor will be this value. Only available when `Value type` is set to `Expression`.
+
 ## Value start
 
 The start value on the bar if `RANGE` mode is selected.
@@ -41,6 +53,10 @@ The start value on the bar if `RANGE` mode is selected.
 ## Value start type
 
 Select between `Literal` and `Expression`. If `Expression` is selected then `Value start` can be evaluated from the expression.
+
+## Preview value start
+
+This is an optional property. If specified then the start value of the bar in the project editor will be this value. Only available when `Value start type` is set to `Expression` and `Mode` is set to `RANGE`.
 
 ## Enable animation
 

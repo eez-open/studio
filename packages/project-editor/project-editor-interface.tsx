@@ -78,6 +78,12 @@ import type {
     ListWidget,
     SelectWidget
 } from "project-editor/flow/components/widgets";
+import type {
+    TextWidget,
+    MultilineTextWidget,
+    ButtonWidget,
+    BarGraphWidget
+} from "project-editor/flow/components/widgets/eez-gui";
 import type { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
 import type { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
 import type {
@@ -146,6 +152,10 @@ export interface IProjectEditor {
     SelectWidgetClass: typeof SelectWidget;
     ContainerWidgetClass: typeof ContainerWidget;
     ListWidgetClass: typeof ListWidget;
+    TextWidgetClass: typeof TextWidget;
+    MultilineTextWidgetClass: typeof MultilineTextWidget;
+    ButtonWidgetClass: typeof ButtonWidget;
+    BarGraphWidgetClass: typeof BarGraphWidget;
     OutputActionComponentClass: typeof OutputActionComponent;
     CallActionActionComponentClass: typeof CallActionActionComponent;
     VariableClass: typeof Variable;

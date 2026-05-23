@@ -475,6 +475,12 @@ export function strToColor16(colorStr: string) {
     return color16;
 }
 
+export function strToColor32(colorStr: string) {
+    const rgb = getColorRGB(colorStr);
+    let color32 = (rgb.r | (rgb.g << 8) | (rgb.b << 16) | (Math.round(rgb.a * 255) << 24)) >>> 0;
+    return color32;
+}
+
 export function to16bitsColor(colorStr: string) {
     const parsed = getColorRGB(colorStr);
     const r = parsed.r & 0b11111000;

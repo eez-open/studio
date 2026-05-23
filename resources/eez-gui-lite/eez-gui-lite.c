@@ -31,6 +31,7 @@ static void display_draw_glyph(const uint8_t *src, uint32_t glyph_full_width, in
 
 static bool widget_is_visible(eezgui_ctx_t *ctx, const eezgui_widget_t *widget);
 static void draw_box(eezgui_ctx_t *ctx, const char *text);
+static void draw_box_with_style(eezgui_ctx_t *ctx, const char *text, uint16_t use_style);
 static void send_event(eezgui_ctx_t *ctx, const eezgui_widget_t *widget, eezgui_event_type_t type);
 static void check_events(eezgui_ctx_t *ctx, const eezgui_widget_t *widget);
 static void widget_start(eezgui_ctx_t *ctx, const eezgui_widget_t *widget, int widget_state_size);
@@ -471,7 +472,15 @@ EM_PORT_API(void) eezgui_button(eezgui_ctx_t *ctx, const eezgui_button_t *widget
 
     strcpy(((eezgui_button_state_t *)ctx->widget_state)->text, text);
 
-    if (is_same_state(ctx) && strcmp(((eezgui_button_state_t *)ctx->previous_widget_state)->text, text) == 0) {
+    bool is_enabled;
+    if (widget->is_enabled && !ctx->get_bool_prop(widget->is_enabled)) {
+        is_enabled = false;
+    } else {
+        is_enabled = true;
+    }
+    ((eezgui_button_state_t *)ctx->widget_state)->is_enabled = is_enabled;
+
+    if (is_same_state(ctx) && strcmp(((eezgui_button_state_t *)ctx->previous_widget_state)->text, text) == 0 && ((eezgui_button_state_t *)ctx->previous_widget_state)->is_enabled == is_enabled) {
         return;
     }
     
@@ -480,7 +489,11 @@ EM_PORT_API(void) eezgui_button(eezgui_ctx_t *ctx, const eezgui_button_t *widget
         return;
     }
 
-    draw_box(ctx, text);
+    if (is_enabled) {
+        draw_box(ctx, text);
+    } else {
+        draw_box_with_style(ctx, text, widget->disabled_style);
+    }
 }
 
 EM_PORT_API(void) eezgui_rectangle(eezgui_ctx_t *ctx, const eezgui_rectangle_t *widget) {
@@ -980,7 +993,7 @@ void font_draw_str(const eezgui_font_data_t *font, const char *text, int text_le
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void draw_box(eezgui_ctx_t *ctx, const char *text) {
+static void draw_box_with_style(eezgui_ctx_t *ctx, const char *text, uint16_t use_style) {
     const eezgui_widget_t *widget = ctx->widget_state->widget;
 
     int x = ctx->x_offset + widget->x;
@@ -994,7 +1007,7 @@ static void draw_box(eezgui_ctx_t *ctx, const char *text) {
 
     bool active = ctx->widget_state->state & EEZGUI_WIDGET_STATE_PRESSED ? true : false;
 
-    const eezgui_style_t *style = ctx->styles + (widget->style < ctx->num_styles ? widget->style : 0);
+    const eezgui_style_t *style = ctx->styles + (use_style < ctx->num_styles ? use_style : 0);
 
     eezgui_color_t bgColor = active ? ctx->colors[style->active_background_color] : ctx->colors[style->background_color];
     eezgui_color_t fgColor = active ? ctx->colors[style->active_color] : ctx->colors[style->color];
@@ -1066,4 +1079,9 @@ static void draw_box(eezgui_ctx_t *ctx, const char *text) {
     }
 
     display_box_end();
+}
+
+static void draw_box(eezgui_ctx_t *ctx, const char *text) {
+    const eezgui_widget_t *widget = ctx->widget_state->widget;
+    draw_box_with_style(ctx, text, widget->style);
 }

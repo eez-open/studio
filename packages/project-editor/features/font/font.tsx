@@ -2432,7 +2432,8 @@ export class Font extends EezObject {
             lvglVersion,
             lvglInclude,
             additionalSources: this.getAdditionalSourcesParams(projectStore),
-            opts_string
+            opts_string,
+            lv_fallback: this.lvglFallbackFont
         };
     }
 

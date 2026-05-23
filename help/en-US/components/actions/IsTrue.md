@@ -16,10 +16,6 @@ Expression whose result is tested.
 
 A standard sequence input.
 
-## value
-
-The input through which the Value to be tested is received. This input can be deleted (we delete it in the Flow - Inputs list) if it is not needed, i.e. if you want to test another expression.
-
 # OUTPUTS
 
 ## seqout

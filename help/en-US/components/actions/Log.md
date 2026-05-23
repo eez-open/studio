@@ -14,10 +14,6 @@ Expression whose result will be displayed in the _Logs_ panel.
 
 A standard sequence input.
 
-## value
-
-The input through which the Value that is displayed in the _Log_ panel is received. This input can be deleted (it is deleted in the Flow - Inputs list) if it is not needed, i.e. if some other expression is displayed.
-
 # OUTPUTS
 
 ## seqout

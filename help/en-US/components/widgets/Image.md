@@ -34,6 +34,13 @@ Rotation angle, angle has 0.1 degree precision, so for 45.8° set `458`. Image i
 
 By default the image widget's width and height will be sized automatically according to the image source. If the widget's width or height is set the larger value the thisinner_align property tells how to align the image source inside the widget.
 
+## Size mode
+
+Controls how the image size is handled within the widget (LVGL 8.x only).
+
+- **VIRTUAL** (default): The widget size is automatically adjusted to match the image source size.
+- **REAL**: The image is displayed in its actual size regardless of the widget size.
+
 ## Value
 
 The needle value on the scale. This property is only visible when the Image widget is used as a child of a Scale widget (scale needle mode).

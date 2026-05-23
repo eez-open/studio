@@ -18,6 +18,18 @@ Initially selected month.
 
 Initially selected day.
 
+## Header
+
+Header type for the calendar:
+
+- `None` – No header.
+- `Arrow` – Header with arrow buttons to navigate months/years.
+- `Dropdown` – Header with dropdown menus to navigate months/years.
+
+## Chinese mode
+
+If enabled, the calendar will use Chinese locale for month and day names. Only available in LVGL 9.x and later.
+
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

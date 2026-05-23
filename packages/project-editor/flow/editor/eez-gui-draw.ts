@@ -1,6 +1,6 @@
-import { getColorRGB, to16bitsColor } from "eez-studio-shared/color";
+import { getColorRGB } from "eez-studio-shared/color";
 
-import { findBitmap } from "project-editor/project/project";
+import { findBitmap, Project } from "project-editor/project/project";
 import type { Style } from "project-editor/features/style/style";
 import type { Font } from "project-editor/features/font/font";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -22,15 +22,20 @@ type BorderRadiusSpec = {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+let project: Project;
 let fgColor: string;
 let bgColor: string;
+
+export function setProject(project_: Project) {
+    project = project_;
+}
 
 export function getColor() {
     return fgColor;
 }
 
 export function setColor(color: string) {
-    fgColor = to16bitsColor(color);
+    fgColor = project.toColorBpp(color);
 }
 
 export function getBackColor() {
@@ -38,7 +43,7 @@ export function getBackColor() {
 }
 
 export function setBackColor(color: string) {
-    bgColor = to16bitsColor(color);
+    bgColor = project.toColorBpp(color);
 }
 
 export function fillRect(

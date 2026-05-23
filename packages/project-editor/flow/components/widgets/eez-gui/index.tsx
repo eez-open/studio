@@ -5,7 +5,6 @@ import QRC from "../qrcodegen";
 
 import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
-import { to16bitsColor } from "eez-studio-shared/color";
 
 import {
     IEezObject,
@@ -62,7 +61,7 @@ import {
     DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME,
     ValueType
 } from "project-editor/features/variable/value-type";
-import * as draw from "project-editor/flow/editor/eez-gui-draw";
+import * as eezGuiDraw from "project-editor/flow/editor/eez-gui-draw";
 import { Font } from "project-editor/features/font/font";
 
 import {
@@ -178,48 +177,32 @@ export class DisplayDataWidget extends Widget {
             {
                 name: "displayOption",
                 type: PropertyType.Enum,
-                enumItems: (widget: DisplayDataWidget) =>
-                    hasFlowSupport(widget)
-                        ? [
-                              {
-                                  id: DisplayOption.All,
-                                  label: "All"
-                              },
-                              {
-                                  id: DisplayOption.Integer,
-                                  label: "Integer"
-                              },
-                              {
-                                  id: DisplayOption.Fraction,
-                                  label: "Fraction"
-                              }
-                          ]
-                        : [
-                              {
-                                  id: DisplayOption.All,
-                                  label: "All"
-                              },
-                              {
-                                  id: DisplayOption.Integer,
-                                  label: "Integer"
-                              },
-                              {
-                                  id: DisplayOption.FractionAndUnit,
-                                  label: "Fraction and unit"
-                              },
-                              {
-                                  id: DisplayOption.Fraction,
-                                  label: "Fraction"
-                              },
-                              {
-                                  id: DisplayOption.Unit,
-                                  label: "Unit"
-                              },
-                              {
-                                  id: DisplayOption.IntegerAndFraction,
-                                  label: "Integer and fraction"
-                              }
-                          ],
+                enumItems: [
+                    {
+                        id: DisplayOption.All,
+                        label: "All"
+                    },
+                    {
+                        id: DisplayOption.Integer,
+                        label: "Integer"
+                    },
+                    {
+                        id: DisplayOption.FractionAndUnit,
+                        label: "Fraction and unit"
+                    },
+                    {
+                        id: DisplayOption.Fraction,
+                        label: "Fraction"
+                    },
+                    {
+                        id: DisplayOption.Unit,
+                        label: "Unit"
+                    },
+                    {
+                        id: DisplayOption.IntegerAndFraction,
+                        label: "Integer and fraction"
+                    }
+                ],
                 propertyGridGroup: specificGroup
             },
             makeDataPropertyInfo("refreshRate", {
@@ -372,7 +355,8 @@ export class DisplayDataWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawText(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+                        eezGuiDraw.drawText(
                             ctx,
                             text,
                             0,
@@ -585,7 +569,8 @@ export class TextWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawText(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+                        eezGuiDraw.drawText(
                             ctx,
                             text,
                             0,
@@ -629,6 +614,7 @@ enum MultilineTextRenderStep {
 
 class MultilineTextRender {
     constructor(
+        private project: Project,
         private ctx: CanvasRenderingContext2D,
         private text: string,
         private x1: number,
@@ -656,9 +642,9 @@ class MultilineTextRender {
             if (step == MultilineTextRenderStep.RENDER) {
                 let x;
 
-                if (draw.styleIsHorzAlignLeft(this.style)) {
+                if (eezGuiDraw.styleIsHorzAlignLeft(this.style)) {
                     x = this.x1;
-                } else if (draw.styleIsHorzAlignRight(this.style)) {
+                } else if (eezGuiDraw.styleIsHorzAlignRight(this.style)) {
                     x = this.x2 + 1 - this.lineWidth;
                 } else {
                     x =
@@ -668,10 +654,10 @@ class MultilineTextRender {
                         );
                 }
 
-                draw.setBackColor(this.style.backgroundColorProperty);
-                draw.setColor(this.style.colorProperty);
+                eezGuiDraw.setBackColor(this.style.backgroundColorProperty);
+                eezGuiDraw.setColor(this.style.colorProperty);
 
-                draw.drawStr(
+                eezGuiDraw.drawStr(
                     this.ctx,
                     this.line,
                     x + this.lineIndent,
@@ -712,7 +698,7 @@ class MultilineTextRender {
                 word += this.text[i++];
             }
 
-            let width = draw.measureStr(word, this.font, 0);
+            let width = eezGuiDraw.measureStr(word, this.font, 0);
 
             while (
                 this.lineWidth +
@@ -772,11 +758,13 @@ class MultilineTextRender {
     }
 
     render() {
+        eezGuiDraw.setProject(this.project);
+
         let x1 = this.x1;
         let y1 = this.y1;
         let x2 = this.x2;
         let y2 = this.y2;
-        ({ x1, y1, x2, y2 } = draw.drawBackground(
+        ({ x1, y1, x2, y2 } = eezGuiDraw.drawBackground(
             this.ctx,
             x1,
             y1,
@@ -786,7 +774,7 @@ class MultilineTextRender {
             true
         ));
 
-        const font = draw.styleGetFont(this.style);
+        const font = eezGuiDraw.styleGetFont(this.style);
         if (!font) {
             return;
         }
@@ -813,8 +801,8 @@ class MultilineTextRender {
 
         const textHeight = this.executeStep(MultilineTextRenderStep.MEASURE);
 
-        if (draw.styleIsVertAlignTop(this.style)) {
-        } else if (draw.styleIsVertAlignBottom(this.style)) {
+        if (eezGuiDraw.styleIsVertAlignTop(this.style)) {
+        } else if (eezGuiDraw.styleIsVertAlignBottom(this.style)) {
             this.y1 = this.y2 + 1 - textHeight;
         } else {
             this.y1 += Math.floor((this.y2 - this.y1 + 1 - textHeight) / 2);
@@ -975,6 +963,7 @@ export class MultilineTextWidget extends Widget {
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
                         var multilineTextRender = new MultilineTextRender(
+                            flowContext.projectStore.project,
                             ctx,
                             text,
                             0,
@@ -1091,7 +1080,8 @@ export class RectangleWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawBackground(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+                        eezGuiDraw.drawBackground(
                             ctx,
                             0,
                             0,
@@ -1355,6 +1345,8 @@ export class BitmapWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
                         const w = width;
                         const h = height;
                         const style = this.style;
@@ -1374,9 +1366,9 @@ export class BitmapWidget extends Widget {
                             let height = imageElement.height;
 
                             let x_offset: number;
-                            if (draw.styleIsHorzAlignLeft(style)) {
+                            if (eezGuiDraw.styleIsHorzAlignLeft(style)) {
                                 x_offset = x1 + style.paddingRect.left;
-                            } else if (draw.styleIsHorzAlignRight(style)) {
+                            } else if (eezGuiDraw.styleIsHorzAlignRight(style)) {
                                 x_offset = x2 - style.paddingRect.right - width;
                             } else {
                                 x_offset = Math.floor(
@@ -1388,9 +1380,9 @@ export class BitmapWidget extends Widget {
                             }
 
                             let y_offset: number;
-                            if (draw.styleIsVertAlignTop(style)) {
+                            if (eezGuiDraw.styleIsVertAlignTop(style)) {
                                 y_offset = y1 + style.paddingRect.top;
-                            } else if (draw.styleIsVertAlignBottom(style)) {
+                            } else if (eezGuiDraw.styleIsVertAlignBottom(style)) {
                                 y_offset =
                                     y2 - style.paddingRect.bottom - height;
                             } else {
@@ -1409,7 +1401,7 @@ export class BitmapWidget extends Widget {
                                 ctx.clearRect(0, 0, width, height);
                             }
 
-                            draw.drawBitmap(
+                            eezGuiDraw.drawBitmap(
                                 ctx,
                                 imageElement,
                                 x_offset,
@@ -1607,7 +1599,8 @@ export class ButtonWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawText(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+                        eezGuiDraw.drawText(
                             ctx,
                             text,
                             0,
@@ -1724,7 +1717,8 @@ export class ToggleButtonWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawText(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+                        eezGuiDraw.drawText(
                             ctx,
                             this.text1 || "",
                             0,
@@ -1875,6 +1869,8 @@ export class ButtonGroupWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
                         let buttonLabels = this.getButtonLabels(flowContext);
                         let selectedButton =
                             this.getSelectedButton(flowContext);
@@ -1892,7 +1888,7 @@ export class ButtonGroupWidget extends Widget {
                             let buttonHeight = h;
                             for (let i = 0; i < buttonLabels.length; i++) {
                                 if (i < buttonLabels.length - 1) {
-                                    draw.drawText(
+                                    eezGuiDraw.drawText(
                                         ctx,
                                         buttonLabels[i],
                                         x,
@@ -1906,7 +1902,7 @@ export class ButtonGroupWidget extends Widget {
                                     );
                                     x += buttonWidth;
                                 } else {
-                                    draw.drawText(
+                                    eezGuiDraw.drawText(
                                         ctx,
                                         buttonLabels[i],
                                         x,
@@ -1943,7 +1939,7 @@ export class ButtonGroupWidget extends Widget {
 
                             for (let i = 0; i < buttonLabels.length; i++) {
                                 if (i == selectedButton) {
-                                    draw.drawText(
+                                    eezGuiDraw.drawText(
                                         ctx,
                                         buttonLabels[i],
                                         x,
@@ -1954,7 +1950,7 @@ export class ButtonGroupWidget extends Widget {
                                         false
                                     );
                                 } else {
-                                    draw.drawText(
+                                    eezGuiDraw.drawText(
                                         ctx,
                                         buttonLabels[i],
                                         x,
@@ -2146,6 +2142,8 @@ export class BarGraphWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
                         let barGraphWidget = this;
                         let style = barGraphWidget.style;
 
@@ -2179,21 +2177,21 @@ export class BarGraphWidget extends Widget {
                         let pos = calcPos(value);
 
                         if (barGraphWidget.orientation == "left-right") {
-                            draw.setColor(style.colorProperty);
-                            draw.fillRect(ctx, 0, 0, pos - 1, height - 1);
-                            draw.setColor(style.backgroundColorProperty);
-                            draw.fillRect(ctx, pos, 0, width - 1, height - 1);
+                            eezGuiDraw.setColor(style.colorProperty);
+                            eezGuiDraw.fillRect(ctx, 0, 0, pos - 1, height - 1);
+                            eezGuiDraw.setColor(style.backgroundColorProperty);
+                            eezGuiDraw.fillRect(ctx, pos, 0, width - 1, height - 1);
                         } else if (barGraphWidget.orientation == "right-left") {
-                            draw.setColor(style.backgroundColorProperty);
-                            draw.fillRect(
+                            eezGuiDraw.setColor(style.backgroundColorProperty);
+                            eezGuiDraw.fillRect(
                                 ctx,
                                 0,
                                 0,
                                 width - pos - 1,
                                 height - 1
                             );
-                            draw.setColor(style.colorProperty);
-                            draw.fillRect(
+                            eezGuiDraw.setColor(style.colorProperty);
+                            eezGuiDraw.fillRect(
                                 ctx,
                                 width - pos,
                                 0,
@@ -2201,21 +2199,21 @@ export class BarGraphWidget extends Widget {
                                 height - 1
                             );
                         } else if (barGraphWidget.orientation == "top-bottom") {
-                            draw.setColor(style.colorProperty);
-                            draw.fillRect(ctx, 0, 0, width - 1, pos - 1);
-                            draw.setColor(style.backgroundColorProperty);
-                            draw.fillRect(ctx, 0, pos, width - 1, height - 1);
+                            eezGuiDraw.setColor(style.colorProperty);
+                            eezGuiDraw.fillRect(ctx, 0, 0, width - 1, pos - 1);
+                            eezGuiDraw.setColor(style.backgroundColorProperty);
+                            eezGuiDraw.fillRect(ctx, 0, pos, width - 1, height - 1);
                         } else {
-                            draw.setColor(style.backgroundColorProperty);
-                            draw.fillRect(
+                            eezGuiDraw.setColor(style.backgroundColorProperty);
+                            eezGuiDraw.fillRect(
                                 ctx,
                                 0,
                                 0,
                                 width - 1,
                                 height - pos - 1
                             );
-                            draw.setColor(style.colorProperty);
-                            draw.fillRect(
+                            eezGuiDraw.setColor(style.colorProperty);
+                            eezGuiDraw.fillRect(
                                 ctx,
                                 0,
                                 height - pos,
@@ -2227,9 +2225,9 @@ export class BarGraphWidget extends Widget {
                         if (this.displayValue) {
                             if (horizontal) {
                                 let textStyle = barGraphWidget.textStyle;
-                                const font = draw.styleGetFont(textStyle);
+                                const font = eezGuiDraw.styleGetFont(textStyle);
                                 if (font) {
-                                    let w = draw.measureStr(
+                                    let w = eezGuiDraw.measureStr(
                                         valueText,
                                         font,
                                         width
@@ -2253,7 +2251,7 @@ export class BarGraphWidget extends Widget {
                                                 style.paddingRect.right;
                                         }
 
-                                        draw.drawText(
+                                        eezGuiDraw.drawText(
                                             ctx,
                                             valueText,
                                             x,
@@ -2286,19 +2284,19 @@ export class BarGraphWidget extends Widget {
                             if (pos == d) {
                                 pos = d - 1;
                             }
-                            draw.setColor(lineStyle.colorProperty);
+                            eezGuiDraw.setColor(lineStyle.colorProperty);
                             if (barGraphWidget.orientation == "left-right") {
-                                draw.drawVLine(ctx, pos, 0, height - 1);
+                                eezGuiDraw.drawVLine(ctx, pos, 0, height - 1);
                             } else if (
                                 barGraphWidget.orientation == "right-left"
                             ) {
-                                draw.drawVLine(ctx, width - pos, 0, height - 1);
+                                eezGuiDraw.drawVLine(ctx, width - pos, 0, height - 1);
                             } else if (
                                 barGraphWidget.orientation == "top-bottom"
                             ) {
-                                draw.drawHLine(ctx, 0, pos, width - 1);
+                                eezGuiDraw.drawHLine(ctx, 0, pos, width - 1);
                             } else {
-                                draw.drawHLine(ctx, 0, height - pos, width - 1);
+                                eezGuiDraw.drawHLine(ctx, 0, height - pos, width - 1);
                             }
                         }
 
@@ -2469,7 +2467,9 @@ export class YTGraphWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawBackground(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
+                        eezGuiDraw.drawBackground(
                             ctx,
                             0,
                             0,
@@ -2601,11 +2601,13 @@ export class UpDownWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
                         let upDownWidget = this;
                         let style = upDownWidget.style;
                         let buttonsStyle = upDownWidget.buttonsStyle;
 
-                        const buttonsFont = draw.styleGetFont(buttonsStyle);
+                        const buttonsFont = eezGuiDraw.styleGetFont(buttonsStyle);
                         if (!buttonsFont) {
                             return;
                         }
@@ -2615,7 +2617,7 @@ export class UpDownWidget extends Widget {
                             buttonsFont.height +
                             buttonsStyle.paddingRect.right;
 
-                        draw.drawText(
+                        eezGuiDraw.drawText(
                             ctx,
                             upDownWidget.downButtonText || "<",
                             0,
@@ -2626,7 +2628,7 @@ export class UpDownWidget extends Widget {
                             false
                         );
 
-                        draw.drawText(
+                        eezGuiDraw.drawText(
                             ctx,
                             text,
                             buttonWidth,
@@ -2637,7 +2639,7 @@ export class UpDownWidget extends Widget {
                             false
                         );
 
-                        draw.drawText(
+                        eezGuiDraw.drawText(
                             ctx,
                             upDownWidget.upButtonText || ">",
                             width - buttonWidth,
@@ -2798,7 +2800,9 @@ export class ListGraphWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawBackground(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
+                        eezGuiDraw.drawBackground(
                             ctx,
                             0,
                             0,
@@ -2969,7 +2973,9 @@ export class ProgressWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawBackground(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
+                        eezGuiDraw.drawBackground(
                             ctx,
                             0,
                             0,
@@ -2980,9 +2986,9 @@ export class ProgressWidget extends Widget {
                         );
 
                         // draw thumb
-                        draw.setColor(this.style.colorProperty);
+                        eezGuiDraw.setColor(this.style.colorProperty);
                         if (isHorizontal) {
-                            draw.drawBackground(
+                            eezGuiDraw.drawBackground(
                                 ctx,
                                 0,
                                 0,
@@ -2992,7 +2998,7 @@ export class ProgressWidget extends Widget {
                                 false
                             );
                         } else {
-                            draw.drawBackground(
+                            eezGuiDraw.drawBackground(
                                 ctx,
                                 0,
                                 height - (percent * height) / 100,
@@ -3114,7 +3120,9 @@ export class AppViewWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawBackground(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
+                        eezGuiDraw.drawBackground(
                             ctx,
                             0,
                             0,
@@ -3215,9 +3223,11 @@ export class ScrollBarWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
                         let widget = this;
 
-                        const buttonsFont = draw.styleGetFont(
+                        const buttonsFont = eezGuiDraw.styleGetFont(
                             widget.buttonsStyle
                         );
                         if (!buttonsFont) {
@@ -3229,7 +3239,7 @@ export class ScrollBarWidget extends Widget {
                         let buttonSize = isHorizontal ? height : width;
 
                         // draw left button
-                        draw.drawText(
+                        eezGuiDraw.drawText(
                             ctx,
                             widget.leftButtonText || "<",
                             0,
@@ -3258,8 +3268,8 @@ export class ScrollBarWidget extends Widget {
                             h = height - 2 * buttonSize;
                         }
 
-                        draw.setColor(this.style.colorProperty);
-                        draw.fillRect(ctx, x, y, x + w - 1, y + h - 1);
+                        eezGuiDraw.setColor(this.style.colorProperty);
+                        eezGuiDraw.fillRect(ctx, x, y, x + w - 1, y + h - 1);
 
                         // draw thumb
                         let data = (widget.data &&
@@ -3300,8 +3310,8 @@ export class ScrollBarWidget extends Widget {
                             );
                         }
 
-                        draw.setColor(this.thumbStyle.colorProperty);
-                        draw.fillRect(
+                        eezGuiDraw.setColor(this.thumbStyle.colorProperty);
+                        eezGuiDraw.fillRect(
                             ctx,
                             xThumb,
                             yThumb,
@@ -3310,7 +3320,7 @@ export class ScrollBarWidget extends Widget {
                         );
 
                         // draw right button
-                        draw.drawText(
+                        eezGuiDraw.drawText(
                             ctx,
                             widget.rightButtonText || ">",
                             isHorizontal ? width - buttonSize : 0,
@@ -3401,8 +3411,10 @@ export class CanvasWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.setColor(this.style.backgroundColorProperty);
-                        draw.fillRect(ctx, 0, 0, width - 1, height - 1);
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
+                        eezGuiDraw.setColor(this.style.backgroundColorProperty);
+                        eezGuiDraw.fillRect(ctx, 0, 0, width - 1, height - 1);
                     }}
                 />
                 {super.render(flowContext, width, height)}
@@ -3772,10 +3784,12 @@ export class LineChartEmbeddedWidget extends Widget {
         return (
             <>
                 <ComponentCanvas
+                    component={this}
                     width={width}
                     height={height}
-                    component={this}
                     draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
                         interface Axis {
                             position: "x" | "y";
                             type: "date" | "number";
@@ -3832,7 +3846,7 @@ export class LineChartEmbeddedWidget extends Widget {
                         ) => {
                             const title = this.getTitle(flowContext);
                             if (title) {
-                                draw.drawText(
+                                eezGuiDraw.drawText(
                                     ctx,
                                     title,
                                     x,
@@ -3852,7 +3866,7 @@ export class LineChartEmbeddedWidget extends Widget {
                                 return { legendWidth: 0, legendLineHeight: 0 };
                             }
 
-                            const legendFont = draw.styleGetFont(
+                            const legendFont = eezGuiDraw.styleGetFont(
                                 this.legendStyle
                             );
                             if (!legendFont) {
@@ -3864,7 +3878,7 @@ export class LineChartEmbeddedWidget extends Widget {
                             for (let i = 0; i < this.lines.length; i++) {
                                 chart.legendLabels.push(`Trace ${i}`);
 
-                                const width = draw.measureStr(
+                                const width = eezGuiDraw.measureStr(
                                     chart.legendLabels[i],
                                     legendFont,
                                     widgetRect.w - LEGEND_ICON_WIDTH
@@ -3886,7 +3900,7 @@ export class LineChartEmbeddedWidget extends Widget {
                             w: number,
                             h: number
                         ) => {
-                            const legendFont = draw.styleGetFont(
+                            const legendFont = eezGuiDraw.styleGetFont(
                                 this.legendStyle
                             );
                             if (!legendFont) {
@@ -3906,9 +3920,9 @@ export class LineChartEmbeddedWidget extends Widget {
                                     break;
                                 }
 
-                                draw.setColor(line.color);
+                                eezGuiDraw.setColor(line.color);
 
-                                draw.fillRect(
+                                eezGuiDraw.fillRect(
                                     ctx,
                                     x,
                                     y + (legendLineHeight - 2) / 2,
@@ -3916,14 +3930,14 @@ export class LineChartEmbeddedWidget extends Widget {
                                     y + (legendLineHeight - 2) / 2 + 2
                                 );
 
-                                draw.fillCircle(
+                                eezGuiDraw.fillCircle(
                                     ctx,
                                     x + (LEGEND_ICON_WIDTH - 4) / 2,
                                     y + legendLineHeight / 2,
                                     3
                                 );
 
-                                draw.drawText(
+                                eezGuiDraw.drawText(
                                     ctx,
                                     chart.legendLabels[i],
                                     x + LEGEND_ICON_WIDTH,
@@ -3954,7 +3968,7 @@ export class LineChartEmbeddedWidget extends Widget {
 
                                 const x = axis.offset + tick * axis.scale;
 
-                                draw.drawText(
+                                eezGuiDraw.drawText(
                                     ctx,
                                     tick.toString(),
                                     x - w / 2,
@@ -3983,7 +3997,7 @@ export class LineChartEmbeddedWidget extends Widget {
 
                                 const y = axis.offset + tick * axis.scale;
 
-                                draw.drawText(
+                                eezGuiDraw.drawText(
                                     ctx,
                                     tick.toString(),
                                     axis.rect.x,
@@ -4015,7 +4029,7 @@ export class LineChartEmbeddedWidget extends Widget {
 
                                     const x = axis.offset + tick * axis.scale;
 
-                                    draw.drawVLine(ctx, x, y, h);
+                                    eezGuiDraw.drawVLine(ctx, x, y, h);
                                 }
                             };
 
@@ -4037,11 +4051,11 @@ export class LineChartEmbeddedWidget extends Widget {
 
                                     const y = axis.offset + tick * axis.scale;
 
-                                    draw.drawHLine(ctx, x, y, w);
+                                    eezGuiDraw.drawHLine(ctx, x, y, w);
                                 }
                             };
 
-                            draw.setColor(this.style.borderColorProperty);
+                            eezGuiDraw.setColor(this.style.borderColorProperty);
 
                             drawVerticalGrid(
                                 gridRect.y,
@@ -4308,10 +4322,10 @@ export class LineChartEmbeddedWidget extends Widget {
                         chart.yAxis.rect.w = this.margin.left;
                         chart.yAxis.rect.h = gridRect.h;
 
-                        const xAxisFont = draw.styleGetFont(this.xAxisStyle);
+                        const xAxisFont = eezGuiDraw.styleGetFont(this.xAxisStyle);
                         let xAxisLabelWidth;
                         if (xAxisFont) {
-                            xAxisLabelWidth = draw.measureStr(
+                            xAxisLabelWidth = eezGuiDraw.measureStr(
                                 "12345",
                                 xAxisFont,
                                 gridRect.w
@@ -4324,7 +4338,7 @@ export class LineChartEmbeddedWidget extends Widget {
                             Math.round(gridRect.w / xAxisLabelWidth)
                         );
 
-                        const yAxisFont = draw.styleGetFont(this.yAxisStyle);
+                        const yAxisFont = eezGuiDraw.styleGetFont(this.yAxisStyle);
                         let yAxisLabelHeight;
                         if (yAxisFont) {
                             yAxisLabelHeight = Math.round(
@@ -4338,7 +4352,7 @@ export class LineChartEmbeddedWidget extends Widget {
                             Math.round(gridRect.h / yAxisLabelHeight)
                         );
 
-                        draw.drawBackground(
+                        eezGuiDraw.drawBackground(
                             ctx,
                             widgetRect.x,
                             widgetRect.y,
@@ -4713,7 +4727,7 @@ export class GaugeEmbeddedWidget extends Widget {
             let w = width;
             let h = height;
 
-            draw.drawBackground(ctx, 0, 0, width, height, this.style, true);
+            eezGuiDraw.drawBackground(ctx, 0, 0, width, height, this.style, true);
 
             const PADDING_HORZ = 56;
             const TICK_LINE_LENGTH = 5;
@@ -4775,7 +4789,7 @@ export class GaugeEmbeddedWidget extends Widget {
             }
 
             // draw ticks
-            const ticksfont = draw.styleGetFont(ticksStyle);
+            const ticksfont = eezGuiDraw.styleGetFont(ticksStyle);
             const ft = firstTick(max - min);
             const ticksRad = radBorderOuter + 1;
             for (let tickValueIndex = 0; ; tickValueIndex++) {
@@ -4808,13 +4822,13 @@ export class GaugeEmbeddedWidget extends Widget {
                             ? `${tickValue} ${unit}`
                             : tickValue.toString();
 
-                        const tickTextWidth = draw.measureStr(
+                        const tickTextWidth = eezGuiDraw.measureStr(
                             tickText,
                             ticksfont,
                             -1
                         );
                         if (tickAngleDeg == 180.0) {
-                            draw.drawText(
+                            eezGuiDraw.drawText(
                                 ctx,
                                 tickText,
                                 xCenter -
@@ -4828,7 +4842,7 @@ export class GaugeEmbeddedWidget extends Widget {
                                 false
                             );
                         } else if (tickAngleDeg > 90.0) {
-                            draw.drawText(
+                            eezGuiDraw.drawText(
                                 ctx,
                                 tickText,
                                 x2 - TICK_TEXT_GAP - tickTextWidth,
@@ -4839,7 +4853,7 @@ export class GaugeEmbeddedWidget extends Widget {
                                 false
                             );
                         } else if (tickAngleDeg == 90.0) {
-                            draw.drawText(
+                            eezGuiDraw.drawText(
                                 ctx,
                                 tickText,
                                 x2 - tickTextWidth / 2,
@@ -4850,7 +4864,7 @@ export class GaugeEmbeddedWidget extends Widget {
                                 false
                             );
                         } else if (tickAngleDeg > 0) {
-                            draw.drawText(
+                            eezGuiDraw.drawText(
                                 ctx,
                                 tickText,
                                 x2 + TICK_TEXT_GAP,
@@ -4861,7 +4875,7 @@ export class GaugeEmbeddedWidget extends Widget {
                                 false
                             );
                         } else {
-                            draw.drawText(
+                            eezGuiDraw.drawText(
                                 ctx,
                                 tickText,
                                 xCenter + radBorderOuter + TICK_TEXT_GAP,
@@ -4877,11 +4891,11 @@ export class GaugeEmbeddedWidget extends Widget {
             }
 
             // draw value
-            const font = draw.styleGetFont(valueStyle);
+            const font = eezGuiDraw.styleGetFont(valueStyle);
             if (font) {
                 const valueText = unit ? `${value} ${unit}` : value.toString();
-                const valueTextWidth = draw.measureStr(valueText, font, -1);
-                draw.drawText(
+                const valueTextWidth = eezGuiDraw.measureStr(valueText, font, -1);
+                eezGuiDraw.drawText(
                     ctx,
                     valueText,
                     xCenter - valueTextWidth / 2,
@@ -4897,12 +4911,13 @@ export class GaugeEmbeddedWidget extends Widget {
         return (
             <>
                 <ComponentCanvas
+                    component={this}
                     width={width}
                     height={height}
-                    component={this}
-                    draw={(ctx: CanvasRenderingContext2D) =>
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
                         drawGauge(ctx, width, height)
-                    }
+                    }}
                 />
                 {super.render(flowContext, width, height)}
             </>
@@ -5082,6 +5097,8 @@ export class InputEmbeddedWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
                         let text;
 
                         if (flowContext.flowState) {
@@ -5124,7 +5141,7 @@ export class InputEmbeddedWidget extends Widget {
                             unit = "";
                         }
 
-                        draw.drawText(
+                        eezGuiDraw.drawText(
                             ctx,
                             text + (unit ? " " + unit : ""),
                             0,
@@ -5314,7 +5331,9 @@ export class RollerWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        draw.drawBackground(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
+                        eezGuiDraw.drawBackground(
                             ctx,
                             0,
                             0,
@@ -5324,7 +5343,7 @@ export class RollerWidget extends Widget {
                             true
                         );
 
-                        const font = draw.styleGetFont(this.selectedValueStyle);
+                        const font = eezGuiDraw.styleGetFont(this.selectedValueStyle);
                         if (!font) {
                             return;
                         }
@@ -5336,7 +5355,7 @@ export class RollerWidget extends Widget {
                             this.selectedValueStyle.paddingRect.bottom +
                             this.selectedValueStyle.borderSizeRect.bottom;
 
-                        draw.drawBackground(
+                        eezGuiDraw.drawBackground(
                             ctx,
                             0,
                             (height - selectedValueHeight) / 2,
@@ -5429,6 +5448,8 @@ export class SwitchWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
                         let x = this.style.paddingRect.left;
                         let y = this.style.paddingRect.top;
                         let w =
@@ -5440,13 +5461,13 @@ export class SwitchWidget extends Widget {
                             this.style.paddingRect.top -
                             this.style.paddingRect.bottom;
 
-                        draw.setColor(this.style.borderColorProperty);
-                        draw.setBackColor(
+                        eezGuiDraw.setColor(this.style.borderColorProperty);
+                        eezGuiDraw.setBackColor(
                             enabled
                                 ? this.style.activeBackgroundColorProperty
                                 : this.style.backgroundColorProperty
                         );
-                        draw.fillRoundedRect(
+                        eezGuiDraw.fillRoundedRect(
                             ctx,
                             x,
                             y,
@@ -5466,8 +5487,8 @@ export class SwitchWidget extends Widget {
                         }
                         w = h;
 
-                        draw.setBackColor(this.style.colorProperty);
-                        draw.fillRoundedRect(
+                        eezGuiDraw.setBackColor(this.style.colorProperty);
+                        eezGuiDraw.fillRoundedRect(
                             ctx,
                             x,
                             y,
@@ -5576,6 +5597,8 @@ export class SliderWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
                         let x = this.style.paddingRect.left;
                         let y = this.style.paddingRect.top;
                         let w =
@@ -5616,8 +5639,8 @@ export class SliderWidget extends Widget {
                         const knobW = h;
                         const knobH = h;
 
-                        draw.setBackColor(this.style.backgroundColorProperty);
-                        draw.fillRoundedRect(
+                        eezGuiDraw.setBackColor(this.style.backgroundColorProperty);
+                        eezGuiDraw.fillRoundedRect(
                             ctx,
                             barX - barBorderRadius,
                             barY,
@@ -5627,8 +5650,8 @@ export class SliderWidget extends Widget {
                             barBorderRadius
                         );
 
-                        draw.setBackColor(this.style.colorProperty);
-                        draw.fillRoundedRect(
+                        eezGuiDraw.setBackColor(this.style.colorProperty);
+                        eezGuiDraw.fillRoundedRect(
                             ctx,
                             knobX - knobRadius,
                             knobY,
@@ -5731,7 +5754,9 @@ export class DropDownListWidget extends Widget {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        const { x1, y1, x2, y2 } = draw.drawBackground(
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
+                        const { x1, y1, x2, y2 } = eezGuiDraw.drawBackground(
                             ctx,
                             0,
                             0,
@@ -5753,7 +5778,7 @@ export class DropDownListWidget extends Widget {
                         let w = x2 - x1 + 1;
                         let h = y2 - y1 + 1;
 
-                        draw.drawText(
+                        eezGuiDraw.drawText(
                             ctx,
                             options.length > 0 && typeof options[0] == "string"
                                 ? options[0]
@@ -5887,7 +5912,7 @@ export class QRCodeWidget extends Widget {
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         super.styleHook(style, flowContext);
 
-        style.backgroundColor = to16bitsColor(
+        style.backgroundColor = ProjectEditor.getProject(this).toColorBpp(
             this.style.backgroundColorProperty
         );
     }
@@ -5926,8 +5951,8 @@ export class QRCodeWidget extends Widget {
         const svg = QRCodeWidget.toSvgString(
             qr0,
             1,
-            to16bitsColor(this.style.backgroundColorProperty),
-            to16bitsColor(this.style.colorProperty)
+            flowContext.projectStore.project.toColorBpp(this.style.backgroundColorProperty),
+            flowContext.projectStore.project.toColorBpp(this.style.colorProperty)
         );
 
         return (
@@ -5949,3 +5974,5 @@ export class QRCodeWidget extends Widget {
 }
 
 registerClass("QRCodeWidget", QRCodeWidget);
+
+

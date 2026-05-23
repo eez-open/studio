@@ -79,8 +79,7 @@ import { validators } from "eez-studio-shared/validation";
 import {
     getLvglCoord,
     getLvglEvents,
-    getLvglFlagCodes,
-    getLvglStylePropName
+    getLvglFlagCodes
 } from "project-editor/lvgl/lvgl-versions";
 import {
     LVGL_FLAG_CODES,
@@ -1621,18 +1620,6 @@ export class LVGLWidget extends Widget {
                 `lv_obj_set_style_${build.getStylePropName(
                     propertyInfo.name
                 )}(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);`
-            );
-        }
-    }
-
-    buildStyleIfNotDefinedInCode(code: LVGLCode, propertyInfo: LVGLPropertyInfo) {
-        if (this.localStyles.getPropertyValue(propertyInfo, "MAIN", "DEFAULT") == undefined) {
-            const stylePropName = getLvglStylePropName(code.project, propertyInfo.name);
-
-            code.callObjectFunction(
-                `lv_obj_set_style_${stylePropName}`,
-                0,
-                code.or(code.constant("LV_PART_MAIN"), code.constant("LV_STATE_DEFAULT"))
             );
         }
     }
