@@ -2939,66 +2939,82 @@ export class Widget extends Component {
             const classInfo = getClassInfo(object);
 
             if (classInfo.widgetEvents) {
-                let widgetEvents;
-                if (typeof classInfo.widgetEvents == "object") {
-                    widgetEvents = classInfo.widgetEvents;
-                } else {
-                    widgetEvents = classInfo.widgetEvents(object);
-                }
+                let widgetEvents: WidgetEvents | undefined;
 
-                if (jsObject.action) {
-                    for (const eventName of Object.keys(widgetEvents)) {
-                        const eventDef = widgetEvents[eventName];
-                        if (eventDef.oldName == "action") {
-                            if (
-                                !jsObject.eventHandlers.find(
-                                    (eventHandler: EventHandler) =>
-                                        eventHandler.eventName == eventName &&
-                                        eventHandler.handlerType == "action" &&
-                                        eventHandler.action == jsObject.action
-                                )
-                            ) {
-                                jsObject.eventHandlers.push({
-                                    eventName,
-                                    handlerType: "action",
-                                    action: jsObject.action
-                                });
+                function getWidgetEvents() {
+                    if (!widgetEvents && classInfo.widgetEvents) {
+                        if (typeof classInfo.widgetEvents == "object") {
+                            widgetEvents = classInfo.widgetEvents;
+                        } else {
+                            try {
+                                widgetEvents = classInfo.widgetEvents(object);
+                            } catch (err) {
                             }
-                            break;
                         }
                     }
 
-                    delete jsObject.action;
+                    return widgetEvents;
                 }
 
-                if (jsObject.asOutputProperties?.length > 0) {
-                    for (const asOutputProperty of jsObject.asOutputProperties) {
+                if (jsObject.action) {
+                    const widgetEvents = getWidgetEvents();
+                    if (widgetEvents) {
                         for (const eventName of Object.keys(widgetEvents)) {
                             const eventDef = widgetEvents[eventName];
-                            if (eventDef.oldName == asOutputProperty) {
+                            if (eventDef.oldName == "action") {
                                 if (
                                     !jsObject.eventHandlers.find(
                                         (eventHandler: EventHandler) =>
-                                            eventHandler.eventName ==
-                                                eventName &&
-                                            eventHandler.handlerType == "flow"
+                                            eventHandler.eventName == eventName &&
+                                            eventHandler.handlerType == "action" &&
+                                            eventHandler.action == jsObject.action
                                     )
                                 ) {
                                     jsObject.eventHandlers.push({
                                         eventName,
-                                        handlerType: "flow"
+                                        handlerType: "action",
+                                        action: jsObject.action
                                     });
-                                    wireSourceChanged(
-                                        object,
-                                        asOutputProperty,
-                                        eventName
-                                    );
                                 }
                                 break;
                             }
                         }
+
+                        delete jsObject.action;
                     }
-                    delete jsObject.asOutputProperties;
+                }
+
+                if (jsObject.asOutputProperties?.length > 0) {
+                    const widgetEvents = getWidgetEvents();
+                    if (widgetEvents) {
+                        for (const asOutputProperty of jsObject.asOutputProperties) {
+                            for (const eventName of Object.keys(widgetEvents)) {
+                                const eventDef = widgetEvents[eventName];
+                                if (eventDef.oldName == asOutputProperty) {
+                                    if (
+                                        !jsObject.eventHandlers.find(
+                                            (eventHandler: EventHandler) =>
+                                                eventHandler.eventName ==
+                                                    eventName &&
+                                                eventHandler.handlerType == "flow"
+                                        )
+                                    ) {
+                                        jsObject.eventHandlers.push({
+                                            eventName,
+                                            handlerType: "flow"
+                                        });
+                                        wireSourceChanged(
+                                            object,
+                                            asOutputProperty,
+                                            eventName
+                                        );
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        delete jsObject.asOutputProperties;
+                    }
                 }
             }
 
