@@ -278,12 +278,14 @@ export class TerminalComponent extends React.Component<{
                         await instrument.connection.acquire(true);
 
                         let hasQuery = false;
-                        try {
-                            const parts = parseScpi(this.terminalState.command);
-                            hasQuery = !!parts.find(
-                                part => part.tag == SCPI_PART_QUERY
-                            );
-                        } catch (err) {}
+                        if (instrument.commandsProtocol == "SCPI") {
+                            try {
+                                const parts = parseScpi(this.terminalState.command);
+                                hasQuery = !!parts.find(
+                                    part => part.tag == SCPI_PART_QUERY
+                                );
+                            } catch (err) {}
+                        }
 
                         const command = this.terminalState.command;
                         this.terminalState.command = "";

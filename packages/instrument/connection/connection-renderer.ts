@@ -250,22 +250,24 @@ export class IpcConnection extends ConnectionBase {
             commandName = command;
         }
 
-        if (commandName.endsWith("?")) {
-            // get expected query response
-            options = Object.assign(options || {}, {
-                queryResponseType: await this.instrument.getQueryResponseType(
-                    commandName
-                ),
-                isQuery: true
-            });
-        } else {
-            if (
-                await this.instrument.isCommandSendsBackDataBlock(commandName)
-            ) {
+        if (this.instrument.commandsProtocol == "SCPI") { 
+            if (commandName.endsWith("?")) {
+                // get expected query response
                 options = Object.assign(options || {}, {
-                    queryResponseType: "non-standard-data-block",
+                    queryResponseType: await this.instrument.getQueryResponseType(
+                        commandName
+                    ),
                     isQuery: true
                 });
+            } else {
+                if (
+                    await this.instrument.isCommandSendsBackDataBlock(commandName)
+                ) {
+                    options = Object.assign(options || {}, {
+                        queryResponseType: "non-standard-data-block",
+                        isQuery: true
+                    });
+                }
             }
         }
 
