@@ -169,7 +169,7 @@ export class LVGLLabelWidget extends LVGLWidget {
 
         // text
         code.postWidgetExecute(() => {
-            if (this.textType == "literal" && code.lvglBuild) {
+            if (this.textType == "literal" && code.lvglBuild && this.longMode != "DOT") {
                 code.callObjectFunction(
                     "lv_label_set_text_static",
                     code.stringProperty(this.textType, this.text, this.previewValue)
