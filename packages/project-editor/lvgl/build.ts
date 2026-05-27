@@ -834,7 +834,7 @@ export class LVGLBuild extends Build {
             if (cf.innerColor!.formatType == ColorFormatType.THEME_NAME) {
                 const colorIndex = this.project.colorToIndexMap.get(cf.innerColor!.name);
                 if (colorIndex != undefined) {
-                    innerColor = `lv_color_hex(theme_colors[${themeIndex}][${colorIndex}])`;
+                    innerColor = `theme_colors[${themeIndex}][${colorIndex}]`;
                     fromTheme = true;
                 }
             }
