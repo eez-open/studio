@@ -1474,9 +1474,9 @@ export class LVGLScaleWidget extends LVGLWidget {
                             }
                         ],
                         (new_min_val: any, new_max_val: any) => {
-                            code.callObjectFunction("lv_obj_invalidate");
+                            //code.callObjectFunction("lv_obj_invalidate");
                             code.callFreeFunction("lv_scale_section_set_range", sectionVar, new_min_val, new_max_val);
-                            code.callObjectFunction("lv_obj_invalidate");
+                            //code.callObjectFunction("lv_obj_invalidate");
                         }
                     );
                 } else if (section.minValueType == "expression") {
