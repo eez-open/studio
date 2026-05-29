@@ -50,6 +50,10 @@ export class LVGLWindowWidget extends LVGLWidget {
     }
 
     override toLVGLCode(code: LVGLCode) {
-        code.createObject("lv_win_create");
+        if (code.isV9) {
+            code.createObject("lv_win_create");
+        } else {
+            code.createObject("lv_win_create", 50);
+        }
     }
 }
