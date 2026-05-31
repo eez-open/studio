@@ -854,7 +854,11 @@ const grid_cell_column_span_property_info: LVGLPropertyInfo = {
         defaultValue: "1",
         inherited: false,
         layout: true,
-        extDraw: false
+        extDraw: false,
+        valueToNum: (value: string, projectStore) =>
+            projectStore.project.settings.general.lvglVersion.startsWith("8.")
+                ? parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
+                : parseInt(value)
     }
 };
 
@@ -910,7 +914,11 @@ const grid_cell_row_span_property_info: LVGLPropertyInfo = {
         defaultValue: "1",
         inherited: false,
         layout: true,
-        extDraw: false
+        extDraw: false,
+        valueToNum: (value: string, projectStore) =>
+            projectStore.project.settings.general.lvglVersion.startsWith("8.")
+                ? parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
+                : parseInt(value)
     }
 };
 
@@ -1497,31 +1505,31 @@ const BorderSide = observer(
 
                                 ...(settingsController.isDarkTheme
                                     ? {
-                                          neutral0: "hsl(0, 0%, 10%)",
-                                          neutral5: "hsl(0, 0%, 20%)",
-                                          neutral10: "hsl(0, 0%, 30%)",
-                                          neutral20: "hsl(0, 0%, 40%)",
-                                          neutral30: "hsl(0, 0%, 50%)",
-                                          neutral40: "hsl(0, 0%, 60%)",
-                                          neutral50: "hsl(0, 0%, 70%)",
-                                          neutral60: "hsl(0, 0%, 80%)",
-                                          neutral70: "hsl(0, 0%, 90%)",
-                                          neutral80: "hsl(0, 0%, 95%)",
-                                          neutral90: "hsl(0, 0%, 100%)"
-                                      }
+                                        neutral0: "hsl(0, 0%, 10%)",
+                                        neutral5: "hsl(0, 0%, 20%)",
+                                        neutral10: "hsl(0, 0%, 30%)",
+                                        neutral20: "hsl(0, 0%, 40%)",
+                                        neutral30: "hsl(0, 0%, 50%)",
+                                        neutral40: "hsl(0, 0%, 60%)",
+                                        neutral50: "hsl(0, 0%, 70%)",
+                                        neutral60: "hsl(0, 0%, 80%)",
+                                        neutral70: "hsl(0, 0%, 90%)",
+                                        neutral80: "hsl(0, 0%, 95%)",
+                                        neutral90: "hsl(0, 0%, 100%)"
+                                    }
                                     : {
-                                          neutral0: "hsl(0, 0%, 100%)",
-                                          neutral5: "hsl(0, 0%, 95%)",
-                                          neutral10: "hsl(0, 0%, 90%)",
-                                          neutral20: "hsl(0, 0%, 80%)",
-                                          neutral30: "hsl(0, 0%, 70%)",
-                                          neutral40: "hsl(0, 0%, 60%)",
-                                          neutral50: "hsl(0, 0%, 50%)",
-                                          neutral60: "hsl(0, 0%, 40%)",
-                                          neutral70: "hsl(0, 0%, 30%)",
-                                          neutral80: "hsl(0, 0%, 20%)",
-                                          neutral90: "hsl(0, 0%, 10%)"
-                                      }),
+                                        neutral0: "hsl(0, 0%, 100%)",
+                                        neutral5: "hsl(0, 0%, 95%)",
+                                        neutral10: "hsl(0, 0%, 90%)",
+                                        neutral20: "hsl(0, 0%, 80%)",
+                                        neutral30: "hsl(0, 0%, 70%)",
+                                        neutral40: "hsl(0, 0%, 60%)",
+                                        neutral50: "hsl(0, 0%, 50%)",
+                                        neutral60: "hsl(0, 0%, 40%)",
+                                        neutral70: "hsl(0, 0%, 30%)",
+                                        neutral80: "hsl(0, 0%, 20%)",
+                                        neutral90: "hsl(0, 0%, 10%)"
+                                    }),
 
                                 primary: "#2684FF",
                                 primary25: "#DEEBFF",
@@ -1534,7 +1542,7 @@ const BorderSide = observer(
                         option: (baseStyles, state) => ({
                             ...baseStyles,
                             ...(settingsController.isDarkTheme &&
-                            state.isFocused
+                                state.isFocused
                                 ? { color: "#333" }
                                 : {})
                         })
@@ -2240,31 +2248,31 @@ const TextDecorationSide = observer(
 
                                 ...(settingsController.isDarkTheme
                                     ? {
-                                          neutral0: "hsl(0, 0%, 10%)",
-                                          neutral5: "hsl(0, 0%, 20%)",
-                                          neutral10: "hsl(0, 0%, 30%)",
-                                          neutral20: "hsl(0, 0%, 40%)",
-                                          neutral30: "hsl(0, 0%, 50%)",
-                                          neutral40: "hsl(0, 0%, 60%)",
-                                          neutral50: "hsl(0, 0%, 70%)",
-                                          neutral60: "hsl(0, 0%, 80%)",
-                                          neutral70: "hsl(0, 0%, 90%)",
-                                          neutral80: "hsl(0, 0%, 95%)",
-                                          neutral90: "hsl(0, 0%, 100%)"
-                                      }
+                                        neutral0: "hsl(0, 0%, 10%)",
+                                        neutral5: "hsl(0, 0%, 20%)",
+                                        neutral10: "hsl(0, 0%, 30%)",
+                                        neutral20: "hsl(0, 0%, 40%)",
+                                        neutral30: "hsl(0, 0%, 50%)",
+                                        neutral40: "hsl(0, 0%, 60%)",
+                                        neutral50: "hsl(0, 0%, 70%)",
+                                        neutral60: "hsl(0, 0%, 80%)",
+                                        neutral70: "hsl(0, 0%, 90%)",
+                                        neutral80: "hsl(0, 0%, 95%)",
+                                        neutral90: "hsl(0, 0%, 100%)"
+                                    }
                                     : {
-                                          neutral0: "hsl(0, 0%, 100%)",
-                                          neutral5: "hsl(0, 0%, 95%)",
-                                          neutral10: "hsl(0, 0%, 90%)",
-                                          neutral20: "hsl(0, 0%, 80%)",
-                                          neutral30: "hsl(0, 0%, 70%)",
-                                          neutral40: "hsl(0, 0%, 60%)",
-                                          neutral50: "hsl(0, 0%, 50%)",
-                                          neutral60: "hsl(0, 0%, 40%)",
-                                          neutral70: "hsl(0, 0%, 30%)",
-                                          neutral80: "hsl(0, 0%, 20%)",
-                                          neutral90: "hsl(0, 0%, 10%)"
-                                      }),
+                                        neutral0: "hsl(0, 0%, 100%)",
+                                        neutral5: "hsl(0, 0%, 95%)",
+                                        neutral10: "hsl(0, 0%, 90%)",
+                                        neutral20: "hsl(0, 0%, 80%)",
+                                        neutral30: "hsl(0, 0%, 70%)",
+                                        neutral40: "hsl(0, 0%, 60%)",
+                                        neutral50: "hsl(0, 0%, 50%)",
+                                        neutral60: "hsl(0, 0%, 40%)",
+                                        neutral70: "hsl(0, 0%, 30%)",
+                                        neutral80: "hsl(0, 0%, 20%)",
+                                        neutral90: "hsl(0, 0%, 10%)"
+                                    }),
 
                                 primary: "#2684FF",
                                 primary25: "#DEEBFF",
@@ -2277,7 +2285,7 @@ const TextDecorationSide = observer(
                         option: (baseStyles, state) => ({
                             ...baseStyles,
                             ...(settingsController.isDarkTheme &&
-                            state.isFocused
+                                state.isFocused
                                 ? { color: "#333" }
                                 : {})
                         })
