@@ -910,7 +910,7 @@ export function createWasmWorker(
                 blob
             );
 
-            //WasmFlowRuntime._mainLoop();
+            WasmFlowRuntime._mainLoop();
 
             return;
         }

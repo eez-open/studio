@@ -145,7 +145,7 @@ export class WasmRuntime extends RemoteRuntime {
     lastScreen: any;
 
     mainLoopTimeoutId: any;
-    requestAnimationFrameId: number | undefined;
+    workerPostMessageTimeoutId: any;
 
     componentProperties = new ComponentProperties(this);
 
@@ -305,11 +305,11 @@ export class WasmRuntime extends RemoteRuntime {
         }
 
         if (this.mainLoopTimeoutId) {
-            window.cancelAnimationFrame(this.mainLoopTimeoutId);
+            window.clearTimeout(this.mainLoopTimeoutId);
         }
 
-        if (this.requestAnimationFrameId) {
-            window.cancelAnimationFrame(this.requestAnimationFrameId);
+        if (this.workerPostMessageTimeoutId) {
+            window.clearTimeout(this.workerPostMessageTimeoutId);
         }
 
         this.destroyGlobalVariables();
@@ -622,7 +622,7 @@ export class WasmRuntime extends RemoteRuntime {
                 }
             });
 
-            this.requestAnimationFrameId = window.requestAnimationFrame(
+            this.workerPostMessageTimeoutId = setTimeout(
                 this.animationFrameLoop
             );
         }
@@ -635,7 +635,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         this.worker.wasm._mainLoop(); // should run max. 5 ms so it doesn't block the UI
 
-        this.mainLoopTimeoutId = window.requestAnimationFrame(this.runMainLoop);
+        this.mainLoopTimeoutId = setTimeout(this.runMainLoop);
     };
 
     animationFrameLoop = () => {
@@ -648,7 +648,7 @@ export class WasmRuntime extends RemoteRuntime {
             this.componentProperties.reset();
         }
 
-        this.requestAnimationFrameId = undefined;
+        this.workerPostMessageTimeoutId = undefined;
 
         if (this.screen) {
             this.lastScreen = this.screen;
