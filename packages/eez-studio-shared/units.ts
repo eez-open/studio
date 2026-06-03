@@ -63,34 +63,36 @@ class Unit implements IUnit {
             return roundedValue + space + dim + unitSymbol;
         }
 
-        if (!(this instanceof TimeUnit)) {
-            if (Math.abs(value) >= 1000000000) {
-                return result(roundNumber(value / 1000000000, this.precision - 9), "G");
+        if (this != CELSIUS_UNIT && this != FAHRENHEIT_UNIT && this != KELVIN_UNIT) {
+            if (!(this instanceof TimeUnit)) {
+                if (Math.abs(value) >= 1000000000) {
+                    return result(roundNumber(value / 1000000000, this.precision - 9), "G");
+                }
+
+                if (Math.abs(value) >= 1000000) {
+                    return result(roundNumber(value / 1000000, this.precision - 6), "M");
+                }
+
+                if (Math.abs(value) >= 1000) {
+                    return result(roundNumber(value / 1000, this.precision - 3), "K");
+                }
             }
 
-            if (Math.abs(value) >= 1000000) {
-                return result(roundNumber(value / 1000000, this.precision - 6), "M");
+            if (this.precision >= 12 && Math.abs(value) < 0.000000001) {
+                return result(roundNumber(value * 1000000000000, this.precision - 12), "p");
             }
 
-            if (Math.abs(value) >= 1000) {
-                return result(roundNumber(value / 1000, this.precision - 3), "K");
+            if (this.precision >= 9 && Math.abs(value) < 0.000001) {
+                return result(roundNumber(value * 1000000000, this.precision - 9), "n");
             }
-        }
 
-        if (this.precision >= 12 && Math.abs(value) < 0.000000001) {
-            return result(roundNumber(value * 1000000000000, this.precision - 12), "p");
-        }
+            if (this.precision >= 6 && Math.abs(value) < 0.001) {
+                return result(roundNumber(value * 1000000, this.precision - 6), "u");
+            }
 
-        if (this.precision >= 9 && Math.abs(value) < 0.000001) {
-            return result(roundNumber(value * 1000000000, this.precision - 9), "n");
-        }
-
-        if (this.precision >= 6 && Math.abs(value) < 0.001) {
-            return result(roundNumber(value * 1000000, this.precision - 6), "u");
-        }
-
-        if (this.precision >= 3 && Math.abs(value) < 1) {
-            return result(roundNumber(value * 1000, this.precision - 3), "m");
+            if (this.precision >= 3 && Math.abs(value) < 1) {
+                return result(roundNumber(value * 1000, this.precision - 3), "m");
+            }
         }
 
         return result(value, "");
@@ -578,6 +580,115 @@ export const DECIBEL_UNIT = new Unit({
     precision: 12
 });
 
+const OHM_UNIT = new Unit({
+    name: "ohm",
+    color: "#4CAF50",
+    colorInverse: "#2E7D32",
+    unitSymbol: "Ω",
+    units: [
+        0.000000000001,
+        0.00000000001,
+        0.0000000001,
+        0.000000001,
+        0.00000001,
+        0.0000001,
+        0.000001,
+        0.00001,
+        0.0001,
+        0.001,
+        0.005,
+        0.01,
+        0.05,
+        0.1,
+        0.5,
+        1,
+        5,
+        10,
+        50,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        10000000,
+        100000000,
+        1000000000,
+        10000000000
+    ],
+    precision: 12
+});
+
+const FARAD_UNIT = new Unit({
+    name: "farad",
+    color: "#1E88E5",
+    colorInverse: "#0D47A1",
+    unitSymbol: "F",
+    units: [
+        0.000000000001,
+        0.00000000001,
+        0.0000000001,
+        0.000000001,
+        0.00000001,
+        0.0000001,
+        0.000001,
+        0.00001,
+        0.0001,
+        0.001,
+        0.005,
+        0.01,
+        0.05,
+        0.1,
+        0.5,
+        1,
+        5,
+        10,
+        50,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        10000000,
+        100000000,
+        1000000000,
+        10000000000
+    ],
+    precision: 12
+});
+
+export const CELSIUS_UNIT = new Unit({
+    name: "celsius",
+    color: "#EF6C00",
+    colorInverse: "#E65100",
+    unitSymbol: "°C",
+    units: [
+        1
+    ],
+    precision: 12
+});
+
+export const FAHRENHEIT_UNIT = new Unit({
+    name: "fahrenheit",
+    color: "#EF6C00",
+    colorInverse: "#E65100",
+    unitSymbol: "°F",
+    units: [
+        1
+    ],
+    precision: 12
+});
+
+export const KELVIN_UNIT = new Unit({
+    name: "kelvin",
+    color: "#EF6C00",
+    colorInverse: "#E65100",
+    unitSymbol: "K",
+    units: [
+        1
+    ],
+    precision: 12
+});
+
 export const UNKNOWN_UNIT = new Unit({
     name: "unknown",
     color: "#a0a0a0",
@@ -638,6 +749,16 @@ export const UNITS = {
     decibel: DECIBEL_UNIT,
 
     joule: JOULE_UNIT,
+
+    ohm: OHM_UNIT,
+    resistance: OHM_UNIT,
+
+    farad: FARAD_UNIT,
+    capacitance: FARAD_UNIT,
+
+    celsius:    CELSIUS_UNIT,
+    fahrenheit: FAHRENHEIT_UNIT,
+    kelvin:     KELVIN_UNIT,
 
     unknown: UNKNOWN_UNIT,
     unkn: UNKNOWN_UNIT
