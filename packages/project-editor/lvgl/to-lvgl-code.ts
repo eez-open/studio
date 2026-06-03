@@ -696,9 +696,13 @@ export class SimulatorLVGLCode implements LVGLCode {
                 this.flowState = flowState;
 
                 const args = properties.map((property, i) => {
-                    this.componentIndex = propExprs[i]!.componentIndex;
-                    this.propertyIndex = propExprs[i]!.propertyIndex;
-                    return property.callback();
+                    if (propExprs[i]) {
+                        this.componentIndex = propExprs[i].componentIndex;
+                        this.propertyIndex = propExprs[i].propertyIndex;
+                        return property.callback();
+                    } else {
+                        return {};
+                    }
                 });
 
                 finalCallback(...args);
