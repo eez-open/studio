@@ -814,6 +814,8 @@ export class General extends EezObject {
     embedFonts: boolean;
     cacheFonts: boolean;
 
+    defaultStyleForUserWidgetInEditor: string;
+
     static classInfo: ClassInfo = {
         label: () => "General",
         properties: [
@@ -1090,6 +1092,12 @@ export class General extends EezObject {
                 }
             },
             {
+                name: "defaultStyleForUserWidgetInEditor",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "allStyles",
+                disabled: isLVGLProject
+            },
+            {
                 name: "title",
                 type: PropertyType.String,
                 disabled: isNotDashboardProject
@@ -1345,7 +1353,8 @@ export class General extends EezObject {
             dimmedLinesOpacity: observable,
             embedBitmaps: observable,
             embedFonts: observable,
-            cacheFonts: observable
+            cacheFonts: observable,
+            defaultStyleForUserWidgetInEditor: observable
         });
     }
 }

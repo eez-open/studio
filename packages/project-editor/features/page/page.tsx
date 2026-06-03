@@ -1072,10 +1072,20 @@ export class Page extends Flow {
 
     getClassName(flowContext: IFlowContext) {
         const project = ProjectEditor.getProject(this);
-        let style = findStyle(project, this.style);
-        if (!project.projectTypeTraits.isLVGL) {
-            style = findStyle(project, this.style);
-        }
+
+        let styleName;
+        if (
+            !flowContext.projectStore.projectTypeTraits.isLVGL && 
+            !flowContext.projectStore.runtime && 
+            this.isUsedAsUserWidget && 
+            flowContext.projectStore.project.settings.general.defaultStyleForUserWidgetInEditor
+        ) {
+            styleName = flowContext.projectStore.project.settings.general.defaultStyleForUserWidgetInEditor;
+        } else {
+            styleName = this.style;
+        } 
+
+        let style = findStyle(project, styleName);
         return classNames("EezStudio_Page", style?.classNames);
     }
 
