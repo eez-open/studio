@@ -692,7 +692,8 @@ export class ProjectEditorTab implements IHomeTab {
                         !event.altKey
                     ) {
                         if (event.key == "Delete") {
-                            //deleteSelection();
+                            event.preventDefault();
+                            deleteSelection();
                         }
                     }
                 }
