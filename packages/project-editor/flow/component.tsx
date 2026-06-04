@@ -2956,7 +2956,11 @@ export class Widget extends Component {
                     return widgetEvents;
                 }
 
-                if (jsObject.action) {
+                const hasLegacyAction = Object.prototype.hasOwnProperty.call(
+                    jsObject,
+                    "action"
+                );
+                if (hasLegacyAction && jsObject.action) {
                     const widgetEvents = getWidgetEvents();
                     if (widgetEvents) {
                         for (const eventName of Object.keys(widgetEvents)) {
