@@ -1202,7 +1202,7 @@ export class ProjectStore {
     }
 
     changingRuntimeMode: any;
-    changingRuntimeModeNewMode: "editor" | "runtime" | "debugger" | undefined;
+    changingRuntimeModeNewMode: "editor" | "runtime" | "debugger" | "full-simulator" | undefined;
     static CONF_CHANGE_RUNTIME_MODE_DEBOUNCE_TIMEOUT = 300;
 
     debounceChangeRuntimeMode() {
@@ -1216,8 +1216,10 @@ export class ProjectStore {
                     this.onSetEditorMode();
                 } else if (this.changingRuntimeModeNewMode == "runtime") {
                     this.onSetRuntimeMode();
-                } else {
+                } else if (this.changingRuntimeModeNewMode == "debugger") {
                     this.onSetDebuggerMode();
+                } else {
+                    this.onSetFullSimulatorMode();
                 }
                 this.changingRuntimeModeNewMode = undefined;
             }
@@ -1280,12 +1282,14 @@ export class ProjectStore {
                 }
             }
 
-            await this.runtime.stopRuntime(false);
-            this.dataContext.clear();
+            const runtime = this.runtime;
 
             runInAction(() => {
                 this.runtime = undefined;
             });
+
+            await runtime.stopRuntime(false);
+            this.dataContext.clear();
 
             this.editorsStore?.refresh(true);
         }
@@ -1356,6 +1360,11 @@ export class ProjectStore {
     };
 
     onSetFullSimulatorMode = async () => {
+        if (this.changingRuntimeMode) {
+            this.changingRuntimeModeNewMode = "full-simulator";
+            return;
+        }
+
         // Import and use the build manager
         const { dockerBuildManager } = await import(
             "project-editor/lvgl/docker-build/build-manager"
