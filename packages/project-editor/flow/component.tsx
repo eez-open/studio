@@ -2956,32 +2956,35 @@ export class Widget extends Component {
                     return widgetEvents;
                 }
 
-                if (jsObject.action) {
-                    const widgetEvents = getWidgetEvents();
-                    if (widgetEvents) {
-                        for (const eventName of Object.keys(widgetEvents)) {
-                            const eventDef = widgetEvents[eventName];
-                            if (eventDef.oldName == "action") {
-                                if (
-                                    !jsObject.eventHandlers.find(
-                                        (eventHandler: EventHandler) =>
-                                            eventHandler.eventName == eventName &&
-                                            eventHandler.handlerType == "action" &&
-                                            eventHandler.action == jsObject.action
-                                    )
-                                ) {
-                                    jsObject.eventHandlers.push({
-                                        eventName,
-                                        handlerType: "action",
-                                        action: jsObject.action
-                                    });
+                try {
+                    if (jsObject.action) {
+                        const widgetEvents = getWidgetEvents();
+                        if (widgetEvents) {
+                            for (const eventName of Object.keys(widgetEvents)) {
+                                const eventDef = widgetEvents[eventName];
+                                if (eventDef.oldName == "action") {
+                                    if (
+                                        !jsObject.eventHandlers.find(
+                                            (eventHandler: EventHandler) =>
+                                                eventHandler.eventName == eventName &&
+                                                eventHandler.handlerType == "action" &&
+                                                eventHandler.action == jsObject.action
+                                        )
+                                    ) {
+                                        jsObject.eventHandlers.push({
+                                            eventName,
+                                            handlerType: "action",
+                                            action: jsObject.action
+                                        });
+                                    }
+                                    break;
                                 }
-                                break;
                             }
                         }
 
                         delete jsObject.action;
                     }
+                } catch (err) {
                 }
 
                 if (jsObject.asOutputProperties?.length > 0) {
