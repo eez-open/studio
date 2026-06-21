@@ -132,7 +132,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
         ),
 
         lvgl: {
-            parts: ["MAIN", "SELECTED"],
+            parts: ["MAIN", "SELECTED", "INDICATOR"],
             defaultFlags:
                 "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
 
