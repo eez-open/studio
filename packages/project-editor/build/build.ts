@@ -84,6 +84,20 @@ export function setSourceCleanupOptions(options: SourceCleanupOptions) {
     sourceCleanupOptions = options;
 }
 
+const GENERATED_C_CPP_EXTENSIONS = new Set([
+    ".c",
+    ".h",
+    ".cpp",
+    ".hpp",
+    ".cc",
+    ".cxx",
+    ".hh",
+    ".hxx"
+]);
+
+function normalizeLineEndingsToLf(content: string) {
+    return content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+}
 
 // Tracked write functions - these track files when tracking is enabled
 export async function writeTextFile(
@@ -92,7 +106,10 @@ export async function writeTextFile(
 ): Promise<void> {
     // Clean up .c and .h files to remove consecutive empty lines
     const basename = path.basename(filePath).toLowerCase();
-    if (basename.endsWith('.c') || basename.endsWith('.h') && basename != 'eez-flow.h') {
+    if (
+        basename.endsWith('.c') ||
+        (basename.endsWith('.h') && basename != 'eez-flow.h')
+    ) {
         content = cleanupSourceFile(
             content, 
             
@@ -105,6 +122,11 @@ export async function writeTextFile(
             // Always exclude eez/ folder when generating source code for eez framework
             sourceCleanupOptions.hasFlowSupport && sourceCleanupOptions.generateSourceCodeForEezFramework ? ["eez/"] : []
         );
+    }
+
+    const extname = path.extname(filePath).toLowerCase();
+    if (GENERATED_C_CPP_EXTENSIONS.has(extname)) {
+        content = normalizeLineEndingsToLf(content);
     }
     
     await originalWriteTextFile(filePath, content);
