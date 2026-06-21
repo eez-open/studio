@@ -14,8 +14,62 @@ let abortRequested = false;
 let runningProcesses: ChildProcess[] = [];
 let currentContainerId: string | null = null;
 
+// Cached Docker executable path. `undefined` means unresolved.
+let dockerCommandPath: string | null | undefined;
+
 // Global state for incremental builds
 let lastProjectInfo: ProjectInfo | null = null;
+
+function getDockerCommandPath(): string | null {
+    if (dockerCommandPath !== undefined) {
+        return dockerCommandPath;
+    }
+
+    const candidates =
+        process.platform === "darwin"
+            ? [
+                  "docker",
+                  "/usr/local/bin/docker",
+                  "/opt/homebrew/bin/docker",
+                  "/Applications/Docker.app/Contents/Resources/bin/docker"
+              ]
+            : ["docker"];
+
+    for (const candidate of candidates) {
+        if (candidate.includes(path.sep) && !fs.existsSync(candidate)) {
+            continue;
+        }
+
+        let result = spawnSync(candidate, ["--version"], {
+            shell: false,
+            stdio: "pipe"
+        });
+
+        // Keep compatibility with environments where shell resolution is required.
+        if (result.status !== 0 && candidate === "docker") {
+            result = spawnSync(candidate, ["--version"], {
+                shell: true,
+                stdio: "pipe"
+            });
+        }
+
+        if (result.status === 0) {
+            dockerCommandPath = candidate;
+            return dockerCommandPath;
+        }
+    }
+
+    dockerCommandPath = null;
+    return dockerCommandPath;
+}
+
+function resolveCommand(command: string): string {
+    if (command !== "docker") {
+        return command;
+    }
+
+    return getDockerCommandPath() || command;
+}
 
 export interface BuildConfig {
     repositoryName: string;
@@ -101,7 +155,7 @@ export function abortBuild(): void {
     // Stop any running Docker containers
     if (currentContainerId) {
         try {
-            spawnSync("docker", ["stop", currentContainerId], {
+            spawnSync(resolveCommand("docker"), ["stop", currentContainerId], {
                 shell: true,
                 timeout: 5000
             });
@@ -138,7 +192,7 @@ export async function stopRunningContainers(
         // Stop containers managed by docker compose
         log("Stopping any running containers...");
         const result = spawnSync(
-            "docker",
+            resolveCommand("docker"),
             ["compose", "down", "--remove-orphans"],
             {
                 cwd: config.dockerBuildPath,
@@ -156,7 +210,7 @@ export async function stopRunningContainers(
     // Also stop tracked container if any
     if (currentContainerId) {
         try {
-            spawnSync("docker", ["stop", currentContainerId], {
+            spawnSync(resolveCommand("docker"), ["stop", currentContainerId], {
                 cwd: config.dockerBuildPath,
                 shell: true,
                 timeout: 10000
@@ -387,10 +441,12 @@ function runCommand(
             return;
         }
 
+        const effectiveCommand = resolveCommand(command);
+
         log(`Running: ${command} ${args.join(" ")}`);
 
         const mergedEnv = { ...process.env, ...env };
-        const proc = spawn(command, args, {
+        const proc = spawn(effectiveCommand, args, {
             cwd: cwd || process.cwd(),
             env: mergedEnv,
             shell: true
@@ -474,8 +530,9 @@ function runCommandSilent(
     env: Record<string, string> | undefined
 ): Promise<CommandResult> {
     return new Promise(resolve => {
+        const effectiveCommand = resolveCommand(command);
         const mergedEnv = { ...process.env, ...env };
-        const proc = spawn(command, args, {
+        const proc = spawn(effectiveCommand, args, {
             cwd: cwd || process.cwd(),
             env: mergedEnv,
             shell: true,
@@ -537,15 +594,25 @@ function shouldFilterDockerMessage(text: string): boolean {
 export async function checkDocker(log: LogFunction): Promise<boolean> {
     log("Checking Docker status...");
 
-    // Check if Docker is installed
-    const versionResult = spawnSync("docker", ["--version"], { shell: true });
-    if (versionResult.status !== 0) {
+    const dockerCommand = getDockerCommandPath();
+    if (!dockerCommand) {
         log("Docker is not installed. Please install Docker Desktop.", "error");
         return false;
     }
 
     // Check if Docker daemon is running
-    const psResult = spawnSync("docker", ["ps"], { shell: true });
+    let psResult = spawnSync(dockerCommand, ["ps"], {
+        shell: false,
+        stdio: "pipe"
+    });
+
+    if (psResult.status !== 0 && dockerCommand === "docker") {
+        psResult = spawnSync(dockerCommand, ["ps"], {
+            shell: true,
+            stdio: "pipe"
+        });
+    }
+
     if (psResult.status !== 0) {
         log("Docker is not running. Please start Docker Desktop.", "error");
         return false;
