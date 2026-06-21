@@ -556,11 +556,11 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
                     const build = code.lvglBuild;
                     if (code.screensLifetimeSupport) {
                         build.line(
-                            `if (${indicatorVar}) ${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
+                            `if (${indicatorVar}) ${indicatorVar}->type_data.needle_line.color = ${color};`
                         );
                     } else {
                         build.line(
-                            `${indicatorVar}->type_data.needle_line.color = lv_color_hex(${color});`
+                            `${indicatorVar}->type_data.needle_line.color = ${color};`
                         );
                     }
                 } else {
@@ -797,10 +797,10 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
                     const build = code.lvglBuild;
 
                     build.line(
-                        `${indicatorVar}->type_data.scale_lines.color_start = lv_color_hex(${colorStart});`
+                        `${indicatorVar}->type_data.scale_lines.color_start = ${colorStart};`
                     );
                     build.line(
-                        `${indicatorVar}->type_data.scale_lines.color_end = lv_color_hex(${colorEnd});`
+                        `${indicatorVar}->type_data.scale_lines.color_end = ${colorEnd};`
                     );
 
                     if (code.screensLifetimeSupport) {
@@ -1020,11 +1020,11 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
                     const build = code.lvglBuild;
                     if (code.screensLifetimeSupport) {
                         build.line(
-                            `if (${indicatorVar}) ${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
+                            `if (${indicatorVar}) ${indicatorVar}->type_data.arc.color = ${color};`
                         );
                     } else {
                         build.line(
-                            `${indicatorVar}->type_data.arc.color = lv_color_hex(${color});`
+                            `${indicatorVar}->type_data.arc.color = ${color};`
                         );
                     }
                 } else {
@@ -1442,10 +1442,10 @@ export class LVGLMeterWidget extends LVGLWidget {
                         const build = code.lvglBuild;
 
                         build.line(
-                            `${scaleVar}->tick_color = lv_color_hex(${minorTickColor});`
+                            `${scaleVar}->tick_color = ${minorTickColor};`
                         );
                         build.line(
-                            `${scaleVar}->tick_major_color = lv_color_hex(${majorTickColor});`
+                            `${scaleVar}->tick_major_color = ${majorTickColor};`
                         );
 
                         if (code.screensLifetimeSupport) {
