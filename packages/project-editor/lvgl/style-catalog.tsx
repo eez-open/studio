@@ -89,6 +89,7 @@ interface LVGLStyleProp {
     valueToNum?: (value: string, projectStore: ProjectStore) => number | number[];
     valueBuild?: (value: string) => string;
     buildPrefix?: string;
+    isInt16Array?: (projectStore: ProjectStore) => boolean;
 }
 
 export type LVGLPropertyInfo = PropertyInfo & {
@@ -787,6 +788,10 @@ function dscArrayValueBuild(value: string) {
     return resultArr.join(", ");
 }
 
+function dscArrayIsInt16(projectStore: ProjectStore) {
+    return projectStore.project.settings.general.lvglVersion.startsWith("8.");
+}
+
 export const grid_row_dsc_array_property_info: LVGLPropertyInfo = {
     name: "grid_row_dsc_array",
     displayName: "Grid row descriptor",
@@ -802,7 +807,8 @@ export const grid_row_dsc_array_property_info: LVGLPropertyInfo = {
         extDraw: false,
         valueRead: dscArrayValueRead,
         valueToNum: dscArrayValueToNum,
-        valueBuild: dscArrayValueBuild
+        valueBuild: dscArrayValueBuild,
+        isInt16Array: dscArrayIsInt16
     }
 };
 
@@ -821,11 +827,12 @@ export const grid_column_dsc_array_property_info: LVGLPropertyInfo = {
         extDraw: false,
         valueRead: dscArrayValueRead,
         valueToNum: dscArrayValueToNum,
-        valueBuild: dscArrayValueBuild
+        valueBuild: dscArrayValueBuild,
+        isInt16Array: dscArrayIsInt16
     }
 };
 
-const grid_cell_column_pos_property_info: LVGLPropertyInfo = {
+export const grid_cell_column_pos_property_info: LVGLPropertyInfo = {
     name: "grid_cell_column_pos",
     displayName: "Grid cell column pos",
     type: PropertyType.Number,
@@ -835,15 +842,11 @@ const grid_cell_column_pos_property_info: LVGLPropertyInfo = {
         defaultValue: "1",
         inherited: false,
         layout: true,
-        extDraw: false,
-        valueToNum: (value: string, projectStore) =>
-            projectStore.project.settings.general.lvglVersion.startsWith("8.")
-                ? parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
-                : parseInt(value)
+        extDraw: false
     }
 };
 
-const grid_cell_column_span_property_info: LVGLPropertyInfo = {
+export const grid_cell_column_span_property_info: LVGLPropertyInfo = {
     name: "grid_cell_column_span",
     displayName: "Grid cell column span",
     type: PropertyType.Number,
@@ -881,7 +884,7 @@ const grid_cell_x_align_property_info: LVGLPropertyInfo = makeEnumPropertyInfo(
     "LV_GRID_ALIGN_"
 );
 
-const grid_cell_row_pos_property_info: LVGLPropertyInfo = {
+export const grid_cell_row_pos_property_info: LVGLPropertyInfo = {
     name: "grid_cell_row_pos",
     displayName: "Grid cell row pos",
     type: PropertyType.Number,
@@ -891,15 +894,11 @@ const grid_cell_row_pos_property_info: LVGLPropertyInfo = {
         defaultValue: "1",
         inherited: false,
         layout: true,
-        extDraw: false,
-        valueToNum: (value: string, projectStore) =>
-            projectStore.project.settings.general.lvglVersion.startsWith("8.")
-                ? parseInt(value) * 2 // For some reason, in v8.x, the value must be multiplied by 2, but, only in simulator
-                : parseInt(value)
+        extDraw: false
     }
 };
 
-const grid_cell_row_span_property_info: LVGLPropertyInfo = {
+export const grid_cell_row_span_property_info: LVGLPropertyInfo = {
     name: "grid_cell_row_span",
     displayName: "Grid cell row span",
     type: PropertyType.Number,

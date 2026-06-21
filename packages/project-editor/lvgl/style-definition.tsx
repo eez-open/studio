@@ -557,7 +557,13 @@ export class LVGLStylesDefinition extends EezObject {
                                 runtime.getLvglStylePropCode(
                                     propertyInfo.lvglStyleProp.code
                                 ),
-                                runtime.allocateInt32Array(arrValue, true),
+                                propertyInfo.lvglStyleProp.isInt16Array &&
+                                    propertyInfo.lvglStyleProp.isInt16Array(projectStore)
+                                    ? runtime.allocateInt16Array(arrValue, true)
+                                    : runtime.allocateInt32Array(
+                                          arrValue,
+                                          true
+                                      ),
                                 selectorCode
                             );
                         } else if (propertyInfo.type == PropertyType.Boolean) {

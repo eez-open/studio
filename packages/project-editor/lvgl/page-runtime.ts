@@ -446,6 +446,15 @@ export abstract class LVGLPageRuntime {
         return ptr;
     }
 
+    allocateInt16Array(arr: number[], free: boolean) {
+        const ptr = this.wasm._malloc(arr.length * 2);
+        if (free) {
+            this.pointers.push(ptr);
+        }
+        this.wasm.HEAP16.set(arr, ptr / 2);
+        return ptr;
+    }
+
     freePointers(pointers: number[]) {
         for (const ptr of pointers) {
             this.wasm._free(ptr);
