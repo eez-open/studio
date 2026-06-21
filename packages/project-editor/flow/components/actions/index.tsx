@@ -2295,7 +2295,7 @@ export class CallActionActionComponent extends ActionComponent {
                         name: "@seqin",
                         type: "any" as ValueType,
                         isSequenceInput: true,
-                        isOptionalInput: false
+                        isOptionalInput: this.customInputs && this.customInputs.length > 0 ? true : false
                     }
                 ];
             } else {
