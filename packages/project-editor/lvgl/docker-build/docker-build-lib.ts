@@ -739,6 +739,7 @@ export async function setupProject(
     if (!projectAlreadySetup) {
         // Step 3: Clone repository (only on first setup)
         log("First-time setup: Cloning repository from GitHub...");
+        log("Note: This can take several minutes, especially while cloning the LVGL submodule.", "info");
 
         containerId = await createTempContainer(config, env, log);
 
