@@ -3311,6 +3311,7 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
             //
             build.line("");
             build.line(`static struct {`);
+            let init_values = "";
             {
                 build.indent();
                 build.line("float last_timeline_position;");
@@ -3324,12 +3325,13 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
                                 lvglWidget
                             )}_${propertyName}_init_value;`
                         );
+                        init_values += ", 0";
                     }
                 }
 
                 build.unindent();
             }
-            build.line(`} anim_state = { -1 };`);
+            build.line(`} anim_state = { -1${init_values} };`);
 
             //
             //
