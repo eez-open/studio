@@ -213,6 +213,13 @@ function generatePath(
     target: Point,
     targetRect: Rect
 ) {
+    if (source.x < target.x && Math.abs(source.y - target.y) <= 1) {
+        source = {
+            x: source.x,
+            y: target.y
+        };
+    }
+
     const sourceTop = {
         x: source.x,
         y: sourceRect.top
