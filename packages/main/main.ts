@@ -53,6 +53,15 @@ app.on("ready", async function () {
     }
 
     app.on("second-instance", function (event, commandLine, workingDirectory) {
+        if (commandLine.includes("--reload-project")) {
+            console.log("[reload-project] second-instance triggered, commandLine:", commandLine);
+            const { reloadProject } =
+                require("main/home-window") as typeof HomeWindowModule;
+            console.log("[reload-project] calling reloadProject()");
+            reloadProject();
+            return;
+        }
+        console.log("[second-instance] commandLine:", commandLine);
         const { bringHomeWindowToFocus } =
             require("main/home-window") as typeof HomeWindowModule;
         bringHomeWindowToFocus();
