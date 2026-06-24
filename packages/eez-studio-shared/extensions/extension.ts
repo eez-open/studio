@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 EEZ Studio Contributors
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 import type { UNITS } from "eez-studio-shared/units";
 import type { IStore } from "eez-studio-shared/store";
 
