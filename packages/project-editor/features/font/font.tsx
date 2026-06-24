@@ -1745,9 +1745,7 @@ export class Font extends EezObject {
                         label: "Outline"
                     }
                 ],
-                // Disabled until LVGL FreeType integration is fixed
                 disabled: (font: Font) =>
-                    true ||
                     !isLVGLProject(font) ||
                     !font.lvglUseFreeType ||
                     ProjectEditor.getProjectStore(
