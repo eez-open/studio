@@ -175,7 +175,7 @@ export class WasmRuntime extends RemoteRuntime {
     ////////////////////////////////////////////////////////////////////////////////
 
     async doStartRuntime(isDebuggerActive: boolean) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // await new Promise(resolve => setTimeout(resolve, 100));
 
         if (this.projectStore.projectTypeTraits.isLVGL) {
             for (const font of this.projectStore.project.fonts) {
@@ -298,7 +298,7 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     async doStopRuntime(notifyUser: boolean) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // await new Promise(resolve => setTimeout(resolve, 100));
         
         if (this.worker?.wasm?._flowCleanup) {
             this.worker.wasm._flowCleanup();
