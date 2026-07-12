@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2023 EEZ Studio Contributors
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 import { getUserDataPath } from "eez-studio-shared/util-electron";
 import { EXTENSIONS_FOLDER_NAME } from "eez-studio-shared/conf";
 import { sourceRootDir } from "eez-studio-shared/util";
