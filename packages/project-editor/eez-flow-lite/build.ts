@@ -124,13 +124,13 @@ export class BuildEezFlowLite {
     }
 
     buildUserActionsDecl(build: Build) {
-        const nativeUserActions = this.project.actions.filter(
-            action => action.implementationType == "native"
+        const userActions = this.project.actions.filter(
+            action => action.implementationType == "native" || action.implementationType == "flow"
         );
 
-        if (nativeUserActions.length > 0) {
+        if (userActions.length > 0) {
             build.line("// User actions");
-            for (const action of nativeUserActions) {
+            for (const action of userActions) {
                 const args = action.userProperties.map(prop => `${this.getVarDecl(prop.name, prop.type, "native-action-parameter", 0)}`).join(", ");
                 build.line(
                     `void ${action.name}(${args ? args : "void"});`
@@ -150,7 +150,7 @@ export class BuildEezFlowLite {
             for (const action of flowUserActions) {
                 const args = action.userProperties.map(prop => `${this.getVarDecl(prop.name, prop.type, "action-parameter", 0)}`).join(", ");
                 build.line(
-                    `static void ${action.name}(${args ? args : "void"});`
+                    `void ${action.name}(${args ? args : "void"});`
                 );
             }
             build.line("");
@@ -159,7 +159,7 @@ export class BuildEezFlowLite {
                 build.line(`// Action ${action.name}`);
                 const args = action.userProperties.map(prop => `${this.getVarDecl(prop.name, prop.type, "action-parameter", 0)}`).join(", ")
                 build.blockStart(
-                    `static void ${action.name}(${args ? args : "void"}) {`
+                    `void ${action.name}(${args ? args : "void"}) {`
                 );
 
                 if (action.localVariables.length > 0) {

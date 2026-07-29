@@ -463,6 +463,9 @@ export class BuildEezGuiLite {
         // native user actions
         this.buildFlow.buildUserActionsDecl(build);
 
+        // public page show helpers
+        this.buildPagesShowDecl(build);
+
         build.line("void ui_init(void);");
         build.line(
             "void ui_tick(int mouse_x, int mouse_y, bool mouse_pressed);"
@@ -510,6 +513,9 @@ export class BuildEezGuiLite {
 
         // pages
         this.buildPagesDecl(build);
+
+        // public page show helpers
+        this.buildPagesShowDef(build);
 
         // Flow code
         this.buildFlow.buildUserActionsDef(build);
@@ -1070,7 +1076,7 @@ export class BuildEezGuiLite {
                                 build.line(
                                     `.disabled_style = ${this.buildStyles[0].styleName},`
                                 );
-                            }                        
+                            }
                         }
                     } else if (buildWidget.widget instanceof SwitchWidget) {
                         build.line(
@@ -1102,6 +1108,32 @@ export class BuildEezGuiLite {
             build.line(
                 `static void ${buildPage.page.name}_page(eezgui_ctx_t *ctx);`
             );
+            build.line("");
+        }
+    }
+
+    buildPagesShowDecl(build: Build) {
+        if (this.buildPages.length == 0) {
+            return;
+        }
+
+        build.line("// Page show helpers");
+        for (const buildPage of this.buildPages) {
+            build.line(`void show_page_${buildPage.page.name}(void);`);
+        }
+        build.line("");
+    }
+
+    buildPagesShowDef(build: Build) {
+        if (this.buildPages.length == 0) {
+            return;
+        }
+
+        build.line("// Page show helpers");
+        for (const buildPage of this.buildPages) {
+            build.blockStart(`void show_page_${buildPage.page.name}(void) {`);
+            build.line(`selected_page = ${buildPage.page.name}_page;`);
+            build.blockEnd("}");
             build.line("");
         }
     }
