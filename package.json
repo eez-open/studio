@@ -111,7 +111,7 @@
         "adm-zip": "0.5.16",
         "app-module-path": "2.2.0",
         "archiver": "5.3.2",
-        "better-sqlite3": "12.6.0",
+        "better-sqlite3": "12.8.0",
         "bootstrap": "5.3.3",
         "chokidar": "4.0.1",
         "classnames": "2.5.1",
