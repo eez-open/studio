@@ -10,9 +10,15 @@ let lz4_module: {
         dstCapacity: number,
         compressionLevel: number
     ) => number;
+    _encodeBlock: (
+        srcPtr: number,
+        dstPtr: number,
+        srcSize: number,
+        dstCapacity: number
+    ) => number;
 };
 
-export async function compress(buffer: Buffer, compressionLevel: number) {
+export async function load_lz4_module() {
     if (!lz4_module) {
         // load lz4 wasm module
         lz4_module = await new Promise<any>(resolve => {
@@ -22,6 +28,45 @@ export async function compress(buffer: Buffer, compressionLevel: number) {
             });
         });
     }
+}
+
+export function compress(buffer: Buffer, compressionLevel: number, with_hc: boolean) {
+    const srcPtr = lz4_module._malloc(buffer.length);
+    lz4_module.HEAPU8.set(buffer, srcPtr);
+
+    const dstCapacity = lz4_module._encodeBound(buffer.length);
+    const dstPtr = lz4_module._malloc(dstCapacity);
+
+    // console.time("lz4");
+    const compressedSize: number = with_hc ? lz4_module._encodeBlockHC(
+        srcPtr,
+        dstPtr,
+        buffer.length,
+        dstCapacity,
+        compressionLevel
+    ) : lz4_module._encodeBlock(
+        srcPtr,
+        dstPtr,
+        buffer.length,
+        dstCapacity
+    );
+    // console.timeEnd("lz4");
+
+    lz4_module._free(srcPtr);
+
+    const compressedBuffer = Buffer.from(
+        new Uint8Array(lz4_module.HEAPU8.buffer, dstPtr, compressedSize)
+    );
+
+    lz4_module._free(dstPtr);
+
+    return { compressedBuffer, compressedSize };
+}
+
+export function compress_sync(buffer: Buffer) {
+    if (!lz4_module) {
+        throw "lz4 wasm module not loaded";
+    }
 
     const srcPtr = lz4_module._malloc(buffer.length);
     lz4_module.HEAPU8.set(buffer, srcPtr);
@@ -30,12 +75,11 @@ export async function compress(buffer: Buffer, compressionLevel: number) {
     const dstPtr = lz4_module._malloc(dstCapacity);
 
     // console.time("lz4");
-    const compressedSize: number = lz4_module._encodeBlockHC(
+    const compressedSize: number = lz4_module._encodeBlock(
         srcPtr,
         dstPtr,
         buffer.length,
-        dstCapacity,
-        compressionLevel
+        dstCapacity
     );
     // console.timeEnd("lz4");
 

@@ -33,6 +33,7 @@ import {
     LVGL_PARTS_9
 } from "project-editor/lvgl/lvgl-constants";
 import type { LVGLVersion } from "project-editor/project/project";
+import { load_lz4_module } from "project-editor/build/lz4";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -303,6 +304,8 @@ const version_9 = {
             [CF_RAW.toString()]: "RAW",
             [CF_RAW_ALPHA.toString()]: "RAW_ALPHA"
         };
+
+        await load_lz4_module();
 
         const { LVGLImage } = require("./lv_img_conv_v9/index.js");
 

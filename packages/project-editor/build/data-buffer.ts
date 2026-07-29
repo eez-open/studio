@@ -1,4 +1,4 @@
-import { compress } from "project-editor/build/lz4";
+import { load_lz4_module, compress } from "project-editor/build/lz4";
 
 export class DataBuffer {
     buffer = Buffer.alloc(32 * 1024 * 1024);
@@ -250,7 +250,8 @@ export class DataBuffer {
     }
 
     async compress(compressionLevel: number) {
-        return compress(this.buffer, compressionLevel);
+        await load_lz4_module();
+        return compress(this.buffer, compressionLevel, true);
     }
 }
 

@@ -137,7 +137,6 @@
         "lodash": "4.17.21",
         "luxon": "3.5.0",
         "lv_font_conv": "github:lvgl/lv_font_conv",
-        "lz4": "^0.6.5",
         "marked": "5.1.2",
         "mobx": "6.5.0",
         "mobx-react": "7.6.0",
