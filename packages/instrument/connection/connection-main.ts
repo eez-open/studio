@@ -341,7 +341,7 @@ export class Connection
         }
     }
 
-    sendTimeout() {
+    sendTimeout(query: string) {
         if (this.callbackWindowId) {
             let browserWindow = require("electron").BrowserWindow.fromId(
                 this.callbackWindowId
@@ -351,7 +351,7 @@ export class Connection
                     instrumentId: this.instrumentId,
                     acquireId: this.acquireId,
                     value: null,
-                    error: "Timeout"
+                    error: `Timeout while executing query: ${query}`
                 });
             }
         }
@@ -640,7 +640,7 @@ export class Connection
 
             this.sendTimeoutId = setTimeout(() => {
                 this.sendTimeoutId = undefined;
-                this.sendTimeout();
+                this.sendTimeout(command);
             }, timeout);
         }
     }
