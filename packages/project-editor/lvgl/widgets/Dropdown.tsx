@@ -41,6 +41,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
     selectedType: LVGLPropertyType;
 
     direction: string;
+    useStaticText: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -58,6 +59,14 @@ export class LVGLDropdownWidget extends LVGLWidget {
                     propertyGridGroup: specificGroup
                 }
             ),
+            {
+                name: "useStaticText",
+                displayName: "Use static text",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true,
+                hideInPropertyGrid: (widget: LVGLDropdownWidget) => widget.optionsType != "literal"
+            },
             ...makeLvglExpressionProperty(
                 "selected",
                 "integer",
@@ -104,7 +113,8 @@ export class LVGLDropdownWidget extends LVGLWidget {
             optionsType: "literal",
             selected: 0,
             selectedType: "literal",
-            direction: "bottom"
+            direction: "bottom",
+            useStaticText: true
         },
 
         beforeLoadHook: (
@@ -122,6 +132,10 @@ export class LVGLDropdownWidget extends LVGLWidget {
 
             if (jsObject.direction == undefined) {
                 jsObject.direction = "bottom";
+            }
+
+            if (jsObject.useStaticText == undefined) {
+                jsObject.useStaticText = true;
             }
         },
 
@@ -150,7 +164,8 @@ export class LVGLDropdownWidget extends LVGLWidget {
             optionsType: observable,
             selected: observable,
             selectedType: observable,
-            direction: observable
+            direction: observable,
+            useStaticText: observable
         });
     }
 
@@ -158,7 +173,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
         code.createObject(`lv_dropdown_create`);
 
         // options
-        if (this.optionsType == "literal" && code.lvglBuild) {
+        if (this.optionsType == "literal" && code.lvglBuild && this.useStaticText) {
             code.callObjectFunction(
                 "lv_dropdown_set_options_static",
                 code.stringProperty(this.optionsType, this.options)

@@ -26,6 +26,7 @@ export class LVGLLabelWidget extends LVGLWidget {
     textType: LVGLPropertyType;
     longMode: keyof typeof LONG_MODE_CODES;
     recolor: boolean;
+    useStaticText: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -57,6 +58,14 @@ export class LVGLLabelWidget extends LVGLWidget {
                     propertyGridGroup: specificGroup
                 }
             ),
+            {
+                name: "useStaticText",
+                displayName: "Use static text",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true,
+                hideInPropertyGrid: (widget: LVGLLabelWidget) => widget.textType != "literal" || widget.longMode == "DOT"
+            },
             {
                 name: "previewValue",
                 type: PropertyType.String,
@@ -93,6 +102,10 @@ export class LVGLLabelWidget extends LVGLWidget {
             if (!jsObject.textType) {
                 jsObject.textType = "literal";
             }
+
+            if (jsObject.useStaticText == undefined) {
+                jsObject.useStaticText = true;
+            }
         },
 
         defaultValue: {
@@ -106,7 +119,8 @@ export class LVGLLabelWidget extends LVGLWidget {
             textType: "literal",
             longMode: "WRAP",
             recolor: false,
-            localStyles: {}
+            localStyles: {},
+            useStaticText: true
         },
 
         icon: (
@@ -144,7 +158,8 @@ export class LVGLLabelWidget extends LVGLWidget {
             textType: observable,
             longMode: observable,
             recolor: observable,
-            previewValue: observable
+            previewValue: observable,
+            useStaticText: observable
         });
     }
 
@@ -169,7 +184,7 @@ export class LVGLLabelWidget extends LVGLWidget {
 
         // text
         code.postWidgetExecute(() => {
-            if (this.textType == "literal" && code.lvglBuild && this.longMode != "DOT") {
+            if (this.textType == "literal" && code.lvglBuild && this.longMode != "DOT" && this.useStaticText) {
                 code.callObjectFunction(
                     "lv_label_set_text_static",
                     code.stringProperty(this.textType, this.text, this.previewValue)

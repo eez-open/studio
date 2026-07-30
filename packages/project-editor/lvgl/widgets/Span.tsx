@@ -76,6 +76,7 @@ export class LVGLSpan extends EezObject {
     textLetterSpace: number;
     textLineSpace: number;
     textOpa: number;
+    useStaticText: boolean;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -88,6 +89,14 @@ export class LVGLSpan extends EezObject {
                     propertyGridGroup: specificGroup
                 }
             ),
+            {
+                name: "useStaticText",
+                displayName: "Use static text",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true,
+                hideInPropertyGrid: (widget: LVGLSpan) => widget.textType != "literal"
+            },
             {
                 name: "textColor",
                 displayName: "Text color",
@@ -138,6 +147,14 @@ export class LVGLSpan extends EezObject {
             }
         ],
 
+        beforeLoadHook: (
+            object: LVGLSpan,
+            jsObject: Partial<LVGLSpan>
+        ) => {
+            if (jsObject.useStaticText == undefined) {
+                jsObject.useStaticText = true;
+            }
+        },        
         listLabel: (span: LVGLSpan, collapsed: boolean) => {
             if (span.text && span.textType == "literal") {
                 return `Span: ${span.text}`;
@@ -147,7 +164,8 @@ export class LVGLSpan extends EezObject {
 
         defaultValue: {
             text: "Span",
-            textType: "literal"
+            textType: "literal",
+            useStaticText: true
         },
 
         check: (span: LVGLSpan, messages: IMessage[]) => {
@@ -195,7 +213,8 @@ export class LVGLSpan extends EezObject {
             textDecor: observable,
             textLetterSpace: observable,
             textLineSpace: observable,
-            textOpa: observable
+            textOpa: observable,
+            useStaticText: observable
         });
     }
 
@@ -221,7 +240,7 @@ export class LVGLSpan extends EezObject {
         );
 
         // Set text
-        if (this.textType == "literal" && code.lvglBuild) {
+        if (this.textType == "literal" && code.lvglBuild && this.useStaticText) {
             code.callFreeFunction(
                 "lv_span_set_text_static",
                 spanVar,

@@ -1,7 +1,7 @@
 import React from "react";
 import { observable, makeObservable } from "mobx";
 
-import { makeDerivedClassInfo } from "project-editor/core/object";
+import { makeDerivedClassInfo, PropertyType } from "project-editor/core/object";
 
 import { Project, ProjectType } from "project-editor/project/project";
 
@@ -16,6 +16,7 @@ import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 export class LVGLCheckboxWidget extends LVGLWidget {
     text: string;
     textType: string;
+    useStaticText: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -32,7 +33,15 @@ export class LVGLCheckboxWidget extends LVGLWidget {
                 {
                     propertyGridGroup: specificGroup
                 }
-            )
+            ),
+            {
+                name: "useStaticText",
+                displayName: "Use static text",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true,
+                hideInPropertyGrid: (widget: LVGLCheckboxWidget) => widget.textType != "literal"
+            }
         ],
 
         beforeLoadHook: (
@@ -41,6 +50,10 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         ) => {
             if (!jsObject.textType) {
                 jsObject.textType = "literal";
+            }
+
+            if (jsObject.useStaticText == undefined) {
+                jsObject.useStaticText = true;
             }
         },
 
@@ -53,7 +66,8 @@ export class LVGLCheckboxWidget extends LVGLWidget {
             heightUnit: "content",
             clickableFlag: true,
             text: "Checkbox",
-            textType: "literal"
+            textType: "literal",
+            useStaticText: true
         },
 
         icon: (
@@ -86,13 +100,13 @@ export class LVGLCheckboxWidget extends LVGLWidget {
     override makeEditable() {
         super.makeEditable();
 
-        makeObservable(this, { text: observable, textType: observable });
+        makeObservable(this, { text: observable, textType: observable, useStaticText: observable });
     }
 
     override toLVGLCode(code: LVGLCode) {
         code.createObject("lv_checkbox_create");
 
-        if (code.lvglBuild) {
+        if (this.textType == "literal" && code.lvglBuild && this.useStaticText) {
             code.callObjectFunction(
                 "lv_checkbox_set_text_static",
                 code.stringProperty(this.textType, this.text)
