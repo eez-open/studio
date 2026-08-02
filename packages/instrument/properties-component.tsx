@@ -58,7 +58,7 @@ const PropertiesComponent = observer(
 
             try {
                 JSON.parse(value);
-            } catch (error) {
+            } catch (error: any) {
                 this.errors = [error.toString()];
                 return;
             }
@@ -128,7 +128,7 @@ async function changeExtensionProperties(
         let packageJs = await readJsObjectFromFile(packageJsonFilePath);
         packageJs["eez-studio"] = properties;
         await writeJsObjectToFile(packageJsonFilePath, packageJs);
-    } catch (err) {
+    } catch (err: any) {
         notification.error(err);
         return;
     }

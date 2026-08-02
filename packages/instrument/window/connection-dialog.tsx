@@ -371,7 +371,7 @@ export const ConnectionProperties = observer(
                 });
 
                 this.initUsbDevices();
-            } catch (err) {
+            } catch (err: any) {
                 if (reportError) {
                     notification.error(err.toString());
                 }

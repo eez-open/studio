@@ -168,7 +168,7 @@ export class VisaInterface implements CommunicationInterface {
             }
 
             this.host.connected();
-        } catch (err) {
+        } catch (err: any) {
             this.vi = undefined;
             this.host.setError(
                 ConnectionErrorCode.UNKNOWN,
@@ -213,7 +213,7 @@ export class VisaInterface implements CommunicationInterface {
                 if (status == vcon.VI_SUCCESS_MAX_CNT) {
                     setTimeout(this.read, 0);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 this.readLock = false;
                 console.error("viRead", err.toString());
             }
@@ -259,7 +259,7 @@ export class VisaInterface implements CommunicationInterface {
                 if (hasQuery) {
                     setTimeout(this.read, 0);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 this.host.setError(
                     ConnectionErrorCode.UNKNOWN,
                     `Failed to write to VISA resource: ${err.toString()}`

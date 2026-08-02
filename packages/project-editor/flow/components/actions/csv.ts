@@ -140,7 +140,7 @@ registerActionComponents("Dashboard Specific", [
                 );
 
                 context.propagateValueThroughSeqout();
-            } catch (err) {
+            } catch (err: any) {
                 context.endAsyncExecution();
                 context.throwError(err.toString());
             }
@@ -234,7 +234,7 @@ registerActionComponents("Dashboard Specific", [
                 );
 
                 context.propagateValueThroughSeqout();
-            } catch (err) {
+            } catch (err: any) {
                 context.endAsyncExecution();
                 context.throwError(err.toString());
             }

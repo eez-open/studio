@@ -21,7 +21,7 @@ export default service<Params, Result>(
                 err: null,
                 rows
             };
-        } catch (err) {
+        } catch (err: any) {
             throw {
                 err: err.toString(),
                 inputParams

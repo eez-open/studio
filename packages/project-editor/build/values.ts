@@ -104,7 +104,7 @@ function getVariableFlowValue(
             value,
             valueType: variable.type
         };
-    } catch (err) {
+    } catch (err: any) {
         assets.projectStore.outputSectionsStore.write(
             Section.OUTPUT,
             MessageType.ERROR,

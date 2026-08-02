@@ -57,7 +57,7 @@ export async function updateImages(
             image.sha256 = sha256Hash;
 
             await saveChanges();
-        } catch (err) {
+        } catch (err: any) {
             console.error(
                 `Failed to upload image "${image.fileName}": ${err.message}`
             );

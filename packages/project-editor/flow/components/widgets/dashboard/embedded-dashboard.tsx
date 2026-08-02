@@ -99,7 +99,7 @@ class LoadDashboard {
                     this.updateGlobalVariablesWithDashboardParameters();
                 };
             }
-        } catch (err) {
+        } catch (err: any) {
             await projectStore.closeWindow();
             projectStore.unmount();
 

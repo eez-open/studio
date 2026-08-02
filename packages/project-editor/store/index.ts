@@ -897,7 +897,7 @@ export class ProjectStore {
                         }" installed`
                     );
                 }
-            } catch (err) {
+            } catch (err: any) {
                 notification.error(err.toString());
             }
         }
@@ -1251,7 +1251,7 @@ export class ProjectStore {
 
         try {
             runtime.startRuntime(isDebuggerActive);
-        } catch (err) {
+        } catch (err: any) {
             notification.error(err.toString());
             runInAction(() => (this.runtime = undefined));
         }

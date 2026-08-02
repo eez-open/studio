@@ -359,7 +359,7 @@ class SettingsController {
                     () => onFinish(true),
                     () => onFinish(false)
                 );
-            } catch (error) {
+            } catch (error: any) {
                 notification.error(error.toString());
             }
         }
@@ -515,7 +515,7 @@ const CompactDatabaseDialog = observer(
                         this.sizeReduced = Math.round(this.sizeReduced);
                     }
                 });
-            } catch (err) {
+            } catch (err: any) {
                 notification.error(err);
             }
         }

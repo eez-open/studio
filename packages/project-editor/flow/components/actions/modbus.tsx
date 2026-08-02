@@ -286,7 +286,7 @@ export class ModbusActionComponent extends ActionComponent {
                         }
 
                         runtimeModbusClients.set(connectionId, client);
-                    } catch (err) {
+                    } catch (err: any) {
                         console.warn(err);
                         context.throwError(err.toString());
                         return undefined;

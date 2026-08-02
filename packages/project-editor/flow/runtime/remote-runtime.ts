@@ -180,7 +180,7 @@ export class RemoteRuntime extends RuntimeBase {
                 await connection.acquire(false);
                 acquired = true;
                 break;
-            } catch (err) {
+            } catch (err: any) {
                 acquireError = err;
                 await new Promise<void>(resolve => setTimeout(resolve, 100));
             }
@@ -252,7 +252,7 @@ export class RemoteRuntime extends RuntimeBase {
             this.onDebuggerActiveChanged();
 
             return;
-        } catch (err) {
+        } catch (err: any) {
             notification.update(toastId, {
                 type: notification.ERROR,
                 render: `Error: ${err.toString()}`,
@@ -297,7 +297,7 @@ export class RemoteRuntime extends RuntimeBase {
         } else {
             try {
                 await connection.acquire(false);
-            } catch (err) {
+            } catch (err: any) {
                 notification.error(`Error: ${err.toString()}`);
                 return;
             }
@@ -312,7 +312,7 @@ export class RemoteRuntime extends RuntimeBase {
                         });
                     }
                 }
-            } catch (err) {
+            } catch (err: any) {
                 if (notifyUser) {
                     notification.error(
                         `Flow stopped with error: ${err.toString()}`

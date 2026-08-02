@@ -390,7 +390,7 @@ export class SelectInstrumentActionComponent extends ActionComponent {
                     context.propagateValue("instrument", instrument);
                 }
                 context.propagateValueThroughSeqout();
-            } catch (err) {
+            } catch (err: any) {
                 context.endAsyncExecution();
                 context.throwError(err.toString());
             }
@@ -978,7 +978,7 @@ export class InstrumentWrite extends ActionComponent {
                 } finally {
                     connection.release();
                 }
-            } catch (err) {
+            } catch (err: any) {
                 context.endAsyncExecution();
                 context.throwError(err.toString());
             }

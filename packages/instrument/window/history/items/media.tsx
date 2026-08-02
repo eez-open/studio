@@ -39,7 +39,7 @@ export const MediaHistoryItemComponent = observer(
         }
 
         get blob() {
-            return new Blob([this.data], {
+            return new Blob([this.data as BufferSource], {
                 type: this.props.historyItem.mediaHistoryItemMessage.mimeType
             });
         }

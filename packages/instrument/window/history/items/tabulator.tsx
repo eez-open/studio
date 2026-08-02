@@ -189,7 +189,7 @@ export const TabulatorHistoryItemComponent = observer(
                 try {
                     await writeTextFile(filePath, jsonStr);
                     notification.success(`Exported to "${filePath}"`);
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err);
                     notification.error(err.toString());
                 }
@@ -229,7 +229,7 @@ export const TabulatorHistoryItemComponent = observer(
                     );
 
                     notification.success(`Imported from "${filePath}"`);
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err);
                     notification.error(err.toString());
                 }

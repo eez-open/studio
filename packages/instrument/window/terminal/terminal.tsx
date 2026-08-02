@@ -295,7 +295,7 @@ export class TerminalComponent extends React.Component<{
                         } else {
                             await instrument.connection.send(command);
                         }
-                    } catch (err) {
+                    } catch (err: any) {
                         notification.error(err.toString());
                     } finally {
                         instrument.connection.release();

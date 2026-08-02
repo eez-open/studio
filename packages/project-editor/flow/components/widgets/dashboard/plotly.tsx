@@ -1561,7 +1561,7 @@ export class LineChartWidget extends Widget {
             try {
                 // as property
                 buildExpression(assets, dataBuffer, this, line.label);
-            } catch (err) {
+            } catch (err: any) {
                 assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
@@ -1577,7 +1577,7 @@ export class LineChartWidget extends Widget {
             try {
                 // as property
                 buildExpression(assets, dataBuffer, this, line.value);
-            } catch (err) {
+            } catch (err: any) {
                 assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
@@ -1593,7 +1593,7 @@ export class LineChartWidget extends Widget {
             try {
                 // as property
                 buildExpression(assets, dataBuffer, this, line.visible);
-            } catch (err) {
+            } catch (err: any) {
                 assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,

@@ -117,7 +117,7 @@ registerActionComponents("File", [
                     );
                     context.propagateValue("content", content);
                     context.propagateValueThroughSeqout();
-                } catch (err) {
+                } catch (err: any) {
                     context.throwError(err.toString());
                 } finally {
                     context.endAsyncExecution();
@@ -202,7 +202,7 @@ registerActionComponents("File", [
                         encodingValue as any
                     );
                     context.propagateValueThroughSeqout();
-                } catch (err) {
+                } catch (err: any) {
                     context.throwError(err.toString());
                 } finally {
                     context.endAsyncExecution();
@@ -285,7 +285,7 @@ registerActionComponents("File", [
                         encodingValue as any
                     );
                     context.propagateValueThroughSeqout();
-                } catch (err) {
+                } catch (err: any) {
                     context.throwError(err.toString());
                 } finally {
                     context.endAsyncExecution();

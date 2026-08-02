@@ -1021,7 +1021,7 @@ export class WasmRuntime extends RemoteRuntime {
 
         try {
             await connection.acquire(false);
-        } catch (err) {
+        } catch (err: any) {
             this.worker.postMessage({
                 scpiResult: {
                     errorMessage: err.toString()
@@ -1047,7 +1047,7 @@ export class WasmRuntime extends RemoteRuntime {
                 await connection.command(command, { timeout, delay });
                 result = "";
             }
-        } catch (err) {
+        } catch (err: any) {
             this.worker.postMessage({
                 scpiResult: {
                     errorMessage: err.toString()

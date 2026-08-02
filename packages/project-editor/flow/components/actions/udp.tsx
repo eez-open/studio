@@ -80,7 +80,7 @@ onWasmFlowRuntimeTerminate((wasmFlowRuntime: IWasmFlowRuntime) => {
                 server.dropMembership(group);
             }
             server.close();
-        } catch (err) {
+        } catch (err: any) {
             console.error(
                 `Free UDP input port in use ${port}: ${err.toString()}`
             );
@@ -237,7 +237,7 @@ export class UDPInActionComponent extends ActionComponent {
                         try {
                             server.setMulticastTTL(128);
                             server.addMembership(group, iface);
-                        } catch (err) {
+                        } catch (err: any) {
                             context.throwError(err.toString());
                         }
                     }
@@ -569,7 +569,7 @@ export class UDPOutActionComponent extends ActionComponent {
                             try {
                                 sock.setMulticastTTL(128);
                                 sock.addMembership(group, iface); // Add to the multicast group
-                            } catch (e) {
+                            } catch (e: any) {
                                 context.throwError(e.toString());
                                 context.endAsyncExecution();
                             }

@@ -1052,7 +1052,7 @@ export const DetailsView = observer(
                     await exportExtension(extension, tempFilePath);
                     await copyFile(tempFilePath, filePath);
                     notification.success(`Saved to "${filePath}"`);
-                } catch (err) {
+                } catch (err: any) {
                     notification.error(err.toString());
                 }
             }
@@ -1320,7 +1320,7 @@ const ExtensionsManagerSubNavigation = observer(
                             extension.id
                         );
                     }
-                } catch (err) {
+                } catch (err: any) {
                     notification.error(err.toString());
                 }
             }

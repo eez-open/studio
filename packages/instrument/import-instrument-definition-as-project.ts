@@ -159,7 +159,7 @@ export async function importInstrumentDefinitionAsProject(
             type: notification.SUCCESS,
             autoClose: 1000
         });
-    } catch (err) {
+    } catch (err: any) {
         notification.update(progressToastId, {
             render: err.toString(),
             type: notification.ERROR,

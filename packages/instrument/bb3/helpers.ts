@@ -105,7 +105,7 @@ export async function useConnection(
         } finally {
             connection.release();
         }
-    } catch (err) {
+    } catch (err: any) {
         notification.error(err.toString());
     } finally {
         obj.setBusy(false);

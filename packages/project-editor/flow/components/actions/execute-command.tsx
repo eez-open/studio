@@ -184,7 +184,7 @@ registerActionComponents("Dashboard Specific", [
                 });
 
                 context.propagateValueThroughSeqout();
-            } catch (err) {
+            } catch (err: any) {
                 context.throwError(err.toString());
             }
         }

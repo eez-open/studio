@@ -1697,7 +1697,7 @@ export class LVGLActionComponent extends ActionComponent {
                                 makeEndInstruction()
                             );
                         }
-                    } catch (err) {
+                    } catch (err: any) {
                         assets.projectStore.outputSectionsStore.write(
                             Section.OUTPUT,
                             MessageType.ERROR,

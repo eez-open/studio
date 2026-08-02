@@ -62,7 +62,7 @@ export class EthernetInterface implements CommunicationInterface {
                     this.host.connected();
                 }
             );
-        } catch (err) {
+        } catch (err: any) {
             this.host.setError(ConnectionErrorCode.NONE, err.toString());
             this.destroy();
         }

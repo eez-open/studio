@@ -87,7 +87,7 @@ const ExportBitmapFilePropertyGridUI = observer(
                 try {
                     await fs.promises.writeFile(filePath, bin);
                     notification.info(`Bitmap file exported.`);
-                } catch (error) {
+                } catch (error: any) {
                     notification.error(error.toString());
                 }
             }
@@ -705,7 +705,7 @@ export async function createBitmap(
         );
 
         return bitmap;
-    } catch (err) {
+    } catch (err: any) {
         notification.error(err);
         return undefined;
     }
@@ -741,7 +741,7 @@ export async function createBitmapFromFile(
 
             const arrayBuffer = await file.arrayBuffer();
             const base64 = btoa(
-                String.fromCharCode.apply(null, new Uint8Array(arrayBuffer))
+                String.fromCharCode(...Array.from(new Uint8Array(arrayBuffer)))
             );
 
             image = `data:${fileType};base64,` + base64;
@@ -763,7 +763,7 @@ export async function createBitmapFromFile(
         );
 
         return bitmap;
-    } catch (err) {
+    } catch (err: any) {
         notification.error(err.toString());
         return undefined;
     }

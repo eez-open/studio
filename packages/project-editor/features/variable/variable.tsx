@@ -761,7 +761,7 @@ export class Variable extends EezObject {
                                 )
                             );
                         }
-                    } catch (err) {
+                    } catch (err: any) {
                         messages.push(
                             new Message(
                                 MessageType.ERROR,

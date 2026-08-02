@@ -2081,7 +2081,7 @@ export const ChartView = observer(
             }
         }
 
-        onWheelEnclosure = (event: WheelEvent) => {
+        onWheelEnclosure = (event: Event) => {
             event.preventDefault();
         };
 
@@ -5548,7 +5548,7 @@ const MeasurementComponent = observer(
                     try {
                         await writeBinaryData(filePath, csv);
                         notification.success(`Saved as "${filePath}"`);
-                    } catch (err) {
+                    } catch (err: any) {
                         console.error(err);
                         notification.error(err.toString());
                     }

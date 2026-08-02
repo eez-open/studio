@@ -444,7 +444,7 @@ export async function saveTableListData(
                 getCsvDataColumnDefinitions(instrument)
             );
             notification.success(`List exported to "${filePath}".`);
-        } catch (err) {
+        } catch (err: any) {
             error("Failed to write list file.", err.toString());
         }
     }
@@ -580,7 +580,7 @@ export const ListsButtons = observer(
 
             try {
                 await connection.acquire(false);
-            } catch (err) {
+            } catch (err: any) {
                 notification.error(`Failed to get list: ${err.toString()}`);
                 return;
             }
@@ -591,7 +591,7 @@ export const ListsButtons = observer(
                     this.props.appStore.history.oid,
                     channelIndex
                 ));
-            } catch (err) {
+            } catch (err: any) {
                 notification.error(`Failed to get list: ${err.toString()}`);
                 return;
             } finally {
@@ -687,7 +687,7 @@ export const ListsButtons = observer(
 
                 try {
                     await connection.acquire(false);
-                } catch (err) {
+                } catch (err: any) {
                     notification.error(
                         `Failed to send list: ${err.toString()}`
                     );
@@ -706,7 +706,7 @@ export const ListsButtons = observer(
                         }
                     );
                     notification.success(`List sent.`);
-                } catch (err) {
+                } catch (err: any) {
                     notification.error(
                         `Failed to send list: ${err.toString()}`
                     );

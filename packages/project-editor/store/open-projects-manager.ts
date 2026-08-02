@@ -296,7 +296,7 @@ export class OpenProjectsManager {
                     const blob = await response.blob();
                     const arrayBuffer = await blob.arrayBuffer();
                     fileData = Buffer.from(arrayBuffer);
-                } catch (err) {
+                } catch (err: any) {
                     throw new Error(`URL fetch error: ${err.toString()}`);
                 }
             }
@@ -304,7 +304,7 @@ export class OpenProjectsManager {
             // read project file
             try {
                 fileData = await fs.promises.readFile(filePath);
-            } catch (err) {
+            } catch (err: any) {
                 throw new Error(`File read error: ${err.toString()}`);
             }
         }

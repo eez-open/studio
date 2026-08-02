@@ -499,7 +499,7 @@ const WatchTable = observer(
                                             )}
                                         </span>
                                     );
-                                } catch (err) {
+                                } catch (err: any) {
                                     watchExpressionLabel = err.toString();
                                     type = "";
                                     className = "error";

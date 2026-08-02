@@ -3,7 +3,7 @@
         "lib": ["ES2020", "DOM"],
         "module": "commonjs",
         "target": "ES2022",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "esModuleInterop": true,
         "jsx": "react",
         "experimentalDecorators": true,
@@ -13,7 +13,11 @@
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "strictNullChecks": true,
-        "baseUrl": "./packages",
+        "strictFunctionTypes": false,
+        "rootDir": "./packages",
+        "paths": {
+            "*": ["./packages/*"]
+        },
         "sourceMap": false,
         "inlineSourceMap": false,
         "pretty": false,
@@ -21,7 +25,8 @@
         "skipLibCheck": true,
         "strictPropertyInitialization": false,
         "useDefineForClassFields": true,
-        "importHelpers": true
+        "importHelpers": true,
+        "types": ["jquery"]
     },
     "include": ["./packages"]
 }

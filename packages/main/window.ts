@@ -326,7 +326,7 @@ ipcMain.on("printPDF", (event: any, { content, options }: any) => {
         try {
             // Use default printing options
             data = await printWindow.webContents.printToPDF(options);
-        } catch (err) {
+        } catch (err: any) {
             await dialog.showMessageBox(senderWindow, {
                 title: "Print to PDF - EEZ Studio",
                 message: err.toString()
@@ -346,7 +346,7 @@ ipcMain.on("printPDF", (event: any, { content, options }: any) => {
             try {
                 await fs.promises.writeFile(filePath, data);
                 shell.openPath(filePath);
-            } catch (err) {
+            } catch (err: any) {
                 await dialog.showMessageBox(senderWindow, {
                     title: "Print to PDF - EEZ Studio",
                     message: err.toString()

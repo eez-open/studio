@@ -112,7 +112,7 @@ export class MicroPython extends EezObject {
                 await connection.acquire(false);
                 acquired = true;
                 break;
-            } catch (err) {
+            } catch (err: any) {
                 acquireError = err;
                 await new Promise<void>(resolve => setTimeout(resolve, 100));
             }
@@ -189,7 +189,7 @@ export class MicroPython extends EezObject {
             });
 
             return;
-        } catch (err) {
+        } catch (err: any) {
             notification.update(toastId, {
                 type: notification.ERROR,
                 render: `Error: ${err.toString()}`,

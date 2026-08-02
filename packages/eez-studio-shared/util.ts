@@ -6,6 +6,19 @@ import type * as GeometryModule from "eez-studio-shared/geometry";
 
 import type * as I10nModule from "eez-studio-shared/i10n";
 
+declare module "moment" {
+    interface Duration {
+        format(
+            format: string,
+            options?: { userLocale?: string }
+        ): string;
+        format(options: {
+            template: string;
+            trim: boolean;
+        }): string;
+    }
+}
+
 export function parseXmlString(xmlString: string) {
     // remove UTF-8 BOM
     if (xmlString.startsWith("\ufeff")) {

@@ -235,7 +235,7 @@ registerActionComponents("Serial Port", [
                             );
                             context.propagateValueThroughSeqout();
                         }
-                    } catch (err) {
+                    } catch (err: any) {
                         context.throwError(err.toString());
                     }
                 } else {
@@ -401,7 +401,7 @@ registerActionComponents("Serial Port", [
                                 serialConnection.write(data.toString());
                             }
                             context.propagateValueThroughSeqout();
-                        } catch (err) {
+                        } catch (err: any) {
                             context.throwError(err.toString());
                         }
                     } else {
@@ -436,7 +436,7 @@ registerActionComponents("Serial Port", [
                     const ports = await SerialConnection.listPorts();
                     context.propagateValue("ports", ports);
                     context.propagateValueThroughSeqout();
-                } catch (err) {
+                } catch (err: any) {
                     context.throwError(err.toString());
                 }
                 context.endAsyncExecution();
@@ -632,7 +632,7 @@ async function showConnectDialog(
                         await serialConnection.connect();
                         serialConnection.disconnect();
                         resolve(true);
-                    } catch (err) {
+                    } catch (err: any) {
                         result.onProgress("error", err);
                         resolve(false);
                     }

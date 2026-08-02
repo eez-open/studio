@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "esModuleInterop": true,
         "jsx": "react",
         "experimentalDecorators": true,
@@ -12,9 +12,13 @@
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "strictNullChecks": true,
-        "baseUrl": "../src",
+        "paths": {
+            "*": ["../src/*"]
+        },
         "sourceMap": false,
         "pretty": false,
-        "skipLibCheck": true
+        "skipLibCheck": true,
+        "types": ["node"],
+        "lib": ["ES6"]
     }
 }

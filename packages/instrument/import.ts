@@ -59,7 +59,7 @@ async function findIdfFile(extensionFolderPath: string) {
     let files;
     try {
         files = await readFolder(extensionFolderPath);
-    } catch (err) {
+    } catch (err: any) {
         if (err.code == "ENOTDIR") {
             return undefined;
         }

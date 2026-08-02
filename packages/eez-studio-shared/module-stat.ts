@@ -16,7 +16,8 @@ function collectModules(
     thirdPartyModules: ModuleInfo[],
     ourModules: ModuleInfo[]
 ) {
-    each(require.cache, (nodeModule: NodeModule) => {
+    each(require.cache, (nodeModule: NodeModule | undefined) => {
+        if (!nodeModule) return;
         try {
             const moduleInfo: ModuleInfo = {
                 fileName: nodeModule.filename,

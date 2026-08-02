@@ -234,7 +234,7 @@ function buildComponent(
                 } else {
                     dataBuffer.writeUint16NonAligned(makeEndInstruction());
                 }
-            } catch (err) {
+            } catch (err: any) {
                 assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
@@ -349,7 +349,7 @@ function buildComponent(
     // specific
     try {
         component.buildFlowComponentSpecific(assets, dataBuffer);
-    } catch (err) {
+    } catch (err: any) {
         assets.projectStore.outputSectionsStore.write(
             Section.OUTPUT,
             MessageType.ERROR,

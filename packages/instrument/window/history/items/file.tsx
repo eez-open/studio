@@ -301,7 +301,7 @@ export const FileHistoryItemComponent = observer(
                 try {
                     await writeBinaryData(filePath, data);
                     notification.success(`Saved as "${filePath}"`);
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err);
                     notification.error(err.toString());
                 }

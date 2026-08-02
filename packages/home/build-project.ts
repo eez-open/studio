@@ -43,7 +43,7 @@ export async function buildProject(filePath: string) {
         });
 
         await projectStore.build();
-    } catch (err) {
+    } catch (err: any) {
         ipcRenderer.send(
             "on-build-project-message",
             "Unhandled error: " + err.toString()

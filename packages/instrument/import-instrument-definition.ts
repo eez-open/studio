@@ -99,7 +99,7 @@ export async function importInstrumentDefinitionAsExtension(filePath: string) {
                 autoClose: 500
             });
         }
-    } catch (err) {
+    } catch (err: any) {
         notification.update(progressToastId, {
             render: err.toString(),
             type: notification.ERROR,

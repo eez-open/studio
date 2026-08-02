@@ -139,7 +139,7 @@ registerActionComponents("Dashboard Specific", [
                             (global ? "g" : "") +
                             (caseInsensitive ? "i" : "")
                     );
-                } catch (err) {
+                } catch (err: any) {
                     context.throwError(
                         "Invalid regular expression" + err.toString()
                     );

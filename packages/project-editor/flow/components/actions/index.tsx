@@ -624,7 +624,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
 
                 context.propagateValue("result", result);
                 context.propagateValueThroughSeqout();
-            } catch (err) {
+            } catch (err: any) {
                 console.info(
                     "Error in EvalJSExprActionComponent_execute",
                     err.toString()
@@ -722,7 +722,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
             try {
                 // as property
                 buildExpression(assets, dataBuffer, this, valueExpression);
-            } catch (err) {
+            } catch (err: any) {
                 assets.projectStore.outputSectionsStore.write(
                     Section.OUTPUT,
                     MessageType.ERROR,
@@ -1542,7 +1542,7 @@ export class ConstantActionComponent extends ActionComponent {
                 this.value
             );
             dataBuffer.writeUint16(assets.getConstantIndex(value, valueType));
-        } catch (err) {
+        } catch (err: any) {
             assets.projectStore.outputSectionsStore.write(
                 Section.OUTPUT,
                 MessageType.ERROR,

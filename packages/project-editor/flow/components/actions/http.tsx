@@ -199,7 +199,7 @@ registerActionComponents("Dashboard Specific", [
                         context.propagateValue("result", result);
                         context.propagateValueThroughSeqout();
                     }
-                } catch (err) {
+                } catch (err: any) {
                     context.throwError(err.toString());
                 } finally {
                     context.endAsyncExecution();

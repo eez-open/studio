@@ -1171,7 +1171,7 @@ async function showConnectDialog(
                         await mqttConnection.connect();
                         mqttConnection.disconnect();
                         resolve(true);
-                    } catch (err) {
+                    } catch (err: any) {
                         result.onProgress("error", err);
                         resolve(false);
                     }

@@ -178,7 +178,7 @@ export const PlotterHistoryItemComponent = observer(
 
             try {
                 data = await this.convertToCsv();
-            } catch (err) {
+            } catch (err: any) {
                 console.error(err);
                 notification.error(err.toString());
                 runInAction(() => (this.actionInProgress = false));
@@ -205,7 +205,7 @@ export const PlotterHistoryItemComponent = observer(
                 try {
                     await writeTextFile(filePath, data);
                     notification.success(`Saved as "${filePath}"`);
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err);
                     notification.error(err.toString());
                 }
@@ -248,7 +248,7 @@ export const PlotterHistoryItemComponent = observer(
                 try {
                     await writeTextFile(filePath, jsonStr);
                     notification.success(`Exported to "${filePath}"`);
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err);
                     notification.error(err.toString());
                 }
@@ -289,7 +289,7 @@ export const PlotterHistoryItemComponent = observer(
                     );
 
                     notification.success(`Imported from "${filePath}"`);
-                } catch (err) {
+                } catch (err: any) {
                     console.error(err);
                     notification.error(err.toString());
                 }

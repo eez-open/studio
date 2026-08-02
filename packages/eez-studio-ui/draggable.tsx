@@ -46,7 +46,8 @@ export class Draggable {
         }
     }
 
-    onPointerDown = (e: PointerEvent) => {
+    onPointerDown = (e: Event) => {
+        const event = e as PointerEvent;
         if (!this.element) {
             return;
         }
@@ -54,11 +55,11 @@ export class Draggable {
         this.finishDragging(undefined, true);
 
         const el1 = closestBySelector(
-            e.target,
+            event.target,
             ".eez-flow-editor-capture-pointers"
         );
         const el2 = closestBySelector(
-            e.target,
+            event.target,
             ".eez-flow-editor-not-capture-pointers"
         );
 
@@ -75,8 +76,8 @@ export class Draggable {
             parentWithTabindex.focus();
         }
 
-        e.preventDefault();
-        e.stopPropagation();
+        event.preventDefault();
+        event.stopPropagation();
 
         this.element.addEventListener("pointerup", this.onPointerUp);
         this.element.addEventListener("pointercancel", this.onPointerCancel);
@@ -95,7 +96,7 @@ export class Draggable {
         this.overlayElement.style.backgroundColor = "transparent";
         this.overlayElement.style.cursor = this.cursor || "default";
         this.overlayElement.addEventListener("pointermove", e => {
-            this.finishDragging(e, true);
+            this.finishDragging(e as PointerEvent, true);
         });
         this.overlayElement.addEventListener("wheel", this.onWheel, {
             passive: false
@@ -106,18 +107,18 @@ export class Draggable {
 
         document.body.appendChild(this.overlayElement);
 
-        this.capturedPointerId = e.pointerId;
-        this.element.setPointerCapture(e.pointerId);
+        this.capturedPointerId = event.pointerId;
+        this.element.setPointerCapture(event.pointerId);
 
         this.dragging = true;
         this.lastDragMoveEvent = undefined;
 
-        this.xDragStart = e.clientX;
-        this.yDragStart = e.clientY;
+        this.xDragStart = event.clientX;
+        this.yDragStart = event.clientY;
 
         if (this.config.onDragStart) {
             this.params = this.config.onDragStart(
-                e,
+                event,
                 this.xDragStart,
                 this.yDragStart
             );
@@ -126,42 +127,44 @@ export class Draggable {
         }
     };
 
-    onPointerMove = (e: PointerEvent) => {
+    onPointerMove = (e: Event) => {
+        const event = e as PointerEvent;
         if (this.dragging) {
             if (this.config.onDragMove) {
-                this.lastDragMoveEvent = e;
+                this.lastDragMoveEvent = event;
                 this.config.onDragMove(
-                    e,
-                    e.clientX - this.xDragStart,
-                    e.clientY - this.yDragStart,
+                    event,
+                    event.clientX - this.xDragStart,
+                    event.clientY - this.yDragStart,
                     this.params
                 );
             }
         } else {
             if (this.config.onMove) {
-                this.config.onMove(e);
+                this.config.onMove(event);
             }
         }
     };
 
-    onPointerUp = (e: PointerEvent) => {
-        this.finishDragging(e, false);
+    onPointerUp = (e: Event) => {
+        this.finishDragging(e as PointerEvent, false);
     };
 
-    onPointerCancel = (e: PointerEvent) => {
-        this.finishDragging(e, true);
+    onPointerCancel = (e: Event) => {
+        this.finishDragging(e as PointerEvent, true);
     };
 
-    onWheel = (e: WheelEvent) => {
+    onWheel = (e: Event) => {
         if (this.config.onDraggableWheel) {
-            this.config.onDraggableWheel(e);
+            this.config.onDraggableWheel(e as WheelEvent);
         }
     };
 
-    onKeyDown = (e: KeyboardEvent) => {
-        if (e.key == "Escape") {
-            e.preventDefault();
-            e.stopPropagation();
+    onKeyDown = (e: Event) => {
+        const event = e as KeyboardEvent;
+        if (event.key == "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
 
             this.finishDragging(undefined, true);
         } else if (this.dragging) {
@@ -171,9 +174,9 @@ export class Draggable {
                     clientY: this.lastDragMoveEvent.clientY,
                     movementX: this.lastDragMoveEvent.movementX,
                     movementY: this.lastDragMoveEvent.movementY,
-                    ctrlKey: e.ctrlKey,
-                    shiftKey: e.shiftKey,
-                    timeStamp: e.timeStamp
+                    ctrlKey: event.ctrlKey,
+                    shiftKey: event.shiftKey,
+                    timeStamp: event.timeStamp
                 };
 
                 this.config.onDragMove(

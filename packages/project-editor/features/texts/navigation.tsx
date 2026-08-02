@@ -158,7 +158,7 @@ export const TextsTab = observer(
 
                                 await writeTextFile(filePath, res);
                                 notification.info("File saved!");
-                            } catch (err) {
+                            } catch (err: any) {
                                 notification.error(err.toString());
                             }
                         }
@@ -263,7 +263,7 @@ export const TextsTab = observer(
                         } catch (err) {
                             xliff.xliff12ToJs(xliffDoc, doit);
                         }
-                    } catch (err) {
+                    } catch (err: any) {
                         notification.error(err.toString());
                     }
                 })

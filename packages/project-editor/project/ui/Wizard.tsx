@@ -1591,7 +1591,7 @@ export class WizardModel {
                         await fs.promises.mkdir(this.projectFolderPath!, {
                             recursive: true
                         });
-                    } catch (err) {
+                    } catch (err: any) {
                         runInAction(() => {
                             this.locationError = err.toString();
                         });
@@ -1614,7 +1614,7 @@ export class WizardModel {
 
                     try {
                         projectTemplate = await this.loadEezProject();
-                    } catch (err) {
+                    } catch (err: any) {
                         runInAction(() => {
                             this.projectCreationError = err.toString();
                         });
@@ -1630,7 +1630,7 @@ export class WizardModel {
                         if (this.bb3ProjectOption == "download") {
                             try {
                                 await this.downloadBB3ProjectFile();
-                            } catch (err) {
+                            } catch (err: any) {
                                 runInAction(() => {
                                     this.bb3ProjectFileDownloadError =
                                         err.toString();
@@ -1724,7 +1724,7 @@ export class WizardModel {
                             projectTemplateStr,
                             "utf8"
                         );
-                    } catch (err) {
+                    } catch (err: any) {
                         runInAction(() => {
                             this.nameError = err.toString();
                         });
@@ -1749,7 +1749,7 @@ export class WizardModel {
                                             recursive: true
                                         }
                                     );
-                                } catch (err) {
+                                } catch (err: any) {
                                     runInAction(() => {
                                         this.locationError = err.toString();
                                     });
@@ -1768,7 +1768,7 @@ export class WizardModel {
                                     resourceFileContent,
                                     "binary"
                                 );
-                            } catch (err) {
+                            } catch (err: any) {
                                 runInAction(() => {
                                     this.nameError = err.toString();
                                 });

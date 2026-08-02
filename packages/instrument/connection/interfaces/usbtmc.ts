@@ -893,11 +893,15 @@ export class Instrument {
     bulk_in_ep_read(length: number) {
         return new Promise<Buffer>((resolve, reject) => {
             this.bulk_in_ep.timeout = this._timeout;
-            this.bulk_in_ep.transfer(length, (err: any, data: Buffer) => {
+            this.bulk_in_ep.transfer(length, (err: any, data: Buffer|undefined) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(data);
+                    if (!data) {
+                        reject("no data")
+                    } else {
+                        resolve(data);
+                    }
                 }
             });
         });
@@ -1275,7 +1279,7 @@ export class UsbTmcInterface implements CommunicationInterface {
                     );
                     this.destroy();
                 });
-        } catch (err) {
+        } catch (err: any) {
             this.host.setError(ConnectionErrorCode.NONE, err.toString());
             this.destroy();
         }

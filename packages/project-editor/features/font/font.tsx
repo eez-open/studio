@@ -1183,7 +1183,7 @@ const ExportFontFilePropertyGridUI = observer(
                 try {
                     await fs.promises.writeFile(filePath, bin);
                     notification.info(`Font file exported.`);
-                } catch (error) {
+                } catch (error: any) {
                     notification.error(error.toString());
                 }
             }
@@ -2277,7 +2277,7 @@ export class Font extends EezObject {
                         notification.info(`Added ${result.values.name} font.`);
 
                         return font;
-                    } catch (err) {
+                    } catch (err: any) {
                         let errorMessage;
                         if (err) {
                             if (err.message) {

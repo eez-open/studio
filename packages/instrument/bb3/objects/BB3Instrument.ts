@@ -854,7 +854,7 @@ export class BB3Instrument {
                             render: `Loading continues on the BB3 ...`,
                             autoClose: 1000
                         });
-                    } catch (err) {
+                    } catch (err: any) {
                         notification.update(toastId, {
                             type: notification.ERROR,
                             render: err.toString(),
@@ -970,7 +970,7 @@ export class BB3Instrument {
                             render: `Loading continues on the BB3 ...`,
                             autoClose: 1000
                         });
-                    } catch (err) {
+                    } catch (err: any) {
                         notification.update(toastId, {
                             type: notification.ERROR,
                             render: err.toString(),
@@ -980,7 +980,7 @@ export class BB3Instrument {
                 },
                 true
             );
-        } catch (err) {
+        } catch (err: any) {
             notification.update(toastId, {
                 type: notification.ERROR,
                 render: `Connection error: ${err.toString()}`,

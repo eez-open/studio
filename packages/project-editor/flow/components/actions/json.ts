@@ -48,7 +48,7 @@ registerActionComponents("Dashboard Specific", [
             try {
                 context.propagateValue("result", JSON.parse(value));
                 context.propagateValueThroughSeqout();
-            } catch (err) {
+            } catch (err: any) {
                 context.throwError(err.toString());
             }
         }
@@ -96,7 +96,7 @@ registerActionComponents("Dashboard Specific", [
                 const result = JSON.stringify(toJS(value), null, indentation);
                 context.propagateValue("result", result);
                 context.propagateValueThroughSeqout();
-            } catch (err) {
+            } catch (err: any) {
                 context.throwError(err.toString());
             }
         }
