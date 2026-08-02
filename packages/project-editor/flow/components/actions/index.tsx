@@ -569,7 +569,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
         properties: [
             {
                 name: "expression",
-                type: PropertyType.MultilineText,
+                type: PropertyType.JavaScript,
                 propertyGridGroup: specificGroup,
                 monospaceFont: true,
                 flowProperty: "template-literal"

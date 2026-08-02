@@ -373,6 +373,20 @@ registerActionComponents("Serial Port", [
 
             const data = context.evalProperty("data");
 
+            if (data) {
+                if (typeof data === "string") {
+                    // valid string
+                } else if (Array.isArray(data)) {
+                    if (!data.every(item => Number.isInteger(item) && item >= 0 && item <= 255)) {
+                        context.throwError(`data must be a string or an array of integers between 0 and 255`);
+                        return;
+                    }
+                } else {
+                    context.throwError(`data must be a string or an array of integers between 0 and 255`);
+                    return;
+                }
+            }
+
             context = context.startAsyncExecution();
 
             (async (serialConnectionId: number, data: any) => {
@@ -381,7 +395,11 @@ registerActionComponents("Serial Port", [
                 if (serialConnection) {
                     if (data) {
                         try {
-                            serialConnection.write(data.toString());
+                            if (Array.isArray(data)) {
+                                serialConnection.write(Buffer.from(data));
+                            } else {
+                                serialConnection.write(data.toString());
+                            }
                             context.propagateValueThroughSeqout();
                         } catch (err) {
                             context.throwError(err.toString());
@@ -757,7 +775,7 @@ export class SerialConnection implements SerialConnectionCallbacks {
         return data;
     }
 
-    write(data: string) {
+    write(data: string|Buffer) {
         if (!this.isConnected) {
             throw "not connected";
         }

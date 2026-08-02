@@ -48,7 +48,7 @@ export function disconnect(connectionId: string) {
     }
 }
 
-export function write(connectionId: string, data: string) {
+export function write(connectionId: string, data: string|Buffer) {
     const connection = connections.get(connectionId);
     if (connection) {
         connection.write(data);
@@ -70,7 +70,7 @@ const CONF_CHUNK_SIZE = 64;
 class Connection {
     port: SerialPort | undefined;
     connectedCalled: boolean = false;
-    dataToWrite: string | undefined;
+    dataToWrite: Buffer | undefined;
 
     constructor(
         public callbacks: SerialConnectionCallbacks,
@@ -138,11 +138,11 @@ class Connection {
                 nextChunk = this.dataToWrite;
                 this.dataToWrite = undefined;
             } else {
-                nextChunk = this.dataToWrite.slice(0, CONF_CHUNK_SIZE);
-                this.dataToWrite = this.dataToWrite.slice(CONF_CHUNK_SIZE);
+                nextChunk = this.dataToWrite.subarray(0, CONF_CHUNK_SIZE);
+                this.dataToWrite = this.dataToWrite.subarray(CONF_CHUNK_SIZE);
             }
 
-            this.port.write(nextChunk, "binary");
+            this.port.write(nextChunk);
 
             if (this.dataToWrite) {
                 this.port.drain(this.sendNextChunkCallback);
@@ -150,12 +150,20 @@ class Connection {
         }
     };
 
-    write(data: string) {
+    write(data: string|Buffer) {
         if (this.port) {
             if (this.dataToWrite) {
-                this.dataToWrite += data;
+                if (typeof data == "string") {
+                    this.dataToWrite = Buffer.concat([this.dataToWrite, Buffer.from(data, "binary")]);
+                } else {
+                    this.dataToWrite = Buffer.concat([this.dataToWrite, data]);
+                }
             } else {
-                this.dataToWrite = data;
+                if (typeof data == "string") {
+                    this.dataToWrite = Buffer.from(data, "binary");
+                } else {
+                    this.dataToWrite = data;
+                }
                 this.port.drain(this.sendNextChunkCallback);
             }
         }
