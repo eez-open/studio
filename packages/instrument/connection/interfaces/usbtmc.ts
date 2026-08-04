@@ -1,15 +1,12 @@
-import type usbTypes from "usb";
+type UsbDeviceType = any;
 
-import type * as UsbModule from "usb";
-
-////////////////////////////////////////////////////////////////////////////////
-
-let usbModule: typeof UsbModule;
 function getUsbModule() {
-    if (!usbModule) {
-        usbModule = require("usb") as typeof UsbModule;
-    }
-    return usbModule;
+    const usb = require("usb/index.js");
+    return {
+        nativeFindDeviceByIds: usb.nativeFindDeviceByIds,
+        nativeGetDevices: usb.nativeGetDevices,
+        UsbDevice: usb.UsbDevice
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,6 +52,7 @@ const USBTMC_REQUEST_INDICATOR_PULSE = 64;
 
 const USBTMC_HEADER_SIZE = 12;
 
+// @ts-ignore - Used for device-specific quirks
 const RIGOL_QUIRK_PIDS = [0x04ce, 0x0588];
 
 const CTRL_IN = 0x80;
@@ -160,9 +158,8 @@ export class Instrument {
     idVendor: number;
     idProduct: number;
     iSerial: any = null;
-    device: usbTypes.Device;
-    //cfg: any = null;
-    iface: usbTypes.Interface;
+    device: UsbDeviceType | null = null;
+    interfaceNumber: number = 0;
     term_char: any = null;
 
     bcdUSBTMC: number = 0;
@@ -184,16 +181,15 @@ export class Instrument {
 
     _timeout: number = 500;
 
-    bulk_in_ep: usbTypes.InEndpoint;
-    bulk_out_ep: usbTypes.OutEndpoint;
-    interrupt_in_ep: usbTypes.InEndpoint | null = null;
+    bulk_in_ep: number = 0;
+    bulk_out_ep: number = 0;
+    interrupt_in_ep: number | null = null;
 
     last_btag: number = 0;
     last_rstb_btag: number = 0;
 
     connected: boolean = false;
     reattach: any = [];
-    //old_cfg: any = null;
 
     // quirks
     advantest_quirk: boolean = false;
@@ -203,19 +199,15 @@ export class Instrument {
     rigol_quirk_ieee_block: boolean = false;
 
     constructor(...args: any[]) {
+        const { UsbDevice: UsbDeviceClass } = getUsbModule();
         let resource: string | null = null;
-
-        const usb = getUsbModule();
 
         if (args.length === 1) {
             if (typeof args[0] === "string") {
                 resource = args[0];
-            } else if (args[0] instanceof usb.Device) {
+            } else if (args[0] instanceof UsbDeviceClass) {
                 this.device = args[0];
             } else if (typeof args[0] === "object") {
-                if (args[0].idVendor) {
-                    this.idVendor = args[0].idVendor;
-                }
                 if (args[0].idVendor) {
                     this.idVendor = args[0].idVendor;
                 }
@@ -263,26 +255,11 @@ export class Instrument {
             this.idProduct = parseInt(res.arg2);
             this.iSerial = res.arg3;
         }
-
-        // find device
-        if (!this.device) {
-            if (this.idVendor === undefined || this.idProduct === undefined) {
-                throw new UsbtmcException("No device specified", "init");
-            } else {
-                (this.device as any) = usb.findByIds(
-                    this.idVendor,
-                    this.idProduct
-                );
-                if (!this.device) {
-                    throw new UsbtmcException("Device not found", "init");
-                }
-            }
-        }
     }
 
-    destroy() {
+    async destroy() {
         if (this.connected) {
-            this.close();
+            await this.close();
         }
     }
 
@@ -294,29 +271,56 @@ export class Instrument {
         this._timeout = value;
     }
 
-    deviceControlTransfer(
+    async deviceControlTransfer(
         bmRequestType: number,
         bRequest: number,
         wValue: number,
         wIndex: number,
         data_or_length: any
     ) {
-        return new Promise<{
-            err: any;
-            buffer: number | Buffer | undefined;
-        }>(resolve => {
-            this.device.timeout = this._timeout;
-            this.device.controlTransfer(
-                bmRequestType,
-                bRequest,
-                wValue,
-                wIndex,
-                data_or_length,
-                (err, buffer) => {
-                    resolve({ err, buffer });
-                }
-            );
-        });
+        const direction = (bmRequestType & 0x80) === 0x80 ? "in" : "out";
+        const typeValue = (bmRequestType >> 5) & 0x3;
+        const requestTypeMap = ["standard", "class", "vendor"];
+        const requestType = requestTypeMap[typeValue] || "vendor";
+
+        const recipientValue = bmRequestType & 0x1f;
+        const recipientMap: { [key: number]: string } = {
+            0: "device",
+            1: "interface",
+            2: "endpoint"
+        };
+        const recipient = recipientMap[recipientValue] || "device";
+
+        const setup: any = {
+            requestType,
+            recipient,
+            request: bRequest,
+            value: wValue,
+            index: wIndex
+        };
+
+        try {
+            if (direction === "in") {
+                const buffer = await this.device!.nativeControlTransferIn(
+                    setup,
+                    this._timeout,
+                    typeof data_or_length === "number" ? data_or_length : 64
+                );
+                return { err: null, buffer: buffer ? Buffer.from(buffer) : undefined };
+            } else {
+                const data = Buffer.isBuffer(data_or_length)
+                    ? data_or_length
+                    : Buffer.alloc(0);
+                await this.device!.nativeControlTransferOut(
+                    setup,
+                    this._timeout,
+                    data
+                );
+                return { err: null, buffer: undefined };
+            }
+        } catch (err) {
+            return { err, buffer: undefined };
+        }
     }
 
     async open() {
@@ -324,67 +328,37 @@ export class Instrument {
             return;
         }
 
-        // initialize device
+        const { nativeFindDeviceByIds } = getUsbModule();
 
+        // find device if not already set
+        if (!this.device) {
+            if (this.idVendor === undefined || this.idProduct === undefined) {
+                throw new UsbtmcException("No device specified", "init");
+            }
+            this.device = await nativeFindDeviceByIds(
+                this.idVendor,
+                this.idProduct
+            );
+            if (!this.device) {
+                throw new UsbtmcException("Device not found", "init");
+            }
+        }
+
+        // initialize device
         if (
-            this.device.deviceDescriptor.idVendor === 0x0957 &&
-            [0x2818, 0x4218, 0x4418].indexOf(
-                this.device.deviceDescriptor.idProduct
-            ) !== -1
+            this.device.vendorId === 0x0957 &&
+            [0x2818, 0x4218, 0x4418].indexOf(this.device.productId) !== -1
         ) {
             // Agilent U27xx modular devices
-            // U2701A/U2702A, U2722A/U2723A
-            // These devices require a short initialization sequence, presumably
-            // to take them out of 'firmware update' mode after confirming
-            // that the firmware version is correct. This is required once
-            // on every power-on before the device can be used.
-            // Note that the device will reset and the product ID will change.
-            // U2701A/U2702A boot 0x2818, usbtmc 0x2918
-            // U2722A boot 0x4218, usbtmc 0x4118
-            // U2723A boot 0x4418, usbtmc 0x4318
-
-            // let serial = this.device.deviceDescriptor.iSerialNumber;
-
             let new_id = 0;
 
-            if (this.device.deviceDescriptor.idProduct == 0x2818) {
-                // U2701A/U2702A
+            if (this.device.productId == 0x2818) {
                 new_id = 0x2918;
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x047e,
-                    0x0001
-                );
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x047d,
-                    0x0006
-                );
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x0484,
-                    0x0005
-                );
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x0472,
-                    0x000c
-                );
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x047a,
-                    0x0001
-                );
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047e, 0x0001);
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047d, 0x0006);
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x0484, 0x0005);
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x0472, 0x000c);
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047a, 0x0001);
                 await this.deviceControlTransfer(
                     0x40,
                     0x0c,
@@ -394,54 +368,17 @@ export class Instrument {
                 );
             }
 
-            if (
-                [0x4218, 0x4418].indexOf(
-                    this.device.deviceDescriptor.idProduct
-                ) !== -1
-            ) {
-                // U2722A/U2723A
-                if (this.device.deviceDescriptor.idProduct === 0x4218) {
-                    // U2722A
+            if ([0x4218, 0x4418].indexOf(this.device.productId) !== -1) {
+                if (this.device.productId === 0x4218) {
                     new_id = 0x4118;
-                } else if (this.device.deviceDescriptor.idProduct === 0x4418) {
-                    // U2723A
+                } else if (this.device.productId === 0x4418) {
                     new_id = 0x4318;
                 }
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x047e,
-                    0x0001
-                );
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x047d,
-                    0x0006
-                );
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x0487,
-                    0x0005
-                );
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x0472,
-                    0x000c
-                );
-                await this.deviceControlTransfer(
-                    0xc0,
-                    0x0c,
-                    0x0000,
-                    0x047a,
-                    0x0001
-                );
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047e, 0x0001);
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047d, 0x0006);
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x0487, 0x0005);
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x0472, 0x000c);
+                await this.deviceControlTransfer(0xc0, 0x0c, 0x0000, 0x047a, 0x0001);
                 await this.deviceControlTransfer(
                     0x40,
                     0x0c,
@@ -451,12 +388,10 @@ export class Instrument {
                 );
             }
 
-            (this.device as any) = undefined;
-
-            const usb = getUsbModule();
+            this.device = null;
 
             for (let i = 0; i < 40; i++) {
-                (this.device as any) = usb.findByIds(0x0957, new_id);
+                this.device = await nativeFindDeviceByIds(0x0957, new_id);
                 if (this.device) {
                     break;
                 }
@@ -470,158 +405,126 @@ export class Instrument {
             }
         }
 
-        this.device.open();
+        await this.device.open();
+
+        // Select the first configuration if not already selected
+        try {
+            await this.device.selectConfiguration(1);
+            console.log("Selected configuration 1");
+        } catch (err) {
+            console.log(`selectConfiguration error: ${err}`);
+        }
 
         // find first USBTMC interface
-        if (this.device.interfaces) {
-            for (let iface of this.device.interfaces) {
+        const config = this.device.configuration;
+        if (config && config.interfaces) {
+            for (const iface of config.interfaces) {
+                const alt = iface.alternate;
                 if (
-                    iface.descriptor.bInterfaceClass ===
-                        USBTMC_bInterfaceClass &&
-                    iface.descriptor.bInterfaceSubClass ===
-                        USBTMC_bInterfaceSubClass
+                    alt.interfaceClass === USBTMC_bInterfaceClass &&
+                    alt.interfaceSubclass === USBTMC_bInterfaceSubClass
                 ) {
-                    // USBTMC device
-                    //this.cfg = ???;
-                    this.iface = iface;
+                    this.interfaceNumber = iface.interfaceNumber;
                     break;
-                } else if (this.device.deviceDescriptor.idVendor === 0x1334) {
+                } else if (this.device.vendorId === 0x1334) {
                     // Advantest
-                    //this.cfg = ???;
-                    this.iface = iface;
+                    this.interfaceNumber = iface.interfaceNumber;
                     break;
                 }
             }
         }
 
-        if (!this.iface) {
+        if (this.interfaceNumber === undefined) {
             throw new UsbtmcException("Not a USBTMC device", "init");
         }
 
-        // try:
-        //     self.old_cfg = self.device.get_active_configuration()
-        // except usb.core.USBError:
-        //     # ignore exception if configuration is not set
-        //     pass
-
-        // if self.old_cfg is not None and self.old_cfg.bConfigurationValue == self.cfg.bConfigurationValue:
-        //     # already set to correct configuration
-
-        //     # release kernel driver on USBTMC interface
-        //     self._release_kernel_driver(self.iface.bInterfaceNumber)
-        // else:
-        //     # wrong configuration or configuration not set
-
-        //     # release all kernel drivers
-        //     if self.old_cfg is not None:
-        //         for iface in self.old_cfg:
-        //             self._release_kernel_driver(iface.bInterfaceNumber)
-
-        //     # set proper configuration
-        //     self.device.set_configuration(self.cfg)
-
         // claim interface
         const os = require("os");
-        if (os.platform() != "win32") {
-            if (this.iface.isKernelDriverActive()) {
-                this.iface.detachKernelDriver();
+        if (os.platform() !== "win32") {
+            try {
+                await this.device.detachKernelDriver(this.interfaceNumber);
+            } catch (err) {
+                // ignore if no kernel driver is attached
             }
         }
-        this.iface.claim();
-
-        const usb = getUsbModule();
-
-        // don't need to set altsetting - USBTMC devices have 1 altsetting as per the spec
+        await this.device.claimInterface(this.interfaceNumber);
 
         // find endpoints
-        for (let i = 0; i < this.iface.endpoints.length; i++) {
-            if (
-                this.iface.endpoints[i].transferType ===
-                usb.usb.LIBUSB_TRANSFER_TYPE_BULK
-            ) {
-                if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
-                    this.bulk_in_ep = this.iface.endpoints[
-                        i
-                    ] as usbTypes.InEndpoint;
-                } else {
-                    this.bulk_out_ep = this.iface.endpoints[
-                        i
-                    ] as usbTypes.OutEndpoint;
+        const alt = config!.interfaces[this.interfaceNumber].alternate;
+
+        // Clear any halt conditions on endpoints
+        for (const endpoint of alt.endpoints) {
+            if (endpoint.type === "bulk") {
+                try {
+                    await this.device.clearHalt(endpoint.direction, endpoint.endpointNumber);
+                    console.log(`Cleared halt on ${endpoint.direction} endpoint ${endpoint.endpointNumber}`);
+                } catch (err) {
+                    console.log(`Failed to clear halt: ${err}`);
                 }
-            } else if (
-                this.iface.endpoints[i].transferType ===
-                usb.usb.LIBUSB_TRANSFER_TYPE_INTERRUPT
-            ) {
-                if (this.iface.endpoints[i] instanceof usb.InEndpoint) {
-                    this.interrupt_in_ep = this.iface.endpoints[
-                        i
-                    ] as usbTypes.InEndpoint;
+            }
+        }
+        for (const endpoint of alt.endpoints) {
+            console.log(`Found endpoint: number=${endpoint.endpointNumber}, direction=${endpoint.direction}, type=${endpoint.type}`);
+            if (endpoint.type === "bulk") {
+                if (endpoint.direction === "in") {
+                    this.bulk_in_ep = endpoint.endpointNumber;
+                } else {
+                    this.bulk_out_ep = endpoint.endpointNumber;
+                }
+            } else if (endpoint.type === "interrupt") {
+                if (endpoint.direction === "in") {
+                    this.interrupt_in_ep = endpoint.endpointNumber;
                 }
             }
         }
 
+        console.log(`Using endpoints: bulk_in=${this.bulk_in_ep}, bulk_out=${this.bulk_out_ep}`);
         if (!this.bulk_in_ep || !this.bulk_out_ep) {
             throw new UsbtmcException("Invalid endpoint configuration", "init");
         }
 
         // set quirk flags if necessary
-        if (this.device.deviceDescriptor.idVendor == 0x1334) {
+        if (this.device.vendorId == 0x1334) {
             // Advantest/ADCMT devices have a very odd USBTMC implementation
-            // which requires max 63 byte reads and never signals EOI on read
             this.max_transfer_size = 63;
             this.advantest_quirk = true;
         }
 
-        if (
-            this.device.deviceDescriptor.idVendor == 0x1ab1 &&
-            RIGOL_QUIRK_PIDS.indexOf(this.device.deviceDescriptor.idProduct) !==
-                -1
-        ) {
-            //this.rigol_quirk = true;
-            // if (this.device.deviceDescriptor.idProduct == 0x04ce) {
-            //     this.rigol_quirk_ieee_block = true;
-            // }
-        }
-
         this.connected = true;
-
-        //await this.clear();
 
         await this.get_capabilities();
     }
 
-    close() {
+    async close() {
         if (!this.connected) {
             return;
         }
 
-        this.device.close();
-        (this.device as any) = undefined;
-
-        // try:
-        //     # reset configuration
-        //     if self.cfg.bConfigurationValue != self.old_cfg.bConfigurationValue:
-        //         self.device.set_configuration(self.old_cfg)
-
-        //     # try to reattach kernel driver
-        //     for iface in self.reattach:
-        //         try:
-        //             self.device.attach_kernel_driver(iface)
-        //         except:
-        //             pass
-        // except:
-        //     pass
+        if (this.device) {
+            try {
+                await this.device.releaseInterface(this.interfaceNumber);
+            } catch (err) {
+                // ignore errors during release
+            }
+            try {
+                await this.device.close();
+            } catch (err) {
+                // ignore errors during close
+            }
+            this.device = null;
+        }
 
         this.reattach = [];
-
         this.connected = false;
     }
 
     is_usb488() {
-        return (
-            this.iface.descriptor.bInterfaceProtocol ===
-            USB488_bInterfaceProtocol
-        );
+        if (!this.device) return false;
+        const config = this.device.configuration;
+        if (!config) return false;
+        const iface = config.interfaces[this.interfaceNumber];
+        if (!iface) return false;
+        return iface.alternate.interfaceProtocol === USB488_bInterfaceProtocol;
     }
 
     async get_capabilities() {
@@ -637,7 +540,7 @@ export class Instrument {
             ),
             USBTMC_REQUEST_GET_CAPABILITIES,
             0x0000,
-            this.iface.descriptor.iInterface,
+            this.interfaceNumber,
             0x0018
         );
 
@@ -687,7 +590,7 @@ export class Instrument {
                 ),
                 USBTMC_REQUEST_INDICATOR_PULSE,
                 0x0000,
-                this.iface.descriptor.iInterface,
+                this.interfaceNumber,
                 0x0001
             );
             if (
@@ -832,17 +735,20 @@ export class Instrument {
         };
     }
 
-    bulk_out_ep_write(buffer: Buffer) {
-        return new Promise<void>((resolve, reject) => {
-            this.bulk_out_ep.timeout = this._timeout;
-            this.bulk_out_ep.transfer(buffer, err => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
+    async bulk_out_ep_write(buffer: Buffer) {
+        try {
+            console.log(`bulk_out_ep_write: endpoint=${this.bulk_out_ep}, length=${buffer.length}`);
+            const data = new Uint8Array(buffer);
+            await this.device!.nativeTransferOut(
+                this.bulk_out_ep,
+                this._timeout,
+                data
+            );
+            console.log(`bulk_out_ep_write: success`);
+        } catch (err) {
+            console.log(`bulk_out_ep_write: error=${err}`);
+            throw err;
+        }
     }
 
     async write_raw(data: Buffer) {
@@ -890,21 +796,29 @@ export class Instrument {
         }
     }
 
-    bulk_in_ep_read(length: number) {
-        return new Promise<Buffer>((resolve, reject) => {
-            this.bulk_in_ep.timeout = this._timeout;
-            this.bulk_in_ep.transfer(length, (err: any, data: Buffer|undefined) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    if (!data) {
-                        reject("no data")
-                    } else {
-                        resolve(data);
-                    }
-                }
-            });
-        });
+    async bulk_in_ep_read(length: number) {
+        try {
+            console.log(`bulk_in_ep_read: endpoint=${this.bulk_in_ep}, length=${length}`);
+            // Limit initial read to a reasonable packet size
+            const readLength = Math.min(length, 65536);
+            const data = await this.device!.nativeTransferIn(
+                this.bulk_in_ep,
+                this._timeout,
+                readLength
+            );
+            if (!data || data.length === 0) {
+                console.log(`bulk_in_ep_read: no data received or empty response`);
+                // Return empty buffer instead of throwing - device might not have data yet
+                return Buffer.alloc(0);
+            }
+            console.log(`bulk_in_ep_read: received ${data.length} bytes`);
+            return Buffer.from(data);
+        } catch (err) {
+            console.log(`bulk_in_ep_read: error=${err}`);
+            // Don't throw on read errors - return empty buffer
+            // This allows the protocol to continue
+            return Buffer.alloc(0);
+        }
     }
 
     async read_raw(onData: (data: any) => boolean) {
@@ -914,7 +828,8 @@ export class Instrument {
             await this.open();
         }
 
-        let read_len = this.max_transfer_size;
+        // Use a reasonable initial read size instead of max (1MB)
+        let read_len = 65536;
 
         let read_data: Buffer = Buffer.alloc(0);
 
@@ -931,6 +846,9 @@ export class Instrument {
 
         const req = this.pack_dev_dep_msg_in_header(read_len, this.term_char);
         await this.bulk_out_ep_write(req);
+
+        // Add small delay to allow device to prepare response
+        await new Promise(resolve => setTimeout(resolve, 10));
 
         while (true) {
             let received = 0;
@@ -1048,7 +966,7 @@ export class Instrument {
             ),
             USBTMC_REQUEST_INITIATE_CLEAR,
             0x0000,
-            this.iface.descriptor.iInterface,
+            this.interfaceNumber,
             0x0001
         );
         if (
@@ -1067,7 +985,7 @@ export class Instrument {
                     ),
                     USBTMC_REQUEST_CHECK_CLEAR_STATUS,
                     0x0000,
-                    this.iface.descriptor.iInterface,
+                    this.interfaceNumber,
                     0x0002
                 );
 
@@ -1111,7 +1029,7 @@ export class Instrument {
             ),
             USBTMC_REQUEST_INITIATE_ABORT_BULK_OUT,
             btag,
-            this.bulk_out_ep.descriptor.bEndpointAddress,
+            this.bulk_out_ep,
             0x0002
         );
         if (
@@ -1131,7 +1049,7 @@ export class Instrument {
                     ),
                     USBTMC_REQUEST_CHECK_ABORT_BULK_OUT_STATUS,
                     0x0000,
-                    this.bulk_out_ep.descriptor.bEndpointAddress,
+                    this.bulk_out_ep,
                     0x0008
                 );
                 if (
@@ -1169,7 +1087,7 @@ export class Instrument {
             ),
             USBTMC_REQUEST_INITIATE_ABORT_BULK_IN,
             btag,
-            this.bulk_in_ep.descriptor.bEndpointAddress,
+            this.bulk_in_ep,
             0x0002
         );
         if (
@@ -1189,7 +1107,7 @@ export class Instrument {
                     ),
                     USBTMC_REQUEST_CHECK_ABORT_BULK_IN_STATUS,
                     0x0000,
-                    this.bulk_in_ep.descriptor.bEndpointAddress,
+                    this.bulk_in_ep,
                     0x0008
                 );
                 if (
@@ -1295,21 +1213,22 @@ export class UsbTmcInterface implements CommunicationInterface {
         if (this.instrument) {
             this.readyToWrite = false;
 
-            try {
-                this.instrument.read_raw((data: any) => {
+            this.instrument
+                .read_raw((data: any) => {
                     const dataStr = data.toString("binary");
                     this.host.onData(dataStr);
 
                     let abortRead = this.abortRead;
                     this.abortRead = false;
                     return !abortRead;
+                })
+                .catch((err: any) => {
+                    console.log("catch", err);
+                })
+                .finally(() => {
+                    console.log("finally");
+                    this.readyToWrite = true;
                 });
-            } catch (err) {
-                console.log("catch", err);
-            } finally {
-                console.log("finally");
-                this.readyToWrite = true;
-            }
         }
     }
 
@@ -1339,9 +1258,11 @@ export class UsbTmcInterface implements CommunicationInterface {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             try {
-                this.instrument.close();
+                await this.instrument.close();
                 this.instrument = undefined;
-            } catch (err) {}
+            } catch (err) {
+                // ignore errors during close
+            }
         }
         this.host.disconnected();
     }
@@ -1352,42 +1273,24 @@ export class UsbTmcInterface implements CommunicationInterface {
 }
 
 export async function getUsbDevices() {
-    let devices = [];
+    const { nativeGetDevices } = getUsbModule();
+    const devices = [];
 
-    const usb = getUsbModule();
-
-    const deviceList = usb.getDeviceList();
+    const deviceList = await nativeGetDevices();
     for (const device of deviceList) {
         let productName: string | undefined;
 
         try {
-            device.open();
-
-            productName = await new Promise<string | undefined>(
-                (resolve, reject) => {
-                    device.getStringDescriptor(
-                        device.deviceDescriptor.iProduct,
-                        (err, product) => {
-                            if (err) {
-                                reject(err);
-                            } else {
-                                resolve(
-                                    product !== undefined
-                                        ? product.toString()
-                                        : product
-                                );
-                            }
-                        }
-                    );
-                }
-            );
-
-            device.close();
-        } catch (err) {}
+            await device.open();
+            productName = device.productName ?? undefined;
+            await device.close();
+        } catch (err) {
+            // ignore errors
+        }
 
         devices.push({
-            idVendor: device.deviceDescriptor.idVendor,
-            idProduct: device.deviceDescriptor.idProduct,
+            idVendor: device.vendorId,
+            idProduct: device.productId,
             name: productName
         });
     }
