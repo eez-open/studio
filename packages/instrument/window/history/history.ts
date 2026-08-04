@@ -250,7 +250,7 @@ class HistoryCalendar {
     }
 
     getActivityCount(day: Date) {
-        return this.counters.get(formatDate(day, "YYYY-MM-DD")) || 0;
+        return this.counters.get(formatDate(day, "yyyy-MM-dd")) || 0;
     }
 
     async update(selectedDay?: Date) {
@@ -408,12 +408,12 @@ class HistoryCalendar {
     }
 
     incrementCounter(day: Date) {
-        const key = formatDate(day, "YYYY-MM-DD");
+        const key = formatDate(day, "yyyy-MM-dd");
         this.counters.set(key, (this.counters.get(key) || 0) + 1);
     }
 
     decrementCounter(day: Date) {
-        const key = formatDate(day, "YYYY-MM-DD");
+        const key = formatDate(day, "yyyy-MM-dd");
         this.counters.set(key, (this.counters.get(key) || 0) - 1);
     }
 }

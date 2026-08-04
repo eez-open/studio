@@ -156,10 +156,10 @@ if (isRenderer()) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export const DATE_FORMATS = [
-    { format: "L", description: "Locale default" },
-    { format: "l", description: "Locale default #2" },
-    { format: "LL", description: "Locale default #3" },
-    { format: "ll", description: "Locale default #4" }
+    { format: "MM/dd/yyyy", description: "Locale default" },
+    { format: "M/d/yyyy", description: "Locale default #2" },
+    { format: "MMMM d, yyyy", description: "Locale default #3" },
+    { format: "MMM d, yyyy", description: "Locale default #4" }
 ];
 
 export let getDateFormat: () => string;
@@ -179,7 +179,7 @@ if (isRenderer()) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const TIME_FORMATS = [{ format: "LTS", description: "Locale default" }];
+export const TIME_FORMATS = [{ format: "h:mm:ss a", description: "Locale default" }, { format: "HH:mm:ss", description: "Locale default" }];
 
 export let getTimeFormat: () => string;
 export let setTimeFormat: (value: string) => void;

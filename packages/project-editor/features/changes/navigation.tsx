@@ -25,7 +25,7 @@ import {
     getHashFromFilePath,
     getFilePathFromHash
 } from "./state";
-import { getMoment } from "eez-studio-shared/util";
+import { formatDateCalendar } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,9 +119,13 @@ export const ChangesTab = observer(
                     node.data.hash != UNSTAGED_HASH &&
                     node.data.hash != STAGED_HASH &&
                     !getFilePathFromHash(node.data.hash)
-                        ? `${node.data.hash.slice(0, 8)} • ${
-                              node.data.author_name
-                          } • ${getMoment()(node.data.date).calendar()}`
+                        ? (() => {
+                              let details = `${node.data.hash.slice(0, 8)} • ${node.data.author_name}`;
+                              if (node.data.date) {
+                                  details += ` • ${formatDateCalendar(node.data.date)}`;
+                              }
+                              return details;
+                          })()
                         : ""}
                 </div>
             </div>

@@ -558,7 +558,7 @@ export class BuildEezFlowLite {
         }
     }
 
-    buildDelaysCode() {
+    buildDelayVars() {
         if (this.delays.length == 0) {
             return undefined;
         }
@@ -566,7 +566,7 @@ export class BuildEezFlowLite {
         const build = new Build();
         build.startBuild();
 
-        build.line("// Delays");
+        build.line("// Delay variables");
         build.blockStart("typedef struct delay_t {");
         build.line("bool ticking;");
         build.line("uint32_t tick_time;");
@@ -577,6 +577,17 @@ export class BuildEezFlowLite {
             build.line(`static delay_t ${delay.varName};`);
         }
         build.line("");
+
+        return build.result;
+    }
+
+    buildDelaysCode() {
+        if (this.delays.length == 0) {
+            return undefined;
+        }
+
+        const build = new Build();
+        build.startBuild();
 
         for (const delay of this.delays) {
             build.blockStart(`static void ${delay.varName}_tick(void) {`);

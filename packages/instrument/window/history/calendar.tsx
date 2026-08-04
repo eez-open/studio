@@ -167,7 +167,7 @@ export const Month = observer(
 
             return (
                 <div className={className} ref={ref => (this.element = ref)}>
-                    <div>{formatDate(month, "YYYY MMMM")}</div>
+                    <div>{formatDate(month, "yyyy MMMM")}</div>
                     <div>{this.renderDays()}</div>
                 </div>
             );

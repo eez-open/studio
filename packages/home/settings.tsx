@@ -56,7 +56,7 @@ import {
 } from "eez-studio-ui/header-with-body";
 
 import dbVacuum from "db-services/vacuum";
-import { getMoment } from "eez-studio-shared/util";
+import { formatDateRelative, formatDateWithLocaleAndFormat } from "eez-studio-shared/util";
 import type { IMruItem } from "main/settings";
 import { IconAction } from "eez-studio-ui/action";
 import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
@@ -677,9 +677,9 @@ const SelectedDatabaseDetails = observer(
                         </div>
                         <div>
                             Database compacted{" "}
-                            {getMoment()(
+                            {formatDateRelative(
                                 selectedDatabase.timeOfLastDatabaseCompactOperation
-                            ).fromNow()}
+                            )}
                             .
                         </div>
                         {selectedDatabase.isCompactDatabaseAdvisable && (
@@ -1050,9 +1050,7 @@ export const Settings = observer(
                                     key={dateFormat.format}
                                     value={dateFormat.format}
                                 >
-                                    {getMoment()(new Date())
-                                        .locale(settingsController.locale)
-                                        .format(dateFormat.format)}
+                                    {formatDateWithLocaleAndFormat(new Date(), settingsController.locale, dateFormat.format)}
                                 </option>
                             ))}
                         </SelectProperty>
@@ -1066,9 +1064,7 @@ export const Settings = observer(
                                     key={timeFormat.format}
                                     value={timeFormat.format}
                                 >
-                                    {getMoment()(new Date())
-                                        .locale(settingsController.locale)
-                                        .format(timeFormat.format)}
+                                    {formatDateWithLocaleAndFormat(new Date(), settingsController.locale, timeFormat.format)}
                                 </option>
                             ))}
                         </SelectProperty>

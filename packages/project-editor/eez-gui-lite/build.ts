@@ -473,6 +473,10 @@ export class BuildEezGuiLite {
 
         build.line("");
 
+        //
+        build.line("void save_selected_page(void);");
+        build.line("void restore_selected_page(void);");
+
         build.line("#ifdef __cplusplus");
         build.line('}');
         build.line("#endif");
@@ -494,6 +498,7 @@ export class BuildEezGuiLite {
         );
         build.line(`static eezgui_ctx_t eezgui_ctx;`);
         build.line("static void (*selected_page)(eezgui_ctx_t *ctx);");
+        build.line("static void (*saved_selected_page)(eezgui_ctx_t *ctx);");
         build.line("");
 
         // global variables
@@ -528,14 +533,22 @@ export class BuildEezGuiLite {
             pages
         );
 
-        let delaysCode = this.buildFlow.buildDelaysCode();
-        if (delaysCode) {
-            build.text(delaysCode);
-        }
+        // make sure we catch all the Delay's accessible from Watch'es
+        this.buildFlow.buildWatchesCode(pages)
 
+        let delayVars = this.buildFlow.buildDelayVars();
+        if (delayVars) {
+            build.text(delayVars);
+        }
+        
         let watchesCode = this.buildFlow.buildWatchesCode(pages);
         if (watchesCode) {
             build.text(watchesCode);
+        }
+
+        let delaysCode = this.buildFlow.buildDelaysCode();
+        if (delaysCode) {
+            build.text(delaysCode);
         }
 
         if (pagesDefCode) {
@@ -602,6 +615,24 @@ export class BuildEezGuiLite {
         );
 
         build.line("selected_page(&eezgui_ctx);");
+
+        build.blockEnd("}");
+
+        // save_selected_page
+        build.blockStart(
+            "void save_selected_page() {"
+        );
+
+        build.line("saved_selected_page = selected_page;");
+
+        build.blockEnd("}");
+
+        // restore_selected_page
+        build.blockStart(
+            "void restore_selected_page() {"
+        );
+
+        build.line("selected_page = saved_selected_page;");
 
         build.blockEnd("}");
 
