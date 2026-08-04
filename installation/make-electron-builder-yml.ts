@@ -61,6 +61,7 @@ let files = [
     "help/**",
     "icon.icns",
     "icon.ico",
+    "icon.png",
     "LICENSE.TXT",
     "THIRD-PARTY-LICENSES.TXT",
     "node_modules/**",
@@ -203,7 +204,7 @@ files.push(
                 process.arch == "arm"
                     ? [{ target: "deb", arch: ["armv7l"] }]
                     : ["deb", "AppImage", "rpm"],
-            icon: "./icon.icns",
+            icon: "./icon.png",
             category: "Utility",
             synopsis: packageJson.description,
             description:

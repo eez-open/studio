@@ -7,9 +7,7 @@ export function getIcon() {
     if (os.platform() == "win32") {
         return path.resolve(`${sourceRootDir()}/../icon.ico`);
     } else {
-        return path.resolve(
-            `${sourceRootDir()}/eez-studio-ui/_images/eez_studio_logo.png`
-        );
+        return path.resolve(`${sourceRootDir()}/../icon.png`);
     }
 }
 
