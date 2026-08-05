@@ -140,6 +140,11 @@ export const Property = observer(
             }
 
             this.changeDocumentDisposer = autorun(() => {
+                // Force MobX to always track observable object properties
+                this.props.objects.forEach(obj => {
+                    getObjectPropertyValue(obj, this.props.propertyInfo);
+                });
+
                 const lastValue = this._lastValue;
                 this._lastValue = this._value;
                 if (!this.props.readOnly && this._value != lastValue) {
