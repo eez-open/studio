@@ -1259,7 +1259,7 @@ export class ProjectStore {
         this.editorsStore?.refresh(true);
 
         // Also exit full simulator mode if active
-        if (this.layoutModels.isDockerSimulatorMode) {
+        if (this.layoutModels?.isDockerSimulatorMode) {
             this.onExitFullSimulatorMode();
         }        
     }
@@ -1295,7 +1295,7 @@ export class ProjectStore {
         }
 
         // Also exit full simulator mode if active
-        if (this.layoutModels.isDockerSimulatorMode) {
+        if (this.layoutModels?.isDockerSimulatorMode) {
             await this.onExitFullSimulatorMode();
         }
     }
