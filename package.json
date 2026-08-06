@@ -2,6 +2,7 @@
     "name": "eezstudio",
     "author": "Envox <eez@envox.hr>",
     "description": "Cross-platform visual development tool and SCPI instrument controller",
+    "desktopName": "EEZ Studio",
     "homepage": "https://www.envox.hr/eez/studio/studio-introduction.html",
     "version": "0.30.0",
     "revision": "1",

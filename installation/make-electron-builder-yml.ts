@@ -94,8 +94,8 @@ let files = [
     "!node_modules/xterm/src/**",
     "!node_modules/koffi/src",
     "!node_modules/koffi/doc",
-    "!node_modules/tabulator-tables/src"
-    //"!node_modules/koffi/build/koffi/**"
+    "!node_modules/tabulator-tables/src",
+    "!node_modules/koffi/build/koffi/**"
 ];
 
 files.push(
@@ -204,6 +204,7 @@ files.push(
                 process.arch == "arm"
                     ? [{ target: "deb", arch: ["armv7l"] }]
                     : ["deb", "AppImage", "rpm"],
+            syncDesktopName: true,
             icon: "./icon.png",
             category: "Utility",
             synopsis: packageJson.description,
