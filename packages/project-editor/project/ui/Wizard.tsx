@@ -1,5 +1,6 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
 import fs from "fs";
+import { marked } from "marked";
 import { rmdir } from "fs/promises";
 import path from "path";
 import React from "react";
@@ -2700,12 +2701,11 @@ function PlatformDescription({ wizardModel }: { wizardModel: WizardModel }) {
         return null;
     }
 
-    const showdown = require("showdown");
-    const converter = new showdown.Converter();
     const html = {
-        __html: converter.makeHtml(
-            wizardModel.selectedProjectType.targetPlatform || ""
-        )
+        __html: marked.parse(
+            wizardModel.selectedProjectType.targetPlatform || "",
+            { mangle: false, headerIds: false }
+        ) as string
     };
 
     const targetPlatformLink =

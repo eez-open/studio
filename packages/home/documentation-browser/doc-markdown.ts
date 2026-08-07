@@ -86,16 +86,9 @@ class MarkdownBuilder {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-let markdownToHTML_converter: any;
-
 export function markdownToHTML(markdown: string) {
-    if (!markdownToHTML_converter) {
-        const showdown = require("showdown");
-        markdownToHTML_converter = new showdown.Converter();
-    }
-
     return {
-        __html: markdownToHTML_converter.makeHtml(markdown)
+        __html: marked.parse(markdown, { mangle: false, headerIds: false }) as string
     };
 }
 

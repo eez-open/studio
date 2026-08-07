@@ -8,6 +8,7 @@ import {
     IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
+import { marked } from "marked";
 
 import { ProjectContext } from "project-editor/project/context";
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
@@ -128,9 +129,9 @@ export const ReadmeEditor = observer(
             };
 
             if (this.context.project.readme.readmeFile && this.text) {
-                const showdown = require("showdown");
-                const converter = new showdown.Converter();
-                html = { __html: converter.makeHtml(this.text || "") };
+                html = {
+                    __html: marked.parse(this.text || "", { mangle: false, headerIds: false }) as string
+                };
             } else {
                 html = { __html: "" };
                 style.height = "100%";

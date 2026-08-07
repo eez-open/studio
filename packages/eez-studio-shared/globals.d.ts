@@ -8,8 +8,6 @@ declare const EEZStudio: {
     remote: any;
 };
 
-declare module "quill";
-
 //
 interface HTMLCanvasElement {
     transferControlToOffscreen(): HTMLCanvasElement;

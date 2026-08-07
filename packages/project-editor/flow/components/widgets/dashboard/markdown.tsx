@@ -1,4 +1,5 @@
 import React from "react";
+import { marked } from "marked";
 
 import {
     registerClass,
@@ -73,9 +74,9 @@ export class MarkdownWidget extends Widget {
         width: number,
         height: number
     ): React.ReactNode {
-        const showdown = require("showdown");
-        const converter = new showdown.Converter();
-        const html = { __html: converter.makeHtml(this.text || "") };
+        const html = {
+            __html: marked.parse(this.text || "", { mangle: false, headerIds: false }) as string
+        };
         return (
             <>
                 <div dangerouslySetInnerHTML={html} />

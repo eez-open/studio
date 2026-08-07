@@ -10,6 +10,8 @@ import { capitalize } from "eez-studio-shared/string";
 
 import { ListContainer, List, IListNode } from "eez-studio-ui/list";
 
+import Quill from 'quill';
+
 export const PropertyEnclosure = observer(
     class PropertyEnclosure extends React.Component<
         {
@@ -356,12 +358,8 @@ export const RichTextProperty = observer(
         quill: any;
 
         componentDidMount() {
-            let Quill = (window as any).Quill;
-            if (!Quill && (window as any).require) {
-                Quill = (window as any).require("quill");
-            }
 
-            this.quill = new Quill(this.div, {
+            this.quill = new Quill(this.div!, {
                 theme: "snow"
             });
 
@@ -414,12 +412,7 @@ export const StaticRichTextProperty = observer(
         quill: any;
 
         componentDidMount() {
-            let Quill = (window as any).Quill;
-            if (!Quill && (window as any).require) {
-                Quill = (window as any).require("quill");
-            }
-
-            this.quill = new Quill(this.div, {
+            this.quill = new Quill(this.div!, {
                 modules: {
                     toolbar: false
                 },
