@@ -779,15 +779,18 @@ const Items = observer(
                                 title="Create a New Scrapbook Item from the Clipboard"
                                 icon="material:content_paste"
                                 iconSize={22}
-                                onClick={() => {
-                                    if (pasteModel.sourceProjectStore) {
-                                        model.pasteIntoNewItem(
-                                            pasteModel.sourceProjectStore
-                                        );
+                                onClick={async () => {
+                                    if (pasteModel.serializedData) {
+                                        const sourceProjectStore = await pasteModel.getSourceProjectStore();
+                                        if (sourceProjectStore) {
+                                            model.pasteIntoNewItem(
+                                                sourceProjectStore
+                                            );
+                                        }
                                     }
                                 }}
                                 enabled={
-                                    pasteModel.sourceProjectStore != undefined
+                                    pasteModel.serializedData != undefined
                                 }
                             />
                             <IconAction
@@ -932,20 +935,23 @@ const ItemDetails = observer(
                                 title="Paste Clipboard Content into Select Scrapbook Item"
                                 icon="material:content_paste"
                                 iconSize={22}
-                                onClick={() => {
+                                onClick={async () => {
                                     if (
                                         model.store.selectedItem &&
-                                        pasteModel.sourceProjectStore
+                                        pasteModel.serializedData
                                     ) {
-                                        model.pasteIntoExistingItem(
-                                            model.store.selectedItem,
-                                            pasteModel.sourceProjectStore
-                                        );
+                                        const sourceProjectStore = await pasteModel.getSourceProjectStore();
+                                        if (sourceProjectStore) {
+                                            model.pasteIntoExistingItem(
+                                                model.store.selectedItem,
+                                                sourceProjectStore
+                                            );
+                                        }
                                     }
                                 }}
                                 enabled={
                                     model.store.selectedItem &&
-                                    pasteModel.sourceProjectStore != undefined
+                                    pasteModel.serializedData != undefined
                                 }
                             />
                         </div>

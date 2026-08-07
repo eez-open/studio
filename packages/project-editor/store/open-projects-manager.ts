@@ -365,12 +365,6 @@ export class OpenProjectsManager {
                 importDirective.projectFilePath
             );
 
-            console.log(
-                absoluteFilePath,
-                baseFilePath,
-                importDirective.projectFilePath
-            );
-
             try {
                 if (importDirective.projectFilePath) {
                     await this._openProject(

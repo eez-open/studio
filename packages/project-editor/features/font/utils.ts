@@ -20,6 +20,9 @@ export interface IGlyphBitmap {
 }
 
 export function serializePixelArray(pixelArrayAsNumberArray: number[]) {
+    if (typeof pixelArrayAsNumberArray == "string") {
+        return pixelArrayAsNumberArray;
+    }
     return pixelArrayAsNumberArray
         .map(pixel => pixel.toString(16).padStart(2, "0"))
         .join("");

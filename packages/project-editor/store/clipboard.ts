@@ -1,7 +1,6 @@
 import { clipboard } from "@electron/remote";
 import {
     action,
-    computed,
     makeObservable,
     observable,
     reaction,
@@ -187,38 +186,29 @@ export function getEezStudioDataFromDragEvent(
 class PasteModel {
     changed: number = 0;
 
-    sourceProjectStore: ProjectStore | undefined;
+    serializedData: SerializedData | undefined;
 
     constructor() {
         makeObservable(this, {
             changed: observable,
-            sourceProjectStore: observable,
-            onPasteContentChanged: action,
-            serializedData: computed
+            serializedData: observable,
+            onPasteContentChanged: action
         });
 
         reaction(
             () => this.changed,
-            async () => {
+            () => {
                 let textBuffer = clipboard.readBuffer(CLIPOARD_DATA_ID);
                 if (textBuffer && textBuffer.length > 0) {
                     const text = textBuffer.toString("utf-8");
                     const serializedData: SerializedData = JSON.parse(text);
 
-                    const projectStore = ProjectStore.create({
-                        type: "read-only"
-                    });
-
-                    await projectStore.openFile(
-                        serializedData.originProjectFilePath
-                    );
-
                     runInAction(() => {
-                        this.sourceProjectStore = projectStore;
+                        this.serializedData = serializedData;
                     });
                 } else {
                     runInAction(() => {
-                        this.sourceProjectStore = undefined;
+                        this.serializedData = undefined;
                     });
                 }
             }
@@ -229,23 +219,20 @@ class PasteModel {
         this.changed++;
     }
 
-    get serializedData() {
-        if (!this.sourceProjectStore) {
+    async getSourceProjectStore() {
+        if (!this.serializedData) {
             return undefined;
         }
 
-        let textBuffer = clipboard.readBuffer(CLIPOARD_DATA_ID);
-        if (textBuffer && textBuffer.length > 0) {
-            const text = textBuffer.toString("utf-8");
-            let serializedData = clipboardDataToObject(
-                this.sourceProjectStore,
-                text
-            );
-            if (serializedData) {
-                return serializedData;
-            }
-        }
-        return undefined;
+        const projectStore = ProjectStore.create({
+            type: "read-only"
+        });
+
+        await projectStore.openFile(
+            this.serializedData.originProjectFilePath
+        );
+
+        return projectStore;
     }
 }
 
