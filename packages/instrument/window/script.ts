@@ -410,6 +410,71 @@ export async function runJavaScript(
 ) {
     const moduleNames = Object.keys(globalModules);
     const args = moduleNames.join(", ");
+
+    // use node "vm" module to check syntax erros
+    const vm = require("vm");
+    let scriptCode = `async function my_func(${args}) {
+${code}
+}`;
+    const scriptFilename = "script.js"
+    try {
+        new vm.Script(scriptCode, { filename: scriptFilename });
+    } catch (err: any) {
+        function extractLocationFromStack(stack: any, filename: string) {
+            const lines: string[] = stack.split("\n");
+
+            // Find "filename:LINE"
+            const headerIdx = lines.findIndex((l) => l.startsWith(filename + ":"));
+            if (headerIdx === -1) return null;
+
+            const lineMatch = lines[headerIdx].match(/:(\d+)$/);
+            if (!lineMatch) return null;
+            const line = parseInt(lineMatch[1], 10);
+
+            // The caret line ("^") is usually 2 lines below the header:
+            // header, sourceSnippet, caretLine
+            const caretIdx = lines.findIndex((l, i) => i > headerIdx && /^\s*\^/.test(l));
+            const column = caretIdx !== -1 ? lines[caretIdx].indexOf("^") + 1 : 1;
+
+            return { line, column };
+        }
+
+        let errMessage = err.message;
+        const skipTextAtStart = "Failed to construct 'ContextifyScript': ";
+        if (errMessage.startsWith(skipTextAtStart)) {
+            errMessage = errMessage.slice(skipTextAtStart.length);
+        }
+
+        let syntaxErrorMessage;
+        let lineNumber;
+        let columnNumber;
+
+        const parsed = extractLocationFromStack(err.stack, scriptFilename);
+
+        if (parsed) {
+            const { line, column } = parsed;
+            const lines = scriptCode.split("\n");
+            const sourceLine = lines[line - 1] ?? "";
+
+            lineNumber = line - 1; // skip first line (i.e. "async function my_func(${args}) {")
+            columnNumber = column;
+
+            syntaxErrorMessage =
+                `SyntaxError: ${errMessage} (line ${lineNumber}, column ${column})\n` +
+                `${String(lineNumber).padStart(4)} | ${sourceLine}\n` +
+                `${" ".repeat(4)} | ${" ".repeat(Math.max(0, column - 1))}^`;
+        } else {
+            syntaxErrorMessage = `SyntaxError: ${errMessage}`;
+
+            lineNumber = undefined;
+            columnNumber = undefined;
+        }
+
+        await new Promise((_, reject) => { reject({ message: syntaxErrorMessage, lineNumber, columnNumber }); });
+        return;
+    }
+
+    // no syntax error, continue
     const factoryFnCode = `return async (${args}) => {
 ${code}
 }`;
@@ -461,8 +526,6 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
             });
         })
         .catch(err => {
-            console.error(err);
-
             let lineNumber = 0;
             let columnNumber = 0;
             if (err?.stack?.match) {
@@ -470,6 +533,13 @@ function doExecuteShortcut(appStore: InstrumentAppStore, shortcut: IShortcut) {
                 if (match) {
                     lineNumber = parseInt(match[1]) - 2;
                     columnNumber = parseInt(match[2]);
+                }
+            } else {
+                if (err?.lineNumber != undefined) {
+                    lineNumber = err.lineNumber;
+                }
+                if (err?.columnNumber != undefined) {
+                    columnNumber = err.columnNumber;
                 }
             }
 

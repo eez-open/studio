@@ -332,7 +332,7 @@ export class ScriptViewComponent extends React.Component<
                         className="mb-0"
                         onDismiss={scriptsModel.dismissError}
                     >
-                        {scriptsModel.errorMessage}
+                        <pre className="mt-2 mb-0">{scriptsModel.errorMessage}</pre>
                     </AlertDanger>
                 )}
                 {codeEditor}
