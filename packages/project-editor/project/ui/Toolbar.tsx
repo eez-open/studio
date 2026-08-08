@@ -34,8 +34,10 @@ import {
     model as scrapbookModel
 } from "project-editor/store/scrapbook";
 import { closest } from "eez-studio-shared/dom";
+import { isDark } from "eez-studio-shared/color";
 import { Icon } from "eez-studio-ui/icon";
 import { dockerBuildState } from "project-editor/lvgl/docker-build/docker-build-state";
+import { ThemedColorInput } from "project-editor/ui-components/PropertyGrid/ThemedColorInput";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -518,6 +520,13 @@ const EditorButtons = observer(
                     {this.pageTabState && (
                         <PageZoomButton pageTabState={this.pageTabState} />
                     )}
+
+                    {this.pageTabState &&
+                        this.pageTabState.page.isUsedAsUserWidget && (
+                            <PreviewBackgroundColorButton
+                                pageTabState={this.pageTabState}
+                            />
+                        )}
                 </div>
             );
         }
@@ -552,6 +561,64 @@ const SelectLanguage = observer(
                         </option>
                     ))}
                 </select>
+            );
+        }
+    }
+);
+
+const PreviewBackgroundColorButton = observer(
+    class PreviewBackgroundColorButton extends React.Component<{
+        pageTabState: PageTabState;
+    }> {
+        onChange = action((newValue: any) => {
+            this.props.pageTabState.previewBackgroundColor = newValue;
+        });
+
+        onReset = action(() => {
+            this.props.pageTabState.previewBackgroundColor = undefined;
+        });
+
+        render() {
+            const { previewBackgroundColor } = this.props.pageTabState;
+
+            const iconColor = previewBackgroundColor
+                ? isDark(previewBackgroundColor)
+                    ? "#fff"
+                    : "#000"
+                : undefined;
+
+            return (
+                <div
+                    className="btn-group EezStudio_ProjectEditor_PreviewBackgroundColor"
+                    role="group"
+                    title="Preview background color (this editor session only)"
+                >
+                    <div className="EezStudio_ProjectEditor_PreviewBackgroundColor_Swatch">
+                        <ThemedColorInput
+                            value={
+                                previewBackgroundColor
+                            }
+                            onChange={this.onChange}
+                            readOnly={false}
+                            simpleMode={true}
+                        />
+                        <Icon
+                            icon="material:format_color_fill"
+                            size={20}
+                            className="EezStudio_ProjectEditor_PreviewBackgroundColor_Icon"
+                            style={iconColor ? { color: iconColor } : undefined}
+                        />
+                    </div>
+
+                    {previewBackgroundColor && (
+                        <IconAction
+                            title="Reset preview background color"
+                            icon="material:close"
+                            iconSize={16}
+                            onClick={this.onReset}
+                        />
+                    )}
+                </div>
             );
         }
     }

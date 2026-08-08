@@ -1156,11 +1156,13 @@ export const ThemedColorInput = observer(
         onChange: (newValue: any) => void;
         readOnly: boolean;
         onClick?: (event: React.MouseEvent) => void;
+        simpleMode?: boolean;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
         buttonRef = React.createRef<HTMLButtonElement>();
+        buttonRefInSimpleMode = React.createRef<HTMLInputElement>();
         dropDownRef = React.createRef<HTMLDivElement>();
         dropDownOpen: boolean | undefined = undefined;
         dropDownLeft = 0;
@@ -1217,18 +1219,20 @@ export const ThemedColorInput = observer(
             this.props.onChange(colorFormat.toString());
         };
 
-        updateDropDownPosition = action(() => {
-            const buttonEl = this.buttonRef.current;
-            if (!buttonEl) return;
+        get buttonEl() {
+            return this.props.simpleMode ? this.buttonRefInSimpleMode.current : this.buttonRef.current;
+        }
 
-            const rectButton = buttonEl.getBoundingClientRect();
+        updateDropDownPosition = action(() => {
+            if (!this.buttonEl) return;
+            const rectButton = this.buttonEl.getBoundingClientRect();
 
             const DROP_DOWN_WIDTH = COLOR_PICKER_WIDTH;
             const DROP_DOWN_HEIGHT = SV_PICKER_HEIGHT + 280;
 
-            this.dropDownLeft = rectButton.right - DROP_DOWN_WIDTH;
+            this.dropDownLeft = this.props.simpleMode ? rectButton.left : rectButton.right - DROP_DOWN_WIDTH;
 
-            this.dropDownTop = rectButton.bottom - 9;
+            this.dropDownTop = rectButton.bottom - 1;
             if (this.dropDownTop + DROP_DOWN_HEIGHT > window.innerHeight) {
                 this.dropDownTop = window.innerHeight - DROP_DOWN_HEIGHT;
             }
@@ -1265,8 +1269,7 @@ export const ThemedColorInput = observer(
         }
 
         openDropdown = action(() => {
-            const buttonEl = this.buttonRef.current;
-            if (!buttonEl) {
+            if (!this.buttonEl) {
                 return;
             }
 
@@ -1300,7 +1303,7 @@ export const ThemedColorInput = observer(
                     !closest(
                         event.target,
                         el =>
-                            this.buttonRef.current == el ||
+                            this.buttonEl == el ||
                             this.dropDownRef.current == el
                     )
                 ) {
@@ -1394,29 +1397,48 @@ export const ThemedColorInput = observer(
 
             return (
                 <div className="input-group">
-                    <input
-                        ref={this.props.inputRef}
-                        className="form-control"
-                        style={{
-                            color: inputColor,
-                            backgroundColor: inputBackgroundColor
-                        }}
-                        type="text"
-                        value={value}
-                        onChange={this.onChange}
-                        readOnly={readOnly}
-                        onDrop={this.onDrop}
-                        onDragOver={this.onDragOver}
-                        onClick={this.props.onClick}
-                    />
+                    {this.props.simpleMode === true ? (
+                        <input
+                            ref={
+                                this.buttonRefInSimpleMode
+                            }
+                            className="form-control"
+                            style={{
+                                color: inputColor,
+                                backgroundColor: inputBackgroundColor
+                            }}
+                            type="text"
+                            value={""}
+                            readOnly={true}
+                            onClick={this.openDropdown}
+                        />
+                    ) : (
+                        <input
+                            ref={this.props.inputRef}
+                            className="form-control"
+                            style={{
+                                color: inputColor,
+                                backgroundColor: inputBackgroundColor
+                            }}
+                            type="text"
+                            value={value}
+                            onChange={this.onChange}
+                            readOnly={readOnly}
+                            onDrop={this.onDrop}
+                            onDragOver={this.onDragOver}
+                            onClick={this.props.onClick}
+                        />
+                    )}
                     {!readOnly && (
                         <>
-                            <button
-                                ref={this.buttonRef}
-                                className="btn btn-secondary dropdown-toggle EezStudio_ThemedColorInput_DropdownButton"
-                                type="button"
-                                onClick={this.openDropdown}
-                            />
+                            {this.props.simpleMode !== true && (
+                                <button
+                                    ref={this.buttonRef}
+                                    className="btn btn-secondary dropdown-toggle EezStudio_ThemedColorInput_DropdownButton"
+                                    type="button"
+                                    onClick={this.openDropdown}
+                                />
+                            )}
                             {portal}
                         </>
                     )}

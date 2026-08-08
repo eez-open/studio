@@ -46,6 +46,7 @@ import type {
     IResizeHandler,
     IFlowContext
 } from "project-editor/flow/flow-interfaces";
+import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { ComponentGroupRenderer } from "project-editor/flow/editor/ComponentGroupRenderer";
 import {
     ComponentsContainerEnclosure,
@@ -1013,6 +1014,24 @@ export class Page extends Flow {
             !flowContext.document.findObjectById(getId(this)) &&
             !flowContext.projectStore.runtime;
 
+        let previewBackgroundColor: string | undefined;
+        if (
+            this.isUsedAsUserWidget &&
+            !isUserWidgetWidgetPage &&
+            !flowContext.projectStore.runtime
+        ) {
+            const editor =
+                flowContext.projectStore.editorsStore.getEditorByObject(
+                    this
+                );
+
+            const themedColor = (editor?.state as PageTabState)?.previewBackgroundColor;
+
+            if (themedColor) {
+                previewBackgroundColor = getThemedColor(flowContext.projectStore, themedColor).colorValue;
+            }
+        }
+
         let pageBackground;
         if (
             !flowContext.projectStore.projectTypeTraits.isDashboard &&
@@ -1025,7 +1044,10 @@ export class Page extends Flow {
                     width={width}
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
-                        if (pageStyle) {
+                        if (previewBackgroundColor) {
+                            ctx.fillStyle = previewBackgroundColor;
+                            ctx.fillRect(0, 0, width, height);
+                        } else if (pageStyle) {
                             eezGuiDraw.setProject(flowContext.projectStore.project);
                             eezGuiDraw.drawBackground(
                                 ctx,

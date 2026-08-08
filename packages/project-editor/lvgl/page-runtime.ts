@@ -52,8 +52,10 @@ import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import {
     LVGLStylePropCode,
     LVGL_CONSTANTS_ALL,
-    LVGL_CONSTANTS_ALL_95
+    LVGL_CONSTANTS_ALL_95,
+    LVGL_STYLE_PROP_CODES
 } from "project-editor/lvgl/lvgl-constants";
+import { getSelectorCode } from "project-editor/lvgl/style-helper";
 import {
     BUILT_IN_FONTS,
     pad_bottom_property_info,
@@ -62,7 +64,7 @@ import {
     pad_top_property_info
 } from "./style-catalog";
 import type { LVGLStyleObjects } from "project-editor/lvgl/style";
-import type { Theme } from "project-editor/features/style/theme";
+import { getThemedColor, type Theme } from "project-editor/features/style/theme";
 import {
     NamingConvention,
     USER_WIDGET_IDENTIFIER_SEPARATOR,
@@ -832,13 +834,50 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                             this.projectStore.editorsStore.getEditorByObject(
                                 this.page
                             );
-                        if (editor) {
-                            const pageTabState = editor.state as PageTabState;
-                            if (pageTabState?.timeline?.isEditorActive) {
-                                this.wasm._lvglSetTimelinePosition(
-                                    pageTabState.timeline.position
-                                );
-                            }
+                        const pageTabState = editor?.state as
+                            | PageTabState
+                            | undefined;
+
+                        if (pageTabState?.timeline?.isEditorActive) {
+                            this.wasm._lvglSetTimelinePosition(
+                                pageTabState.timeline.position
+                            );
+                        }
+
+                        if (
+                            this.page.isUsedAsUserWidget &&
+                            pageTabState?.previewBackgroundColor
+                        ) {
+                            const selectorCode = getSelectorCode(
+                                this.page,
+                                "MAIN",
+                                "DEFAULT"
+                            );
+
+                            const colorValue = getThemedColor(this.projectStore, pageTabState?.previewBackgroundColor).colorValue;
+
+                            this.lvglSetAndUpdateColor(
+                                colorValue,
+                                (wasm, colorNum) => {
+                                    wasm._lvglObjSetLocalStylePropColor(
+                                        pageObj,
+                                        this.getLvglStylePropCode(
+                                            LVGL_STYLE_PROP_CODES.LV_STYLE_BG_COLOR
+                                        ),
+                                        colorNum,
+                                        selectorCode
+                                    );
+                                }
+                            );
+
+                            this.wasm._lvglObjSetLocalStylePropNum(
+                                pageObj,
+                                this.getLvglStylePropCode(
+                                    LVGL_STYLE_PROP_CODES.LV_STYLE_BG_OPA
+                                ),
+                                255,
+                                selectorCode
+                            );
                         }
 
                         this.wasm._lvglScreenLoad(-1, pageObj);

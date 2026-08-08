@@ -93,13 +93,18 @@ export class PageTabState extends FlowTabState {
         this._timeline = value;
     }
 
+    // Background color used to preview a User Widget over a non-default
+    // background (e.g. to check visibility on dark screens).
+    previewBackgroundColor: string | undefined = undefined;
+
     constructor(object: IEezObject, transform?: Transform) {
         super(object as Flow);
 
         makeObservable(this, {
             _transform: observable,
             transform: computed,
-            frontFace: computed
+            frontFace: computed,
+            previewBackgroundColor: observable
         });
 
         this.widgetContainerFrontFace = new PageTreeObjectAdapter(
