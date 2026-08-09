@@ -245,6 +245,39 @@ const version_8 = {
     LVGL_PARTS: LVGL_PARTS_8
 };
 
+async function ensurePngDataURL(dataURL: string) {
+    function loadImageElement(url: string) {
+        return new Promise<HTMLImageElement | null>(resolve => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = () => resolve(null);
+            image.src = url;
+        });
+    }
+
+    if (dataURL.startsWith("data:image/png")) {
+        return dataURL;
+    }
+
+    const image = await loadImageElement(dataURL);
+    if (!image) {
+        return dataURL;
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+        return dataURL;
+    }
+
+    ctx.drawImage(image, 0, 0);
+
+    return canvas.toDataURL("image/png");
+}
+
 const version_9 = {
     wasmFlowRuntime: "project-editor/flow/runtime/wasm/lvgl_runtime_v9.2.2.js",
 
@@ -309,7 +342,9 @@ const version_9 = {
 
         const { LVGLImage } = require("./lv_img_conv_v9/index.js");
 
-        const embeddedImage = await bitmap.getEmbeddedImage();
+        const embeddedImage = await ensurePngDataURL(
+            await bitmap.getEmbeddedImage()
+        );
 
         try {
             const img = await new LVGLImage().from_png(embeddedImage, TO_IMAGE_MODE[bitmap.bpp.toString()], 0x000000, false, false, false, false);
