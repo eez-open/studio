@@ -111,7 +111,7 @@ export function initValuesAccesor(
     } else if (format === WaveformFormat.RIGOL_WORD) {
         length = Math.floor(values.length / 2);
         waveformData = (index: number) => {
-            return values[index];
+            return values[2 * index] | (values[2 * index + 1] << 8);;
         };
         value = (index: number) => {
             return offset + waveformData(index) * scale;
