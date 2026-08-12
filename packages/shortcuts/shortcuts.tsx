@@ -194,6 +194,9 @@ export const ShortcutsToolbarButtons = observer(
 const Keybinding = observer(
     class Keybinding extends React.Component<{ keybinding: string }, {}> {
         render() {
+            if (!this.props.keybinding) {
+                return null;
+            }
             return this.props.keybinding
                 .split("+")
                 .map(part => (
