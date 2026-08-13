@@ -1,5 +1,8 @@
 import { action, observable, runInAction } from "mobx";
 
+import { createElement } from "react";
+import htm from "htm";
+
 import { format } from "eez-studio-shared/units";
 
 import * as notification from "eez-studio-ui/notification";
@@ -365,6 +368,13 @@ function prepareJavaScriptModules(
                     JSON.stringify(value)
                 );
             }
+        },
+
+        createElement,
+        html: htm.bind(createElement),
+
+        delay: (delay_ms: number) => {
+            return new Promise(resolve => setTimeout(resolve, delay_ms))
         }
     };
 }
