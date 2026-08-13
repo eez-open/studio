@@ -37,6 +37,7 @@ import { createInstrumentListStore } from "instrument/window/lists/store";
 import { BaseList } from "instrument/window/lists/store-renderer";
 import { getScrapbookStore } from "instrument/window/history/scrapbook";
 import { unwatch } from "eez-studio-shared/notify";
+import * as notification from "eez-studio-ui/notification";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,6 +70,7 @@ export class InstrumentAppStore implements IEditor {
 
     autorunDisposer: IReactionDisposer | undefined;
     reactionDisposer: IReactionDisposer | undefined;
+    recordHistoryWarningDisposer: IReactionDisposer | undefined;
 
     _created = false;
 
@@ -180,6 +182,32 @@ export class InstrumentAppStore implements IEditor {
                 );
             }
         );
+
+        let wasConnected = false;
+        this.recordHistoryWarningDisposer = autorun(() => {
+            const isConnected = this.instrument.isConnected;
+            if (
+                isConnected &&
+                !wasConnected &&
+                !this.instrument.recordHistory
+            ) {
+                notification.warn(
+                    <div className="EezStudio_HistoryRecordingPausedNotification">
+                        History recording is paused for this instrument.
+                        Data from this session will not be recorded.
+                        <button
+                            className="btn btn-sm btn-outline-secondary ms-2"
+                            onClick={() =>
+                                this.instrument.toggleRecordHistory()
+                            }
+                        >
+                            Resume History Recording
+                        </button>
+                    </div>
+                );
+            }
+            wasConnected = isConnected;
+        });
     }
 
     onActivate() {
@@ -213,6 +241,10 @@ export class InstrumentAppStore implements IEditor {
         if (this.reactionDisposer) {
             this.reactionDisposer();
             this.reactionDisposer = undefined;
+        }
+        if (this.recordHistoryWarningDisposer) {
+            this.recordHistoryWarningDisposer();
+            this.recordHistoryWarningDisposer = undefined;
         }
         this.undoManager.onTerminate();
         this.history.onTerminate();

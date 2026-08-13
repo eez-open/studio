@@ -9,19 +9,19 @@ import {
 
 export type ToastId = React.ReactText;
 
-export function info(message: string, options?: ToastOptions) {
+export function info(message: React.ReactNode, options?: ToastOptions) {
     return toast.info(message, options);
 }
 
-export function success(message: string, options?: ToastOptions) {
+export function success(message: React.ReactNode, options?: ToastOptions) {
     return toast.success(message, options);
 }
 
-export function warn(message: string, options?: ToastOptions) {
+export function warn(message: React.ReactNode, options?: ToastOptions) {
     return toast.warn(message, options);
 }
 
-export function error(message: string, options?: ToastOptions) {
+export function error(message: React.ReactNode, options?: ToastOptions) {
     return toast.error(message, Object.assign({ autoClose: 10000 }, options));
 }
 
