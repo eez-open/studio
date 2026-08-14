@@ -298,9 +298,24 @@ export class InstrumentAppStore implements IEditor {
         }
     };
 
+    toggleConnect = () => {
+        if (this.instrument.connection.isIdle) {
+            this.instrument.openConnectDialog();
+        } else {
+            this.instrument.connection.disconnect();
+        }
+    };
+
     onKeyDown = (event: KeyboardEvent) => {
         if (event.target && $(event.target).parents(".modal").length > 0) {
             // ignore if target is modal dialog
+            return;
+        }
+
+        if (event.ctrlKey && event.shiftKey && event.keyCode == 67) {
+            // Ctrl+Shift+C - Connect/Disconnect
+            event.preventDefault();
+            this.toggleConnect();
             return;
         }
 

@@ -55,11 +55,32 @@ const Input = observer(
         historyItemIndex: number | undefined;
         moveCursorToTheEnd: boolean;
 
+        wasConnected: boolean;
+
         componentDidMount() {
             this.input.focus();
+            this.wasConnected = this.props.appStore.instrument.connection.isConnected;
         }
 
         componentDidUpdate() {
+            const isConnected =
+                this.props.appStore.instrument.connection.isConnected;
+
+            if (
+                isConnected &&
+                !this.wasConnected &&
+                this.props.appStore.navigationStore
+                    .mainNavigationSelectedItem ===
+                    this.props.appStore.navigationStore.terminalNavigationItem
+            ) {
+                // connection just established and Terminal tab is active,
+                // input is no longer disabled at this point so it can
+                // receive focus
+                this.input.focus();
+            }
+
+            this.wasConnected = isConnected;
+
             if (this.moveCursorToTheEnd) {
                 this.input.selectionStart = this.input.selectionEnd =
                     this.props.terminalState.command.length;

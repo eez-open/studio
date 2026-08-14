@@ -88,6 +88,10 @@ export const AppBar = observer(
             this.instrument.connection.disconnect();
         };
 
+        get connectShortcutTitle() {
+            return "Shortcut: Ctrl+Shift+C";
+        }
+
         onEditInstrumentLabel = () => {
             showDialog(
                 <EditInstrumentLabelDialog
@@ -133,6 +137,7 @@ export const AppBar = observer(
                         <button
                             className="btn btn-success btn-sm"
                             onClick={this.handleConnectClick}
+                            title={this.connectShortcutTitle}
                         >
                             Connect
                         </button>
@@ -146,6 +151,7 @@ export const AppBar = observer(
                         <button
                             className="btn btn-danger btn-sm"
                             onClick={this.handleDisconnectClick}
+                            title={this.connectShortcutTitle}
                         >
                             Disconnect
                         </button>
@@ -161,6 +167,7 @@ export const AppBar = observer(
                         <button
                             className="btn btn-danger btn-sm"
                             onClick={this.handleDisconnectClick}
+                            title={this.connectShortcutTitle}
                         >
                             Abort
                         </button>
