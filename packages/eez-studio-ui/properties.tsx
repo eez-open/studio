@@ -968,3 +968,9 @@ export class AbsoluteFileInputProperty extends React.Component<
         );
     }
 }
+
+export class EmptyProperty extends React.Component {
+    render() {
+        return null;
+    }
+}

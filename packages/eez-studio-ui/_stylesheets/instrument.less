@@ -1684,3 +1684,28 @@
         border-radius: 30px;
     }
 }
+
+.EezStudio_PropertyList_Fieldset {
+    position: relative;
+    border: 1px solid @borderColor;
+    border-radius: 2px;
+    padding: 10px;
+
+    &:first-child {
+        margin-top: 10px;
+    }
+
+    &:not(:last-child) {
+        margin-bottom: 20px;
+    }
+
+    & > .EezStudio_PropertyList_Legend {
+        position: absolute;
+        top: -12px;
+        left: 15px;
+        background: @backgroundColor;
+        padding: 0 8px;
+        font-size: 120%;
+        font-weight: bold;
+    }
+}

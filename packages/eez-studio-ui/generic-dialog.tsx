@@ -26,7 +26,8 @@ import {
     Radio,
     RangeProperty,
     ButtonProperty,
-    PasswordInputProperty
+    PasswordInputProperty,
+    EmptyProperty
 } from "eez-studio-ui/properties";
 import classNames from "classnames";
 import { Loader } from "eez-studio-ui//loader";
@@ -55,6 +56,7 @@ export interface IFieldProperties {
         | "radio"
         | "range"
         | "button"
+        | "group"
         | typeof FieldComponent;
     unit?: keyof typeof UNITS;
     enumItems?:
@@ -247,7 +249,9 @@ export const GenericDialog = observer(
         get values() {
             var values: any = {};
             for (const fieldProperties of this.props.dialogDefinition.fields) {
-                if (fieldProperties.type === "integer") {
+                if (fieldProperties.type === "group") {
+                    continue;
+                } else if (fieldProperties.type === "integer") {
                     values[fieldProperties.name] = parseInt(
                         this.fieldValues[fieldProperties.name]
                     );
@@ -433,9 +437,36 @@ export const GenericDialog = observer(
         });
 
         render() {
-            let fields = (
-                <PropertyList>
-                    {this.props.dialogDefinition.fields
+            const fieldGroups = [];
+
+            let fieldGroup: {
+                name?: string;
+                members: IFieldProperties[];
+            } | undefined;
+            for (const field of this.props.dialogDefinition.fields) {
+                if (field.type == "group") {
+                    fieldGroup = {
+                        name: field.name,
+                        members: []
+                    };
+                    fieldGroups.push(fieldGroup);
+                } else {
+                    if (fieldGroup == undefined) {
+                        fieldGroup = {
+                            members: []
+                        }
+                        fieldGroups.push(fieldGroup);
+                    }
+                    fieldGroup.members.push(field);
+                }
+            }
+
+
+            let fields = fieldGroups.map(fieldGroup => {
+
+
+                const propertyList = <PropertyList>
+                    {fieldGroup.members
                         .filter(fieldProperties => {
                             return (
                                 !fieldProperties.visible ||
@@ -574,6 +605,8 @@ export const GenericDialog = observer(
                                 Field = RangeProperty;
                             } else if (fieldProperties.type === "button") {
                                 Field = ButtonProperty;
+                            } else if (fieldProperties.type === "group") {
+                                Field = EmptyProperty;
                             } else {
                                 return (
                                     <PropertyEnclosure
@@ -643,24 +676,38 @@ export const GenericDialog = observer(
                                 </React.Fragment>
                             );
                         })}
-                </PropertyList>
-            );
+                </PropertyList>                
+
+                if (!fieldGroup.name) {
+                    return propertyList;
+                }
+
+                return (
+                    <div
+                        key={fieldGroup.name}
+                        className="EezStudio_PropertyList_Fieldset"
+                    >
+                        <div className="EezStudio_PropertyList_Legend">{fieldGroup.name}</div>
+                        {propertyList}
+                    </div>
+                );
+            });
 
             if (this.props.opts) {
                 if (this.props.opts.fieldsEnclosureDiv) {
-                    fields = (
+                    fields = [
                         <this.props.opts.fieldsEnclosureDiv>
                             {fields}
                         </this.props.opts.fieldsEnclosureDiv>
-                    );
+                    ];
                 }
 
                 if (this.props.opts.jsPanel) {
-                    fields = (
+                    fields = [
                         <div style={{ padding: 10, width: "100%" }}>
                             {fields}
                         </div>
-                    );
+                    ];
                 }
             }
 
