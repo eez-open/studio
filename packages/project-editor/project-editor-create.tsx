@@ -145,7 +145,7 @@ import { newComponentMenuItem } from "project-editor/flow/editor/ComponentsPalet
 
 import { LVGLPageEditorRuntime } from "project-editor/lvgl/page-runtime";
 
-export async function createProjectEditor(
+export function createProjectEditor(
     homeTabs: Tabs | undefined,
     ProjectEditorTabClass: typeof ProjectEditorTab
 ) {

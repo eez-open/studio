@@ -455,7 +455,7 @@ export class ProjectEditorTab implements IHomeTab {
 
             this.ProjectEditor = ProjectEditorView;
 
-            await initProjectEditor(tabs, ProjectEditorTab);
+            initProjectEditor(tabs, ProjectEditorTab);
             const projectStore = ProjectStore.create(
                 this.runMode
                     ? {
@@ -1404,6 +1404,6 @@ ipcRenderer.on("show-documentation-browser", async () => {
     const { showDocumentationBrowser } = await import(
         "home/documentation-browser"
     );
-    await initProjectEditor(tabs, ProjectEditorTab);
+    initProjectEditor(tabs, ProjectEditorTab);
     showDocumentationBrowser();
 });

@@ -9,7 +9,7 @@ export async function buildProject(filePath: string) {
     ipcRenderer.send("on-build-project-message", "Build project: " + filePath);
 
     try {
-        await initProjectEditor(undefined, undefined as any);
+        initProjectEditor(undefined, undefined as any);
 
         const projectStore = ProjectStore.create({
             type: "read-only"

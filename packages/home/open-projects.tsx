@@ -123,7 +123,7 @@ class OpenProjectsStore {
                         "utf8"
                     );
 
-                    await initProjectEditor(tabs, ProjectEditorTab);
+                    initProjectEditor(tabs, ProjectEditorTab);
                     const projectStore = ProjectStore.create({
                         type: "read-only"
                     });

@@ -1,7 +1,8 @@
-import type { ProjectEditorTab, Tabs } from "home/tabs-store";
+import { ProjectEditorTab, Tabs } from "home/tabs-store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { createProjectEditor } from "./project-editor-create";
 
-export async function initProjectEditor(
+export function initProjectEditor(
     homeTabs: Tabs | undefined,
     ProjectEditorTabClass: typeof ProjectEditorTab
 ) {
@@ -18,11 +19,7 @@ export async function initProjectEditor(
         return;
     }
 
-    const { createProjectEditor } = await import(
-        "project-editor/project-editor-create"
-    );
-
-    const projectEditor = await createProjectEditor(
+    const projectEditor = createProjectEditor(
         homeTabs,
         ProjectEditorTabClass
     );
