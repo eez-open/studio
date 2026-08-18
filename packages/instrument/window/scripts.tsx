@@ -40,8 +40,7 @@ import { showShortcutDialog } from "shortcuts/shortcut-dialog";
 import type { InstrumentAppStore } from "instrument/window/app-store";
 import {
     executeShortcut,
-    isShorcutRunning,
-    stopActiveShortcut
+    isShorcutRunning
 } from "instrument/window/script";
 import type { IModel } from "instrument/window/undo";
 
@@ -592,17 +591,9 @@ export function toolbarButtonsRender(appStore: InstrumentAppStore) {
                         className="btn-secondary"
                         title="Run"
                         onClick={scriptsModel.run}
+                        style={{ marginRight: 20 }}
                     />
                 )}
-            {isShorcutRunning() && (
-                <ButtonAction
-                    text="Stop"
-                    icon="material:stop"
-                    className="btn-danger"
-                    title="Stop"
-                    onClick={stopActiveShortcut}
-                />
-            )}
             <ButtonAction
                 text={
                     scriptsModel.terminalVisible

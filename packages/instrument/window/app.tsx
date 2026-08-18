@@ -23,6 +23,10 @@ import type { INavigationItem } from "instrument/window/navigation";
 import type { InstrumentObject } from "instrument/instrument-object";
 import { Icon } from "eez-studio-ui/icon";
 import { settingsController } from "home/settings";
+import {
+    isShorcutRunning,
+    stopActiveShortcut
+} from "instrument/window/script";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -213,6 +217,20 @@ export const AppBar = observer(
                 this.props.selectedItem &&
                 this.props.selectedItem.renderToolbarButtons();
 
+            let stopScriptButton;
+            if (isShorcutRunning()) {
+                stopScriptButton = (
+                    <ButtonAction
+                        text={"Stop"}
+                        icon="material:stop"
+                        className="btn-danger"
+                        title="Stop running script"
+                        onClick={stopActiveShortcut}
+                        style={{ marginRight: 20 }}
+                    />
+                );
+            }
+
             return (
                 <Header className="EezStudio_ConnectionBar">
                     <div>
@@ -236,6 +254,7 @@ export const AppBar = observer(
                     <div>{sendFile}</div>
 
                     <Toolbar className="EezStudio_InstrumentTools">
+                        {stopScriptButton}
                         {toolbarButtons}
                     </Toolbar>
                 </Header>
