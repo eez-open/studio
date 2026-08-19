@@ -37,7 +37,8 @@ import {
     updateObject,
     createObject,
     getProjectStore,
-    getClassInfo
+    getClassInfo,
+    insertObjectBefore
 } from "project-editor/store";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -804,7 +805,7 @@ export const TimelineKeyframePropertyUI = observer(
                     if (position <= keyframe.start) {
                         newKeyframe.start =
                             i == 0 ? 0 : widget.timeline[i - 1].end;
-                        this.context.insertObjectBefore(keyframe, newKeyframe);
+                        insertObjectBefore(keyframe, newKeyframe);
                         return;
                     }
 
@@ -943,7 +944,7 @@ export const TimelineKeyframePropertyUI = observer(
                             start: position
                         });
 
-                        this.context.insertObjectBefore(keyframe, newKeyframe);
+                        insertObjectBefore(keyframe, newKeyframe);
 
                         return;
                     }
@@ -2738,7 +2739,7 @@ export function setWidgetRectInTimelineEditor(
                 start: time
             });
 
-            projectStore.insertObjectBefore(keyframe, newKeyframe);
+            insertObjectBefore(keyframe, newKeyframe);
 
             if (!combineCommands) {
                 projectStore.undoManager.setCombineCommands(false);
@@ -2748,7 +2749,7 @@ export function setWidgetRectInTimelineEditor(
         }
 
         if (time <= keyframe.start) {
-            projectStore.insertObjectBefore(keyframe, newKeyframe);
+            insertObjectBefore(keyframe, newKeyframe);
 
             return;
         }

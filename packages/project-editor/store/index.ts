@@ -67,14 +67,8 @@ import { TypesStore } from "project-editor/store//types";
 
 import {
     addObject,
-    addObjects,
     deleteObject,
     deleteObjects,
-    insertObject,
-    insertObjectAfter,
-    insertObjectBefore,
-    replaceObject,
-    replaceObjects,
     updateObject
 } from "project-editor/store/commands";
 
@@ -1026,14 +1020,6 @@ export class ProjectStore {
         return eezObject;
     }
 
-    addObjects(parentObject: IEezObject, objects: EezObject[]) {
-        return addObjects(parentObject, objects);
-    }
-
-    insertObject(parentObject: IEezObject, index: number, object: EezObject) {
-        return insertObject(parentObject, index, object);
-    }
-
     updateObject(object: IEezObject, inputValues: any) {
         // make sure that plain JavaScript objects to EezObject's
         let values: any = {};
@@ -1165,30 +1151,6 @@ export class ProjectStore {
                 this.undoManager.setCombineCommands(false);
             }
         }
-    }
-
-    replaceObject(
-        object: IEezObject,
-        replaceWithObject: EezObject,
-        newParent?: IEezObject
-    ) {
-        return replaceObject(object, replaceWithObject, newParent);
-    }
-
-    replaceObjects(
-        objects: IEezObject[],
-        replaceWithObject: EezObject,
-        newParent?: IEezObject
-    ) {
-        return replaceObjects(objects, replaceWithObject, newParent);
-    }
-
-    insertObjectBefore(object: IEezObject, objectToInsert: any) {
-        return insertObjectBefore(object, objectToInsert);
-    }
-
-    insertObjectAfter(object: IEezObject, objectToInsert: any) {
-        return insertObjectAfter(object, objectToInsert);
     }
 
     objectsToClipboardData(objects: EezObject[]) {

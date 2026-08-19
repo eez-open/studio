@@ -777,15 +777,9 @@ const ArrayElementProperties = observer(
                 deleteObject(newObject);
 
                 if (addBefore) {
-                    this.context.insertObjectBefore(
-                        this.props.object,
-                        newObject
-                    );
+                    insertObjectBefore(this.props.object, newObject);
                 } else {
-                    this.context.insertObjectAfter(
-                        this.props.object,
-                        newObject
-                    );
+                    insertObjectAfter(this.props.object, newObject);
                 }
 
                 this.context.undoManager.setCombineCommands(false);
@@ -811,15 +805,9 @@ const ArrayElementProperties = observer(
                 );
 
                 if (addBefore) {
-                    this.context.insertObjectBefore(
-                        this.props.object,
-                        newObject
-                    );
+                    insertObjectBefore(this.props.object, newObject);
                 } else {
-                    this.context.insertObjectAfter(
-                        this.props.object,
-                        newObject
-                    );
+                    insertObjectAfter(this.props.object, newObject);
                 }
 
                 this.context.undoManager.setCombineCommands(false);

@@ -39,6 +39,7 @@ import {
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { createObject, objectToJson } from "project-editor/store/serialization";
+import { addObjects, insertObject } from "project-editor/store/commands";
 import { confirm } from "project-editor/core/util";
 import type { Flow } from "project-editor/flow/flow";
 
@@ -818,7 +819,7 @@ export function pasteItem(object: IEezObject) {
                             false
                         );
 
-                        return projectStore.insertObject(
+                        return insertObject(
                             pastePlace,
                             pastePlace.indexOf(object as EezObject) + 1,
                             pasteObject
@@ -857,7 +858,7 @@ export function pasteItem(object: IEezObject) {
                         )
                     );
 
-                    return projectStore.addObjects(pastePlace, pasteObjects);
+                    return addObjects(pastePlace, pasteObjects);
                 }
             } else {
                 const key = pastePlace.name;

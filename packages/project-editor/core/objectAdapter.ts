@@ -63,6 +63,10 @@ import { DragAndDropManager } from "project-editor/core/dd";
 
 import type { IResizeHandler } from "project-editor/flow/flow-interfaces";
 import { onAfterPaste } from "project-editor/core/util";
+import {
+    insertObjectAfter,
+    insertObjectBefore
+} from "project-editor/store/commands";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { isArray } from "eez-studio-shared/util";
@@ -421,31 +425,17 @@ export class TreeObjectAdapter {
     }
 
     canDuplicate() {
-        if (this.selectedItems.length == 0) {
-            return false;
-        }
-
-        for (let i = 0; i < this.selectedItems.length; i++) {
-            if (!canDuplicate(this.selectedItems[i].object)) {
-                return false;
-            }
-        }
-
-        return true;
+        return (
+            this.selectedItems.length > 0 &&
+            this.selectedItems.every(item => canDuplicate(item.object))
+        );
     }
 
     canCut() {
-        if (this.selectedItems.length == 0) {
-            return false;
-        }
-
-        for (let i = 0; i < this.selectedItems.length; i++) {
-            if (!canCut(this.selectedItems[i].object)) {
-                return false;
-            }
-        }
-
-        return true;
+        return (
+            this.selectedItems.length > 0 &&
+            this.selectedItems.every(item => canCut(item.object))
+        );
     }
 
     duplicateSelection() {
@@ -475,17 +465,10 @@ export class TreeObjectAdapter {
     }
 
     canCopy() {
-        if (this.selectedItems.length == 0) {
-            return false;
-        }
-
-        for (let i = 0; i < this.selectedItems.length; i++) {
-            if (!canCopy(this.selectedItems[i].object)) {
-                return false;
-            }
-        }
-
-        return true;
+        return (
+            this.selectedItems.length > 0 &&
+            this.selectedItems.every(item => canCopy(item.object))
+        );
     }
 
     copySelection() {
@@ -531,17 +514,10 @@ export class TreeObjectAdapter {
     }
 
     canDelete() {
-        if (this.selectedItems.length == 0) {
-            return false;
-        }
-
-        for (let i = 0; i < this.selectedItems.length; i++) {
-            if (!canDelete(this.selectedItems[i].object)) {
-                return false;
-            }
-        }
-
-        return true;
+        return (
+            this.selectedItems.length > 0 &&
+            this.selectedItems.every(item => canDelete(item.object))
+        );
     }
 
     deleteSelection() {
@@ -1199,7 +1175,7 @@ export class TreeAdapter {
                 DragAndDropManager.deleteDragItem(true, {
                     dropPlace: getParent(dropItem.object)
                 });
-                aNewObject = projectStore.insertObjectBefore(
+                aNewObject = insertObjectBefore(
                     dropItem.object,
                     dragObjectClone
                 );
@@ -1207,7 +1183,7 @@ export class TreeAdapter {
                 DragAndDropManager.deleteDragItem(true, {
                     dropPlace: getParent(dropItem.object)
                 });
-                aNewObject = projectStore.insertObjectAfter(
+                aNewObject = insertObjectAfter(
                     dropItem.object,
                     dragObjectClone
                 );

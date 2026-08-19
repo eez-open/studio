@@ -17,6 +17,7 @@ import { LVGLWidget } from "./internal";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
+    addObjects,
     createObject,
     propertyNotFoundMessage,
     propertyNotSetMessage
@@ -139,7 +140,7 @@ class LVGLAnimationImage extends EezObject {
             }
 
             if (objects.length > 1) {
-                project._store.addObjects(parentObject, objects);
+                addObjects(parentObject, objects);
                 return undefined;
             }
 

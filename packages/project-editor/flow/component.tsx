@@ -50,7 +50,9 @@ import {
     updateObject,
     createObject,
     ProjectStore,
-    getObjectIcon
+    getObjectIcon,
+    replaceObject,
+    replaceObjects
 } from "project-editor/store";
 import {
     isEezFlowLiteProject,
@@ -3579,11 +3581,7 @@ export class Widget extends Component {
 
         projectStore.undoManager.setCombineCommands(true);
 
-        const result = projectStore.replaceObject(
-            this,
-            selectWidget,
-            selectWidget.widgets
-        );
+        const result = replaceObject(this, selectWidget, selectWidget.widgets);
 
         projectStore.updateObject(this, {
             left: 0,
@@ -3698,7 +3696,7 @@ export class Widget extends Component {
 
         projectStore.undoManager.setCombineCommands(true);
 
-        const result = projectStore.replaceObjects(
+        const result = replaceObjects(
             fromWidgets,
             containerWidget,
             containerWidget.widgets
@@ -3766,7 +3764,7 @@ export class Widget extends Component {
 
         projectStore.undoManager.setCombineCommands(true);
 
-        const result = projectStore.replaceObjects(
+        const result = replaceObjects(
             fromWidgets,
             listWidget,
             containerWidget.widgets
@@ -3829,7 +3827,7 @@ export class Widget extends Component {
                 )
             );
 
-            return projectStore.replaceObjects(
+            return replaceObjects(
                 fromWidgets,
                 createObject<UserWidgetWidget>(
                     projectStore,
@@ -3842,7 +3840,8 @@ export class Widget extends Component {
                         userWidgetPageName: userWidgetName
                     },
                     ProjectEditor.UserWidgetWidgetClass
-                )
+                ),
+                undefined
             );
         } catch (error) {
             console.error(error);
@@ -3872,7 +3871,7 @@ export class Widget extends Component {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            return getProjectStore(fromWidgets[0]).replaceObjects(
+            return replaceObjects(
                 fromWidgets,
                 createObject<UserWidgetWidget>(
                     getProjectStore(fromWidgets[0]),
@@ -3885,7 +3884,8 @@ export class Widget extends Component {
                         userWidgetPageName
                     },
                     ProjectEditor.UserWidgetWidgetClass
-                )
+                ),
+                undefined
             );
         } catch (error) {
             console.error(error);

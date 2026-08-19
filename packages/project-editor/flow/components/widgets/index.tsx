@@ -28,7 +28,8 @@ import {
     createObject,
     getChildOfObject,
     updateObject,
-    getObjectPathAsString
+    getObjectPathAsString,
+    replaceObject
 } from "project-editor/store";
 import { getProjectStore, IContextMenuContext } from "project-editor/store";
 
@@ -2067,7 +2068,7 @@ export class UserWidgetWidget extends Widget {
 
             const projectStore = getProjectStore(this);
 
-            return projectStore.replaceObject(
+            return replaceObject(
                 getParent(this),
                 this,
                 createObject<ContainerWidget>(
