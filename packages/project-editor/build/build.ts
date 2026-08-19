@@ -587,7 +587,9 @@ export async function build(
             const defaultConfiguration =
                 project.settings.build.configurations[0];
             const buildResults =
-                configurationBuildResults[defaultConfiguration.name];
+                configurationBuildResults[
+                    defaultConfiguration?.name ?? "default"
+                ];
 
             parts = {};
             for (const buildResult of buildResults) {
