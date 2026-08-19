@@ -21,7 +21,9 @@ export class LayoutModels extends AbstractLayoutModels {
         splitterSize: 4,
         splitterExtra: 4,
         legacyOverflowMenu: false,
-        tabEnableRename: false
+        tabEnableRename: false,
+        tabSetMinWidth: 50,
+        tabSetMinHeight: 50,
     };
 
     static PAGES_TAB_ID = "PAGES";
@@ -400,11 +402,13 @@ export class LayoutModels extends AbstractLayoutModels {
                         children: [
                             {
                                 type: "row",
-                                weight: 15,
+                                width: 320,
+                                weight: 0,
                                 children: [
                                     {
                                         type: "tabset",
-                                        weight: 1,
+                                        weight: 0,
+                                        height: 300,
                                         enableClose: false,
                                         children: [
                                             LayoutModels.PAGES_TAB,
@@ -428,7 +432,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                     },
                                     {
                                         type: "tabset",
-                                        weight: 1,
+                                        weight: 0,
+                                        height: 300,
                                         enableClose: false,
                                         children: [
                                             {
@@ -445,7 +450,7 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "tabset",
-                                weight: 65,
+                                weight: 1,
                                 enableDeleteWhenEmpty: false,
                                 enableClose: false,
                                 id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
@@ -453,11 +458,12 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "row",
-                                weight: 20,
+                                weight: 0,
+                                width: 320,
                                 children: [
                                     {
                                         type: "tabset",
-                                        weight: 2,
+                                        weight: 1,
                                         children: [
                                             {
                                                 type: "tab",
@@ -471,7 +477,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                     },
                                     {
                                         type: "tabset",
-                                        weight: 1,
+                                        weight: 0,
+                                        height: 300,
                                         children: [
                                             LayoutModels.COMPONENTS_PALETTE_TAB
                                         ]
@@ -500,7 +507,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                 children: [
                                     {
                                         type: "tabset",
-                                        weight: 1,
+                                        weight: 0,
+                                        height: 200,
                                         enableClose: false,
                                         children: [
                                             LayoutModels.EXTENSION_DEFINITIONS_TAB
@@ -508,13 +516,14 @@ export class LayoutModels extends AbstractLayoutModels {
                                     },
                                     {
                                         type: "tabset",
-                                        weight: 5,
+                                        weight: 1,
                                         enableClose: false,
                                         children: [LayoutModels.SCPI_TAB]
                                     },
                                     {
                                         type: "tabset",
-                                        weight: 5,
+                                        weight: 0,
+                                        height: 300,
                                         enableClose: false,
                                         children: [
                                             LayoutModels.INSTRUMENT_COMMANDS_TAB
@@ -533,11 +542,11 @@ export class LayoutModels extends AbstractLayoutModels {
                             {
                                 type: "row",
                                 weight: 0,
-                                width: 420,
+                                width: 320,
                                 children: [
                                     {
                                         type: "tabset",
-                                        weight: 2,
+                                        weight: 1,
                                         children: [
                                             {
                                                 type: "tab",
@@ -572,7 +581,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                 children: [
                                     {
                                         type: "tabset",
-                                        weight: 1,
+                                        weight: 0,
+                                        height: 300,
                                         children: [
                                             LayoutModels.PAGES_TAB,
                                             LayoutModels.WIDGETS_TAB,
@@ -594,7 +604,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                     },
                                     {
                                         type: "tabset",
-                                        weight: 2,
+                                        weight: 0,
+                                        height: 300,
                                         children: [
                                             {
                                                 type: "tab",
@@ -622,7 +633,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                 children: [
                                     {
                                         type: "tabset",
-                                        weight: 1,
+                                        weight: 0,
+                                        height: 300,
                                         children: [
                                             {
                                                 type: "tab",
@@ -636,7 +648,7 @@ export class LayoutModels extends AbstractLayoutModels {
                                     },
                                     {
                                         type: "tabset",
-                                        weight: 2,
+                                        weight: 1,
                                         children: [
                                             {
                                                 type: "tab",
@@ -666,7 +678,7 @@ export class LayoutModels extends AbstractLayoutModels {
                         children: [
                             {
                                 type: "tabset",
-                                weight: 70,
+                                weight: 1,
                                 enableTabStrip: true,
                                 enableDrag: false,
                                 enableDrop: false,
@@ -684,11 +696,12 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "row",
-                                weight: 30,
+                                weight: 0,
+                                width: 320,
                                 children: [
                                     {
                                         type: "tabset",
-                                        weight: 50,
+                                        weight: 1,
                                         enableTabStrip: true,
                                         enableDrag: false,
                                         enableDrop: false,
@@ -706,7 +719,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                     },
                                     {
                                         type: "tabset",
-                                        weight: 50,
+                                        weight: 0,
+                                        height: 300,
                                         enableTabStrip: true,
                                         enableDrag: false,
                                         enableDrop: false,
@@ -749,7 +763,7 @@ export class LayoutModels extends AbstractLayoutModels {
                                         enableDrag: false,
                                         enableDrop: false,
                                         enableClose: false,
-                                        weight: 75,
+                                        weight: 1,
                                         children: [
                                             {
                                                 type: "tab",
@@ -765,7 +779,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                         enableDrag: false,
                                         enableDrop: false,
                                         enableClose: false,
-                                        weight: 25,
+                                        weight: 0,
+                                        height: 200,
                                         children: [
                                             {
                                                 type: "tab",
@@ -895,7 +910,7 @@ export class LayoutModels extends AbstractLayoutModels {
                                         enableDrag: false,
                                         enableDrop: false,
                                         enableClose: false,
-                                        weight: 75,
+                                        weight: 1,
                                         children: [
                                             {
                                                 type: "tab",
@@ -911,7 +926,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                         enableDrag: false,
                                         enableDrop: false,
                                         enableClose: false,
-                                        weight: 25,
+                                        weight: 0,
+                                        height: 200,
                                         children: [
                                             {
                                                 type: "tab",
@@ -947,7 +963,7 @@ export class LayoutModels extends AbstractLayoutModels {
                                         enableDrag: false,
                                         enableDrop: false,
                                         enableClose: false,
-                                        weight: 75,
+                                        weight: 1,
                                         children: [
                                             {
                                                 type: "tab",
@@ -963,7 +979,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                         enableDrag: false,
                                         enableDrop: false,
                                         enableClose: false,
-                                        weight: 25,
+                                        weight: 0,
+                                        height: 200,
                                         children: [
                                             {
                                                 type: "tab",
@@ -1103,7 +1120,8 @@ export class LayoutModels extends AbstractLayoutModels {
                                         enableDrag: false,
                                         enableDrop: false,
                                         enableClose: false,
-                                        weight: 50,
+                                        weight: 0,
+                                        height: 200,
                                         children: [
                                             {
                                                 type: "tab",
@@ -1119,7 +1137,7 @@ export class LayoutModels extends AbstractLayoutModels {
                                         enableDrag: false,
                                         enableDrop: false,
                                         enableClose: false,
-                                        weight: 50,
+                                        weight: 1,
                                         children: [
                                             {
                                                 type: "tab",
