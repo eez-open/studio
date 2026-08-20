@@ -1097,6 +1097,7 @@ export class Page extends Flow {
 
         let styleName;
         if (
+            flowContext.document.flow.object == this &&
             !flowContext.projectStore.projectTypeTraits.isLVGL && 
             !flowContext.projectStore.runtime && 
             this.isUsedAsUserWidget && 
