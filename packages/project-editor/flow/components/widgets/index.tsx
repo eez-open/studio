@@ -485,9 +485,6 @@ export class ContainerWidget extends Widget {
             toJS(this.dockingLayout) || {
                 global: {
                     borderEnableAutoHide: true,
-                    splitterSize: 4,
-                    splitterExtra: 4,
-                    legacyOverflowMenu: false,
                     tabEnableRename: false
                 },
                 borders: [

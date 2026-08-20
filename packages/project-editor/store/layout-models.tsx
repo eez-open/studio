@@ -16,14 +16,11 @@ import { settingsController } from "home/settings";
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LayoutModels extends AbstractLayoutModels {
-    static GLOBAL_OPTIONS = {
+    static GLOBAL_OPTIONS: FlexLayout.IGlobalAttributes = {
         borderEnableAutoHide: true,
-        splitterSize: 4,
-        splitterExtra: 4,
-        legacyOverflowMenu: false,
         tabEnableRename: false,
         tabSetMinWidth: 50,
-        tabSetMinHeight: 50,
+        tabSetMinHeight: 50
     };
 
     static PAGES_TAB_ID = "PAGES";
@@ -563,7 +560,7 @@ export class LayoutModels extends AbstractLayoutModels {
             },
             {
                 name: "rootRuntime",
-                version: 54,
+                version: 55,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     layout: {
@@ -571,8 +568,7 @@ export class LayoutModels extends AbstractLayoutModels {
                         children: [
                             {
                                 type: "row",
-                                weight: 0,
-                                width: 320,
+                                weight: 1,
                                 children: [
                                     {
                                         type: "tabset",
@@ -613,7 +609,7 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "tabset",
-                                weight: 1,
+                                weight: 3,
                                 enableClose: false,
                                 enableDeleteWhenEmpty: false,
                                 id: LayoutModels.RUNTIME_MODE_EDITORS_TABSET_ID,
@@ -621,8 +617,7 @@ export class LayoutModels extends AbstractLayoutModels {
                             },
                             {
                                 type: "row",
-                                weight: 0,
-                                width: 320,
+                                weight: 1,
                                 children: [
                                     {
                                         type: "tabset",

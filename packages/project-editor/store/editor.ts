@@ -442,11 +442,16 @@ export class EditorsStore {
         }
 
         try {
-            let icon = getObjectIcon(object);
-            if (typeof icon == "string") {
-                if (!icon.startsWith("material:") && !icon.startsWith("svg:")) {
-                    icon = "material:" + icon;
-                }
+            // the icon attribute must be a string, non-string icons
+            // (React elements) were never rendered in the tab button anyway
+            const objectIcon = getObjectIcon(object);
+            let icon: string | undefined;
+            if (typeof objectIcon == "string") {
+                icon =
+                    !objectIcon.startsWith("material:") &&
+                    !objectIcon.startsWith("svg:")
+                        ? "material:" + objectIcon
+                        : objectIcon;
             }
 
             for (let i = 0; i < editors.length; i++) {

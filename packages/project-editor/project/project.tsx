@@ -2071,10 +2071,9 @@ export class Project extends EezObject {
         ) {
             if (enabled) {
                 if (!layoutModel.getNodeById(tabId)) {
-                    const borderNode = layoutModel
-                        .getBorderSet()
-                        .getBorders()
-                        .find(border => border.getLocation() == borderLocation);
+                    const borderNode = layoutModel.getNodeById(
+                        "border_" + borderLocation.getName()
+                    );
 
                     if (borderNode) {
                         layoutModel.doAction(

@@ -102,11 +102,8 @@ export class LayoutModels extends AbstractLayoutModels {
     databaseSettings: FlexLayout.Model;
 
     get models(): ILayoutModel[] {
-        const global = {
+        const global: FlexLayout.IGlobalAttributes = {
             borderEnableAutoHide: true,
-            splitterSize: 4,
-            splitterExtra: 4,
-            legacyOverflowMenu: false,
             tabEnableRename: false
         };
         return [

@@ -129,11 +129,8 @@ export class LayoutModels {
         size: "small"
     };
 
-    static GLOBAL_OPTIONS = {
+    static GLOBAL_OPTIONS: FlexLayout.IGlobalAttributes = {
         borderEnableAutoHide: true,
-        splitterSize: 4,
-        splitterExtra: 4,
-        legacyOverflowMenu: false,
         tabEnableRename: false
     };
 

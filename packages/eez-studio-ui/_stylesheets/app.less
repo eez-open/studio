@@ -1363,6 +1363,13 @@ button.EezStudio_Action {
     height: 100%;
 }
 
+.flexlayout__layout {
+    // flexlayout-react >= 0.9 configures splitters via CSS variables instead
+    // of the splitterSize/splitterExtra global model attributes
+    --flexlayout-splitter-size: 4px;
+    --flexlayout-splitter-active-size: 8px;
+}
+
 .flexlayout__layout .EezStudio_PanelHeader {
     background-color: @panelHeaderColorInsideFlexLayout;
 }

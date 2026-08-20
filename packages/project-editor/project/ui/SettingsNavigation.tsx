@@ -219,7 +219,8 @@ export const SettingsEditor = observer(
                             enableDrag: false,
                             enableDrop: false,
                             enableClose: false,
-                            width: 240,
+                            weight: 0,
+                            minWidth: 240,
                             children: [
                                 {
                                     type: "tab",
@@ -327,7 +328,8 @@ export const SettingsContent = observer(
                                     enableDrag: false,
                                     enableDrop: false,
                                     enableClose: false,
-                                    height: 120,
+                                    weight: 0,
+                                    minHeight: 120,
                                     children: [
                                         {
                                             type: "tab",
