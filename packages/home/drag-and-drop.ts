@@ -21,7 +21,11 @@ export function handleDragAndDrop() {
             if (ev.dataTransfer.files.length > 0) {
                 $ev.preventDefault();
                 ev.dataTransfer.dropEffect = "copy";
-            } else {
+            } else if (!ev.defaultPrevented) {
+                // only refuse drags that no drop target accepted, otherwise
+                // forcing dropEffect to "none" here would suppress the drop
+                // event of the accepting target (flexlayout-react tab docking
+                // uses native HTML5 drag and drop since version 0.8)
                 ev.dataTransfer.dropEffect = "none";
             }
         }
