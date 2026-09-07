@@ -22,6 +22,8 @@ import {
     LVGLListWidget,
     LVGLLottieWidget,
     LVGLMenuWidget,
+    LVGLMenuPageWidget,
+    LVGLMenuSectionWidget,
     LVGLMessageBoxWidget,
     LVGLMeterWidget,
     LVGLPanelWidget,
@@ -39,6 +41,7 @@ import {
     LVGLTabWidget,
     LVGLTextareaWidget,
     LVGLTileViewWidget,
+    LVGLTileWidget,
     LVGLUserWidgetWidget,
     LVGLWindowWidget
 } from "./internal";
@@ -145,6 +148,8 @@ registerClass("LVGLListWidget", LVGLListWidget);
 registerClass("LVGLLottieWidget", LVGLLottieWidget);
 registerClass("LVGLKeyboardWidget", LVGLKeyboardWidget);
 registerClass("LVGLMenuWidget", LVGLMenuWidget);
+registerClass("LVGLMenuPageWidget", LVGLMenuPageWidget);
+registerClass("LVGLMenuSectionWidget", LVGLMenuSectionWidget);
 registerClass("LVGLMessageBoxWidget", LVGLMessageBoxWidget);
 registerClass("LVGLMeterWidget", LVGLMeterWidget);
 registerClass("LVGLQRCodeWidget", LVGLQRCodeWidget);
@@ -162,6 +167,7 @@ registerClass("LVGLTabviewWidget", LVGLTabviewWidget);
 registerClass("LVGLTabWidget", LVGLTabWidget);
 registerClass("LVGLTextareaWidget", LVGLTextareaWidget);
 registerClass("LVGLTileViewWidget", LVGLTileViewWidget);
+registerClass("LVGLTileWidget", LVGLTileWidget);
 registerClass("LVGLUserWidgetWidget", LVGLUserWidgetWidget);
 registerClass("LVGLWindowWidget", LVGLWindowWidget);
 
