@@ -1,11 +1,16 @@
 import React from "react";
 import { makeObservable } from "mobx";
 
-import { makeDerivedClassInfo } from "project-editor/core/object";
+import {
+    IMessage,
+    MessageType,
+    makeDerivedClassInfo
+} from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
-import { LVGLWidget } from "./internal";
+import { LVGLTileWidget, LVGLWidget } from "./internal";
+import { Message } from "project-editor/store";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,6 +43,20 @@ export class LVGLTileViewWidget extends LVGLWidget {
                 />
             </svg>
         ),
+
+        check: (widget: LVGLTileViewWidget, messages: IMessage[]) => {
+            for (const childWidget of widget.children) {
+                if (!(childWidget instanceof LVGLTileWidget)) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Tileview child is not a Tile widget`,
+                            childWidget
+                        )
+                    );
+                }
+            }
+        },
 
         lvgl: {
             parts: ["MAIN"],
