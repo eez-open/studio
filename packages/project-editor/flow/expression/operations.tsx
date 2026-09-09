@@ -1669,6 +1669,16 @@ export const builtInConstants: (
 ) => BuiltInConstantsType = (projectStore: ProjectStore) =>
         projectStore.projectTypeTraits.isLVGL ? lvglConstants : commonConstants;
 
+export const lvglSymbols: {
+    id: string;
+    value: string;
+}[] = Object.keys(lvglConstants)
+    .filter(name => name.startsWith("LVGL.LV_SYMBOL_"))
+    .map(name => ({
+        id: name.substring("LVGL.LV_SYMBOL_".length),
+        value: lvglConstants[name].value(undefined as any)
+    }));
+
 export const operationIndexes: { [key: string]: number } = {};
 
 function buildOperationIndexes() {
