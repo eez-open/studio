@@ -54,6 +54,7 @@ const COMPARE_ROLLER_OPTIONS_FUNCTION = `int compareRollerOptions(lv_roller_t *r
 export class LVGLRollerWidget extends LVGLWidget {
     options: string;
     optionsType: LVGLPropertyType;
+    optionsWrapper: string;
 
     selected: number | string;
     selectedType: LVGLPropertyType;
@@ -159,6 +160,7 @@ export class LVGLRollerWidget extends LVGLWidget {
         makeObservable(this, {
             options: observable,
             optionsType: observable,
+            optionsWrapper: observable,
             selected: observable,
             selectedType: observable,
             mode: observable
@@ -171,7 +173,11 @@ export class LVGLRollerWidget extends LVGLWidget {
         // options
         code.callObjectFunction(
             "lv_roller_set_options",
-            code.stringProperty(this.optionsType, this.options),
+            code.stringProperty(
+                this.optionsType,
+                this.options,
+                this.optionsWrapper
+            ),
             code.constant(`LV_ROLLER_MODE_${this.mode}`)
         );
 

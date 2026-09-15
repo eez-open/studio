@@ -277,6 +277,8 @@ export class Build extends EezObject {
     separateFolderForImagesAndFonts?: boolean;
     lvglInclude: string;
     screensLifetimeSupport: boolean;
+    useCommonWrapperForTranslatedLiterals: boolean;
+    translatedLiteralWrapper: string;
     generateSourceCodeForEezFramework: boolean;
     compressFlowDefinition: boolean;
     executionQueueSize: number;
@@ -369,6 +371,22 @@ export class Build extends EezObject {
                 disabled: isNotLVGLProject
             },
             {
+                name: "useCommonWrapperForTranslatedLiterals",
+                displayName: "Use common wrapper for all translated literals",
+                checkboxStyleSwitch: true,
+                type: PropertyType.Boolean,
+                disabled: isNotLVGLProject
+            },
+            {
+                name: "translatedLiteralWrapper",
+                displayName: "Translated literal wrapper",
+                type: PropertyType.String,
+                formText: 'Wrapper function, e.g. "_" (default) or "lv_tr"',
+                disabled: (object: Build) =>
+                    isNotLVGLProject(object) ||
+                    !object.useCommonWrapperForTranslatedLiterals
+            },
+            {
                 name: "useDockerDesktop",
                 displayName: "Use Docker Desktop for full simulator",
                 checkboxStyleSwitch: true,
@@ -441,6 +459,10 @@ export class Build extends EezObject {
                 jsObject.screensLifetimeSupport = false;
             }
 
+            if (jsObject.useCommonWrapperForTranslatedLiterals == undefined) {
+                jsObject.useCommonWrapperForTranslatedLiterals = false;
+            }
+
             if (jsObject.useDockerDesktop == undefined) {
                 jsObject.useDockerDesktop = true;
             }
@@ -464,6 +486,27 @@ export class Build extends EezObject {
             if (jsObject.fileSystemPath == undefined) {
                 jsObject.fileSystemPath = "";
             }
+        },
+
+        check: (object: Build, messages: IMessage[]) => {
+            if (!object.useCommonWrapperForTranslatedLiterals) {
+                return;
+            }
+
+            const wrapper = object.translatedLiteralWrapper;
+            if (wrapper == undefined || wrapper.trim().length == 0) {
+                return;
+            }
+
+            if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(wrapper.trim())) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Invalid wrapper function name "${wrapper.trim()}". Wrapper must be a valid C function name, e.g. "_" or "lv_tr".`,
+                        getChildOfObject(object, "translatedLiteralWrapper")
+                    )
+                );
+            }
         }
     };
 
@@ -480,6 +523,8 @@ export class Build extends EezObject {
             fileSystemPath: observable,
             lvglInclude: observable,
             screensLifetimeSupport: observable,
+            useCommonWrapperForTranslatedLiterals: observable,
+            translatedLiteralWrapper: observable,
             useDockerDesktop: observable,
             generateSourceCodeForEezFramework: observable,
             compressFlowDefinition: observable,
