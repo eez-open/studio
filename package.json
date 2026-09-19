@@ -101,7 +101,7 @@
         "@emotion/css": "11.13.4",
         "@emotion/react": "11.13.3",
         "@popperjs/core": "2.11.8",
-        "adm-zip": "0.6.0",
+        "adm-zip": "0.6.1",
         "app-module-path": "2.2.0",
         "archiver": "5.3.2",
         "better-sqlite3": "13.0.2",
