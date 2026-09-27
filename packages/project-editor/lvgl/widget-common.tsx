@@ -196,6 +196,41 @@ export function getDropdown(widget: LVGLWidget) {
     return undefined;
 }
 
+// A Container placed as a direct child of a Calendar widget is interpreted
+// as a hook into one of the (otherwise inaccessible) objects LVGL creates
+// internally for the calendar's header, mirroring how a Container placed as
+// a direct child of a Dropdown hooks into its List (see getDropdown above).
+//
+// Arrow header (lv_calendar_add_header_arrow), children of the header object:
+//   0 - "Previous Button", 1 - "Text" (the year/month label), 2 - "Next Button"
+// Dropdown header (lv_calendar_add_header_dropdown), children of the header object:
+//   0 - "Year Dropdown", 1 - "Month Dropdown"
+export function getCalendarHeaderChild(widget: LVGLWidget) {
+    const parentChildren = getParent(widget) as LVGLWidget[];
+    const parentWidget = getParent(parentChildren);
+    if (!(parentWidget instanceof ProjectEditor.LVGLCalendarWidgetClass)) {
+        return undefined;
+    }
+
+    const index = parentChildren.indexOf(widget);
+
+    if (
+        parentWidget.header == "Arrow" &&
+        (index == 0 || index == 1 || index == 2)
+    ) {
+        return { calendar: parentWidget, index };
+    }
+
+    if (
+        parentWidget.header == "Dropdown" &&
+        (index == 0 || index == 1)
+    ) {
+        return { calendar: parentWidget, index };
+    }
+
+    return undefined;
+}
+
 export function isGeometryControlledByParent(widget: LVGLWidget) {
     if (
         getDropdown(widget) ||

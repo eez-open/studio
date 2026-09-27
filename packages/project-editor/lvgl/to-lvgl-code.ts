@@ -58,6 +58,12 @@ export interface LVGLCode {
     createObjectWithoutPosAndSize(createObjectFunction: string, ...args: any[]): any;
     getObject(getObjectFunction: string, ...args: any[]): any;
     getParentObject(getObjectFunction: string, ...args: any[]): any;
+    // Fetches lv_obj_get_child(lv_obj_get_child(parentObj, outerIndex), innerIndex)
+    // instead of creating a new object. Used to hook a widget onto a
+    // grandchild that some LVGL widgets create internally (e.g. the
+    // buttons/label/dropdowns inside a Calendar header), which aren't
+    // otherwise reachable as a single-level "get object" call.
+    getGrandchildObject(outerIndex: number, innerIndex: number): any;
 
     //
     callObjectFunction(func: string, ...args: any[]): any;
@@ -139,6 +145,11 @@ export interface LVGLCode {
 
     //
     addToTick(propertyName: string, callback: () => void): void;
+    // Like addToTick, but runs on every tick regardless of whether the
+    // widget has any flow-expression property with the given name. Use this
+    // for continuous per-tick logic that isn't driven by a specific
+    // expression property (e.g. keeping a derived value in sync).
+    addToTickAlways(callback: () => void): void;
     addToTickMulti(
         properties: {
             propertyName: string;
@@ -414,6 +425,23 @@ export class SimulatorLVGLCode implements LVGLCode {
         );
     }
 
+    getGrandchildObject(outerIndex: number, innerIndex: number) {
+        const outerObj = this.callFreeFunction(
+            "lv_obj_get_child",
+            this.parentObj,
+            outerIndex
+        );
+        this.obj = this.callFreeFunction(
+            "lv_obj_get_child",
+            outerObj,
+            innerIndex
+        );
+        this.callObjectFunction(
+            "setObjectIndex",
+            this.runtime.getCreateWidgetIndex(this.widget)
+        );
+    }
+
     callObjectFunction(func: string, ...args: any[]): any {
         const result = (this.runtime.wasm as any)["_" + func](
             this.obj,
@@ -665,6 +693,18 @@ export class SimulatorLVGLCode implements LVGLCode {
                 callback();
             });
         }
+    }
+
+    addToTickAlways(callback: () => void) {
+        const widget = this.widget;
+        const obj = this.obj;
+        const flowState = this.runtime.lvglCreateContext.flowState;
+        this.runtime.addTickCallback((_flowState: number) => {
+            this.widget = widget;
+            this.obj = obj;
+            this.flowState = flowState;
+            callback();
+        });
     }
 
     addToTickMulti(
@@ -1012,6 +1052,16 @@ export class BuildLVGLCode implements LVGLCode {
         return "obj";
     }
 
+    getGrandchildObject(outerIndex: number, innerIndex: number) {
+        this.build.line(
+            `lv_obj_t *obj = lv_obj_get_child(lv_obj_get_child(parent_obj, ${outerIndex}), ${innerIndex});`
+        );
+
+        this.build.buildWidgetAssign(this.widget);
+
+        return "obj";
+    }
+
     callObjectFunction(func: string, ...args: any[]): any {
         this.build.line(
             `${func}(${[
@@ -1339,6 +1389,26 @@ export class BuildLVGLCode implements LVGLCode {
                         propertyName
                     );
             }
+
+            this.isTick = true;
+
+            callback();
+
+            this.isTick = false;
+
+            build.blockEnd(`}`);
+        });
+    }
+
+    addToTickAlways(callback: () => void) {
+        const build = this.build;
+
+        const widget = this.widget;
+
+        build.addTickCallback(() => {
+            this.widget = widget;
+
+            build.blockStart(`{`);
 
             this.isTick = true;
 
