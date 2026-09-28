@@ -413,6 +413,20 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// hover highlight without requiring container focus — upstream only shows
+// row hover inside :focus, so on freshly opened projects nothing highlights
+// until the first click
+.EezStudio_Tree .tree-row:not(.drag-source):not(.selected):hover {
+    background-color: @hoverBackgroundColor;
+    color: var(--bs-body-color);
+}
+
+.EezStudio_List_Selectable > div:not(.EezStudio_Selected):not(.EezStudio_Focused):hover {
+    background-color: @hoverBackgroundColor;
+    color: var(--bs-body-color);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Figma-style row selection — translucent blue tint with normal text
 // color instead of solid blue with white text; rows get rounded corners.
 // The tint works over both light and dark surfaces.

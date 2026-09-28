@@ -20,6 +20,7 @@ import {
     getProject
 } from "project-editor/project/helper";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { hoverOutlineState } from "project-editor/flow/editor/hover-outline";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -77,6 +78,7 @@ const TreeRow = observer(
         onEditItem?: (itemId: string) => void;
         renderItem?: (itemId: string) => React.ReactNode;
         selectedRun?: { start: boolean; end: boolean };
+        hoverOutline?: boolean;
     }> {
         ref = React.createRef<HTMLDivElement>();
 
@@ -184,6 +186,25 @@ const TreeRow = observer(
                     onDragStart={this.props.onDragStart}
                     onDrag={this.props.onDrag}
                     onDragEnd={this.props.onDragEnd}
+                    onMouseEnter={
+                        this.props.hoverOutline
+                            ? () =>
+                                  (hoverOutlineState.objectAdapter =
+                                      item)
+                            : undefined
+                    }
+                    onMouseLeave={
+                        this.props.hoverOutline
+                            ? () => {
+                                  if (
+                                      hoverOutlineState.objectAdapter ===
+                                      item
+                                  ) {
+                                      hoverOutlineState.objectAdapter = undefined;
+                                  }
+                              }
+                            : undefined
+                    }
                 >
                     {triangle}
 
@@ -235,6 +256,7 @@ const TreeRow = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 interface TreeProps {
+    hoverOutline?: boolean;
     treeAdapter: TreeAdapter;
     tabIndex?: number;
     onFocus?: () => void;
@@ -994,6 +1016,7 @@ export const Tree = observer(
                                 onEditItem={onEditItem}
                                 renderItem={renderItem}
                                 selectedRun={selectedRun.get(row)}
+                                hoverOutline={this.props.hoverOutline}
                             />
                         ))}
 

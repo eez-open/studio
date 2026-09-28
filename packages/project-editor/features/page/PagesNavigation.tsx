@@ -459,6 +459,7 @@ export const PageStructure = observer(
                             onFocus={this.onFocus}
                             tabIndex={0}
                             renderItem={this.renderItem}
+                            hoverOutline
                         />
                     </Body>
                 </VerticalHeaderWithBody>
