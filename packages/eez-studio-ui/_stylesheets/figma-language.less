@@ -376,6 +376,7 @@
 // get clipped by overflow:hidden containers)
 .EezStudio_Miniselect {
     position: relative;
+    margin-right: 12px;
 
     .EezStudio_Miniselect_Value {
         display: inline-flex;
@@ -403,6 +404,28 @@
         min-width: 110px;
         display: block;
         z-index: 5000;
+        background-color: var(--bs-secondary-bg);
+        border: 1px solid @borderColor;
+        border-radius: 8px;
+        box-shadow: @shadowElevation4;
+        padding: 4px;
+
+        .dropdown-item {
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 12px;
+            color: var(--bs-body-color);
+            cursor: pointer;
+
+            &:hover {
+                background-color: @hoverBackgroundColor;
+            }
+
+            &.active {
+                background-color: @selectionBackgroundColor;
+                color: @selectionColor;
+            }
+        }
     }
 }
 
