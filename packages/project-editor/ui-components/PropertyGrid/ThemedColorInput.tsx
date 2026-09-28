@@ -1455,17 +1455,15 @@ export const ThemedColorInput = observer(
             // a dark text field with the color value
             return (
                 <div className="EezStudio_ColorInput">
-                    {!readOnly && (
-                        <button
-                            ref={this.buttonRef}
-                            className="EezStudio_ColorInput_Swatch"
-                            type="button"
-                            style={{
-                                background: inputBackgroundColor || "transparent"
-                            }}
-                            onClick={this.openDropdown}
-                        />
-                    )}
+                    <button
+                        ref={this.buttonRef}
+                        className="EezStudio_ColorInput_Swatch"
+                        type="button"
+                        style={{
+                            background: inputBackgroundColor || "transparent"
+                        }}
+                        onClick={readOnly ? undefined : this.openDropdown}
+                    />
                     <input
                         ref={this.props.inputRef}
                         className="form-control"

@@ -1030,26 +1030,25 @@ export const Property = observer(
                 // (kept invisible for the OS picker) + hex text field
                 return (
                     <div className="EezStudio_ColorInput">
-                        {!readOnly && (
-                            <label
-                                className="EezStudio_ColorInput_Swatch"
+                        <label
+                            className="EezStudio_ColorInput_Swatch"
+                            style={{
+                                background: this._value || "transparent"
+                            }}
+                        >
+                            <input
+                                type="color"
+                                value={this._value || "#000000"}
+                                onChange={this.onChange}
+                                disabled={readOnly}
                                 style={{
-                                    background: this._value || "transparent"
+                                    opacity: 0,
+                                    position: "absolute",
+                                    width: 1,
+                                    height: 1
                                 }}
-                            >
-                                <input
-                                    type="color"
-                                    value={this._value || "#000000"}
-                                    onChange={this.onChange}
-                                    style={{
-                                        opacity: 0,
-                                        position: "absolute",
-                                        width: 1,
-                                        height: 1
-                                    }}
-                                />
-                            </label>
-                        )}
+                            />
+                        </label>
                         <input
                             ref={(ref: any) => (this.input = ref)}
                             type="text"
