@@ -1,7 +1,8 @@
 import React from "react";
-import { computed, makeObservable } from "mobx";
+import { action, computed, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
+import { Icon } from "eez-studio-ui/icon";
 import { dialog, getCurrentWindow } from "@electron/remote";
 
 import { formatBytes } from "eez-studio-shared/formatBytes";
@@ -455,6 +456,101 @@ export const StaticRichTextProperty = observer(
     }
 );
 
+export const FigmaSelect = observer(
+    class FigmaSelect extends React.Component<{
+        children?: React.ReactNode;
+        value: string | undefined;
+        onChange: (value: string) => void;
+        style?: React.CSSProperties;
+    }> {
+        open = false;
+
+        constructor(props: any) {
+            super(props);
+            makeObservable(this, {
+                open: observable
+            });
+        }
+
+        onDocumentPointerDown = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest(".EezStudio_FigmaSelect")) {
+                this.open = false;
+            }
+        };
+
+        componentDidMount() {
+            document.addEventListener(
+                "pointerdown",
+                this.onDocumentPointerDown
+            );
+        }
+
+        componentWillUnmount() {
+            document.removeEventListener(
+                "pointerdown",
+                this.onDocumentPointerDown
+            );
+        }
+
+        get options() {
+            return React.Children.toArray(this.props.children)
+                .filter(
+                    (child: any) =>
+                        React.isValidElement(child) && child.type === "option"
+                )
+                .map((child: any) => ({
+                    id: child.props.value,
+                    label: child.props.children
+                }));
+        }
+
+        render() {
+            const selected =
+                this.options.find(
+                    option => option.id === this.props.value
+                ) || this.options[0];
+
+            return (
+                <div className="EezStudio_FigmaSelect">
+                    <button
+                        type="button"
+                        className="EezStudio_FigmaSelect_Value"
+                        style={this.props.style}
+                        onClick={action(() => {
+                            this.open = !this.open;
+                        })}
+                    >
+                        <span className="EezStudio_FigmaSelect_Label">
+                            {selected ? selected.label : ""}
+                        </span>
+                        <Icon icon="material:arrow_drop_down" size={16} />
+                    </button>
+                    {this.open && (
+                        <div className="EezStudio_FigmaSelect_Menu dropdown-menu show">
+                            {this.options.map(option => (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    className={classNames("dropdown-item", {
+                                        active: option.id === this.props.value
+                                    })}
+                                    onClick={action(() => {
+                                        this.props.onChange(option.id);
+                                        this.open = false;
+                                    })}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+    }
+);
+
 export const SelectProperty = observer(
     class SelectProperty extends React.Component<{
         children?: React.ReactNode;
@@ -508,17 +604,13 @@ export const SelectProperty = observer(
                                     </datalist>
                                 </>
                             ) : (
-                                <select
-                                    id={id}
-                                    className="form-select"
+                                <FigmaSelect
                                     value={this.props.value}
-                                    onChange={event =>
-                                        this.props.onChange(event.target.value)
-                                    }
+                                    onChange={this.props.onChange}
                                     style={this.props.selectStyle}
                                 >
                                     {this.props.children}
-                                </select>
+                                </FigmaSelect>
                             )}
                             {this.props.inputGroupButton}
                         </div>
