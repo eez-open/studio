@@ -610,6 +610,12 @@
     box-shadow: 0 0 0 1px @geometryFieldHoverRing;
 }
 
+// while editing: blue ring around the whole bubble (the inner input no
+// longer paints its own border)
+.EezStudio_LVGLGeometryField:focus-within {
+    box-shadow: 0 0 0 1px @selectionBackgroundColor;
+}
+
 .EezStudio_LVGLGeometryField {
     display: flex;
     align-items: center;
@@ -631,10 +637,15 @@
     user-select: none;
 }
 
+// !important required: the global flat-input rules are
+// .form-control:not(textarea):hover/... — higher specificity than this
+// block, and they would paint their own border around the inner input
+// instead of letting the bubble carry hover/focus
 .EezStudio_LVGLGeometryField .form-control {
-    border: none;
-    background: transparent;
-    box-shadow: none;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
     height: 24px;
     padding: 2px 4px;
     min-width: 0;
@@ -644,9 +655,9 @@
     height: 22px;
     min-height: 0;
     padding: 0 2px;
-    border: none;
-    background: transparent;
-    box-shadow: none;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
     flex-shrink: 0;
 }
 
