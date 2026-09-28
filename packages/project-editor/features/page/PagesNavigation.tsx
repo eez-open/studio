@@ -1,5 +1,5 @@
 import React from "react";
-import { action, computed, makeObservable } from "mobx";
+import { action, computed, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 
 import { IEezObject } from "project-editor/core/object";
@@ -10,6 +10,7 @@ import {
 import { IPanel } from "project-editor/store";
 
 import { Tree } from "project-editor/ui-components/Tree";
+import { Icon } from "eez-studio-ui/icon";
 
 import { ProjectContext } from "project-editor/project/context";
 import { t } from "eez-studio-shared/i18n";
@@ -56,6 +57,15 @@ const EYE_CLOSE_ICON = (
 
 export const PageStructure = observer(
     class PageStructure extends React.Component implements IPanel {
+        showLinesMenu = false;
+
+        onDocumentPointerDownCloseLinesMenu = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest(".EezStudio_Miniselect")) {
+                this.showLinesMenu = false;
+            }
+        };
+
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -63,6 +73,7 @@ export const PageStructure = observer(
             super(props);
 
             makeObservable(this, {
+                showLinesMenu: observable,
                 pageTabState: computed,
                 componentContainerDisplayItem: computed,
                 treeAdapter: computed,
@@ -73,10 +84,18 @@ export const PageStructure = observer(
 
         componentDidMount() {
             this.context.navigationStore.mountPanel(this);
+            document.addEventListener(
+                "pointerdown",
+                this.onDocumentPointerDownCloseLinesMenu
+            );
         }
 
         componentWillUnmount() {
             this.context.navigationStore.unmountPanel(this);
+            document.removeEventListener(
+                "pointerdown",
+                this.onDocumentPointerDownCloseLinesMenu
+            );
         }
 
         get pageTabState() {
@@ -393,28 +412,71 @@ export const PageStructure = observer(
                             {this.isAnyHidden ? (
                                 <label className="EezStudio_PageStructure_HiddenWidgetLines">
                                     <span>{t("Hidden widget lines")}</span>
-                                    <select
-                                        className="form-select"
-                                        value={
-                                            this.context.project.settings
-                                                .general.hiddenWidgetLines
-                                        }
-                                        onChange={action(event => {
-                                            this.context.project.settings.general.hiddenWidgetLines =
-                                                event.target.value as any;
-                                        })}
-                                        style={{ margin: "2px 10px 2px 5px" }}
-                                    >
-                                        <option value="visible">
-                                            {t("Visible")}
-                                        </option>
-                                        <option value="dimmed">
-                                            {t("Dimmed")}
-                                        </option>
-                                        <option value="hidden">
-                                            {t("Hidden")}
-                                        </option>
-                                    </select>
+                                    <div className="EezStudio_Miniselect">
+                                        <button
+                                            type="button"
+                                            className="EezStudio_Miniselect_Value"
+                                            onClick={action(() => {
+                                                this.showLinesMenu =
+                                                    !this.showLinesMenu;
+                                            })}
+                                        >
+                                            {t(
+                                                {
+                                                    visible: "Visible",
+                                                    dimmed: "Dimmed",
+                                                    hidden: "Hidden"
+                                                }[
+                                                    this.context.project
+                                                        .settings.general
+                                                        .hiddenWidgetLines
+                                                ] || "Visible"
+                                            )}
+                                            <Icon
+                                                icon="material:arrow_drop_down"
+                                                size={16}
+                                            />
+                                        </button>
+                                        {this.showLinesMenu && (
+                                            <div className="EezStudio_Miniselect_Menu dropdown-menu show">
+                                                {["visible", "dimmed", "hidden"].map(
+                                                    option => (
+                                                        <button
+                                                            key={option}
+                                                            type="button"
+                                                            className={classNames(
+                                                                "dropdown-item",
+                                                                {
+                                                                    active:
+                                                                        this
+                                                                            .context
+                                                                            .project
+                                                                            .settings
+                                                                            .general
+                                                                            .hiddenWidgetLines ==
+                                                                        option
+                                                                }
+                                                            )}
+                                                            onClick={action(() => {
+                                                                this.context.project.settings.general.hiddenWidgetLines =
+                                                                    option as any;
+                                                                this.showLinesMenu = false;
+                                                            })}
+                                                        >
+                                                            {t(
+                                                                {
+                                                                    visible: "Visible",
+                                                                    dimmed: "Dimmed",
+                                                                    hidden: "Hidden"
+                                                                }[option] ||
+                                                                option
+                                                            )}
+                                                        </button>
+                                                    )
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </label>
                             ) : null}
                             <IconAction

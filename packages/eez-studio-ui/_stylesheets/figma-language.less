@@ -372,6 +372,41 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// miniselect — tiny custom dropdown used inside toolbars (nested selects
+// get clipped by overflow:hidden containers)
+.EezStudio_Miniselect {
+    position: relative;
+
+    .EezStudio_Miniselect_Value {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        color: var(--bs-secondary-color);
+        font-size: 12px;
+        padding: 3px 8px;
+        cursor: pointer;
+        transition: background-color 0.12s ease, color 0.12s ease;
+
+        &:hover {
+            background: @hoverBackgroundColor;
+            color: var(--bs-body-color);
+        }
+    }
+
+    .EezStudio_Miniselect_Menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        min-width: 110px;
+        display: block;
+        z-index: 5000;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // dropdown menus (Bootstrap dropdown-menu everywhere: toolbar, palettes,
 // custom dropdowns) — Figma style: dark raised panel, rounded, hover rows
 .dropdown-menu {
