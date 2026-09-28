@@ -12,7 +12,7 @@
 }
 
 // flat compact inputs — Figma: 1px hairline border, small radius, ~28px
-// height, focus = blue border with no glow
+// height, hover = brighter border, focus = blue border with no glow
 .form-control:not(textarea),
 .form-select {
     height: 28px;
@@ -22,6 +22,11 @@
     border-color: @formControlBorderColor;
     background-color: @backgroundColor;
     box-shadow: none;
+    transition: border-color 0.12s ease;
+
+    &:hover:not(:disabled):not(:focus) {
+        border-color: @hoverInputBorderColor;
+    }
 
     &:focus {
         border-color: @selectionBackgroundColor;
@@ -221,6 +226,54 @@
     pointer-events: none;
     z-index: 6000;
     transition: opacity 0.12s ease;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Figma-style color input: swatch (opens picker) + dark hex field
+.EezStudio_ColorInput {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+
+    .EezStudio_ColorInput_Swatch {
+        position: relative;
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        border: 1px solid @borderColor;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 0;
+        background: transparent;
+        display: inline-block;
+
+        // the native <input type=color> inside is invisible; its swatch is
+        // drawn by the label background (inline style from the component)
+        input[type="color"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            border: none;
+            padding: 0;
+        }
+
+        &:hover {
+            border-color: @hoverInputBorderColor;
+        }
+
+        &:focus-within {
+            border-color: @selectionBackgroundColor;
+        }
+    }
+
+    .form-control {
+        flex: 1;
+        min-width: 0;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
