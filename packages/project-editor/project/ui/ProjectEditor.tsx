@@ -518,17 +518,27 @@ const Content = observer(
                 }
 
                 return (
-                    <PageEditor
-                        editor={
-                            new Editor(
-                                this.context,
-                                this.context.runtime.selectedPage,
-                                undefined,
-                                undefined,
-                                pageTabState
-                            )
-                        }
-                    ></PageEditor>
+                    <div
+                        style={{
+                            position: "relative",
+                            flexGrow: 1,
+                            display: "flex",
+                            flexDirection: "column"
+                        }}
+                    >
+                        <PageEditor
+                            editor={
+                                new Editor(
+                                    this.context,
+                                    this.context.runtime.selectedPage,
+                                    undefined,
+                                    undefined,
+                                    pageTabState
+                                )
+                            }
+                        />
+                        <FloatingToolbar />
+                    </div>
                 );
             }
 

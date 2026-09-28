@@ -300,6 +300,13 @@ export const FloatingToolbar = observer(
             return this.context.layoutModels.isDockerSimulatorMode;
         }
 
+        get showFullSimulatorButton() {
+            return (
+                this.context.projectTypeTraits.isLVGL &&
+                this.context.project.settings.build.useDockerDesktop
+            );
+        }
+
         render() {
             const runtime = this.context.runtime;
 
@@ -319,7 +326,12 @@ export const FloatingToolbar = observer(
                     <div
                         className={classNames(
                             "EezStudio_FloatingToolbar_Button",
-                            { active: !!runtime }
+                            {
+                                active:
+                                    !!runtime &&
+                                    !runtime.isDebuggerActive &&
+                                    !this.isFullSimulatorMode
+                            }
                         )}
                         data-tooltip={t("Enter run mode (F5)")}
                         onClick={this.context.onSetRuntimeMode}
@@ -327,11 +339,40 @@ export const FloatingToolbar = observer(
                         <Icon icon="material:play_arrow" size={18} />
                     </div>
 
+                    <div
+                        className={classNames(
+                            "EezStudio_FloatingToolbar_Button",
+                            {
+                                active:
+                                    !!runtime &&
+                                    runtime.isDebuggerActive &&
+                                    !this.isFullSimulatorMode
+                            }
+                        )}
+                        data-tooltip={t("Enter debug mode (Ctrl+F5)")}
+                        onClick={this.context.onSetDebuggerMode}
+                    >
+                        <Icon icon="material:bug_report" size={18} />
+                    </div>
+
+                    {this.showFullSimulatorButton && (
+                        <div
+                            className={classNames(
+                                "EezStudio_FloatingToolbar_Button",
+                                { active: this.isFullSimulatorMode }
+                            )}
+                            data-tooltip={t("Run in Full Simulator (F7)")}
+                            onClick={this.context.onSetFullSimulatorMode}
+                        >
+                            <Icon icon="material:computer" size={18} />
+                        </div>
+                    )}
+
                     <div className="EezStudio_FloatingToolbar_Divider" />
 
                     <div
                         className="EezStudio_FloatingToolbar_Button"
-                        data-tooltip={
+                        title={
                             settingsController.isDarkTheme
                                 ? t("Switch to Light Theme")
                                 : t("Switch to Dark Theme")

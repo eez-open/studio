@@ -177,6 +177,13 @@
         border-radius: 6px;
     }
 
+    // mode switch moved to the bottom floating toolbar (all selector
+    // shapes — the run-mode toolbar nests deeper and has higher specificity)
+    .EezStudio_ProjectEditor_ToolbarNav_RunEditSwitchControls,
+    .EezStudio_ProjectEditor_MainContentWrapper > .EezStudio_ProjectEditor_ToolbarNav .EezStudio_ProjectEditor_ToolbarNav_RunEditSwitchControls {
+        display: none !important;
+    }
+
     // mode switch (Edit/Run/Debug/Full Sim): rounded active pill
     .EezStudio_Action.selected {
         border-radius: 6px;
