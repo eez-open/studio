@@ -11,20 +11,23 @@
     --bs-border-radius: 4px;
 }
 
-// flat compact inputs — Figma: 1px hairline border, small radius, ~28px
-// height, hover = brighter border, focus = blue border with no glow
+// flat compact inputs — Figma style: borderless raised surface one step
+// lighter than the panel, 8px radius, hover = slightly brighter, focus =
+// blue border. Applies to every input/select app-wide (property grids,
+// dialogs, settings).
 .form-control:not(textarea),
 .form-select {
     height: 28px;
     padding: 2px 8px;
     font-size: 12px;
-    border-radius: 4px;
-    border-color: @formControlBorderColor;
-    background-color: @backgroundColor;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background-color: var(--bs-secondary-bg);
     box-shadow: none;
-    transition: border-color 0.12s ease;
+    transition: background-color 0.12s ease, border-color 0.12s ease;
 
     &:hover:not(:disabled):not(:focus) {
+        background-color: var(--bs-secondary-bg);
         border-color: @hoverInputBorderColor;
     }
 
@@ -273,11 +276,21 @@
         height: 32px;
         padding-left: 32px !important;
         padding-right: 10px;
-        border: none;
+        border: 1px solid transparent;
         border-radius: 8px;
         // Figma's dark color field: borderless, one step lighter than the
         // panel, ~35px tall, 8px radius
         background-color: var(--bs-secondary-bg);
+
+        &:focus {
+            border-color: @selectionBackgroundColor;
+        }
+    }
+
+    &:focus-within {
+        .form-control {
+            border-color: @selectionBackgroundColor;
+        }
     }
 }
 
