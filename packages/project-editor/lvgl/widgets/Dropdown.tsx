@@ -21,6 +21,10 @@ import {
     LVGLPropertyType,
     makeLvglExpressionProperty
 } from "../expression-property";
+import {
+    CALENDAR_HEADER_CHILD_LABELS,
+    getCalendarHeaderChild
+} from "../widget-common";
 
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
@@ -48,6 +52,22 @@ export class LVGLDropdownWidget extends LVGLWidget {
             projectType === ProjectType.LVGL,
 
         componentPaletteGroupName: "!1Input",
+
+        label: (widget: LVGLDropdownWidget) => {
+            const calendarHeaderChild = getCalendarHeaderChild(widget);
+            if (
+                calendarHeaderChild &&
+                calendarHeaderChild.calendar.header == "Dropdown" &&
+                (calendarHeaderChild.index == 0 ||
+                    calendarHeaderChild.index == 1)
+            ) {
+                return CALENDAR_HEADER_CHILD_LABELS["Dropdown"][
+                    calendarHeaderChild.index
+                ];
+            }
+
+            return LVGLWidget.classInfo.label!(widget);
+        },
 
         properties: [
             ...makeLvglExpressionProperty(
@@ -170,6 +190,24 @@ export class LVGLDropdownWidget extends LVGLWidget {
     }
 
     override toLVGLCode(code: LVGLCode) {
+        const calendarHeaderChild = getCalendarHeaderChild(this);
+        if (
+            calendarHeaderChild &&
+            calendarHeaderChild.calendar.header == "Dropdown" &&
+            (calendarHeaderChild.index == 0 || calendarHeaderChild.index == 1)
+        ) {
+            // The calendar's Dropdown header is always created as the
+            // calendar's own child at index 0, and this Dropdown hooks onto
+            // one of the two year/month Dropdowns LVGL creates internally
+            // there (with its own options, and its own logic keeping the
+            // calendar's shown date in sync), so only its style is relevant
+            // here - none of this widget's own options/selected properties
+            // apply. A Container added as ITS own child still hooks onto
+            // its List in the usual way (see getDropdown/Container.tsx).
+            code.getGrandchildObject(0, calendarHeaderChild.index);
+            return;
+        }
+
         code.createObject(`lv_dropdown_create`);
 
         // options

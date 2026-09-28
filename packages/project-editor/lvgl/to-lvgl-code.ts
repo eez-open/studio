@@ -145,11 +145,6 @@ export interface LVGLCode {
 
     //
     addToTick(propertyName: string, callback: () => void): void;
-    // Like addToTick, but runs on every tick regardless of whether the
-    // widget has any flow-expression property with the given name. Use this
-    // for continuous per-tick logic that isn't driven by a specific
-    // expression property (e.g. keeping a derived value in sync).
-    addToTickAlways(callback: () => void): void;
     addToTickMulti(
         properties: {
             propertyName: string;
@@ -693,18 +688,6 @@ export class SimulatorLVGLCode implements LVGLCode {
                 callback();
             });
         }
-    }
-
-    addToTickAlways(callback: () => void) {
-        const widget = this.widget;
-        const obj = this.obj;
-        const flowState = this.runtime.lvglCreateContext.flowState;
-        this.runtime.addTickCallback((_flowState: number) => {
-            this.widget = widget;
-            this.obj = obj;
-            this.flowState = flowState;
-            callback();
-        });
     }
 
     addToTickMulti(
@@ -1389,26 +1372,6 @@ export class BuildLVGLCode implements LVGLCode {
                         propertyName
                     );
             }
-
-            this.isTick = true;
-
-            callback();
-
-            this.isTick = false;
-
-            build.blockEnd(`}`);
-        });
-    }
-
-    addToTickAlways(callback: () => void) {
-        const build = this.build;
-
-        const widget = this.widget;
-
-        build.addTickCallback(() => {
-            this.widget = widget;
-
-            build.blockStart(`{`);
 
             this.isTick = true;
 

@@ -10,6 +10,10 @@ import { ProjectType } from "project-editor/project/project";
 
 import { LVGLLabelWidget, LVGLWidget } from "./internal";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
+import {
+    CALENDAR_HEADER_CHILD_LABELS,
+    getCalendarHeaderChild
+} from "../widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -19,6 +23,22 @@ export class LVGLButtonWidget extends LVGLWidget {
             projectType === ProjectType.LVGL,
 
         componentPaletteGroupName: "!1Basic",
+
+        label: (widget: LVGLButtonWidget) => {
+            const calendarHeaderChild = getCalendarHeaderChild(widget);
+            if (
+                calendarHeaderChild &&
+                calendarHeaderChild.calendar.header == "Arrow" &&
+                (calendarHeaderChild.index == 0 ||
+                    calendarHeaderChild.index == 2)
+            ) {
+                return CALENDAR_HEADER_CHILD_LABELS["Arrow"][
+                    calendarHeaderChild.index
+                ];
+            }
+
+            return LVGLWidget.classInfo.label!(widget);
+        },
 
         properties: [],
 
@@ -77,6 +97,20 @@ export class LVGLButtonWidget extends LVGLWidget {
     }
 
     override toLVGLCode(code: LVGLCode) {
+        const calendarHeaderChild = getCalendarHeaderChild(this);
+        if (
+            calendarHeaderChild &&
+            calendarHeaderChild.calendar.header == "Arrow" &&
+            (calendarHeaderChild.index == 0 || calendarHeaderChild.index == 2)
+        ) {
+            // The calendar's Arrow header is always created as the
+            // calendar's own child at index 0, and this Button hooks onto
+            // one of the two navigation buttons LVGL creates internally
+            // there, which aren't otherwise exposed.
+            code.getGrandchildObject(0, calendarHeaderChild.index);
+            return;
+        }
+
         if (code.isV9) {
             code.createObject("lv_button_create");
         } else {

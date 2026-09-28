@@ -12,11 +12,7 @@ import {
 import { findLvglStyle, ProjectType } from "project-editor/project/project";
 
 import { LVGLTabviewWidget, LVGLTabWidget, LVGLWidget } from "./internal";
-import {
-    getCalendarHeaderChild,
-    getDropdown,
-    getTabview
-} from "../widget-common";
+import { getDropdown, getTabview } from "../widget-common";
 import { getProjectStore, Message } from "project-editor/store";
 import { getLvglParts, getLvglStylePropName } from "../lvgl-versions";
 import { Rect } from "eez-studio-shared/geometry";
@@ -37,11 +33,6 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const CALENDAR_HEADER_CHILD_LABELS: { [header: string]: string[] } = {
-    Arrow: ["Previous Button", "Text", "Next Button"],
-    Dropdown: ["Year Dropdown", "Month Dropdown"]
-};
-
 export class LVGLContainerWidget extends LVGLWidget {
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -60,13 +51,6 @@ export class LVGLContainerWidget extends LVGLWidget {
             const dropdown = getDropdown(widget);
             if (dropdown && dropdown.children.indexOf(widget) == 0) {
                 return "List";
-            }
-
-            const calendarHeaderChild = getCalendarHeaderChild(widget);
-            if (calendarHeaderChild) {
-                return CALENDAR_HEADER_CHILD_LABELS[
-                    calendarHeaderChild.calendar.header
-                ][calendarHeaderChild.index];
             }
 
             return LVGLWidget.classInfo.label!(widget);
@@ -192,10 +176,6 @@ export class LVGLContainerWidget extends LVGLWidget {
             return "both";
         }
 
-        if (getCalendarHeaderChild(this)) {
-            return "both";
-        }
-
         return super.autoSize;
     }
 
@@ -239,10 +219,6 @@ export class LVGLContainerWidget extends LVGLWidget {
 
         const dropdown = getDropdown(this);
         if (dropdown && dropdown.children.indexOf(this) == 0) {
-            return [];
-        }
-
-        if (getCalendarHeaderChild(this)) {
             return [];
         }
 
@@ -342,17 +318,6 @@ export class LVGLContainerWidget extends LVGLWidget {
             const dropdown = getDropdown(this);
             if (dropdown && dropdown.children.indexOf(this) == 0) {
                 code.getObject("lv_dropdown_get_list");
-                return;
-            }
-
-            const calendarHeaderChild = getCalendarHeaderChild(this);
-            if (calendarHeaderChild) {
-                // The calendar's header (Arrow or Dropdown type) is always
-                // created as the calendar's own child at index 0, and this
-                // Container hooks onto one of ITS children (a button, the
-                // label, or a year/month dropdown), which LVGL creates
-                // internally and doesn't otherwise expose.
-                code.getGrandchildObject(0, calendarHeaderChild.index);
                 return;
             }
         }
