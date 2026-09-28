@@ -8,7 +8,7 @@
 @sectionBackgroundColor: #f5f5f5;
 @borderColor: #e6e6e6;
 @darkBorderColor: #d9d9d9;
-@panelHeaderColor: var(--bs-tertiary-bg);
+@panelHeaderColor: @backgroundColor;
 @selectionBackgroundColor: #0d99ff;
 @selectionColor: white;
 @lightSelectionBackgroundColor: #d2e9ff;
@@ -111,9 +111,15 @@
 @componentShadow: @shadowElevation1;
 @componentBodyShadow: none;
 
-@panelHeaderColorInsideFlexLayout: var(--bs-tertiary-bg);
+@panelHeaderColorInsideFlexLayout: @backgroundColor;
 
 @formControlBorderColor: #d9d9d9;
+
+@geometryFieldHoverRing: rgba(0, 0, 0, 0.3);
+
+// opaque selected-row color (Figma light layers): translucent tints shift
+// color when stacked on hover backgrounds
+@selectedRowTint: #cfe8ff;
 
 @pageTimelineRowColor: #e0e0e0;
 @pageTimelineSelectedRowColor: #a0a0a0;

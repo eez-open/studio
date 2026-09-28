@@ -71,6 +71,7 @@ export class LayoutModels extends AbstractLayoutModels {
     static DOCKER_SIMULATOR_LOGS_TAB_ID = "DOCKER_SIMULATOR_LOGS";
     static DOCKER_SIMULATOR_PREVIEW_LOGS_TAB_ID =
         "DOCKER_SIMULATOR_PREVIEW_LOGS";
+    static RESOURCES_TAB_ID = "RESOURCES";
 
     static PROJECT_EXPLORER_TAB_ID = "PROJECT_EXPLORER";
     // "Widgets Structure" tab in the "Project Explorer" layout
@@ -111,7 +112,7 @@ export class LayoutModels extends AbstractLayoutModels {
         type: "tab",
         enableClose: false,
         name: "Pages",
-        component: "pages",
+        component: "pages-with-structure",
         icon: "svg:pages",
         id: LayoutModels.PAGES_TAB_ID
     };
@@ -119,7 +120,7 @@ export class LayoutModels extends AbstractLayoutModels {
         type: "tab",
         enableClose: false,
         name: "User Widgets",
-        component: "widgets",
+        component: "widgets-with-structure",
         icon: "svg:user_widgets",
         id: LayoutModels.USER_WIDGETS_TAB_ID
     };
@@ -130,6 +131,24 @@ export class LayoutModels extends AbstractLayoutModels {
         component: "actions",
         icon: "material:code",
         id: LayoutModels.ACTIONS_TAB_ID
+    };
+
+    static VARIABLES_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Variables",
+        component: "variables-with-actions",
+        icon: "svg:variable",
+        id: LayoutModels.VARIABLES_TAB_ID
+    };
+
+    static RESOURCE_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Resources",
+        component: "resources",
+        icon: "material:folder_open",
+        id: LayoutModels.RESOURCES_TAB_ID
     };
 
     static STYLES_TAB: FlexLayout.IJsonTabNode = {
@@ -505,18 +524,14 @@ export class LayoutModels extends AbstractLayoutModels {
             }
         ];
 
+        // The project resources (styles, fonts, bitmaps, themes, LVGL groups,
+        // breakpoints) moved into the left activity bar — the right border
+        // stays empty and is not rendered.
         borders.push({
             type: "border",
             location: "right",
             size: 240,
-            children: [
-                LayoutModels.STYLES_TAB,
-                LayoutModels.FONTS_TAB,
-                LayoutModels.BITMAPS_TAB,
-                LayoutModels.THEMES_TAB,
-                LayoutModels.LVGL_GROUPS_TAB,
-                LayoutModels.BREAKPOINTS_TAB
-            ]
+            children: []
         });
 
         borders.push({
@@ -632,7 +647,7 @@ export class LayoutModels extends AbstractLayoutModels {
             },
             {
                 name: "rootEditor",
-                version: 116,
+                version: 119,
                 json: {
                     global: LayoutModels.GLOBAL_OPTIONS,
                     borders: this.borders,
@@ -646,37 +661,12 @@ export class LayoutModels extends AbstractLayoutModels {
                                     {
                                         type: "tabset",
                                         weight: 1,
+                                        enableTabStrip: false,
                                         children: [
                                             LayoutModels.PAGES_TAB,
                                             LayoutModels.WIDGETS_TAB,
-                                            LayoutModels.ACTIONS_TAB
-                                        ]
-                                    },
-                                    {
-                                        type: "tabset",
-                                        weight: 1,
-                                        children: [
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Widgets Structure",
-                                                component: "flow-structure",
-                                                icon: "svg:hierarchy"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        type: "tabset",
-                                        weight: 1,
-                                        children: [
-                                            {
-                                                type: "tab",
-                                                enableClose: false,
-                                                name: "Variables",
-                                                component: "variables",
-                                                icon: "svg:variable",
-                                                id: LayoutModels.VARIABLES_TAB_ID
-                                            }
+                                            LayoutModels.VARIABLES_TAB,
+                                            LayoutModels.RESOURCE_TAB
                                         ]
                                     }
                                 ]

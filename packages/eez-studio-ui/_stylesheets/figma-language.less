@@ -1,0 +1,388 @@
+// Figma design-language pass: flat surfaces, hairline dividers, compact
+// controls, thin always-visible scrollbars, flat text tabs. Imported last
+// in app.less (after project-editor.less) so these rules win the cascade
+// without editing the original files. Colors go through theme variables,
+// so the same rules serve both main.css and main-dark.css.
+
+////////////////////////////////////////////////////////////////////////////////
+// global primitives
+
+:root {
+    --bs-border-radius: 4px;
+}
+
+// flat compact inputs — Figma: 1px hairline border, small radius, ~28px
+// height, focus = blue border with no glow
+.form-control:not(textarea),
+.form-select {
+    height: 28px;
+    padding: 2px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+    border-color: @formControlBorderColor;
+    background-color: @backgroundColor;
+    box-shadow: none;
+
+    &:focus {
+        border-color: @selectionBackgroundColor;
+        box-shadow: none;
+        outline: none;
+    }
+}
+
+// flat buttons: no bootstrap inner-highlight, compact radius and type
+.btn {
+    --bs-btn-border-radius: 4px;
+    --bs-btn-box-shadow: none;
+    --bs-btn-font-size: 12px;
+}
+
+// thin scrollbars, visible without hover, thumb inset like Figma's
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: @scrollThumbColor;
+    border: 3px solid transparent;
+    border-radius: 5px;
+    background-clip: padding-box;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// panels and headers — single flat surface + hairline divider
+
+.EezStudio_PanelHeader {
+    background-color: @backgroundColor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// FlexLayout tabs — flat text tabs, hairline under the tab strip
+
+.flexlayout__tabset {
+    background: @backgroundColor;
+}
+
+.flexlayout__tabset_tabbar {
+    background: @backgroundColor;
+    border-bottom: 1px solid @borderColor;
+}
+
+.flexlayout__tab {
+    background: @backgroundColor;
+}
+
+.flexlayout__tab_button {
+    background: transparent;
+    color: var(--bs-secondary-color);
+}
+
+.flexlayout__tab_button:hover {
+    background: transparent;
+    color: var(--bs-body-color);
+}
+
+.flexlayout__tab_button--selected {
+    background: transparent;
+    color: var(--bs-body-color);
+    font-weight: 500;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// canvas selection — hairline like Figma, no drop shadow on the
+// multi-selection bounding box (resize handles are already white squares
+// with a blue border)
+
+.EezStudio_FlowEditorSelection_BoundingRect {
+    border: 1px solid @selectionBackgroundColor;
+    box-shadow: none;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// floating toolbar — active tool reads as a grey block like Figma's tool
+// states, blue stays reserved for selection and primary actions
+
+.EezStudio_FloatingToolbar_Button.active {
+    background: @nonFocusedSelectionBackgroundColor;
+    color: var(--bs-body-color);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Figma-style left panel composites — each primary tab stacks two sections
+// (Pages + Widget Structure, Variables + Actions)
+
+.EezStudio_LeftComposite {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.EezStudio_LeftComposite_Section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    flex-grow: 0;
+    flex-shrink: 0;
+
+    &:last-child {
+        flex-grow: 1;
+    }
+
+    & + .EezStudio_LeftComposite_Section {
+        border-top: 1px solid @borderColor;
+    }
+}
+
+.EezStudio_LeftComposite_Header {
+    flex-shrink: 0;
+    padding: 6px 10px 2px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+    user-select: none;
+}
+
+.EezStudio_LeftComposite_Body {
+    // SubNavigation positions itself absolutely against the nearest
+    // positioned ancestor — this must be it, or it escapes the section.
+    position: relative;
+
+    flex-grow: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    > * {
+        // basis 0: height comes from the container, not the content —
+        // content-sized items would overflow the section instead of
+        // activating their internal scrollbars
+        flex: 1 1 0;
+        min-height: 0;
+    }
+}
+
+// let the header-with-body inner region shrink so its own scrollbar
+// (overflow: auto on .EezStudio_Body / .EezStudio_Tree) activates
+.EezStudio_LeftComposite .EezStudio_Body {
+    min-height: 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// structure tree toolbar — left-aligned like Figma's layer filter row
+// (ToolbarHeader defaults to flex-end for other headers)
+
+.EezStudio_PageStructure .EezStudio_ToolbarHeader {
+    justify-content: flex-start;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// geometry fields (X/Y/W/H) — Figma-style: one bordered field per value
+// with the axis letter inside on the left; hold the letter and move the
+// mouse horizontally to scrub the value
+
+.EezStudio_LVGLWidgetGeometryProperty {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 4px;
+
+    > div:nth-child(n) {
+        margin: 0;
+        transform: none;
+    }
+}
+
+.EezStudio_LVGLPageGeometryProperty {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 4px;
+
+    > div:nth-child(n) {
+        margin: 0;
+        transform: none;
+    }
+}
+
+.EezStudio_LVGLGeometryField {
+    transition: box-shadow 0.12s ease;
+}
+
+// Figma-style hover: a brief outline appears around the field when the
+// pointer moves onto the axis letter (not the accent blue — that is kept
+// for focus/scrub)
+.EezStudio_LVGLGeometryField:hover {
+    box-shadow: 0 0 0 1px @geometryFieldHoverRing;
+}
+
+.EezStudio_LVGLGeometryField {
+    display: flex;
+    align-items: center;
+    height: 30px;
+    min-width: 0;
+    padding: 0 2px 0 10px;
+    border: none;
+    border-radius: 6px;
+    // raised surface one step lighter than the panel — Figma's dark-theme
+    // input look (light theme: bootstrap's near-white secondary bg)
+    background-color: var(--bs-secondary-bg);
+}
+
+.EezStudio_LVGLGeometryField_Label {
+    flex-shrink: 0;
+    padding-right: 4px;
+    color: var(--bs-secondary-color);
+    cursor: ew-resize;
+    user-select: none;
+}
+
+.EezStudio_LVGLGeometryField .form-control {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    height: 24px;
+    padding: 2px 4px;
+    min-width: 0;
+}
+
+.EezStudio_LVGLGeometryField .form-select {
+    height: 22px;
+    min-height: 0;
+    padding: 0 2px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    flex-shrink: 0;
+}
+
+// unit dropdowns with icons render as IconEnumDropdown (btn based)
+.EezStudio_LVGLGeometryField {
+    .EezStudio_IconEnumDropdown {
+        flex-shrink: 0;
+        min-width: 0;
+    }
+
+    .EezStudio_IconEnumDropdown_Button {
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        padding: 0 2px;
+        height: 22px;
+        min-height: 0;
+        color: var(--bs-secondary-color);
+
+        &:hover {
+            background: transparent;
+            color: var(--bs-body-color);
+        }
+    }
+}
+
+// while scrubbing: blue outline only — the background stays unchanged
+// (Figma's active-input look)
+.EezStudio_LVGLGeometryField.EezStudio_LVGLGeometryField_Scrubbing,
+.EezStudio_LVGLGeometryField.EezStudio_LVGLGeometryField_Scrubbing:hover {
+    box-shadow: 0 0 0 1px @selectionBackgroundColor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Figma-style row selection — translucent blue tint with normal text
+// color instead of solid blue with white text; rows get rounded corners.
+// The tint works over both light and dark surfaces.
+
+@selectedRowTint: rgba(13, 153, 255, 0.2);
+
+// navigation lists (Pages, Widgets, Actions, Variables...)
+.EezStudio_List_Selectable > div,
+.EezStudio_List > div {
+    border-radius: 4px;
+}
+
+.EezStudio_List_Selectable:focus > .EezStudio_List_Selectable,
+.EezStudio_List_Selectable:focus {
+    > div.EezStudio_Focused {
+        background-color: @selectedRowTint;
+        color: var(--bs-body-color);
+    }
+
+    > div.EezStudio_Selected {
+        background-color: @selectedRowTint;
+        color: var(--bs-body-color);
+    }
+}
+
+// simple trees
+.EezStudio_SimpleTree:focus .EezStudio_TreeRowEnclosure .EezStudio_TreeRow {
+    &.EezStudio_Focused,
+    &.EezStudio_Selected {
+        background-color: @selectedRowTint;
+        color: var(--bs-body-color);
+    }
+}
+
+// structure trees (project tree / widget structure)
+.EezStudio_Tree .tree-row:not(.drag-source) {
+    // width:auto — the upstream width:100% makes the row overflow past its
+    // right margin, which is why the right gap never grew
+    width: auto;
+
+    // inset the row from the panel edge so the rounding reads like
+    // Figma's layer rows; wide right gap is where the hover lock/eye
+    // icons live
+    margin: 0 6px 0 8px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-radius: 8px;
+
+    &.focused,
+    &:focus-within {
+        background-color: @selectedRowTint !important;
+        color: var(--bs-body-color) !important;
+    }
+
+    &.selected {
+        // descendants of the selected container sit one shade darker
+        // than the container row itself (Figma layers-panel look)
+        background-color: #32394d !important;
+        color: var(--bs-body-color) !important;
+    }
+}
+
+.EezStudio_Tree .tree-row.selected.selected-run-start {
+    // the selected container row reads one shade lighter
+    background-color: @selectedRowTint !important;
+}
+
+// contiguous selected rows read as ONE merged block like Figma's selected
+// frame: square junctions between rows, rounding only on the group's top
+// and bottom ends (the start/end classes are computed per visible row by
+// the Tree component)
+.EezStudio_Tree .tree-row.selected {
+    border-radius: 0;
+}
+
+.EezStudio_Tree .tree-row.selected.selected-run-start {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.EezStudio_Tree .tree-row.selected.selected-run-end {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+// hover lock/eye buttons in structure tree rows: spread apart and keep
+// the eye away from the row edge
+.EezStudio_Tree .tree-row .EezStudio_Toolbar {
+    gap: 8px;
+    padding-right: 8px;
+}
+

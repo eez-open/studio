@@ -76,6 +76,7 @@ const TreeRow = observer(
         onToggleCollapse: (event: any) => void;
         onEditItem?: (itemId: string) => void;
         renderItem?: (itemId: string) => React.ReactNode;
+        selectedRun?: { start: boolean; end: boolean };
     }> {
         ref = React.createRef<HTMLDivElement>();
 
@@ -137,6 +138,17 @@ const TreeRow = observer(
                     treeAdapter.draggableAdapter.isDragSource(item),
                 "tree-row-external-project-item": isExternalItem
             });
+
+            // contiguous selected rows are drawn as one merged block
+            // (Figma layer-row look)
+            if (this.props.selectedRun) {
+                if (this.props.selectedRun.start) {
+                    className += " selected-run-start";
+                }
+                if (this.props.selectedRun.end) {
+                    className += " selected-run-end";
+                }
+            }
 
             let triangle: JSX.Element | undefined;
             if (collapsable) {
@@ -914,6 +926,23 @@ export const Tree = observer(
                     treeAdapter.draggableAdapter.isDragging
             });
 
+            const selectedRun = new Map<
+                any,
+                { start: boolean; end: boolean }
+            >();
+            for (let i = 0; i < this.allRows.length; i++) {
+                const row = this.allRows[i];
+                if (!treeAdapter.isSelected(row.item)) {
+                    continue;
+                }
+                const prev = this.allRows[i - 1];
+                const next = this.allRows[i + 1];
+                selectedRun.set(row, {
+                    start: !prev || !treeAdapter.isSelected(prev.item),
+                    end: !next || !treeAdapter.isSelected(next.item)
+                });
+            }
+
             return (
                 <div
                     className={className}
@@ -964,6 +993,7 @@ export const Tree = observer(
                                 onToggleCollapse={this.onRowToggleCollapse}
                                 onEditItem={onEditItem}
                                 renderItem={renderItem}
+                                selectedRun={selectedRun.get(row)}
                             />
                         ))}
 

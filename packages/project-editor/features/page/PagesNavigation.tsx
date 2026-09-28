@@ -12,6 +12,7 @@ import { IPanel } from "project-editor/store";
 import { Tree } from "project-editor/ui-components/Tree";
 
 import { ProjectContext } from "project-editor/project/context";
+import { t } from "eez-studio-shared/i18n";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
@@ -104,7 +105,7 @@ export const PageStructure = observer(
             if (!this.componentContainerDisplayItem) {
                 return null;
             }
-            return new TreeAdapter(
+            const treeAdapter = new TreeAdapter(
                 this.componentContainerDisplayItem,
                 undefined,
                 (object: IEezObject) => {
@@ -123,6 +124,24 @@ export const PageStructure = observer(
                     ? true
                     : false
             );
+
+            // Figma-style: selecting a container also highlights its whole
+            // subtree in the tree.
+            const innerIsSelected = treeAdapter.isSelected.bind(treeAdapter);
+            treeAdapter.isSelected = (item: any) => {
+                if (innerIsSelected(item)) {
+                    return true;
+                }
+                for (const selected of this.componentContainerDisplayItem!
+                    .selectedItems) {
+                    if (treeAdapter.isAncestor(item, selected)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            return treeAdapter;
         }
 
         // interface IPanel implementation
@@ -373,7 +392,7 @@ export const PageStructure = observer(
                         <Toolbar style={{ minHeight: 38 }}>
                             {this.isAnyHidden ? (
                                 <label className="EezStudio_PageStructure_HiddenWidgetLines">
-                                    <span>Hidden widget lines</span>
+                                    <span>{t("Hidden widget lines")}</span>
                                     <select
                                         className="form-select"
                                         value={
@@ -386,15 +405,23 @@ export const PageStructure = observer(
                                         })}
                                         style={{ margin: "2px 10px 2px 5px" }}
                                     >
-                                        <option value="visible">Visible</option>
-                                        <option value="dimmed">Dimmed</option>
-                                        <option value="hidden">Hidden</option>
+                                        <option value="visible">
+                                            {t("Visible")}
+                                        </option>
+                                        <option value="dimmed">
+                                            {t("Dimmed")}
+                                        </option>
+                                        <option value="hidden">
+                                            {t("Hidden")}
+                                        </option>
                                     </select>
                                 </label>
                             ) : null}
                             <IconAction
                                 title={
-                                    this.isAnyLocked ? "Unlock All" : "Lock All"
+                                    this.isAnyLocked
+                                        ? t("Unlock All")
+                                        : t("Lock All")
                                 }
                                 icon={
                                     this.isAnyLocked ? UNLOCK_ICON : LOCK_ICON
@@ -408,7 +435,9 @@ export const PageStructure = observer(
                             />
                             <IconAction
                                 title={
-                                    this.isAnyHidden ? "Show All" : "Hide all"
+                                    this.isAnyHidden
+                                        ? t("Show All")
+                                        : t("Hide all")
                                 }
                                 icon={
                                     this.isAnyHidden

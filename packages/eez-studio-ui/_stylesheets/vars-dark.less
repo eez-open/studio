@@ -25,7 +25,7 @@
 @sectionBackgroundColor: #1e1e1e;
 @borderColor: #444444;
 @darkBorderColor: #4d4d4d;
-@panelHeaderColor: var(--bs-tertiary-bg);
+@panelHeaderColor: @backgroundColor;
 @selectionBackgroundColor: #0d99ff;
 @selectionColor: #ffffff;
 @lightSelectionBackgroundColor: #0d99ff;
@@ -126,9 +126,14 @@
 @componentShadow: @shadowElevation1;
 @componentBodyShadow: none;
 
-@panelHeaderColorInsideFlexLayout: rgba(var(--bs-tertiary-bg-rgb), 1);
+@panelHeaderColorInsideFlexLayout: @backgroundColor;
 
 @formControlBorderColor: #4d4d4d;
+
+@geometryFieldHoverRing: rgba(255, 255, 255, 0.4);
+
+// Figma dark layer selection as an opaque color
+@selectedRowTint: #394360;
 
 @pageTimelineRowColor: #303030;
 @pageTimelineSelectedRowColor: #606060;
