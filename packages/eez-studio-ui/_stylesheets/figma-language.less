@@ -113,6 +113,110 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// top toolbar — Figma-style: ghost icon buttons (transparent until hover),
+// hairline dividers between groups, flat compact dropdowns
+
+.EezStudio_ProjectEditor_ToolbarNav {
+    .btn {
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        color: var(--bs-emphasis-color);
+        box-shadow: none;
+
+        &:hover:not(:disabled) {
+            background: @hoverBackgroundColor;
+            color: var(--bs-body-color);
+        }
+
+        &.disabled,
+        &:disabled {
+            opacity: 0.35;
+        }
+    }
+
+    // neutral ghost icons in the toolbar (upstream paints all IconActions
+    // with the selection blue); enabled icons are bright so they clearly
+    // differ from dimmed disabled ones
+    .EezStudio_IconAction:not(.selected) {
+        &:not(:disabled) {
+            color: var(--bs-emphasis-color);
+            fill: var(--bs-emphasis-color);
+        }
+
+        &:hover:not(:disabled) {
+            background: @hoverBackgroundColor;
+            border-radius: 6px;
+            color: var(--bs-body-color);
+        }
+    }
+
+    // hairline divider between toolbar button groups (replaces bare spacing);
+    // the groups live inside the EditorButtons wrapper, not on the nav itself.
+    // Drawn with a pseudo-element so it stays perfectly straight and inset
+    // regardless of the group's box quirks.
+    .EezStudio_ProjectEditor_ToolbarNav_EditorButtons > .btn-group:not(:last-child) {
+        position: relative;
+        margin-right: 10px;
+        padding-right: 10px;
+
+        &::after {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 7px;
+            bottom: 7px;
+            width: 1px;
+            background: @borderColor;
+        }
+    }
+
+    // larger hover highlight box around ghost icons
+    .EezStudio_IconAction:not(.selected) {
+        padding: 5px 7px;
+        border-radius: 6px;
+    }
+
+    // mode switch (Edit/Run/Debug/Full Sim): rounded active pill
+    .EezStudio_Action.selected {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    // zoom / configuration dropdowns: flat ghost selects
+    .form-select {
+        background: transparent;
+        border-color: transparent;
+        color: var(--bs-secondary-color);
+        box-shadow: none;
+        border-radius: 6px;
+
+        &:hover {
+            background: @hoverBackgroundColor;
+            color: var(--bs-body-color);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// toolbar tooltip pill (rendered by Toolbar's title hijack)
+.EezStudio_ToolbarTooltip {
+    position: fixed;
+    display: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: var(--bs-secondary-bg);
+    border: 1px solid @borderColor;
+    color: var(--bs-body-color);
+    font-size: 12px;
+    white-space: nowrap;
+    box-shadow: @shadowElevation3;
+    pointer-events: none;
+    z-index: 6000;
+    transition: opacity 0.12s ease;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Figma-style left panel composites — each primary tab stacks two sections
 // (Pages + Widget Structure, Variables + Actions)
 
@@ -291,6 +395,21 @@
 .EezStudio_LVGLGeometryField.EezStudio_LVGLGeometryField_Scrubbing,
 .EezStudio_LVGLGeometryField.EezStudio_LVGLGeometryField_Scrubbing:hover {
     box-shadow: 0 0 0 1px @selectionBackgroundColor;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// icon actions app-wide: enabled icons bright, disabled dim — blue stays
+// reserved for selection states (upstream paints every IconAction
+// selection-blue)
+.EezStudio_IconAction:not(.selected) {
+    &:not(:disabled) {
+        color: var(--bs-emphasis-color);
+        fill: var(--bs-emphasis-color);
+    }
+
+    &:disabled {
+        opacity: 0.55;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

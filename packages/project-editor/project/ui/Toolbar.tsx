@@ -1,5 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
+
+import { t } from "eez-studio-shared/i18n";
 import {
     action,
     computed,
@@ -45,6 +47,107 @@ import { showExportedItemsDialog } from "./ExportedItemsDialog";
 
 export const Toolbar = observer(
     class Toolbar extends React.Component {
+        // Figma-style tooltips: while the pointer is over the toolbar, the
+        // native title attribute is swapped for a custom pill rendered
+        // below the button.
+        tooltipPill: HTMLDivElement | undefined;
+        tooltipTarget: Element | undefined;
+
+        componentDidMount() {
+            const nav = ReactDOM.findDOMNode(this) as Element | null;
+            if (!nav) {
+                return;
+            }
+
+            this.hideTooltip = () => {
+                if (this.tooltipTarget) {
+                    const el = this.tooltipTarget as HTMLElement;
+                    if (el.dataset.ttTitle !== undefined) {
+                        el.setAttribute("title", el.dataset.ttTitle);
+                    }
+                    this.tooltipTarget = undefined;
+                }
+                if (this.tooltipPill) {
+                    this.tooltipPill.style.opacity = "0";
+                }
+            };
+
+            this.onTooltipOver = (event: MouseEvent) => {
+                const target = event.target as Element;
+                const el = target.closest<HTMLElement>("[title]");
+                if (!el || !nav.contains(el)) {
+                    return;
+                }
+                if (this.tooltipTarget === el) {
+                    return;
+                }
+                this.hideTooltip?.();
+
+                const title = el.getAttribute("title");
+                if (!title) {
+                    return;
+                }
+
+                el.dataset.ttTitle = title;
+                el.removeAttribute("title");
+                this.tooltipTarget = el;
+
+                if (!this.tooltipPill) {
+                    const pill = document.createElement("div");
+                    pill.className = "EezStudio_ToolbarTooltip";
+                    document.body.appendChild(pill);
+                    this.tooltipPill = pill;
+                }
+
+                const pill = this.tooltipPill!;
+                pill.textContent = title;
+                pill.style.opacity = "0";
+                pill.style.display = "block";
+
+                const rect = el.getBoundingClientRect();
+                requestAnimationFrame(() => {
+                    const pillRect = pill.getBoundingClientRect();
+                    let left = rect.left + rect.width / 2 - pillRect.width / 2;
+                    left = Math.max(
+                        8,
+                        Math.min(left, window.innerWidth - pillRect.width - 8)
+                    );
+                    pill.style.left = left + "px";
+                    pill.style.top = rect.bottom + 8 + "px";
+                    pill.style.opacity = "1";
+                });
+            };
+
+            this.onTooltipOut = (event: MouseEvent) => {
+                const target = event.target as Element;
+                if (this.tooltipTarget && target.contains(this.tooltipTarget)) {
+                    this.hideTooltip?.();
+                }
+            };
+
+            nav.addEventListener("mouseover", this.onTooltipOver!);
+            nav.addEventListener("mouseout", this.onTooltipOut!);
+            nav.addEventListener("mousedown", this.hideTooltip!);
+        }
+
+        componentWillUnmount() {
+            const nav = ReactDOM.findDOMNode(this) as Element | null;
+            if (nav) {
+                nav.removeEventListener("mouseover", this.onTooltipOver!);
+                nav.removeEventListener("mouseout", this.onTooltipOut!);
+                nav.removeEventListener("mousedown", this.hideTooltip!);
+            }
+            this.hideTooltip?.();
+            if (this.tooltipPill) {
+                this.tooltipPill.remove();
+                this.tooltipPill = undefined;
+            }
+        }
+
+        onTooltipOver: ((event: MouseEvent) => void) | undefined;
+        onTooltipOut: ((event: MouseEvent) => void) | undefined;
+        hideTooltip: (() => void) | undefined;
+
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -278,7 +381,7 @@ const EditorButtons = observer(
                                 <IconAction
                                     title={
                                         this.context.undoManager.canUndo
-                                            ? `Undo "${this.context.undoManager.undoDescription}"`
+                                            ? t("Undo")
                                             : ""
                                     }
                                     icon="material:undo"
@@ -290,7 +393,7 @@ const EditorButtons = observer(
                                 <IconAction
                                     title={
                                         this.context.undoManager.canRedo
-                                            ? `Redo "${this.context.undoManager.redoDescription}"`
+                                            ? t("Redo")
                                             : ""
                                     }
                                     icon="material:redo"
@@ -527,7 +630,7 @@ const EditorButtons = observer(
                                         title={title}
                                         icon={icon}
                                         onClick={onClick}
-                                        enabled={!isActive}
+                                        selected={isActive}
                                     />
                                 );
                             })}
