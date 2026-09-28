@@ -1,5 +1,5 @@
 import { guid } from "eez-studio-shared/guid";
-import { action, computed, makeObservable } from "mobx";
+import { action, computed, makeObservable, observable } from "mobx";
 import { getParent, IEezObject } from "project-editor/core/object";
 import { getProjectStore } from "project-editor/store";
 import { Component } from "project-editor/flow/component";
@@ -18,6 +18,9 @@ export abstract class FlowTabState implements IEditorState {
 
     constructor(public flow: Flow) {
         makeObservable(this, {
+            // observable so consumers reading `.page`/`.flow` (e.g. the
+            // toolbar's preview-background button) are tracked
+            flow: observable,
             flowState: computed,
             projectStore: computed,
             isRuntime: computed,
