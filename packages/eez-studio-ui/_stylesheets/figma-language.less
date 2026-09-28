@@ -229,24 +229,26 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Figma-style color input: swatch (opens picker) + dark hex field
+// Figma-style color input: ONE bordered field with the swatch nested
+// inside on the left (click opens the picker) and the hex value next to it
 .EezStudio_ColorInput {
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 6px;
     width: 100%;
+    height: 32px;
+    border-radius: 8px;
 
     .EezStudio_ColorInput_Swatch {
-        position: relative;
-        width: 18px;
-        height: 18px;
-        flex-shrink: 0;
-        border: 1px solid @borderColor;
-        border-radius: 4px;
+        position: absolute;
+        left: 8px;
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
         cursor: pointer;
         padding: 0;
-        background: transparent;
         display: inline-block;
+        z-index: 1;
 
         // the native <input type=color> inside is invisible; its swatch is
         // drawn by the label background (inline style from the component)
@@ -260,19 +262,22 @@
             border: none;
             padding: 0;
         }
-
-        &:hover {
-            border-color: @hoverInputBorderColor;
-        }
-
-        &:focus-within {
-            border-color: @selectionBackgroundColor;
-        }
     }
 
+    // higher specificity than the global 28px input rule (same cascade
+    // position, later would win — force with both class chain and !important
+    // on the left padding that clears the nested swatch)
     .form-control {
         flex: 1;
         min-width: 0;
+        height: 32px;
+        padding-left: 32px !important;
+        padding-right: 10px;
+        border: none;
+        border-radius: 8px;
+        // Figma's dark color field: borderless, one step lighter than the
+        // panel, ~35px tall, 8px radius
+        background-color: var(--bs-secondary-bg);
     }
 }
 
