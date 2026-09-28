@@ -1,27 +1,28 @@
-// Cool grey ramp (hue 220) and primary blue ramp (hue 207) — every neutral
-// and accent-blue value below is drawn from these two families so borders,
-// panels, hovers and selection states read as one coherent palette instead
-// of independently-picked greys.
+// Figma-derived palette (light theme). Neutral grey ramp (no hue) plus a
+// single accent blue #0d99ff — panels #ffffff, canvas/section #f5f5f5,
+// borders #e6e6e6, hover #f0f0f0, inactive selection #e5e5e5 — so the UI
+// reads like one coherent design-system palette instead of independently
+// picked greys.
 @backgroundColor: var(--bs-body-bg);
 @textColor: var(--bs-body-color);
-@sectionBackgroundColor: hsl(220, 20%, 95%);
-@borderColor: hsl(220, 14%, 90%);
-@darkBorderColor: hsl(220, 10%, 78%);
+@sectionBackgroundColor: #f5f5f5;
+@borderColor: #e6e6e6;
+@darkBorderColor: #d9d9d9;
 @panelHeaderColor: var(--bs-tertiary-bg);
-@selectionBackgroundColor: hsl(207, 56%, 46%);
+@selectionBackgroundColor: #0d99ff;
 @selectionColor: white;
-@lightSelectionBackgroundColor: hsl(207, 60%, 72%);
-@lightSelectionColor: white;
-@tableBorderColor: hsl(220, 14%, 89%);
-@nonFocusedSelectionBackgroundColor: hsl(220, 10%, 78%);
-@nonFocusedSelectionColor: black;
-@hoverBackgroundColor: hsl(220, 10%, 78%);
-@hoverColor: black;
-@scrollTrackColor: hsl(220, 20%, 95%);
-@scrollThumbColor: hsl(220, 8%, 76%);
-@darkTextColor: hsl(220, 8%, 35%);
-@focusBackgroundColor: hsl(207, 58%, 58%);
-@focusColor: hsl(220, 10%, 27%);
+@lightSelectionBackgroundColor: #d2e9ff;
+@lightSelectionColor: #1e1e1e;
+@tableBorderColor: #e6e6e6;
+@nonFocusedSelectionBackgroundColor: #e5e5e5;
+@nonFocusedSelectionColor: #1e1e1e;
+@hoverBackgroundColor: #f0f0f0;
+@hoverColor: #1e1e1e;
+@scrollTrackColor: #f5f5f5;
+@scrollThumbColor: #cccccc;
+@darkTextColor: #888888;
+@focusBackgroundColor: #0d99ff;
+@focusColor: #ffffff;
 @dragSourceBackgroundColor: #e040fb;
 @dragSourceColor: white;
 @dropTargetBackgroundColor: #7c4dff;
@@ -30,7 +31,7 @@
 @errorColor: #dc3545;
 @warningBackgroundColor: #ffc107;
 @warningColor: #212529;
-@actionHoverColor: #0056b3;
+@actionHoverColor: #0c8ce9;
 @connectionLineColor: #999;
 @trixToolbarColor: #eee;
 
@@ -56,8 +57,8 @@
 
 @BB3_StartPageGridGap: 40px;
 
-@componentBackgroundColor: #fffcf7;
-@componentBorder: #fffcf7;
+@componentBackgroundColor: #ffffff;
+@componentBorder: #ffffff;
 @componentBody: @backgroundColor;
 
 @calendarMonthBackgroundDayLevel0BackgroundColor: #ebedf0;
@@ -97,12 +98,13 @@
 
 // Five-step shadow/elevation scale — pick by how far off the surface an
 // element sits (barely-raised control -> dropdown -> popover -> panel ->
-// modal), never by eyeballing a one-off box-shadow.
-@shadowElevation1: 0 1px 3px hsla(220, 30%, 10%, 0.16);
-@shadowElevation2: 0 4px 6px hsla(220, 30%, 10%, 0.16);
-@shadowElevation3: 0 5px 15px hsla(220, 30%, 10%, 0.18);
-@shadowElevation4: 0 10px 24px hsla(220, 30%, 10%, 0.18);
-@shadowElevation5: 0 15px 35px hsla(220, 30%, 10%, 0.22);
+// modal), never by eyeballing a one-off box-shadow. Neutral (hue-less)
+// shadows to match the Figma palette.
+@shadowElevation1: 0 1px 3px hsla(0, 0%, 10%, 0.16);
+@shadowElevation2: 0 4px 6px hsla(0, 0%, 10%, 0.16);
+@shadowElevation3: 0 5px 15px hsla(0, 0%, 10%, 0.18);
+@shadowElevation4: 0 10px 24px hsla(0, 0%, 10%, 0.18);
+@shadowElevation5: 0 15px 35px hsla(0, 0%, 10%, 0.22);
 
 @borderRadiusSmall: 4px;
 
@@ -111,12 +113,12 @@
 
 @panelHeaderColorInsideFlexLayout: var(--bs-tertiary-bg);
 
-@formControlBorderColor: #ced4da;
+@formControlBorderColor: #d9d9d9;
 
 @pageTimelineRowColor: #e0e0e0;
 @pageTimelineSelectedRowColor: #a0a0a0;
 
-@documentationHeadingColor: #0066cc;
+@documentationHeadingColor: #0c8ce9;
 
 @inErrorTextColor: @textColor;
 @inErrorBackgroundColor: #ffcccc;

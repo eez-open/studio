@@ -1,26 +1,45 @@
-// Same cool grey (hue 220) / primary blue (hue 207) families as vars.less,
-// re-sampled at the lightness levels a dark surface needs — this keeps the
-// two themes visibly related instead of two unrelated ad hoc palettes.
+// Figma-derived palette (dark theme): panels #2c2c2c, canvas #1e1e1e,
+// borders #444444, hover #383838 — neutral greys with the same single
+// accent blue #0d99ff as the light theme. The :root block re-samples the
+// Bootstrap dark CSS variables to neutral greys (Bootstrap's own dark
+// values are blue-tinted), and this file is only loaded while
+// data-bs-theme="dark" is active.
+:root {
+    --bs-body-bg: #2c2c2c;
+    --bs-body-bg-rgb: 44, 44, 44;
+    --bs-secondary-bg: #383838;
+    --bs-secondary-bg-rgb: 56, 56, 56;
+    --bs-tertiary-bg: #2c2c2c;
+    --bs-tertiary-bg-rgb: 44, 44, 44;
+    --bs-body-color: #ffffff;
+    --bs-body-color-rgb: 255, 255, 255;
+    --bs-secondary-color: #b3b3b3;
+    --bs-secondary-color-rgb: 179, 179, 179;
+    --bs-border-color: #444444;
+    --bs-border-color-translucent: #444444;
+    --bs-light-rgb: 64, 64, 64;
+}
+
 @backgroundColor: var(--bs-body-bg);
 @textColor: var(--bs-body-color);
-@sectionBackgroundColor: hsl(220, 12%, 33%);
-@borderColor: hsl(220, 12%, 27%);
-@darkBorderColor: hsl(220, 12%, 24%);
+@sectionBackgroundColor: #1e1e1e;
+@borderColor: #444444;
+@darkBorderColor: #4d4d4d;
 @panelHeaderColor: var(--bs-tertiary-bg);
-@selectionBackgroundColor: hsl(207, 56%, 46%);
-@selectionColor: hsl(220, 15%, 89%);
-@lightSelectionBackgroundColor: hsl(207, 60%, 72%);
-@lightSelectionColor: hsl(220, 15%, 89%);
-@tableBorderColor: hsl(220, 12%, 27%);
-@nonFocusedSelectionBackgroundColor: hsl(220, 8%, 40%);
-@nonFocusedSelectionColor: hsl(220, 20%, 93%);
-@hoverBackgroundColor: hsl(220, 8%, 40%);
-@hoverColor: hsl(220, 15%, 89%);
-@scrollTrackColor: hsl(220, 20%, 95%);
-@scrollThumbColor: hsl(220, 8%, 76%);
-@darkTextColor: hsl(220, 15%, 87%);
-@focusBackgroundColor: hsl(207, 58%, 58%);
-@focusColor: hsl(220, 10%, 27%);
+@selectionBackgroundColor: #0d99ff;
+@selectionColor: #ffffff;
+@lightSelectionBackgroundColor: #0d99ff;
+@lightSelectionColor: #ffffff;
+@tableBorderColor: #444444;
+@nonFocusedSelectionBackgroundColor: #4a4a4a;
+@nonFocusedSelectionColor: #ffffff;
+@hoverBackgroundColor: #383838;
+@hoverColor: #ffffff;
+@scrollTrackColor: #2c2c2c;
+@scrollThumbColor: #595959;
+@darkTextColor: #b3b3b3;
+@focusBackgroundColor: #0d99ff;
+@focusColor: #ffffff;
 @dragSourceBackgroundColor: #e040fb;
 @dragSourceColor: white;
 @dropTargetBackgroundColor: #7c4dff;
@@ -29,7 +48,7 @@
 @errorColor: #dc3545;
 @warningBackgroundColor: #ffc107;
 @warningColor: #212529;
-@actionHoverColor: #0056b3;
+@actionHoverColor: #0c8ce9;
 @connectionLineColor: #999;
 @trixToolbarColor: #eee;
 
@@ -37,13 +56,13 @@
 @seqConnectionLineColor: #3fadb5;
 @activeConnectionLineColor: rgb(18, 18, 48);
 @connectionLineInTheMakingColor: #337bb7;
-@activeTabBackgroundColor: #666666;
+@activeTabBackgroundColor: #2c2c2c;
 @disabledConnectionLineColor: #999;
 
 @actionSelectedTextColor: white;
 @actionDisabledColor: #666;
 
-@readOnlyListItem: #f5f5f5;
+@readOnlyListItem: #383838;
 
 @splitterBackgroundColor: @panelHeaderColor;
 @splitterBorderColor: @borderColor;
@@ -55,8 +74,8 @@
 
 @BB3_StartPageGridGap: 40px;
 
-@componentBackgroundColor: #333;
-@componentBorder: #333;
+@componentBackgroundColor: #2c2c2c;
+@componentBorder: #2c2c2c;
 @componentBody: @backgroundColor;
 
 @calendarMonthBackgroundDayLevel0BackgroundColor: #666;
@@ -92,19 +111,15 @@
 
 @historyItemDateColor: #6c757d;
 
-:root {
-    --bs-light-rgb: 64, 64, 64;
-}
-
 @debuggerPanelLogItemScpi: lightblue;
 
 // Same five-step scale as vars.less, darker and more opaque so elevation
 // still reads against a dark surface.
-@shadowElevation1: 0 1px 3px hsla(220, 40%, 1%, 0.45);
-@shadowElevation2: 0 4px 6px hsla(220, 40%, 1%, 0.45);
-@shadowElevation3: 0 5px 15px hsla(220, 40%, 1%, 0.5);
-@shadowElevation4: 0 10px 24px hsla(220, 40%, 1%, 0.5);
-@shadowElevation5: 0 15px 35px hsla(220, 40%, 1%, 0.6);
+@shadowElevation1: 0 1px 3px hsla(0, 0%, 1%, 0.45);
+@shadowElevation2: 0 4px 6px hsla(0, 0%, 1%, 0.45);
+@shadowElevation3: 0 5px 15px hsla(0, 0%, 1%, 0.5);
+@shadowElevation4: 0 10px 24px hsla(0, 0%, 1%, 0.5);
+@shadowElevation5: 0 15px 35px hsla(0, 0%, 1%, 0.6);
 
 @borderRadiusSmall: 4px;
 
@@ -113,12 +128,12 @@
 
 @panelHeaderColorInsideFlexLayout: rgba(var(--bs-tertiary-bg-rgb), 1);
 
-@formControlBorderColor: #515151;
+@formControlBorderColor: #4d4d4d;
 
 @pageTimelineRowColor: #303030;
 @pageTimelineSelectedRowColor: #606060;
 
-@documentationHeadingColor: #3388ff;
+@documentationHeadingColor: #4daaff;
 
 @inErrorTextColor: #333;
 @inErrorBackgroundColor: #ffcccc;

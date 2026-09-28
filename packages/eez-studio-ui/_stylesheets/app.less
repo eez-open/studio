@@ -5,7 +5,57 @@
 
 @font-face {
     font-family: "EEZ Studio Font";
-    src: url(Roboto-Regular.ttf);
+    src: url(Inter-Variable.ttf), url(Roboto-Regular.ttf);
+    font-weight: 100 900;
+    font-style: normal;
+}
+
+// Figma accent (#0d99ff) for the Bootstrap components that bake their
+// primary color in at compile time — --bs-primary alone doesn't reach
+// .btn-primary / form controls.
+:root {
+    --bs-primary: #0d99ff;
+    --bs-primary-rgb: 13, 153, 255;
+    --bs-link-color: #0d99ff;
+    --bs-link-color-rgb: 13, 153, 255;
+    --bs-link-hover-color: #0c8ce9;
+    --bs-link-hover-color-rgb: 12, 140, 233;
+}
+
+.btn-primary {
+    --bs-btn-bg: #0d99ff;
+    --bs-btn-border-color: #0d99ff;
+    --bs-btn-hover-bg: #0c8ce9;
+    --bs-btn-hover-border-color: #0c8ce9;
+    --bs-btn-active-bg: #0b82da;
+    --bs-btn-active-border-color: #0b82da;
+    --bs-btn-disabled-bg: #0d99ff;
+    --bs-btn-disabled-border-color: #0d99ff;
+    --bs-btn-focus-shadow-rgb: 13, 153, 255;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: #0d99ff;
+    --bs-btn-border-color: #0d99ff;
+    --bs-btn-hover-bg: #0d99ff;
+    --bs-btn-hover-border-color: #0d99ff;
+    --bs-btn-active-bg: #0d99ff;
+    --bs-btn-active-border-color: #0d99ff;
+    --bs-btn-disabled-color: #0d99ff;
+    --bs-btn-disabled-border-color: #0d99ff;
+    --bs-btn-focus-shadow-rgb: 13, 153, 255;
+}
+
+.form-check-input:checked {
+    background-color: #0d99ff;
+    border-color: #0d99ff;
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: #8ed1ff;
+    box-shadow: 0 0 0 0.2rem rgba(13, 153, 255, 0.2);
 }
 
 @font-face {
