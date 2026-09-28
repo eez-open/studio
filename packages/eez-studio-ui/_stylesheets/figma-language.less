@@ -404,7 +404,7 @@
         min-width: 110px;
         display: block;
         z-index: 5000;
-        background-color: var(--bs-secondary-bg);
+        background-color: @menuBackgroundColor;
         border: 1px solid @borderColor;
         border-radius: 8px;
         box-shadow: @shadowElevation4;
@@ -418,7 +418,7 @@
             cursor: pointer;
 
             &:hover {
-                background-color: @hoverBackgroundColor;
+                background-color: @menuHoverColor;
             }
 
             &.active {
@@ -433,7 +433,7 @@
 // dropdown menus (Bootstrap dropdown-menu everywhere: toolbar, palettes,
 // custom dropdowns) — Figma style: dark raised panel, rounded, hover rows
 .dropdown-menu {
-    background-color: var(--bs-secondary-bg);
+    background-color: @menuBackgroundColor;
     border: 1px solid @borderColor;
     border-radius: 8px;
     box-shadow: @shadowElevation4;
@@ -447,7 +447,7 @@
 
         &:hover,
         &:focus {
-            background-color: @hoverBackgroundColor;
+            background-color: @menuHoverColor;
             color: var(--bs-body-color);
         }
 
@@ -467,7 +467,7 @@
 // native <select> popup can't be styled — but IconEnumDropdown (custom) and
 // any custom listboxes get the same treatment:
 .EezStudio_IconEnumDropdown_Menu {
-    background-color: var(--bs-secondary-bg);
+    background-color: @menuBackgroundColor;
     border: 1px solid @borderColor;
     border-radius: 8px;
     box-shadow: @shadowElevation4;
@@ -478,7 +478,7 @@
         font-size: 12px;
 
         &:hover {
-            background-color: @hoverBackgroundColor;
+            background-color: @menuHoverColor;
         }
     }
 }
