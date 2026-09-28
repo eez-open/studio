@@ -372,6 +372,60 @@
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// dropdown menus (Bootstrap dropdown-menu everywhere: toolbar, palettes,
+// custom dropdowns) — Figma style: dark raised panel, rounded, hover rows
+.dropdown-menu {
+    background-color: var(--bs-secondary-bg);
+    border: 1px solid @borderColor;
+    border-radius: 8px;
+    box-shadow: @shadowElevation4;
+    padding: 4px;
+
+    .dropdown-item {
+        color: var(--bs-body-color);
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-size: 12px;
+
+        &:hover,
+        &:focus {
+            background-color: @hoverBackgroundColor;
+            color: var(--bs-body-color);
+        }
+
+        &.active,
+        &:active {
+            background-color: @selectionBackgroundColor;
+            color: @selectionColor;
+        }
+    }
+
+    .dropdown-divider {
+        border-color: @borderColor;
+        margin: 4px 0;
+    }
+}
+
+// native <select> popup can't be styled — but IconEnumDropdown (custom) and
+// any custom listboxes get the same treatment:
+.EezStudio_IconEnumDropdown_Menu {
+    background-color: var(--bs-secondary-bg);
+    border: 1px solid @borderColor;
+    border-radius: 8px;
+    box-shadow: @shadowElevation4;
+
+    .dropdown-item {
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-size: 12px;
+
+        &:hover {
+            background-color: @hoverBackgroundColor;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // geometry fields (X/Y/W/H) — Figma-style: one bordered field per value
 // with the axis letter inside on the left; hold the letter and move the
 // mouse horizontally to scrub the value
