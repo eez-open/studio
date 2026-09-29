@@ -82,7 +82,7 @@
         "@types/wpapi": "1.1.4",
         "@types/xterm": "3.0.0",
         "animate.css": "3.5.2",
-        "electron": "43.2.0",
+        "electron": "43.7.5",
         "electron-builder": "26.15.3",
         "gulp": "^5.0.1",
         "gulp-cli": "^3.1.0",
