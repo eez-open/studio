@@ -194,7 +194,8 @@ export const GeometryProperties = observer(
                         objects={this.props.objects}
                         updateObject={this.props.updateObject}
                         unitPropertyName="widthUnit"
-                        readOnly={this.props.readOnly || widthReadOnly}
+                        readOnly={this.props.readOnly}
+                        valueReadOnly={widthReadOnly}
                         scrub
                     />
                     <GeometryFieldRow
@@ -205,7 +206,8 @@ export const GeometryProperties = observer(
                         objects={this.props.objects}
                         updateObject={this.props.updateObject}
                         unitPropertyName="heightUnit"
-                        readOnly={this.props.readOnly || heightReadOnly}
+                        readOnly={this.props.readOnly}
+                        valueReadOnly={heightReadOnly}
                         scrub
                     />
                 </div>

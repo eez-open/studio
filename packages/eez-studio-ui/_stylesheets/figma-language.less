@@ -691,6 +691,27 @@
     box-shadow: 0 0 0 1px @selectionBackgroundColor;
 }
 
+// content-sized widget (e.g. GIF): the value is determined by the content,
+// so the number input is inert — not clickable/focusable, dimmed text. The
+// unit dropdown button stays interactive so the unit can be switched back
+// to px/percent. The input is wrapped by Property (not a direct child), so
+// target it descendant-wise; the unit control is a button, not a
+// .form-control, and is unaffected.
+.EezStudio_LVGLGeometryField_Locked {
+    .form-control {
+        pointer-events: none;
+        cursor: default;
+        color: var(--bs-secondary-color);
+    }
+
+    // a locked field never edits: no hover ring, no focus ring (mouse focus
+    // is blocked by pointer-events, tab focus must not light the bubble up)
+    &:hover,
+    &:focus-within {
+        box-shadow: none;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // icon actions app-wide: enabled icons bright, disabled dim — blue stays
 // reserved for selection states (upstream paints every IconAction

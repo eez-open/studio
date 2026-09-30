@@ -21,6 +21,10 @@ export const GeometryFieldRow = React.memo(
             updateObject: (propertyValues: any) => void;
             unitPropertyName?: string;
             readOnly?: boolean | undefined;
+            // value is content-determined (unit == "content"): the number
+            // input turns inert, but the unit dropdown must stay editable
+            // so the unit can be switched back to px/percent
+            valueReadOnly?: boolean | undefined;
             scrub?: boolean | undefined;
         },
         { scrubbing: boolean }
@@ -63,13 +67,16 @@ export const GeometryFieldRow = React.memo(
 
         render() {
             const readOnly = this.props.readOnly;
-            const scrub = this.props.scrub && !readOnly;
+            const valueReadOnly = readOnly || this.props.valueReadOnly;
+            const scrub = this.props.scrub && !valueReadOnly;
 
             return (
                 <div
                     className={classNames("EezStudio_LVGLGeometryField", {
                         EezStudio_LVGLGeometryField_Scrubbing:
-                            this.state.scrubbing
+                            this.state.scrubbing,
+                        EezStudio_LVGLGeometryField_Locked:
+                            this.props.valueReadOnly
                     })}
                 >
                     <div
@@ -92,7 +99,7 @@ export const GeometryFieldRow = React.memo(
                             )!
                         }
                         objects={this.props.objects}
-                        readOnly={!!readOnly}
+                        readOnly={!!valueReadOnly}
                         updateObject={this.props.updateObject}
                     />
                     {this.props.unitPropertyName && (
@@ -104,7 +111,7 @@ export const GeometryFieldRow = React.memo(
                                 )!
                             }
                             objects={this.props.objects}
-                            readOnly={!!this.props.readOnly}
+                            readOnly={!!readOnly}
                             updateObject={this.props.updateObject}
                         />
                     )}
