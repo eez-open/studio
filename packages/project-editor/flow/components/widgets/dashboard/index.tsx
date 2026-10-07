@@ -703,17 +703,29 @@ const NumberInputDashboardWidgetElement = observer(
                 );
             }
 
+            const displayedValue =
+                this.inputValue != undefined ? this.inputValue : value;
+
+            const numericValue = parseFloat(displayedValue);
+            const invalid =
+                isNaN(numericValue) || numericValue < min || numericValue > max;
+
             return (
                 <input
                     ref={this.inputElement}
                     type="number"
                     className={classNames(this.props.className, {
                         "eez-studio-disable-default-tab-handling":
-                            this.props.disableDefaultTabHandling
+                            this.props.disableDefaultTabHandling,
+                        "eez-number-input-invalid": invalid
                     })}
-                    value={
-                        this.inputValue != undefined ? this.inputValue : value
+                    aria-invalid={invalid}
+                    title={
+                        invalid
+                            ? `Value must be between ${min} and ${max}`
+                            : undefined
                     }
+                    value={displayedValue}
                     min={min}
                     max={max}
                     step={step}
