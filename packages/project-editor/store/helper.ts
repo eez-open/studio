@@ -451,6 +451,10 @@ export function getObjectPathAsString(object: IEezObject) {
     const path = getObjectPath(object).join("/");
     const project = getProject(object);
     const projectStore = project._store;
+    if (!projectStore) {
+        console.warn(`ProjectStore not found for the object`, object);
+        return "";
+    }
     const absoluteFilePath =
         projectStore.openProjectsManager.getProjectFilePath(project);
     if (absoluteFilePath != undefined) {

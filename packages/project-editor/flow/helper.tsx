@@ -305,7 +305,7 @@ export function buildWidgetText(
 
     if (text != undefined) {
         const writeText = text;
-        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(writeText));
+        dataBuffer.writeStringPtr(writeText);
     } else {
         dataBuffer.writeUint32(0);
     }

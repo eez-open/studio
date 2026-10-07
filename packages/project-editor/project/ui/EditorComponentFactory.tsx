@@ -26,6 +26,7 @@ import { Font } from "project-editor/features/font/font";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { getAncestorOfType } from "project-editor/store";
 import { ReadmeEditor } from "project-editor/features/readme/navigation";
+import { DibModuleMetadataEditor } from "project-editor/features/dib-module-metadata/navigation";
 import { ChangesEditor } from "project-editor/features/changes/editor";
 import { isLVGLProject } from "project-editor/project/project-type-traits";
 
@@ -95,6 +96,14 @@ export function getEditorComponent(
             object: project.readme,
             subObject: object,
             EditorComponent: ReadmeEditor
+        };
+    }
+
+    if (isAncestor(object, project.dibModuleMetadata)) {
+        return {
+            object: project.dibModuleMetadata,
+            subObject: object,
+            EditorComponent: DibModuleMetadataEditor
         };
     }
 

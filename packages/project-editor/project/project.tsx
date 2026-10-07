@@ -62,6 +62,7 @@ import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Texts } from "project-editor/features/texts";
 import { Readme } from "project-editor/features/readme";
+import { DibModuleMetadata } from "project-editor/features/dib-module-metadata";
 import { Changes } from "project-editor/features/changes";
 import { validators } from "eez-studio-shared/validation";
 import { createProjectTypeTraits } from "./project-type-traits";
@@ -1781,6 +1782,7 @@ export class Project extends EezObject {
     fonts: Font[];
     texts: Texts;
     readme: Readme;
+    dibModuleMetadata: DibModuleMetadata;
     scpi: Scpi;
     instrumentCommands: InstrumentCommands;
     shortcuts: Shortcuts;
@@ -1830,6 +1832,7 @@ export class Project extends EezObject {
             fonts: observable,
             texts: observable,
             readme: observable,
+            dibModuleMetadata: observable,
             bitmaps: observable,
             scpi: observable,
             instrumentCommands: observable,
@@ -2011,7 +2014,7 @@ export class Project extends EezObject {
 
         for (let i = 0; i < colors.length; i++) {
             if (!colors[i]) {
-                for (let j = 0; j < colors.length; j++) {
+                for (let j = i + 1; j < colors.length; j++) {
                     if (colors[j]) {
                         colors[i] = colors[j];
                         break;

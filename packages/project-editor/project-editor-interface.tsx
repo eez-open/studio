@@ -121,6 +121,7 @@ import type { FlowEditor } from "project-editor/flow/editor/editor";
 import type { newComponentMenuItem } from "project-editor/flow/editor/ComponentsPalette";
 
 import type { LVGLPageEditorRuntime } from "project-editor/lvgl/page-runtime";
+import type { writeDibModuleMetadata } from "project-editor/features/dib-module-metadata";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -220,6 +221,7 @@ export interface IProjectEditor {
     BuildFileClass: typeof BuildFile;
     FlowEditorClass: typeof FlowEditor;
     newComponentMenuItem: typeof newComponentMenuItem;
+    writeDibModuleMetadata: typeof writeDibModuleMetadata;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

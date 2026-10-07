@@ -54,7 +54,7 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
     }
 
     function buildTheme(theme: Theme) {
-        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(theme.name));
+        dataBuffer.writeStringPtr(theme.name);
         dataBuffer.writeNumberArray(theme.colors, buildColor);
     }
 

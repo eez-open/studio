@@ -1535,7 +1535,21 @@ export const builtInFunctions: {
             return "integer";
         },
         enabled: projectStore => projectStore.projectTypeTraits.isLVGL
-    }
+    },
+
+    "DibModule.field": {
+        operationIndex: 96,
+        arity: 1,
+        args: ["globalVariableIndex"],
+        eval: (
+            expressionContext: IExpressionContext | undefined,
+            ...args: any[]
+        ) => undefined,
+        getValueType: (...args: ValueType[]) => {
+            return "any";
+        },
+        enabled: projectStore => false
+    },
 };
 
 type BuiltInConstantsType = {

@@ -335,6 +335,10 @@ export const NativeVariableImplementationInfoPropertyUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type DibField = "input" | "output" | "input-output" | undefined;
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class Variable extends EezObject {
     id: number | undefined;
     name: string;
@@ -346,6 +350,7 @@ export class Variable extends EezObject {
     usedIn?: string[];
     persistent: boolean;
     native: boolean;
+    dibField: DibField;
 
     constructor() {
         super();
@@ -368,7 +373,8 @@ export class Variable extends EezObject {
             defaultValueList: observable,
             usedIn: observable,
             persistent: observable,
-            native: observable
+            native: observable,
+            dibField: observable
         });
     }
 
@@ -442,15 +448,19 @@ export class Variable extends EezObject {
             {
                 name: "native",
                 type: PropertyType.Boolean,
-                disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !hasFlowSupport(variable) ||
-                    !ProjectEditor.getProject(
-                        variable
-                    ).projectTypeTraits.isVariableTypeSupportedAsNative(
-                        variable.type
-                    ) ||
-                    ProjectEditor.getProject(variable).masterProject != null,
+                disabled: (variable: Variable) => {
+                    const project = ProjectEditor.getProject(variable);
+                    return (
+                        !isGlobalVariable(variable) ||
+                        !hasFlowSupport(variable) ||
+                        !ProjectEditor.getProject(
+                            variable
+                        ).projectTypeTraits.isVariableTypeSupportedAsNative(
+                            variable.type
+                        ) ||
+                        project.masterProject != null
+                    );
+                },
                 checkboxStyleSwitch: true
             },
             {
@@ -511,6 +521,25 @@ export class Variable extends EezObject {
                     !variable.persistent ||
                     !isGlobalVariable(variable) ||
                     variable.type == "object:TCPSocket"
+            },
+            {
+                name: "dibField",
+                displayName: "DIB field",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "input"
+                    },
+                    {
+                        id: "output"
+                    },
+                    {
+                        id: "input-output"
+                    }
+                ],
+                disabled: (variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).dibModuleMetadata
             }
         ],
         icon: VARIABLE_ICON,
@@ -524,6 +553,15 @@ export class Variable extends EezObject {
                         variable.native && (
                             <span className="EezStudio_ListLabel_Badge">
                                 NATIVE
+                            </span>
+                        )}
+                    {!isPropertyDisabled(
+                        variable,
+                        findPropertyByNameInObject(variable, "dibField")!
+                    ) &&
+                        variable.dibField && (
+                            <span className="EezStudio_ListLabel_Badge">
+                                {variable.dibField.toUpperCase()}
                             </span>
                         )}
                     {!isPropertyDisabled(

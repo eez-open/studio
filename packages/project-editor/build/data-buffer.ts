@@ -119,6 +119,10 @@ export class DataBuffer {
         this.addPadding();
     }
 
+    writeStringPtr(str: string) {
+        this.writeObjectOffset(() => this.writeString(str));
+    }
+
     writeArray<T>(
         arr: T[],
         callback: (item: T, i: number) => void,
@@ -131,7 +135,11 @@ export class DataBuffer {
             this.writeUint32(arr.length);
             this.writeObjectOffset(() => {
                 for (let i = 0; i < arr.length; i++) {
-                    this.writeObjectOffset(() => callback(arr[i], i), padding);
+                    if (arr[i] != undefined) {
+                        this.writeObjectOffset(() => callback(arr[i], i), padding);
+                    } else {
+                        this.writeUint32(0);
+                    }
                 }
             });
         } else {
@@ -300,6 +308,7 @@ export class DummyDataBuffer {
     writeUint8Array(array: Uint8Array | number[]) {}
 
     writeString(str: string) {}
+    writeStringPtr(str: string) {}
 
     writeArray<T>(
         arr: T[],

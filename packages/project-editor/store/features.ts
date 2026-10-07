@@ -25,6 +25,7 @@ import shortcutsFeature from "project-editor/features/shortcuts/project-shortcut
 import microPythonFeature from "project-editor/features/micropython/micropython";
 import textsFeature from "project-editor/features/texts";
 import readmeFeature from "project-editor/features/readme";
+import dibModuleMetadataFeature from "project-editor/features/dib-module-metadata";
 import diffFeature from "project-editor/features/changes";
 import jsonStylesFeature from "project-editor/lvgl/style";
 import lvglGroupsFeature from "project-editor/lvgl/groups";
@@ -79,6 +80,7 @@ let features: ProjectEditorFeature[] = [
     microPythonFeature,
     diffFeature,
     readmeFeature,
+    dibModuleMetadataFeature,
     lvglGroupsFeature
 ];
 

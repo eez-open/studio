@@ -57,6 +57,29 @@ function buildDataArrayDef(projectVariables: Variable[]) {
     )}\n};`;
 }
 
+function buildDibModuleFieldTags(assets: Assets) {
+    let fieldTags = [];
+
+    const variables = assets.projectStore.project.variables.globalVariables;
+    for (let i = 0; i < variables.length; i++) {
+        if (variables[i].dibField) {
+            fieldTags.push(
+                `${TAB}${getName(
+                    "BB3P_CUSTOM_FIELD_TAG_",
+                    variables[i],
+                    NamingConvention.UnderscoreUpperCase
+                )} = BB3P_CUSTOM_FIELD_TAG_START + ${i}`
+            );
+        }
+    }
+
+    if (fieldTags.length == 0) {
+        return "";
+    }
+
+    return `enum DataEnum {\n${fieldTags.join(",\n")}\n};`;
+}
+
 export function buildVariables(
     assets: Assets,
     sectionNames: string[] | undefined
@@ -90,6 +113,12 @@ export function buildVariables(
 
         if (!sectionNames || sectionNames.indexOf("DATA_ARRAY_DEF") !== -1) {
             result.DATA_ARRAY_DEF = buildDataArrayDef(projectVariables);
+        }
+
+        if (assets.projectStore.project.dibModuleMetadata) {
+            if (!sectionNames || sectionNames.indexOf("DIB_MODULE_FIELD_TAGS") !== -1) {
+                result.DIB_MODULE_FIELD_TAGS = buildDibModuleFieldTags(assets);
+            }
         }
 
         resolve(result);

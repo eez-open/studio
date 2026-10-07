@@ -144,6 +144,7 @@ import { FlowEditor } from "project-editor/flow/editor/editor";
 import { newComponentMenuItem } from "project-editor/flow/editor/ComponentsPalette";
 
 import { LVGLPageEditorRuntime } from "project-editor/lvgl/page-runtime";
+import { writeDibModuleMetadata } from "project-editor/features/dib-module-metadata";
 
 export function createProjectEditor(
     homeTabs: Tabs | undefined,
@@ -262,7 +263,8 @@ export function createProjectEditor(
         FlowTabStateClass: FlowTabState,
         BuildFileClass: BuildFile,
         FlowEditorClass: FlowEditor,
-        newComponentMenuItem
+        newComponentMenuItem,
+        writeDibModuleMetadata
     };
 
     return projectEditor;

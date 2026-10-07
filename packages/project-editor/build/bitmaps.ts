@@ -75,7 +75,7 @@ export async function buildGuiBitmapsData(
         dataBuffer.writeInt16(bitmap.height);
         dataBuffer.writeInt16(bitmap.bpp);
         dataBuffer.writeInt16(0);
-        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(bitmap.name));
+        dataBuffer.writeStringPtr(bitmap.name);
         dataBuffer.writeUint8Array(bitmap.pixels);
     });
 }

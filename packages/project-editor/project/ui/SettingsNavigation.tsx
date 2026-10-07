@@ -378,6 +378,15 @@ export const SettingsContent = observer(
                             );
                         }
 
+                        if (extension.key == "dibModuleMetadata") {
+                            return (
+                                this.context.project.settings.general
+                                    .projectType == ProjectType.FIRMWARE &&
+                                !!this.context.project.settings.general
+                                    .masterProject
+                            );
+                        }
+
                         if (extension.key == "scpi") {
                             return (
                                 this.context.project.settings.general

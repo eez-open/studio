@@ -216,9 +216,7 @@ function buildFlowValue(
         } else if (flowValue.type == FLOW_VALUE_TYPE_DOUBLE) {
             dataBuffer.writeDouble(flowValue.value);
         } else if (flowValue.type == FLOW_VALUE_TYPE_STRING_ASSET) {
-            dataBuffer.writeObjectOffset(() => {
-                dataBuffer.writeString(flowValue.value);
-            });
+            dataBuffer.writeStringPtr(flowValue.value);
             dataBuffer.writeUint32(0);
         } else if (flowValue.type == FLOW_VALUE_TYPE_DATE) {
             if (flowValue.value instanceof Date) {

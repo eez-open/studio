@@ -243,7 +243,13 @@ function buildExpressionNode(
         let globalVariableIndex = assets.getAssetIndexByAssetName(
             component,
             node.name,
-            findVariable,
+            (project, assetName) => {
+                const variable = findVariable(project, assetName);
+                if (!variable || assets.projectStore.project.dibModuleMetadata && variable.dibField != undefined) {
+                    return undefined;
+                }
+                return variable;
+            },
             assets.globalVariables
         );
 
@@ -253,6 +259,16 @@ function buildExpressionNode(
             }
 
             return [makePushGlobalVariableInstruction(globalVariableIndex - 1)];
+        }
+
+        if (assets.projectStore.project.dibModuleMetadata) {
+            let dibFieldIndex = assets.projectStore.project.dibModuleMetadata.getDibFieldIndex(node.name);
+            if (dibFieldIndex != -1) {
+                return [
+                    makePushConstantInstruction(assets, dibFieldIndex, "integer"),
+                    makeOperationInstruction(operationIndexes["DibModule.field"])
+                ]
+            }
         }
 
         if (node.name == FLOW_ITERATOR_INDEX_VARIABLE) {

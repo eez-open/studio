@@ -716,7 +716,7 @@ export class EvalJSExprActionComponent extends ActionComponent {
         const { expression, valueExpressions } =
             this.expandExpressionForBuild();
 
-        dataBuffer.writeObjectOffset(() => dataBuffer.writeString(expression));
+        dataBuffer.writeStringPtr(expression);
 
         dataBuffer.writeArray(valueExpressions, valueExpression => {
             try {

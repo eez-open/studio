@@ -258,15 +258,20 @@ export class Assets {
             page => assetIncludePredicate(page) && page.id == undefined
         ).forEach(page => this.pages.push(page));
 
+        let missingPageIDs = [];
         for (let i = 0; i < this.pages.length; i++) {
             if (!this.pages[i]) {
-                this.projectStore.outputSectionsStore.write(
-                    Section.OUTPUT,
-                    MessageType.WARNING,
-                    `Missing page with ID = ${i + 1}`,
-                    this.rootProject.pages
-                );
+                missingPageIDs.push(i + 1);
             }
+        }
+
+        if (missingPageIDs.length > 0) {
+            this.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.WARNING,
+                `Missing page with ID's: ${missingPageIDs.join(", ")}`,
+                this.rootProject
+            );
         }
 
         //
@@ -295,11 +300,16 @@ export class Assets {
         //
         // global variables
         //
+        const isDibField = (globalVariable: Variable) =>
+            this.projectStore.project.dibModuleMetadata &&
+            globalVariable.dibField != undefined;
+
         const nonNativeVariables = hasFlowSupport ? this.getAssets<Variable>(
             project =>
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
+                !isDibField(globalVariable) &&
                 ((this.option != "buildFiles" && globalVariable.id == undefined) ||
                     !globalVariable.native)
         ) : [];
@@ -310,6 +320,7 @@ export class Assets {
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
+                !isDibField(globalVariable) &&
                 (!hasFlowSupport || globalVariable.native) &&
                 globalVariable.id != undefined
         ).forEach(
@@ -322,6 +333,7 @@ export class Assets {
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
+                !isDibField(globalVariable) &&
                 this.option == "buildFiles" &&
                 (!hasFlowSupport || globalVariable.native) &&
                 globalVariable.id == undefined
@@ -885,7 +897,7 @@ export class Assets {
     ) {
         let color = getStyleProperty(style, propertyName, false);
         if (color != "transparent") {
-            const colorFormat = ColorFormat.parse(color, this.projectStore.project);
+            const colorFormat = ColorFormat.parse(color, this.projectStore.masterProject ? this.projectStore.masterProject : this.projectStore.project);
             if (!colorFormat.isUsingThemeColor) {
                 color = colorFormat.getHexString();
             }
@@ -1473,9 +1485,7 @@ function buildLanguages(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(
         assets.projectStore.project.texts?.languages ?? [],
         language => {
-            dataBuffer.writeObjectOffset(() => {
-                dataBuffer.writeString(language.languageID);
-            });
+            dataBuffer.writeStringPtr(language.languageID);
 
             dataBuffer.writeArray(
                 assets.projectStore.project.texts.resources,
@@ -1528,6 +1538,11 @@ export async function buildGuiAssetsData(
     buildFlowData(assets, dataBuffer);
     // languages
     buildLanguages(assets, dataBuffer);
+    // metadata
+    const dibModuleMetadata = assets.projectStore.project.dibModuleMetadata
+    if (dibModuleMetadata) {
+        ProjectEditor.writeDibModuleMetadata(dibModuleMetadata, dataBuffer);
+    }
 
     dataBuffer.finalize();
 
@@ -1941,17 +1956,22 @@ export async function buildAssets(
 }
 
 export function buildGuiPagesEnum(assets: Assets) {
-    let pages = assets.pages.map(
-        (page, i) =>
-            `${TAB}${page
-                ? getName(
-                    "PAGE_ID_",
-                    page,
-                    NamingConvention.UnderscoreUpperCase
-                )
-                : `PAGE_ID_${i}`
-            } = ${i + 1}`
-    );
+    let pages = [];
+    
+
+    for (let i = 0; i < assets.pages.length; i++) {
+        const page = assets.pages[i];
+        if (!page) {
+            continue;
+        }
+        pages.push(
+            `${TAB}${getName(
+                "PAGE_ID_",
+                page,
+                NamingConvention.UnderscoreUpperCase
+            )} = ${i + 1}`
+        );
+    }
 
     pages.unshift(`${TAB}PAGE_ID_NONE = 0`);
 

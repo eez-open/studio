@@ -4800,11 +4800,7 @@ export function createActionComponentClass(
                     propertyDefinition.type == "enum" ||
                     propertyDefinition.type == "inline-code"
                 ) {
-                    dataBuffer.writeObjectOffset(() =>
-                        dataBuffer.writeString(
-                            (this as any)[propertyDefinition.name]
-                        )
-                    );
+                    dataBuffer.writeStringPtr((this as any)[propertyDefinition.name]);
                 } else if (propertyDefinition.type == "list") {
                     const listItemProperties = propertyDefinition.properties;
 
