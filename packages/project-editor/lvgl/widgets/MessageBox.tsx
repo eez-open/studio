@@ -1,5 +1,5 @@
 import React from "react";
-import { makeObservable } from "mobx";
+import { observable, makeObservable } from "mobx";
 
 import {
     ClassInfo,
@@ -27,8 +27,10 @@ import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 export class LVGLMessageBoxWidget extends LVGLWidget {
     title: string;
     titleType: LVGLPropertyType;
+    titleWrapper: string;
     text: string;
     textType: LVGLPropertyType;
+    textWrapper: string;
 
     // Built lazily so that the LVGLMessageBoxButtonWidget class reference
     // in the buttons (children) array property is resolved after all widget
@@ -160,7 +162,10 @@ export class LVGLMessageBoxWidget extends LVGLWidget {
     override makeEditable() {
         super.makeEditable();
 
-        makeObservable(this, {});
+        makeObservable(this, {
+            titleWrapper: observable,
+            textWrapper: observable
+        });
     }
 
     override toLVGLCode(code: LVGLCode) {
@@ -170,14 +175,22 @@ export class LVGLMessageBoxWidget extends LVGLWidget {
             if (this.title) {
                 code.callObjectFunction(
                     "lv_msgbox_add_title",
-                    code.stringProperty(this.titleType, this.title)
+                    code.stringProperty(
+                        this.titleType,
+                        this.title,
+                        this.titleWrapper
+                    )
                 );
             }
 
             if (this.text) {
                 code.callObjectFunction(
                     "lv_msgbox_add_text",
-                    code.stringProperty(this.textType, this.text)
+                    code.stringProperty(
+                        this.textType,
+                        this.text,
+                        this.textWrapper
+                    )
                 );
             }
 
@@ -253,10 +266,18 @@ export class LVGLMessageBoxWidget extends LVGLWidget {
             code.createObject(
                 "lv_msgbox_create",
                 this.title
-                    ? code.stringProperty(this.titleType, this.title)
+                    ? code.stringProperty(
+                          this.titleType,
+                          this.title,
+                          this.titleWrapper
+                      )
                     : code.constant("NULL"),
                 this.text
-                    ? code.stringProperty(this.textType, this.text)
+                    ? code.stringProperty(
+                          this.textType,
+                          this.text,
+                          this.textWrapper
+                      )
                     : code.constant("NULL"),
                 btnsArg,
                 closeArg

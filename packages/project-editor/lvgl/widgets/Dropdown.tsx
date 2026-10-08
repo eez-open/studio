@@ -36,6 +36,7 @@ export const LVGL_DROPDOWN_DIRECTION: { [key: string]: number } = {
 export class LVGLDropdownWidget extends LVGLWidget {
     options: string;
     optionsType: LVGLPropertyType;
+    optionsWrapper: string;
 
     selected: number | string;
     selectedType: LVGLPropertyType;
@@ -162,6 +163,7 @@ export class LVGLDropdownWidget extends LVGLWidget {
         makeObservable(this, {
             options: observable,
             optionsType: observable,
+            optionsWrapper: observable,
             selected: observable,
             selectedType: observable,
             direction: observable,
@@ -176,12 +178,20 @@ export class LVGLDropdownWidget extends LVGLWidget {
         if (this.optionsType == "literal" && code.lvglBuild && this.useStaticText) {
             code.callObjectFunction(
                 "lv_dropdown_set_options_static",
-                code.stringProperty(this.optionsType, this.options)
+                code.stringProperty(
+                    this.optionsType,
+                    this.options,
+                    this.optionsWrapper
+                )
             );
         } else {
             code.callObjectFunction(
                 "lv_dropdown_set_options",
-                code.stringProperty(this.optionsType, this.options)
+                code.stringProperty(
+                    this.optionsType,
+                    this.options,
+                    this.optionsWrapper
+                )
             );
         }
 

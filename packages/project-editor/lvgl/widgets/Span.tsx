@@ -20,7 +20,8 @@ import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups"
 
 import {
     LVGLPropertyType,
-    makeLvglExpressionProperty
+    makeLvglExpressionProperty,
+    checkTranslatedLiteralWrappers
 } from "project-editor/lvgl/expression-property";
 import {
     BUILT_IN_FONTS,
@@ -70,6 +71,7 @@ const TEXT_DECOR_CODES: { [key: string]: number } = {
 export class LVGLSpan extends EezObject {
     text: string;
     textType: LVGLPropertyType;
+    textWrapper: string;
     textColor: string;
     textFont: string;
     textDecor: keyof typeof TEXT_DECOR_CODES;
@@ -199,6 +201,8 @@ export class LVGLSpan extends EezObject {
                     );
                 }
             }
+
+            checkTranslatedLiteralWrappers(span, messages);
         }
     };
 
@@ -208,6 +212,7 @@ export class LVGLSpan extends EezObject {
         makeObservable(this, {
             text: observable,
             textType: observable,
+            textWrapper: observable,
             textColor: observable,
             textFont: observable,
             textDecor: observable,
@@ -244,7 +249,7 @@ export class LVGLSpan extends EezObject {
             code.callFreeFunction(
                 "lv_span_set_text_static",
                 spanVar,
-                code.stringProperty(this.textType, this.text)
+                code.stringProperty(this.textType, this.text, this.textWrapper)
             );
         } else if (
             this.textType == "literal" ||
@@ -253,7 +258,7 @@ export class LVGLSpan extends EezObject {
             code.callFreeFunction(
                 "lv_span_set_text",
                 spanVar,
-                code.stringProperty(this.textType, this.text)
+                code.stringProperty(this.textType, this.text, this.textWrapper)
             );
         }
 
