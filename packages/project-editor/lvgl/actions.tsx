@@ -67,6 +67,13 @@ import { IListNode, List, ListContainer, ListItem } from "eez-studio-ui/list";
 import { ColorFormat, ColorFormatType } from "project-editor/features/style/color-format";
 import { lvglProperties, LVGLPropertiesGroup, LVGLPropertyInfo } from "project-editor/lvgl/style-catalog";
 
+import {
+    buttonMatrixButtonsProperty,
+    LVGLMatrixButton,
+    getButtonMatrixControl,
+    getButtonMatrixTextExpression
+} from "./button-matrix";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 type LvglActionPropertyType =
@@ -81,7 +88,8 @@ type LvglActionPropertyType =
     | "style"
     | "image"
     | "style-property"
-    | "style-value";
+    | "style-value"
+    | "buttons";
 
 export interface IActionPropertyDefinition {
     name: string;
@@ -225,6 +233,13 @@ export function registerAction(actionDefinition: IActionDefinition) {
     const properties: PropertyInfo[] = [];
 
     actionDefinition.properties.forEach(actionProperty => {
+        if (actionProperty.type == "buttons") {
+            properties.push({
+                ...buttonMatrixButtonsProperty,
+                name: actionProperty.name
+            });
+            return;
+        }
         const expressionType = getValueTypeFromActionPropertyType(
             actionProperty.type
         );
@@ -407,7 +422,10 @@ export function registerAction(actionDefinition: IActionDefinition) {
     const defaultValue = Object.assign({}, actionDefinition.defaults);
 
     actionDefinition.properties.forEach(propertyDefinition => {
-        if (!propertyDefinition.isAssignable) {
+        if (
+            !propertyDefinition.isAssignable &&
+            propertyDefinition.type != "buttons"
+        ) {
             defaultValue[propertyDefinition.name + "Type"] = "literal";
         }
     });
@@ -428,7 +446,9 @@ export function registerAction(actionDefinition: IActionDefinition) {
                 const propertyValues = actionDefinition.properties.map(actionProperty => {
                     let value = (action as any)[actionProperty.name];
 
-                    if (typeof value == "boolean") {
+                    if (actionProperty.type == "buttons") {
+                        value = `${(value || []).filter((button: LVGLMatrixButton) => !button.newLine).length} buttons`;
+                    } else if (typeof value == "boolean") {
                         value = value ? "ON" : "OFF";
                     } else if (
                         actionProperty.isAssignable ||
@@ -701,7 +721,10 @@ export function registerAction(actionDefinition: IActionDefinition) {
                 (this as any)[propertyInfo.name] = undefined;
                 observables[propertyInfo.name] = observable;
 
-                if (!propertyInfo.isAssignable) {
+                if (
+                    !propertyInfo.isAssignable &&
+                    propertyInfo.type != "buttons"
+                ) {
                     (this as any)[propertyInfo.name + "Type"] = undefined;
                     observables[propertyInfo.name + "Type"] = observable;
                 }
@@ -1192,17 +1215,48 @@ export class LVGLActionType extends EezObject {
 
     getBuildProperties(assets: Assets): IBuildProperties[] {
         const classInfo = getClassInfo(this);
-        return classInfo.properties
-            .filter(propertyInfo => propertyInfo.expressionType != undefined)
-            .map(propertyInfo => ({
-                name: propertyInfo.name,
-                expression: this.getExpression(assets, propertyInfo),
-                isAssignable: isFlowProperty(this, propertyInfo, [
-                    "assignable"
-                ]),
-                isHidden: false,
-                isBuildable: true
-            }));
+        const properties: IBuildProperties[] = [];
+        for (const propertyInfo of classInfo.properties) {
+            if (propertyInfo.typeClass == LVGLMatrixButton) {
+                const buttons: LVGLMatrixButton[] =
+                    (this as any)[propertyInfo.name] || [];
+                const isV9 =
+                    assets.projectStore.project.settings.general.lvglVersion.startsWith(
+                        "9."
+                    );
+                buttons.forEach((button, index) => {
+                    properties.push({
+                        name: `${propertyInfo.name}[${index}].text`,
+                        expression: getButtonMatrixTextExpression(button),
+                        isAssignable: false,
+                        isHidden: false,
+                        isBuildable: true
+                    });
+                    properties.push({
+                        name: `${propertyInfo.name}[${index}].width`,
+                        expression: String(
+                            button.newLine
+                                ? 0
+                                : getButtonMatrixControl(button, isV9)
+                        ),
+                        isAssignable: false,
+                        isHidden: false,
+                        isBuildable: true
+                    });
+                });
+            } else if (propertyInfo.expressionType != undefined) {
+                properties.push({
+                    name: propertyInfo.name,
+                    expression: this.getExpression(assets, propertyInfo),
+                    isAssignable: isFlowProperty(this, propertyInfo, [
+                        "assignable"
+                    ]),
+                    isHidden: false,
+                    isBuildable: true
+                });
+            }
+        }
+        return properties;
     }
 }
 

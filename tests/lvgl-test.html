@@ -1,0 +1,16 @@
+<!doctype html><html><head><link id="main-css"><link id="flexlayout-css"></head><body><div id="EezStudio_Content"></div><script>
+var $ = jQuery = require("jquery");
+(async () => {
+    await new Promise(resolve => window.addEventListener("load", resolve, { once: true }));
+    try {
+        require("app-module-path").addPath(require("node:path").resolve(__dirname, "../build"));
+        const { initProjectEditor } = require("project-editor/project-editor-bootstrap");
+        initProjectEditor(undefined, undefined);
+        await require("./lvgl-editor.cjs").run();
+        await require("./lvgl-project.cjs").run();
+        require("electron").ipcRenderer.send("lvgl-test-result", null);
+    } catch (error) {
+        require("electron").ipcRenderer.send("lvgl-test-result", error.stack || String(error));
+    }
+})();
+</script></body></html>

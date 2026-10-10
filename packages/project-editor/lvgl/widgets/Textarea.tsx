@@ -21,8 +21,10 @@ export class LVGLTextareaWidget extends LVGLWidget {
     text: string;
     textType: LVGLPropertyType;
     placeholder: string;
+    placeholderType: LVGLPropertyType;
     oneLineMode: boolean;
     passwordMode: boolean;
+    passwordBullet: string;
     acceptedCharacters: string;
     maxTextLength: number;
 
@@ -42,11 +44,15 @@ export class LVGLTextareaWidget extends LVGLWidget {
                     propertyGridGroup: specificGroup
                 }
             ),
-            {
-                name: "placeholder",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            },
+            ...makeLvglExpressionProperty(
+                "placeholder",
+                "string",
+                "input",
+                ["literal", "translated-literal", "expression"],
+                {
+                    propertyGridGroup: specificGroup
+                }
+            ),
             {
                 name: "oneLineMode",
                 type: PropertyType.Boolean,
@@ -55,6 +61,11 @@ export class LVGLTextareaWidget extends LVGLWidget {
             {
                 name: "passwordMode",
                 type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "passwordBullet",
+                type: PropertyType.String,
                 propertyGridGroup: specificGroup
             },
             {
@@ -69,6 +80,21 @@ export class LVGLTextareaWidget extends LVGLWidget {
             }
         ],
 
+        beforeLoadHook: (
+            widget: LVGLTextareaWidget,
+            jsWidget: Partial<LVGLTextareaWidget>
+        ) => {
+            if (jsWidget.placeholder == undefined) {
+                jsWidget.placeholder = "";
+            }
+            if (jsWidget.placeholderType == undefined) {
+                jsWidget.placeholderType = "literal";
+            }
+            if (jsWidget.passwordBullet == undefined) {
+                jsWidget.passwordBullet = "";
+            }
+        },
+
         defaultValue: {
             left: 0,
             top: 0,
@@ -78,8 +104,10 @@ export class LVGLTextareaWidget extends LVGLWidget {
             text: "",
             textType: "literal",
             placeholder: "",
+            placeholderType: "literal",
             oneLineMode: false,
             passwordMode: false,
+            passwordBullet: "",
             acceptedCharacters: "",
             maxTextLength: 128
         },
@@ -104,10 +132,11 @@ export class LVGLTextareaWidget extends LVGLWidget {
                     "SCROLLBAR",
                     "TEXTAREA_PLACEHOLDER"
                 ],
-                defaultFlags:
-                    project.settings.general.lvglVersion.startsWith("9.")
-                        ? "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SNAPPABLE"
-                        : "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+                defaultFlags: project.settings.general.lvglVersion.startsWith(
+                    "9."
+                )
+                    ? "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SNAPPABLE"
+                    : "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
                 states: ["CHECKED", "DISABLED", "FOCUSED", "PRESSED"],
 
                 oldInitFlags:
@@ -125,8 +154,10 @@ export class LVGLTextareaWidget extends LVGLWidget {
             text: observable,
             textType: observable,
             placeholder: observable,
+            placeholderType: observable,
             oneLineMode: observable,
             passwordMode: observable,
+            passwordBullet: observable,
             acceptedCharacters: observable,
             maxTextLength: observable
         });
@@ -200,36 +231,75 @@ export class LVGLTextareaWidget extends LVGLWidget {
                             event
                         );
 
-                        code.ifNotEqual(
-                            tick_value_change_obj,
-                            ta,
-                            () => {
-                                const value =
-                                    code.callFreeFunctionWithAssignment(
-                                        "const char *",
-                                        "value",
-                                        "lv_textarea_get_text",
-                                        ta
-                                    );
+                        code.ifNotEqual(tick_value_change_obj, ta, () => {
+                            const value = code.callFreeFunctionWithAssignment(
+                                "const char *",
+                                "value",
+                                "lv_textarea_get_text",
+                                ta
+                            );
 
-                                code.assignStringProperty(
-                                    "text",
-                                    this.text as string,
-                                    value,
-                                    "Failed to assign Text in Textarea widget"
-                                );
-                            }
-                        );
+                            code.assignStringProperty(
+                                "text",
+                                this.text as string,
+                                value,
+                                "Failed to assign Text in Textarea widget"
+                            );
+                        });
                     }
                 );
             }
         }
 
-        // placeholder
-        if (this.placeholder) {
+        // Initialize through the same path as Label, including expression preview.
+        code.postWidgetExecute(() => {
             code.callObjectFunction(
                 "lv_textarea_set_placeholder_text",
-                code.stringLiteral(this.placeholder)
+                code.stringProperty(this.placeholderType, this.placeholder ?? "")
+            );
+        });
+
+        // placeholder
+        if (this.placeholderType == "expression") {
+            code.addToTick("placeholder", () => {
+                const newValue = code.evalTextProperty(
+                    "const char *",
+                    "new_placeholder",
+                    this.placeholder,
+                    "Failed to evaluate Placeholder in Textarea widget"
+                );
+                const currentValue = code.callObjectFunctionWithAssignment(
+                    "const char *",
+                    "current_placeholder",
+                    "lv_textarea_get_placeholder_text"
+                );
+                code.if(newValue, () => {
+                    const setPlaceholder = () => {
+                        code.callObjectFunction(
+                            "lv_textarea_set_placeholder_text",
+                            newValue
+                        );
+                    };
+                    code.if(
+                        currentValue,
+                        () => {
+                            code.ifStringNotEqual(
+                                newValue,
+                                currentValue,
+                                setPlaceholder
+                            );
+                        },
+                        setPlaceholder
+                    );
+                });
+            });
+        }
+
+        // password bullet
+        if (this.passwordBullet) {
+            code.callObjectFunction(
+                "lv_textarea_set_password_bullet",
+                code.stringLiteral(this.passwordBullet)
             );
         }
 

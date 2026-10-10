@@ -1062,6 +1062,243 @@ registerAction({
     helpText: "Clear the attributes of a button of the button matrix"
 });
 
+////////////////////////////////////////////////////////////////////////////////
+
+registerAction({
+    id: 65,
+    name: "textareaGetText",
+    group: "Textarea",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Textarea",
+            helpText: "The textarea to get the text"
+        },
+        {
+            name: "result",
+            type: "string",
+            isAssignable: true,
+            helpText: "The variable where to store the text"
+        }
+    ],
+    defaults: {},
+    label: ([object, result]) => (
+        <>
+            {object} <RightArrow /> {result}
+        </>
+    ),
+    helpText:
+        "Get a copy of the textarea text. Password mode returns the actual text, including the password"
+});
+
+registerAction({
+    id: 66,
+    name: "textareaSetText",
+    group: "Textarea",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Textarea",
+            helpText: "The textarea to set the text"
+        },
+        {
+            name: "text",
+            type: "string",
+            helpText: "The text to set"
+        }
+    ],
+    defaults: {},
+    label: ([object, text]) => (
+        <>
+            {object} {text}
+        </>
+    ),
+    helpText:
+        "Set the textarea text. An expression bound to Text can overwrite it on the next tick"
+});
+
+registerAction({
+    id: 67,
+    name: "textareaSetOneLine",
+    group: "Textarea",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Textarea",
+            helpText: "The textarea to configure"
+        },
+        {
+            name: "enabled",
+            type: "boolean",
+            helpText: "Enable one line mode"
+        }
+    ],
+    defaults: { enabled: false },
+    label: ([object, enabled]) => (
+        <>
+            {object} {enabled}
+        </>
+    ),
+    helpText: "Configure the textarea as one line"
+});
+
+registerAction({
+    id: 68,
+    name: "textareaSetPasswordMode",
+    group: "Textarea",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Textarea",
+            helpText: "The textarea to configure"
+        },
+        {
+            name: "enabled",
+            type: "boolean",
+            helpText: "Enable password mode"
+        }
+    ],
+    defaults: { enabled: false },
+    label: ([object, enabled]) => (
+        <>
+            {object} {enabled}
+        </>
+    ),
+    helpText: "Configure password mode of the textarea"
+});
+
+registerAction({
+    id: 69,
+    name: "textareaSetPasswordBullet",
+    group: "Textarea",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Textarea",
+            helpText: "The textarea to configure"
+        },
+        {
+            name: "bullet",
+            type: "string",
+            helpText: "The replacement text used in password mode"
+        }
+    ],
+    defaults: {},
+    label: ([object, bullet]) => (
+        <>
+            {object} {bullet}
+        </>
+    ),
+    helpText: "Set the password replacement text of the textarea"
+});
+
+registerAction({
+    id: 70,
+    name: "textareaSetPlaceholderText",
+    group: "Textarea",
+    properties: [
+        {
+            name: "object",
+            type: "widget:Textarea",
+            helpText: "The textarea to configure"
+        },
+        {
+            name: "text",
+            type: "string",
+            helpText: "The placeholder text to set"
+        }
+    ],
+    defaults: {},
+    label: ([object, text]) => (
+        <>
+            {object} {text}
+        </>
+    ),
+    helpText:
+        "Set the placeholder text. An expression bound to Placeholder can overwrite it on the next tick"
+});
+
+registerAction({
+    id: 71,
+    name: "buttonMatrixGetSelectedButton",
+    group: "ButtonMatrix",
+    properties: [
+        {
+            name: "object",
+            type: "widget:ButtonMatrix",
+            helpText: "The button matrix"
+        },
+        {
+            name: "result",
+            type: "integer",
+            isAssignable: true,
+            helpText: "The variable where to store the selected button index"
+        }
+    ],
+    defaults: {},
+    label: ([object, result]) => (
+        <>
+            {object} <RightArrow /> {result}
+        </>
+    ),
+    helpText:
+        "Get the selected button index, not counting new lines. Returns 65535 (LVGL button NONE) when no button is selected"
+});
+
+registerAction({
+    id: 72,
+    name: "buttonMatrixSetMap",
+    group: "ButtonMatrix",
+    properties: [
+        {
+            name: "object",
+            type: "widget:ButtonMatrix",
+            helpText: "The button matrix to configure"
+        },
+        {
+            name: "buttons",
+            type: "buttons",
+            helpText:
+                "The buttons, row boundaries, widths and control attributes"
+        }
+    ],
+    defaults: { buttons: [] },
+    helpText:
+        "Replace the button map using the same Buttons editor as the widget. Text expressions are evaluated when the action runs. Widget text bindings can overwrite the corresponding map entries on subsequent ticks"
+});
+
+registerAction({
+    id: 73,
+    name: "buttonMatrixGetButtonText",
+    group: "ButtonMatrix",
+    properties: [
+        {
+            name: "object",
+            type: "widget:ButtonMatrix",
+            helpText: "The button matrix"
+        },
+        {
+            name: "buttonID",
+            type: "integer",
+            helpText: "0 based index of the button. (Not counting new lines)"
+        },
+        {
+            name: "result",
+            type: "string",
+            isAssignable: true,
+            helpText: "The variable where to store the button text"
+        }
+    ],
+    defaults: {},
+    label: ([object, buttonID, result]) => (
+        <>
+            {object} {buttonID} <RightArrow /> {result}
+        </>
+    ),
+    helpText:
+        "Get a copy of the button text. Returns an empty string for an invalid button index or 65535 (LVGL button NONE)"
+});
+
 registerAction({
     id: 50,
     name: "calendarSetTodayDate",

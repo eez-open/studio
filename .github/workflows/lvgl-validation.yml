@@ -1,0 +1,101 @@
+name: LVGL validation
+on:
+  workflow_dispatch:
+  push:
+    branches: [lvgl-textarea-buttonmatrix]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-14]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install test dependencies
+        run: npm ci --ignore-scripts
+      - name: Install Electron
+        run: node node_modules/electron/install.js
+      - name: Install Windows image converter
+        if: runner.os == 'Windows'
+        run: node node_modules/pngquant-bin/lib/install.js
+      - name: Build Studio
+        run: npm run build
+      - name: Verify catalog and bundled engines
+        run: npm run test:lvgl-metadata
+      - name: Exercise editor, project persistence and code generation
+        if: runner.os == 'Linux'
+        run: xvfb-run -a node_modules/.bin/electron --no-sandbox tests/lvgl-electron-main.cjs
+      - name: Exercise editor, project persistence and code generation
+        if: runner.os != 'Linux'
+        run: npm run test:lvgl
+      - name: Package Linux application without publishing
+        if: runner.os == 'Linux'
+        run: npx electron-builder --linux --dir --publish never -c.npmRebuild=false -c.electronDist=node_modules/electron/dist
+      - name: Package Windows installer without publishing
+        if: runner.os == 'Windows'
+        shell: bash
+        run: npx electron-builder --win nsis --x64 --publish never '-c.npmRebuild=false' '-c.electronDist=node_modules/electron/dist'
+      - name: Install Windows application and exercise installed CLI
+        if: runner.os == 'Windows'
+        run: node tests/lvgl-windows-installer.cjs
+      - name: Exercise packaged CLI and installed framework resources
+        if: runner.os == 'Linux'
+        run: node tests/lvgl-package.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lvgl-generated-${{ runner.os }}
+          path: build/lvgl-regression
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: lvgl-studio-linux
+          path: dist/linux-unpacked
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: lvgl-studio-windows-installer
+          path: |
+            dist/*.exe
+            dist/*.exe.sha256
+          if-no-files-found: error
+          retention-days: 14
+  generated-c:
+    needs: build-and-test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        lvgl: [8.4.0, 9.2.2, 9.3.0, 9.4.0, 9.5.0]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: lvgl-generated-Linux
+          path: build/lvgl-regression
+      - uses: actions/checkout@v4
+        with:
+          repository: eez-open/studio-wasm-libs
+          ref: 89789f6de80786ae9a26106e2881088002fd5846
+          path: build/lvgl-deps
+      - name: Fetch pinned LVGL
+        run: git -C build/lvgl-deps submodule update --init --depth 1 lvgl-runtime/v${{ matrix.lvgl }}/lvgl
+      - name: Compile and run actual Studio-generated C with sanitizers
+        run: |
+          src="$PWD/build/lvgl-deps/lvgl-runtime/v${{ matrix.lvgl }}"
+          cmake -S tests/native -B "$RUNNER_TEMP/native" -G Ninja -DLVGL_VERSION=${{ matrix.lvgl }} -DLVGL_SOURCE_DIR="$src/lvgl" -DLVGL_CONFIG_FILE="$src/lv_conf.h"
+          cmake --build "$RUNNER_TEMP/native" --target generated-flow generated-no-flow --parallel 2
+          ctest --test-dir "$RUNNER_TEMP/native" --output-on-failure

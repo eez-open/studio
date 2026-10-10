@@ -20,6 +20,12 @@ Here we can choose that the `Text` item is calculated from the Expression.
 
 A placeholder text can be specified – which is displayed when the `Text` area is empty.
 
+Use the existing type selector to choose Literal - String, Translated Literal,
+or Expression. Without Flow, Expression is shown as Variable, as for other
+LVGL string properties. An expression updates the placeholder on each tick;
+an empty string clears it. Translated Literal uses the existing `_()` translation
+hook in generated C; the editor preview displays the source text.
+
 ## One line mode
 
 If enable, the `Text` area is configured to be on a single line. In this mode the height is set automatically to show only one line, line break characters are ignored, and word wrap is disabled.
@@ -27,6 +33,18 @@ If enable, the `Text` area is configured to be on a single line. In this mode th
 ## Password mode
 
 This enables password mode. By default, if the `•` (Bullet, U+2022) character exists in the font, the entered characters are converted to it after some time or when a new character is entered. If `•` does not exist in the font, `\*` will be used.
+
+## Password bullet
+
+Custom replacement text used in password mode. Leave empty to keep LVGL's default.
+The configured font must contain the selected glyphs. This property is applied
+before Password mode when the widget is created.
+
+The Textarea group of LVGL Actions also provides Get Text, Set Text, Set One Line,
+Set Password Mode, Set Password Bullet and Set Placeholder Text. Get Text stores
+an independent copy of the actual text, including when password mode is enabled.
+Set Text and Set Placeholder Text do not remove expression bindings: a bound
+value can overwrite the action's value on a subsequent tick.
 
 ## Accepted characters
 

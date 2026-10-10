@@ -2,219 +2,31 @@ import React from "react";
 import { makeObservable, observable } from "mobx";
 
 import {
-    ClassInfo,
-    EezObject,
-    getParent,
-    IMessage,
     makeDerivedClassInfo,
-    MessageType,
+    PropertyInfo,
     PropertyType
 } from "project-editor/core/object";
 
 import { ProjectType } from "project-editor/project/project";
 
 import { LVGLWidget } from "./internal";
-import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    getChildOfObject,
-    Message,
-    propertyNotSetMessage
-} from "project-editor/store";
+import { getClassInfo } from "project-editor/store";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { escapeCString, unescapeCString } from "../widget-common";
+import {
+    escapeCString,
+    unescapeCString,
+    getExpressionPropertyInitalValue
+} from "../widget-common";
+import { isFlowProperty } from "project-editor/flow/component";
+import {
+    buttonMatrixButtonsProperty,
+    LVGLMatrixButton,
+    getButtonMatrixControl
+} from "../button-matrix";
+import { addButtonMatrixFunctions } from "../button-matrix-code";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
-import { LV_BUTTONMATRIX_CTRL } from "../lvgl-constants";
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class LVGLMatrixButton extends EezObject {
-    newLine: boolean;
-
-    text: string;
-    width: number;
-
-    ctrlHidden: boolean;
-    ctrlNoRepeat: boolean;
-    ctrlDisabled: boolean;
-    ctrlCheckable: boolean;
-    ctrlChecked: boolean;
-    ctrlClickTrig: boolean;
-    ctrlPopover: boolean;
-    ctrlRecolor: boolean;
-    ctrlCustom1: boolean;
-    ctrlCustom2: boolean;
-
-    static classInfo: ClassInfo = {
-        properties: [
-            {
-                name: "newLine",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true
-            },
-            {
-                name: "text",
-                type: PropertyType.String,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "width",
-                type: PropertyType.Number,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "ctrlHidden",
-                displayName: "HIDDEN",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "ctrlNoRepeat",
-                displayName: "NO_REPEAT",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "ctrlDisabled",
-                displayName: "DISABLED",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "ctrlCheckable",
-                displayName: "CHECKABLE",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "ctrlChecked",
-                displayName: "CHECKED",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "ctrlClickTrig",
-                displayName: "CLICK_TRIG",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "ctrlPopover",
-                displayName: "POPOVER",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "ctrlRecolor",
-                displayName: "RECOLOR",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) =>
-                    button.newLine ||
-                    ProjectEditor.getProject(button).settings.general
-                        .lvglVersion.startsWith("9.")
-            },
-            {
-                name: "ctrlCustom1",
-                displayName: "CUSTOM_1",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            },
-            {
-                name: "ctrlCustom2",
-                displayName: "CUSTOM_2",
-                type: PropertyType.Boolean,
-                checkboxStyleSwitch: true,
-                hideInPropertyGrid: (button: LVGLMatrixButton) => button.newLine
-            }
-        ],
-
-        listLabel: (button: LVGLMatrixButton, collapsed: boolean) => {
-            if (button.newLine) {
-                if (collapsed) {
-                    return "New line";
-                } else {
-                    return "";
-                }
-            }
-
-            let buttonId = 0;
-
-            const buttons = getParent(button) as LVGLMatrixButton[];
-            for (const otherButton of buttons) {
-                if (otherButton == button) {
-                    break;
-                }
-                if (!otherButton.newLine) {
-                    buttonId++;
-                }
-            }
-
-            if (collapsed) {
-                return (
-                    <>
-                        <span style={{ fontWeight: "bold", marginRight: 10 }}>
-                            #{buttonId}
-                        </span>
-                        <span>{button.text}</span>
-                    </>
-                );
-            }
-
-            return <span style={{ fontWeight: "bold" }}>#{buttonId}</span>;
-        },
-
-        defaultValue: {
-            text: "Btn",
-            width: 1
-        },
-
-        check: (button: LVGLMatrixButton, messages: IMessage[]) => {
-            if (!button.newLine) {
-                if (!button.text) {
-                    messages.push(propertyNotSetMessage(button, "text"));
-                }
-
-                if (button.width < 1 || button.width > 7) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `The width must be in the range of 1..7`,
-                            getChildOfObject(button, "width")
-                        )
-                    );
-                }
-            }
-        }
-    };
-
-    override makeEditable() {
-        super.makeEditable();
-
-        makeObservable(this, {
-            newLine: observable,
-            text: observable,
-            width: observable,
-            ctrlHidden: observable,
-            ctrlNoRepeat: observable,
-            ctrlDisabled: observable,
-            ctrlCheckable: observable,
-            ctrlChecked: observable,
-            ctrlClickTrig: observable,
-            ctrlPopover: observable,
-            ctrlRecolor: observable,
-            ctrlCustom1: observable,
-            ctrlCustom2: observable
-        });
-    }
-}
 
 export class LVGLButtonMatrixWidget extends LVGLWidget {
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
@@ -224,17 +36,7 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
         componentPaletteGroupName: "!1Basic",
 
         properties: [
-            {
-                name: "buttons",
-                type: PropertyType.Array,
-                typeClass: LVGLMatrixButton,
-                propertyGridGroup: specificGroup,
-                partOfNavigation: false,
-                enumerable: false,
-                defaultValue: [],
-                showArrayCollapsedByDefaultInPropertyGrid: true,
-                hideElementIndexInPropertyGrid: true
-            },
+            buttonMatrixButtonsProperty,
             {
                 name: "oneCheck",
                 type: PropertyType.Boolean,
@@ -266,6 +68,22 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
             parts: ["MAIN", "ITEMS"],
             defaultFlags:
                 "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+        },
+
+        getAdditionalFlowProperties: (widget: LVGLButtonMatrixWidget) => {
+            const properties: PropertyInfo[] = [];
+            (widget.buttons || []).forEach((button, index) => {
+                if (button.newLine) return;
+                for (const property of getClassInfo(button).properties) {
+                    if (isFlowProperty(button, property, ["input"])) {
+                        properties.push({
+                            ...property,
+                            name: `buttons[${index}].${property.name}`
+                        });
+                    }
+                }
+            });
+            return properties;
         },
 
         overrideEventParamExpressionType: (
@@ -312,7 +130,11 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
             buttons.forEach(button => {
                 build.line(
                     `${escapeCString(
-                        button.newLine ? "\n" : button.text ? button.text : " "
+                        button.newLine
+                            ? "\n"
+                            : button.textType == "expression"
+                              ? " "
+                              : button.text || " "
                     )},`
                 );
             });
@@ -326,10 +148,19 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
             mapArray = new Uint32Array(buttons.length + 1);
             for (let i = 0; i < buttons.length; i++) {
                 let button = buttons[i];
+                const text = button.newLine
+                    ? "\n"
+                    : button.textType == "expression"
+                      ? getExpressionPropertyInitalValue(
+                            runtime,
+                            this,
+                            button.text
+                        )
+                      : unescapeCString(button.text || " ");
+                // Expression results are labels, never row boundaries. Keep the
+                // preview's map shape identical to the generated/tick path.
                 mapArray[i] = runtime.wasm.stringToNewUTF8(
-                    unescapeCString(
-                        button.newLine ? "\n" : button.text ? button.text : " "
-                    )
+                    !button.newLine && text == "\n" ? " " : text || " "
                 );
             }
             mapArray[buttons.length] = 0;
@@ -384,8 +215,8 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
                             button.width < 1
                                 ? 1
                                 : button.width > 7
-                                ? 7
-                                : button.width
+                                  ? 7
+                                  : button.width
                         }${button.ctrlHidden ? prefix + "HIDDEN" : ""}${
                             button.ctrlNoRepeat ? prefix + "NO_REPEAT" : ""
                         }${button.ctrlDisabled ? prefix + "DISABLED" : ""}${
@@ -418,55 +249,7 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
                 for (let i = 0; i < textButtons.length; i++) {
                     const button = textButtons[i];
 
-                    let ctrl = button.width;
-                    if (ctrl < 1) {
-                        ctrl = 1;
-                    }
-                    if (ctrl > 7) {
-                        ctrl = 7;
-                    }
-
-                    if (button.ctrlHidden) {
-                        ctrl |= LV_BUTTONMATRIX_CTRL.HIDDEN;
-                    }
-
-                    if (button.ctrlNoRepeat) {
-                        ctrl |= LV_BUTTONMATRIX_CTRL.NO_REPEAT;
-                    }
-
-                    if (button.ctrlDisabled) {
-                        ctrl |= LV_BUTTONMATRIX_CTRL.DISABLED;
-                    }
-
-                    if (button.ctrlCheckable) {
-                        ctrl |= LV_BUTTONMATRIX_CTRL.CHECKABLE;
-                    }
-
-                    if (button.ctrlChecked) {
-                        ctrl |= LV_BUTTONMATRIX_CTRL.CHECKED;
-                    }
-
-                    if (button.ctrlClickTrig) {
-                        ctrl |= LV_BUTTONMATRIX_CTRL.CLICK_TRIG;
-                    }
-
-                    if (button.ctrlPopover) {
-                        ctrl |= LV_BUTTONMATRIX_CTRL.POPOVER;
-                    }
-
-                    if (!runtime.isV9) {
-                        if (button.ctrlRecolor) {
-                            ctrl |= LV_BUTTONMATRIX_CTRL.RECOLOR;
-                        }
-                    }
-
-                    if (button.ctrlCustom1) {
-                        ctrl |= LV_BUTTONMATRIX_CTRL.CUSTOM_1;
-                    }
-
-                    if (button.ctrlCustom2) {
-                        ctrl |= LV_BUTTONMATRIX_CTRL.CUSTOM_2;
-                    }
+                    const ctrl = getButtonMatrixControl(button, runtime.isV9);
 
                     ctrlMapArray[i] = ctrl;
                 }
@@ -517,9 +300,41 @@ export class LVGLButtonMatrixWidget extends LVGLWidget {
             }
         }
 
+        if (
+            buttons.some(
+                button => !button.newLine && button.textType == "expression"
+            )
+        ) {
+            if (code.lvglBuild && !code.hasFlowSupport) {
+                addButtonMatrixFunctions(code.lvglBuild);
+            }
+            buttons.forEach((button, index) => {
+                if (button.newLine || button.textType != "expression") return;
+                code.addToTick(`buttons[${index}].text`, () => {
+                    const value = code.evalTextProperty(
+                        "const char *",
+                        "button_text",
+                        button.text,
+                        `Failed to evaluate ButtonMatrix buttons[${index}].text`
+                    );
+                    code.callObjectFunction(
+                        code.lvglBuild && !code.hasFlowSupport
+                            ? "eez_bm_set_text"
+                            : "eez_flow_set_buttonmatrix_text",
+                        index,
+                        value
+                    );
+                });
+            });
+        }
+
         if (code.pageRuntime) {
             const runtime = code.pageRuntime!;
-            runtime.addButtonMatrixBuffers(mapArg as number, mapArray! , ctrlMapArg as number);
+            runtime.addButtonMatrixBuffers(
+                mapArg as number,
+                mapArray!,
+                ctrlMapArg as number
+            );
         }
     }
 }

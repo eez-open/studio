@@ -11,6 +11,8 @@
     "main": "build/main/main.js",
     "scripts": {
         "postinstall": "electron-rebuild",
+        "test:lvgl": "electron tests/lvgl-electron-main.cjs",
+        "test:lvgl-metadata": "node tests/lvgl-metadata.cjs",
         "start": "electron --trace-warnings --trace-deprecation .",
         "clean-build": "npx rimraf@^3.0.2 build",
         "clean-dist": "npx rimraf@^3.0.2 dist",
