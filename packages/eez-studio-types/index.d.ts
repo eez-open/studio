@@ -23,8 +23,7 @@ export type OtherBasicType =
     | `uint8`
     | `int16`
     | `uint16`
-    | `int8`
-    | `int8`
+    | `int32`
     | `uint32`
     | `int64`
     | `uint64`

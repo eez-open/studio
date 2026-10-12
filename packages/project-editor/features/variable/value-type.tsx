@@ -81,6 +81,25 @@ export const FIRMWARE_BASIC_TYPE_NAMES = [
     "any"
 ];
 
+export const DIB_MODULE_FIRMWARE_BASIC_TYPE_NAMES = [
+    "integer", // same as "int32"
+    `int8`,
+    `uint8`,
+    `int16`,
+    `uint16`,
+    `int32`,
+    `uint32`,
+    `int64`,
+    `uint64`,
+    "float",
+    "double",
+    "boolean",
+    "string",
+    "date",
+    "blob",
+    "any"
+];
+
 export const LVGL_BASIC_TYPE_NAMES = [
     "integer",
     "float",
@@ -644,7 +663,8 @@ export const VariableTypeSelect = observer(
                     : LVGL_BASIC_TYPE_NAMES
                 : this.props.project.projectTypeTraits.isDashboard
                 ? BASIC_TYPE_NAMES
-                : FIRMWARE_BASIC_TYPE_NAMES;
+                : this.props.project.dibModuleMetadata ?
+                DIB_MODULE_FIRMWARE_BASIC_TYPE_NAMES : FIRMWARE_BASIC_TYPE_NAMES;
 
             const basicTypes = basicTypeNames.map(basicTypeName => {
                 return (
@@ -1079,7 +1099,10 @@ export function isIntegerType(type: string) {
     return type == "integer";
 }
 
-export function isBasicType(type: string) {
+export function isBasicType(project: Project, type: string) {
+    if (project.dibModuleMetadata) {
+        return DIB_MODULE_FIRMWARE_BASIC_TYPE_NAMES.indexOf(type) != -1;
+    }
     return BASIC_TYPE_NAMES.indexOf(type) != -1;
 }
 
@@ -1315,7 +1338,7 @@ export function isValidType(project: Project, valueType: ValueType): boolean {
         return true;
     }
 
-    if (isBasicType(valueType)) {
+    if (isBasicType(project, valueType)) {
         return true;
     }
 

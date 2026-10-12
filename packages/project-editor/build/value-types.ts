@@ -38,6 +38,9 @@ export const FLOW_VALUE_TYPE_WIDGET = 34;
 export const FLOW_VALUE_TYPE_JSON = 35;
 export const FLOW_VALUE_TYPE_JSON_MEMBER_VALUE = 36;
 export const FLOW_VALUE_TYPE_EVENT = 37;
+export const FLOW_VALUE_TYPE_PROPERTY_REF = 38;
+export const FLOW_VALUE_TYPE_DIB_FIELD = 39;
+export const FLOW_VALUE_TYPE_DYNAMIC_ARRAY = 40;
 
 export const basicFlowValueTypes: ValueType[] = [
     "undefined", // FLOW_VALUE_TYPE_UNDEFINED: 0
