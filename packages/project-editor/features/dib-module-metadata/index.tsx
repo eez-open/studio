@@ -1144,7 +1144,7 @@ export function writeDibModuleMetadata(metadata: DibModuleMetadata, dataBuffer: 
         let offset = 0;
         dataBuffer.writeArray(metadata.dibFields, variable => {
             // valueType
-            dataBuffer.writeUint8(getValueType(variable.type));
+            dataBuffer.writeUint16(getValueType(variable.type));
 
             // direction
             const DIB_FIELD_DIRECTION_INPUT = 0;
@@ -1159,7 +1159,7 @@ export function writeDibModuleMetadata(metadata: DibModuleMetadata, dataBuffer: 
             );
 
             // reserved
-            dataBuffer.writeUint16(0);
+            dataBuffer.writeUint8(0);
 
             // offset
             dataBuffer.writeUint32(offset);
