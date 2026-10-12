@@ -954,7 +954,7 @@ export class ListWidget extends Widget {
         if (this.data) {
             if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
                 try {
-                    dataValue = evalProperty(flowContext, this, "data");
+                    dataValue = evalProperty(flowContext, this, "data").value;
                 } catch (err) {
                     //console.error(err);
                 }
@@ -1780,7 +1780,7 @@ export class UserWidgetWidget extends Widget {
                 }
             }
 
-            checkObjectReference(object, "context", messages);
+            // checkObjectReference(object, "context", messages);
         },
 
         open: (object: UserWidgetWidget) => {

@@ -513,7 +513,13 @@ function evalConstantExpressionNode(
         }
 
         if (node.type == "Identifier") {
-            throw `Not a constant`;
+            let globalVariable = project.allGlobalVariables.find(
+                globalVariable => globalVariable.fullName == node.name
+            );
+            if (globalVariable) {
+                return evalConstantExpression(project, globalVariable.defaultValue);
+            }
+            throw `Not a constant or global variable`;
         }
 
         if (node.type == "BinaryExpression") {

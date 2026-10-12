@@ -63,27 +63,30 @@ export interface ProjectEditorFeature {
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
 }
 
-let features: ProjectEditorFeature[] = [
-    userPageFeature,
-    userWidgetFeature,
-    actionFeature,
-    variableFeature,
-    styleFeature,
-    jsonStylesFeature,
-    fontFeature,
-    bitmapFeature,
-    textsFeature,
-    extensionDefinitionsFeature,
-    scpiFeature,
-    instrumentCommandsFeature,
-    shortcutsFeature,
-    microPythonFeature,
-    diffFeature,
-    readmeFeature,
-    dibModuleMetadataFeature,
-    lvglGroupsFeature
-];
+let features: ProjectEditorFeature[];
 
 export function getProjectFeatures() {
+    if (!features) {
+        features = [
+            userPageFeature,
+            userWidgetFeature,
+            actionFeature,
+            variableFeature,
+            styleFeature,
+            jsonStylesFeature,
+            fontFeature,
+            bitmapFeature,
+            textsFeature,
+            extensionDefinitionsFeature,
+            scpiFeature,
+            instrumentCommandsFeature,
+            shortcutsFeature,
+            microPythonFeature,
+            diffFeature,
+            readmeFeature,
+            dibModuleMetadataFeature,
+            lvglGroupsFeature
+        ];
+    }
     return features;
 }
