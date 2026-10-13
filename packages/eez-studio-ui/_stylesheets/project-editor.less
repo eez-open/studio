@@ -1902,6 +1902,44 @@
                 }
             }
 
+            .EezStudio_ExpressionBuilder_Glyphs {
+                flex: 1;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                background-color: @backgroundColor;
+                border: 1px solid @borderColor;
+                overflow: hidden;
+
+                .EezStudio_ExpressionBuilder_GlyphsTitle {
+                    padding: 4px 8px;
+                    font-weight: bold;
+                    border-bottom: 1px solid @borderColor;
+                }
+
+                .EezStudio_ExpressionBuilder_GlyphsList {
+                    flex: 1;
+                    overflow: auto;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-content: flex-start;
+                    padding: 4px;
+                }
+
+                .EezStudio_ExpressionBuilder_Glyph {
+                    margin: 2px;
+                    padding: 2px;
+                    background-color: white;
+                    border: 1px solid @borderColor;
+                    cursor: pointer;
+                    line-height: 0;
+
+                    &:hover {
+                        border-color: black;
+                    }
+                }
+            }
+
             .name {
                 font-weight: bold;
             }

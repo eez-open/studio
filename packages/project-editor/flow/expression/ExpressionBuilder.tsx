@@ -50,6 +50,19 @@ import {
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
 import { parseIdentifier } from "project-editor/flow/expression";
+import {
+    FONT_TAG_REGEX,
+    supportsFontTags
+} from "project-editor/flow/expression/helper";
+import { findFont } from "project-editor/project/assets";
+import type { Font } from "project-editor/features/font/font";
+import type { Widget } from "project-editor/flow/component";
+import {
+    drawGlyph,
+    setBackColor,
+    setColor,
+    setProject
+} from "project-editor/flow/editor/eez-gui-draw";
 import { IObjectVariableValueFieldDescription } from "eez-studio-types";
 
 import type { InstrumentObject } from "instrument/instrument-object";
@@ -229,6 +242,72 @@ const VariableLabel = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const GlyphCanvas = observer(({ font, encoding }: { font: Font; encoding: number }) => {
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+
+    const glyph = font.glyphsMap.get(encoding);
+    const width = Math.max(
+        1,
+        glyph ? Math.max(glyph.dx || 0, glyph.x + glyph.width) : 1
+    );
+    const height = Math.max(1, font.height);
+
+    React.useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext("2d");
+        if (!canvas || !ctx) {
+            return;
+        }
+        setProject(ProjectEditor.getProject(font));
+        setColor("#000000");
+        setBackColor("#ffffff");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawGlyph(ctx, 0, 0, encoding, font);
+    });
+
+    return <canvas ref={canvasRef} width={width} height={height} />;
+});
+
+const GlyphsPanel = observer(
+    ({
+        font,
+        onInsert
+    }: {
+        font: Font;
+        onInsert: (encoding: number) => void;
+    }) => {
+        const encodings = font.glyphs
+            .map(glyph => glyph.encoding)
+            .sort((a, b) => a - b);
+
+        return (
+            <div className="EezStudio_ExpressionBuilder_Glyphs">
+                <div className="EezStudio_ExpressionBuilder_GlyphsTitle">
+                    Font: {font.name}
+                </div>
+                <div className="EezStudio_ExpressionBuilder_GlyphsList">
+                    {encodings.map(encoding => (
+                        <div
+                            key={encoding}
+                            className="EezStudio_ExpressionBuilder_Glyph"
+                            title={`U+${encoding
+                                .toString(16)
+                                .toUpperCase()
+                                .padStart(4, "0")} (${encoding})`}
+                            onDoubleClick={() => onInsert(encoding)}
+                        >
+                            <GlyphCanvas font={font} encoding={encoding} />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const SelectItemDialog = observer(
     class SelectItemDialog extends React.Component<{
         object: IEezObject;
@@ -246,6 +325,8 @@ const SelectItemDialog = observer(
         textarea: HTMLTextAreaElement;
         value: string;
         selection: string | undefined;
+        cursorPosition: number = 0;
+        skipInitialSelectEvent = false;
 
         expressionBuilderState: ExpressionBuilderState;
 
@@ -269,6 +350,8 @@ const SelectItemDialog = observer(
             makeObservable(this, {
                 value: observable,
                 selection: observable,
+                cursorPosition: observable,
+                glyphsFont: computed,
                 component: computed,
                 flow: computed,
                 componentInputs: computed,
@@ -298,6 +381,16 @@ const SelectItemDialog = observer(
 
         componentDidMount() {
             let textInputSelection = this.props.params?.textInputSelection;
+
+            // select font in the glyphs column depending on the cursor
+            // position in the edited text
+            runInAction(() => {
+                this.cursorPosition = Math.min(
+                    textInputSelection?.start ?? 0,
+                    this.value.length
+                );
+            });
+
             if (
                 !textInputSelection ||
                 (textInputSelection.start == this.value.length &&
@@ -320,6 +413,8 @@ const SelectItemDialog = observer(
 
             this.textarea.focus();
 
+            this.skipInitialSelectEvent = true;
+            setTimeout(() => (this.skipInitialSelectEvent = false), 100);
             this.textarea.setSelectionRange(
                 textInputSelection.start,
                 textInputSelection.end,
@@ -436,6 +531,65 @@ const SelectItemDialog = observer(
         get flow() {
             return ProjectEditor.getFlow(this.component);
         }
+
+        // Font whose glyphs are listed in the glyphs column: font from the
+        // <font name="..."> tag that encloses the cursor, otherwise the style
+        // font of the widget. Only for text properties of widgets that
+        // support font tags.
+        get glyphsFont(): Font | undefined {
+            const component = this.component;
+            if (
+                !component ||
+                !supportsFontTags(component) ||
+                (this.props.propertyInfo.name != "text" &&
+                    this.props.propertyInfo.name != "data")
+            ) {
+                return undefined;
+            }
+
+            let fontName: string | undefined;
+            for (const match of this.value
+                .substring(0, this.cursorPosition)
+                .matchAll(FONT_TAG_REGEX)) {
+                fontName = match[1] ?? match[2];
+            }
+
+            if (fontName != undefined) {
+                const font = findFont(this.context.project, fontName);
+                if (font) {
+                    return font;
+                }
+            }
+
+            return (component as Widget).style?.fontObject;
+        }
+
+        insertGlyph = action((encoding: number) => {
+            const start = this.textarea.selectionStart ?? 0;
+            const end = this.textarea.selectionEnd ?? start;
+            const hex = encoding.toString(16).toUpperCase();
+            const char =
+                encoding <= 0xffff
+                    ? `\\u${hex.padStart(4, "0")}`
+                    : `\\u{${hex}}`;
+
+            this.value =
+                this.value.substring(0, start) +
+                char +
+                this.value.substring(end);
+
+            const newPosition = start + char.length;
+            this.cursorPosition = newPosition;
+
+            setTimeout(() => {
+                this.textarea.focus();
+                this.textarea.setSelectionRange(
+                    newPosition,
+                    newPosition,
+                    "forward"
+                );
+            });
+        });
 
         get componentInputs() {
             return this.component.inputs.filter(
@@ -1045,6 +1199,16 @@ const SelectItemDialog = observer(
             const end = event.currentTarget.selectionEnd ?? start;
             const value = event.currentTarget.value;
 
+            // the first select event is caused by the initial setSelectionRange
+            // call in componentDidMount, cursorPosition is already set then
+            if (this.skipInitialSelectEvent) {
+                this.skipInitialSelectEvent = false;
+            } else {
+                runInAction(() => {
+                    this.cursorPosition = start;
+                });
+            }
+
             let expressionStart: number | undefined;
             for (let i = start; i >= 0; i--) {
                 if (
@@ -1332,6 +1496,12 @@ const SelectItemDialog = observer(
                                         }
                                         selectNode={this.selectNode}
                                         onDoubleClick={this.onDoubleClick}
+                                    />
+                                )}
+                                {this.glyphsFont && (
+                                    <GlyphsPanel
+                                        font={this.glyphsFont}
+                                        onInsert={this.insertGlyph}
                                     />
                                 )}
                             </div>
