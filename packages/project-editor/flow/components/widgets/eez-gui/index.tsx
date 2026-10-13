@@ -3,6 +3,8 @@ import { observable, makeObservable, computed } from "mobx";
 
 import QRC from "../qrcodegen";
 
+import { MenuItem } from "@electron/remote";
+
 import { remap } from "eez-studio-shared/util";
 import { roundNumber } from "eez-studio-shared/roundNumber";
 
@@ -26,7 +28,11 @@ import {
     propertyNotSetMessage,
     getChildOfObject,
     propertySetButNotUsedMessage,
-    getProjectStore
+    getProjectStore,
+    IContextMenuContext,
+    objectToJS,
+    replaceObject,
+    createObject
 } from "project-editor/store";
 import {
     isProjectWithFlowSupport,
@@ -498,6 +504,42 @@ export class TextWidget extends Widget {
             </svg>
         ),
 
+        extendContextMenu: (
+            thisObject: Widget,
+            context: IContextMenuContext,
+            objects: IEezObject[],
+            menuItems: Electron.MenuItem[],
+            editable: boolean
+        ): void => {
+            TextWidget.classInfo.parentClassInfo!.extendContextMenu!(
+                thisObject,
+                context,
+                objects,
+                menuItems,
+                editable
+            );
+
+            if (editable && objects.length === 1) {
+                const object = objects[0];
+                if (object instanceof TextWidget) {
+                    menuItems.push(
+                        new MenuItem({
+                            type: "separator"
+                        }),
+                        new MenuItem({
+                            label: "Convert to MultilineText",
+                            click: () => {
+                                const widget = object.convertToMultilineText();
+                                if (widget) {
+                                    context.selectObject(widget);
+                                }
+                            }
+                        })
+                    );
+                }
+            }
+        },
+
         check: (widget: TextWidget, messages: IMessage[]) => {
             const project = ProjectEditor.getProject(widget);
 
@@ -522,6 +564,23 @@ export class TextWidget extends Widget {
             ignoreLuminocity: observable,
             focusStyle: observable
         });
+    }
+
+    convertToMultilineText() {
+        const jsObject = objectToJS(this);
+
+        jsObject.type = "MultilineTextWidget";
+        delete jsObject.ignoreLuminocity;
+        delete jsObject.focusStyle;
+
+        return replaceObject(
+            this,
+            createObject<MultilineTextWidget>(
+                getProjectStore(this),
+                jsObject,
+                MultilineTextWidget
+            )
+        );
     }
 
     getClassName(flowContext: IFlowContext) {
@@ -572,7 +631,7 @@ export class TextWidget extends Widget {
                         eezGuiDraw.setProject(flowContext.projectStore.project);
                         eezGuiDraw.drawText(
                             ctx,
-                            text,
+                            eezGuiDraw.convertFontTags(text),
                             0,
                             0,
                             width,
@@ -637,6 +696,12 @@ class MultilineTextRender {
     private lineIndent: number;
     private lineWidth: number;
 
+    // font tags can span multiple words and lines, so track the active font
+    // index (0 is the default font) at the start of the line and at the end
+    // of the text added so far
+    private lineStartFontIndex: number;
+    private currentFontIndex: number;
+
     flushLine(y: number, step: MultilineTextRenderStep) {
         if (this.line != "" && this.lineWidth > 0) {
             if (step == MultilineTextRenderStep.RENDER) {
@@ -664,7 +729,8 @@ class MultilineTextRender {
                     y,
                     x + this.lineWidth - 1,
                     y + this.font.height - 1,
-                    this.font
+                    this.font,
+                    this.lineStartFontIndex
                 );
             } else {
                 this.textHeight = Math.max(
@@ -685,6 +751,7 @@ class MultilineTextRender {
 
         this.line = "";
         this.lineWidth = this.lineIndent = this.firstLineIndent;
+        this.lineStartFontIndex = this.currentFontIndex = 0;
 
         let i = 0;
 
@@ -698,7 +765,12 @@ class MultilineTextRender {
                 word += this.text[i++];
             }
 
-            let width = eezGuiDraw.measureStr(word, this.font, 0);
+            let width = eezGuiDraw.measureStr(
+                word,
+                this.font,
+                0,
+                this.currentFontIndex
+            );
 
             while (
                 this.lineWidth +
@@ -722,8 +794,15 @@ class MultilineTextRender {
                 this.line += " ";
                 this.lineWidth += this.spaceWidth;
             }
+            if (this.line == "") {
+                this.lineStartFontIndex = this.currentFontIndex;
+            }
             this.line += word;
             this.lineWidth += width;
+            this.currentFontIndex = eezGuiDraw.getFontIndexAtEnd(
+                word,
+                this.currentFontIndex
+            );
 
             while (this.text[i] == " ") {
                 i++;
@@ -783,6 +862,8 @@ class MultilineTextRender {
         if (lineHeight <= 0) {
             return;
         }
+
+        this.text = eezGuiDraw.convertFontTags(this.text);
 
         try {
             this.text = JSON.parse('"' + this.text + '"');
@@ -1602,7 +1683,7 @@ export class ButtonWidget extends Widget {
                         eezGuiDraw.setProject(flowContext.projectStore.project);
                         eezGuiDraw.drawText(
                             ctx,
-                            text,
+                            eezGuiDraw.convertFontTags(text),
                             0,
                             0,
                             width,

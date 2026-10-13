@@ -758,10 +758,13 @@ export class Assets {
     }
 
     getFontIndex(object: any, propertyName: string) {
-        let fontName: string | undefined = object[propertyName];
+        return this.getFontIndexByName(
+            getProject(object),
+            object[propertyName]
+        );
+    }
 
-        const project = getProject(object);
-
+    getFontIndexByName(project: Project, fontName: string | undefined) {
         let font = findFont(project, fontName);
         if (!font && project != this.projectStore.project) {
             font = findFont(this.projectStore.project, fontName);

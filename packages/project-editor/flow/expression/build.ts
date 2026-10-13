@@ -15,6 +15,12 @@ import {
 } from "./operations";
 import { expressionParser } from "project-editor/flow/expression/parser";
 import {
+    FONT_END_CHAR,
+    FONT_START_CHAR,
+    FONT_TAG_REGEX,
+    supportsFontTags
+} from "project-editor/flow/expression/helper";
+import {
     makePushConstantInstruction,
     makePushInputInstruction,
     makePushLocalVariableInstruction,
@@ -32,6 +38,35 @@ import {
 } from "project-editor/flow/expression/type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IMPORT_AS_PREFIX, findVariable } from "project-editor/project/assets";
+
+function convertFontTags(assets: Assets, component: Component, text: string) {
+    if (text.indexOf("<") == -1 || !supportsFontTags(component)) {
+        return text;
+    }
+
+    return text.replace(
+        FONT_TAG_REGEX,
+        (tag: string, doubleQuoted?: string, singleQuoted?: string) => {
+            const fontName = doubleQuoted ?? singleQuoted;
+            if (fontName == undefined) {
+                return FONT_END_CHAR;
+            }
+
+            // in a project with master project font index is negative
+            const fontIndex = Math.abs(
+                assets.getFontIndexByName(
+                    ProjectEditor.getProject(component),
+                    fontName
+                )
+            );
+            if (!fontIndex) {
+                throw `Font '${fontName}' not found`;
+            }
+
+            return FONT_START_CHAR + String.fromCodePoint(fontIndex);
+        }
+    );
+}
 
 export function buildExpression(
     assets: Assets,
@@ -157,9 +192,11 @@ function buildExpressionNode(
     assignable: boolean
 ): number[] {
     if (node.type == "Literal") {
-        return [
-            makePushConstantInstruction(assets, node.value, node.valueType)
-        ];
+        let value = node.value;
+        if (node.valueType == "string" && typeof value == "string") {
+            value = convertFontTags(assets, component, value);
+        }
+        return [makePushConstantInstruction(assets, value, node.valueType)];
     }
 
     if (node.type == "TextResource") {

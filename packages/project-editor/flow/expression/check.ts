@@ -23,7 +23,12 @@ import {
     checkArity
 } from "project-editor/flow/expression/type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { templateLiteralToExpression } from "project-editor/flow/expression/helper";
+import {
+    FONT_TAG_REGEX,
+    supportsFontTags,
+    templateLiteralToExpression
+} from "project-editor/flow/expression/helper";
+import { findFont } from "project-editor/project/assets";
 import type { Project } from "project-editor/project/project";
 
 export function checkExpression(component: Component, expression: string) {
@@ -105,6 +110,20 @@ export function checkAssignableExpression(
 function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
     function checkNode(node: ExpressionNode) {
         if (node.type == "Literal") {
+            if (node.valueType == "string" && supportsFontTags(component)) {
+                const project = ProjectEditor.getProject(component);
+                for (const match of String(node.value).matchAll(
+                    FONT_TAG_REGEX
+                )) {
+                    const fontName = match[1] ?? match[2];
+                    if (
+                        fontName != undefined &&
+                        !findFont(project, fontName)
+                    ) {
+                        throw `font '${fontName}' not found`;
+                    }
+                }
+            }
             return;
         }
 

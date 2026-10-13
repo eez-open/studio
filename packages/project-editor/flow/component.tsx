@@ -1717,6 +1717,28 @@ export class Component extends EezObject {
         listLabel: (component: Component) => {
             const label = getComponentLabel(component);
             const icon = getObjectIcon(component);
+
+            let selectChildLabel: string | undefined;
+            const parentArray = getParent(component);
+            const selectWidget = parentArray && getParent(parentArray);
+            if (selectWidget instanceof ProjectEditor.SelectWidgetClass) {
+                selectChildLabel = selectWidget.getChildLabel(
+                    component as Widget
+                );
+            }
+
+            const actionHandlersInfo = (component.getEventHandlers() ?? [])
+                .filter(
+                    eventHandler =>
+                        eventHandler.handlerType == "action" &&
+                        eventHandler.action
+                )
+                .map(
+                    eventHandler =>
+                        `${eventHandler.eventName}: ${eventHandler.action}`
+                )
+                .join(", ");
+
             return (
                 <>
                     {icon && (
@@ -1730,7 +1752,24 @@ export class Component extends EezObject {
                             }}
                         />
                     )}
-                    <span title={label}>{label}</span>
+                    <span title={label}>
+                        {selectChildLabel ? (
+                            <span style={{ opacity: 0.66, marginRight: 5 }}>
+                                {selectChildLabel} ➔
+                            </span>
+                        ) : (
+                            ""
+                        )}
+                        {label}
+                        {actionHandlersInfo && (
+                            <span
+                                title={actionHandlersInfo}
+                                style={{ opacity: 0.66, marginLeft: 5 }}
+                            >
+                                 ➔ {actionHandlersInfo}
+                            </span>
+                        )}
+                    </span>
                 </>
             );
         },

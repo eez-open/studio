@@ -1,5 +1,7 @@
 import { ExpressionNode } from "project-editor/flow/expression/node";
 import { identifierParser } from "project-editor/flow/expression/parser";
+import type { Component } from "project-editor/flow/component";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export function parseIdentifier(identifier: string) {
     try {
@@ -118,3 +120,26 @@ export function* visitExpressionNodes(
         }
     }
 }
+
+// <font name="..."> or <font name='...'> (fontName is in the 1st or 2nd
+// capture group) and </font> (no capture groups)
+export const FONT_TAG_REGEX =
+    /<font\s+name\s*=\s*(?:"([^"]*)"|'([^']*)')\s*>|<\/font\s*>/g;
+
+export function supportsFontTags(component: Component) {
+    return (
+        component instanceof ProjectEditor.TextWidgetClass ||
+        component instanceof ProjectEditor.MultilineTextWidgetClass ||
+        component instanceof ProjectEditor.ButtonWidgetClass
+    );
+}
+
+// Text of Text, MultilineText and Button widgets can contain font tags:
+//
+//   Default font. <font name="font2">This is font2.</font> Default font.
+//
+// <font name="..."> is replaced with FONT_START_CHAR followed by a character
+// whose code point is the font index, and </font> is replaced with
+// FONT_END_CHAR (back to the default font).
+export const FONT_START_CHAR = "\uE000";
+export const FONT_END_CHAR = "\uE001";

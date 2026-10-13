@@ -29,7 +29,9 @@ import {
     getChildOfObject,
     updateObject,
     getObjectPathAsString,
-    replaceObject
+    replaceObject,
+    insertObject,
+    deleteObject
 } from "project-editor/store";
 import { getProjectStore, IContextMenuContext } from "project-editor/store";
 
@@ -454,6 +456,42 @@ export class ContainerWidget extends Widget {
             </svg>
         ),
 
+        extendContextMenu: (
+            thisObject: Widget,
+            context: IContextMenuContext,
+            objects: IEezObject[],
+            menuItems: Electron.MenuItem[],
+            editable: boolean
+        ): void => {
+            ContainerWidget.classInfo.parentClassInfo!.extendContextMenu!(
+                thisObject,
+                context,
+                objects,
+                menuItems,
+                editable
+            );
+
+            if (editable && objects.length === 1) {
+                const object = objects[0];
+                if (object instanceof ContainerWidget) {
+                    menuItems.push(
+                        new MenuItem({
+                            type: "separator"
+                        }),
+                        new MenuItem({
+                            label: "Remove Container",
+                            click: () => {
+                                const widgets = object.removeContainer();
+                                if (widgets.length > 0) {
+                                    context.selectObjects(widgets);
+                                }
+                            }
+                        })
+                    );
+                }
+            }
+        },
+
         check: (object: ContainerWidget, messages: IMessage[]) => {
             checkObjectReference(object, "overlay", messages);
         }
@@ -470,6 +508,41 @@ export class ContainerWidget extends Widget {
             layout: observable,
             dockingLayout: observable
         });
+    }
+
+    removeContainer() {
+        const parent = getParent(this);
+        if (!Array.isArray(parent)) {
+            return [];
+        }
+
+        const projectStore = getProjectStore(this);
+        const index = parent.indexOf(this);
+
+        const childJsObjects = this.widgets.map(widget => {
+            const jsObject = objectToJS(widget);
+            jsObject.left = widget.left + this.left;
+            jsObject.top = widget.top + this.top;
+            return jsObject;
+        });
+
+        projectStore.undoManager.setCombineCommands(true);
+
+        deleteObject(this);
+
+        const widgets = childJsObjects.map((jsObject, i) => {
+            const widget = createObject<Widget>(
+                projectStore,
+                jsObject,
+                Widget
+            );
+            insertObject(parent, index + i, widget);
+            return widget;
+        });
+
+        projectStore.undoManager.setCombineCommands(false);
+
+        return widgets;
     }
 
     getDockingLayoutModel(flowContext: IFlowContext) {
