@@ -61,6 +61,7 @@ import {
     isNotLVGLProject,
     isNotProjectWithFlowSupport
 } from "project-editor/project/project-type-traits";
+import { isOverlappingChildrenSupported } from "project-editor/flow/components/widgets/overlapping-widgets";
 import { objectToJS } from "project-editor/store";
 import { IContextMenuContext, getProjectStore } from "project-editor/store";
 
@@ -2837,6 +2838,7 @@ export class Widget extends Component {
     style: Style;
 
     allowOutside: boolean;
+    allowOverlapping: boolean;
 
     locked: boolean;
     hiddenInEditor: boolean;
@@ -2882,6 +2884,14 @@ export class Widget extends Component {
                 propertyGridGroup: geometryGroup,
                 disabled: component => isLVGLProject(component),
                 hideInPropertyGrid: isWidgetUnderDockingManager
+            },
+            {
+                name: "allowOverlapping",
+                displayName: `Hide "Widget overlaps" warning`,
+                type: PropertyType.Boolean,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: (widget: Widget) =>
+                    !isOverlappingChildrenSupported(widget)
             },
             {
                 name: "locked",
@@ -3502,6 +3512,7 @@ export class Widget extends Component {
             resizing: observable,
             style: observable,
             allowOutside: observable,
+            allowOverlapping: observable,
             locked: observable,
             hiddenInEditor: observable,
             timeline: observable,

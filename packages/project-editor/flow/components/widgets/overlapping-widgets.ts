@@ -26,6 +26,7 @@ function isOverlay(widget: Widget) {
 // these widgets are allowed to overlap (and to be overlapped)
 function isIgnored(widget: Widget) {
     return (
+        widget.allowOverlapping ||
         isOverlay(widget) ||
         widget instanceof ProjectEditor.BitmapWidgetClass ||
         widget instanceof ProjectEditor.RectangleWidgetClass
