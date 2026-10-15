@@ -524,6 +524,43 @@ export class TextWidget extends Widget {
             projectStore.updateObject(widget, props);
         },
 
+        updateObjectValueHook: (widget: TextWidget, values: any) => {
+            if (
+                values.fitToContent == undefined ||
+                values.fitToContent == widget.fitToContent
+            ) {
+                return;
+            }
+
+            // Set width/height to the content size for the dimensions that
+            // are fitted before or after the change, so the widget doesn't
+            // change its size when "Fit to content" is turned off.
+            const isFitWidth = (fitToContent: TextWidgetFitToContent) =>
+                fitToContent == "width" || fitToContent == "both";
+            const isFitHeight = (fitToContent: TextWidgetFitToContent) =>
+                fitToContent == "height" || fitToContent == "both";
+
+            const contentSize = widget.contentSize;
+
+            if (
+                (isFitWidth(widget.fitToContent) ||
+                    isFitWidth(values.fitToContent)) &&
+                values.width == undefined &&
+                widget.width != contentSize.width
+            ) {
+                values.width = contentSize.width;
+            }
+
+            if (
+                (isFitHeight(widget.fitToContent) ||
+                    isFitHeight(values.fitToContent)) &&
+                values.height == undefined &&
+                widget.height != contentSize.height
+            ) {
+                values.height = contentSize.height;
+            }
+        },
+
         beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
             if (jsObject.text) {
                 if (project.projectTypeTraits.hasFlowSupport) {
