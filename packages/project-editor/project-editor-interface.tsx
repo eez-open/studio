@@ -82,7 +82,9 @@ import type {
     TextWidget,
     MultilineTextWidget,
     ButtonWidget,
-    BarGraphWidget
+    BarGraphWidget,
+    BitmapWidget,
+    RectangleWidget
 } from "project-editor/flow/components/widgets/eez-gui";
 import type { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
 import type { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
@@ -157,6 +159,8 @@ export interface IProjectEditor {
     MultilineTextWidgetClass: typeof MultilineTextWidget;
     ButtonWidgetClass: typeof ButtonWidget;
     BarGraphWidgetClass: typeof BarGraphWidget;
+    BitmapWidgetClass: typeof BitmapWidget;
+    RectangleWidgetClass: typeof RectangleWidget;
     OutputActionComponentClass: typeof OutputActionComponent;
     CallActionActionComponentClass: typeof CallActionActionComponent;
     VariableClass: typeof Variable;

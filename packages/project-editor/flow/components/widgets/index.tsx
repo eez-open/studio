@@ -108,6 +108,11 @@ import { isArray } from "eez-studio-shared/util";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { showDialog } from "eez-studio-ui/dialog";
 import { EditorFlowContext } from "project-editor/flow/editor/context";
+import {
+    checkOverlappingChildren,
+    isOverlappingChildrenSupported,
+    OVERLAPPING_CHILDREN_FLAG
+} from "project-editor/flow/components/widgets/overlapping-widgets";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { ProjectContext } from "project-editor/project/context";
 import {
@@ -308,6 +313,7 @@ export class ContainerWidget extends Widget {
     shadow?: boolean;
     layout: "static" | "horizontal" | "vertical" | "docking-manager";
     dockingLayout: any;
+    allowOverlappingChildren?: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -409,6 +415,15 @@ export class ContainerWidget extends Widget {
                     return widget.layout != "docking-manager";
                 }
             },
+            {
+                name: "allowOverlappingChildren",
+                type: PropertyType.Boolean,
+                propertyGridGroup: layoutGroup,
+                hideInPropertyGrid: (widget: ContainerWidget) =>
+                    !isOverlappingChildrenSupported(widget),
+                disabled: (widget: ContainerWidget) =>
+                    widget.layout != "static"
+            },
             makeStylePropertyInfo("style", "Default style", {
                 hideInDocumentation: "none"
             })
@@ -494,6 +509,15 @@ export class ContainerWidget extends Widget {
 
         check: (object: ContainerWidget, messages: IMessage[]) => {
             checkObjectReference(object, "overlay", messages);
+
+            if (object.layout == "static") {
+                checkOverlappingChildren(
+                    object,
+                    object.widgets,
+                    !!object.allowOverlappingChildren,
+                    messages
+                );
+            }
         }
     });
 
@@ -506,7 +530,8 @@ export class ContainerWidget extends Widget {
             overlay: observable,
             shadow: observable,
             layout: observable,
-            dockingLayout: observable
+            dockingLayout: observable,
+            allowOverlappingChildren: observable
         });
     }
 
@@ -887,6 +912,10 @@ export class ContainerWidget extends Widget {
             flags |= SHADOW_FLAG;
         }
 
+        if (this.allowOverlappingChildren && this.layout == "static") {
+            flags |= OVERLAPPING_CHILDREN_FLAG;
+        }
+
         dataBuffer.writeUint16(flags);
 
         // overlay
@@ -1027,7 +1056,7 @@ export class ListWidget extends Widget {
         if (this.data) {
             if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
                 try {
-                    dataValue = evalProperty(flowContext, this, "data").value;
+                    dataValue = evalProperty(flowContext, this, "data");
                 } catch (err) {
                     //console.error(err);
                 }

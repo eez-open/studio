@@ -82,7 +82,9 @@ import {
     TextWidget,
     MultilineTextWidget,
     ButtonWidget,
-    BarGraphWidget
+    BarGraphWidget,
+    BitmapWidget,
+    RectangleWidget
 } from "project-editor/flow/components/widgets/eez-gui";
 import {
     LVGLWidget,
@@ -200,6 +202,8 @@ export function createProjectEditor(
         MultilineTextWidgetClass: MultilineTextWidget,
         ButtonWidgetClass: ButtonWidget,
         BarGraphWidgetClass: BarGraphWidget,
+        BitmapWidgetClass: BitmapWidget,
+        RectangleWidgetClass: RectangleWidget,
         OutputActionComponentClass: OutputActionComponent,
         CallActionActionComponentClass: CallActionActionComponent,
         VariableClass: Variable,

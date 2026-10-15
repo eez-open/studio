@@ -55,7 +55,8 @@ import {
 
 import type {
     IDataContext,
-    IFlowContext
+    IFlowContext,
+    IResizeHandler
 } from "project-editor/flow/flow-interfaces";
 import {
     ComponentEnclosure,
@@ -80,6 +81,8 @@ import {
 } from "project-editor/flow/component";
 
 import { Assets, DataBuffer } from "project-editor/build/assets";
+import type { Rect } from "eez-studio-shared/geometry";
+import { isTimelineEditorActive } from "project-editor/flow/timeline";
 import {
     WIDGET_TYPE_DISPLAY_DATA,
     WIDGET_TYPE_MULTILINE_TEXT,
@@ -114,6 +117,7 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     generalGroup,
+    geometryGroup,
     indentationGroup,
     specificGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
@@ -398,11 +402,14 @@ registerClass("DisplayDataWidget", DisplayDataWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type TextWidgetFitToContent = "none" | "width" | "height" | "both";
+
 export class TextWidget extends Widget {
     name: string;
     text?: string;
     ignoreLuminocity: boolean;
     focusStyle: Style;
+    fitToContent: TextWidgetFitToContent;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -459,6 +466,19 @@ export class TextWidget extends Widget {
                 propertyGridGroup: specificGroup,
                 disabled: isV3OrNewerProject
             },
+            {
+                name: "fitToContent",
+                displayName: "Fit to content",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "none", label: "None" },
+                    { id: "width", label: "Width" },
+                    { id: "height", label: "Height" },
+                    { id: "both", label: "Both" }
+                ],
+                enumDisallowUndefined: true,
+                propertyGridGroup: geometryGroup
+            },
             makeStylePropertyInfo("style", "Default style"),
             Object.assign(
                 makeStylePropertyInfo("focusStyle", "Focused style"),
@@ -468,6 +488,41 @@ export class TextWidget extends Widget {
                 }
             )
         ],
+
+        setRect: (widget: TextWidget, value: Partial<Rect>) => {
+            const projectStore = getProjectStore(widget);
+
+            const props: Partial<Rect> = {};
+
+            const { left, top } = widget.fromRelativePosition(
+                value.left ?? widget.rect.left,
+                value.top ?? widget.rect.top
+            );
+
+            if (left !== widget.left) {
+                props.left = left;
+            }
+
+            if (top !== widget.top) {
+                props.top = top;
+            }
+
+            if (!widget.isFitToContentWidth) {
+                const width = value.width ?? widget.rect.width;
+                if (width !== widget.width) {
+                    props.width = width;
+                }
+            }
+
+            if (!widget.isFitToContentHeight) {
+                const height = value.height ?? widget.rect.height;
+                if (height !== widget.height) {
+                    props.height = height;
+                }
+            }
+
+            projectStore.updateObject(widget, props);
+        },
 
         beforeLoadHook: (widget: Widget, jsObject: any, project: Project) => {
             if (jsObject.text) {
@@ -480,13 +535,18 @@ export class TextWidget extends Widget {
             }
 
             migrateStyleProperty(jsObject, "focusStyle");
+
+            if (jsObject.fitToContent == undefined) {
+                jsObject.fitToContent = "none";
+            }
         },
 
         defaultValue: {
             left: 0,
             top: 0,
             width: 64,
-            height: 32
+            height: 32,
+            fitToContent: "none"
         },
 
         icon: (
@@ -562,8 +622,133 @@ export class TextWidget extends Widget {
             name: observable,
             text: observable,
             ignoreLuminocity: observable,
-            focusStyle: observable
+            focusStyle: observable,
+            fitToContent: observable,
+            contentSize: computed
         });
+    }
+
+    get isFitToContentWidth() {
+        return this.fitToContent == "width" || this.fitToContent == "both";
+    }
+
+    get isFitToContentHeight() {
+        return this.fitToContent == "height" || this.fitToContent == "both";
+    }
+
+    // text displayed in the editor when there is no runtime,
+    // must be kept in sync with getTextValue
+    get editorText(): string {
+        const project = ProjectEditor.getProject(this);
+
+        if (project.projectTypeTraits.hasFlowSupport) {
+            if (this.data) {
+                if (this.name) {
+                    return this.name;
+                }
+
+                try {
+                    const result = evalConstantExpression(project, this.data);
+                    if (typeof result.value === "string") {
+                        return result.value;
+                    }
+                } catch (err) {}
+
+                return `{${this.data}}`;
+            }
+
+            return this.name || "<no text>";
+        }
+
+        if (this.text) {
+            return this.text;
+        }
+
+        if (this.name) {
+            return this.name;
+        }
+
+        if (this.data) {
+            const result = getProjectStore(this).dataContext.get(this.data);
+            return result != undefined ? result.toString() : this.data;
+        }
+
+        return "<no text>";
+    }
+
+    // must be kept in sync with TextWidget_autoSize in eez-framework
+    get contentSize() {
+        const style = this.style;
+        const border = style.borderSizeRect;
+        const padding = style.paddingRect;
+        const font = eezGuiDraw.styleGetFont(style);
+
+        let textWidth = 0;
+        if (font) {
+            eezGuiDraw.setProject(ProjectEditor.getProject(this));
+
+            let text = eezGuiDraw.convertFontTags(this.editorText);
+            try {
+                text = JSON.parse('"' + text + '"');
+            } catch (e) {}
+
+            textWidth = eezGuiDraw.measureStr(text, font, 0);
+        }
+
+        return {
+            width:
+                border.left +
+                padding.left +
+                textWidth +
+                padding.right +
+                border.right,
+            height:
+                border.top +
+                padding.top +
+                (font ? font.height : 0) +
+                padding.bottom +
+                border.bottom
+        };
+    }
+
+    override get componentWidth() {
+        if (this.isFitToContentWidth) {
+            return this.contentSize.width;
+        }
+        return super.componentWidth;
+    }
+
+    override get componentHeight() {
+        if (this.isFitToContentHeight) {
+            return this.contentSize.height;
+        }
+        return super.componentHeight;
+    }
+
+    override getResizeHandlers(): IResizeHandler[] | undefined | false {
+        if (isTimelineEditorActive(this)) {
+            return [];
+        }
+
+        if (this.isFitToContentWidth && this.isFitToContentHeight) {
+            return [];
+        }
+
+        if (this.isFitToContentWidth) {
+            return [
+                { x: 50, y: 0, type: "n-resize" },
+                { x: 50, y: 100, type: "s-resize" }
+            ];
+        }
+
+        if (this.isFitToContentHeight) {
+            return [
+                { x: 0, y: 50, type: "w-resize" },
+                { x: 100, y: 50, type: "e-resize" }
+            ];
+        }
+
+        return super.getResizeHandlers();
     }
 
     convertToMultilineText() {
@@ -572,6 +757,7 @@ export class TextWidget extends Widget {
         jsObject.type = "MultilineTextWidget";
         delete jsObject.ignoreLuminocity;
         delete jsObject.focusStyle;
+        delete jsObject.fitToContent;
 
         return replaceObject(
             this,
@@ -656,6 +842,14 @@ export class TextWidget extends Widget {
         // ignoreLuminocity
         if (this.ignoreLuminocity) {
             flags |= 1 << 0;
+        }
+
+        // fitToContent
+        if (this.isFitToContentWidth) {
+            flags |= 1 << 1;
+        }
+        if (this.isFitToContentHeight) {
+            flags |= 1 << 2;
         }
 
         dataBuffer.writeInt8(flags);
