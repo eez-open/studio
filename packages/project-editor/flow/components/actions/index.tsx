@@ -2431,6 +2431,7 @@ export class CallActionActionComponent extends ActionComponent {
                 dataBuffer.writeUint8(0);
             } else {
                 // flowIndex
+                assets.markMasterProjectAssetUsed(action);
                 const flowIndex = assets.flows.indexOf(action);
                 dataBuffer.writeInt16(flowIndex);
 

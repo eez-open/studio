@@ -225,11 +225,9 @@ export class Action extends Flow {
                 enumDisallowUndefined: true,
                 propertyGridGroup: specificGroup,
                 disabled: (action: Action) => {
-                    const projectStore = getProjectStore(action);
                     return (
                         (isNotV1Project(action) && !hasFlowSupport(action)) ||
-                        isDashboardProject(action) ||
-                        projectStore.masterProject != null
+                        isDashboardProject(action)
                     );
                 }
             },
@@ -332,8 +330,7 @@ export class Action extends Flow {
                             ],
                             visible: () =>
                                 !projectStore.projectTypeTraits.isDashboard &&
-                                projectStore.projectTypeTraits.hasFlowSupport &&
-                                !projectStore.masterProject
+                                projectStore.projectTypeTraits.hasFlowSupport
                         }
                     ]
                 },

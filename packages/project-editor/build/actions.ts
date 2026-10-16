@@ -134,7 +134,7 @@ export function buildActions(
 
 export function buildActionNames(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(
-        assets.projectStore.masterProject ? assets.actions : [],
+        assets.masterProject ? assets.actions : [],
         action => {
             dataBuffer.writeString(action.name);
         }

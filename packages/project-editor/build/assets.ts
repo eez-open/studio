@@ -3,7 +3,8 @@ import type { BuildResult } from "project-editor/store/features";
 import {
     EezObject,
     getProperty,
-    MessageType
+    MessageType,
+    ProjectType
 } from "project-editor/core/object";
 
 import {
@@ -192,6 +193,30 @@ export class Assets {
         return this.rootProject._store;
     }
 
+    // When running FIRMWARE project with master project in the Studio simulator,
+    // master project assets used by this project are built as part of this project.
+    // Styles, fonts and bitmaps are added on first use. Pages, actions and
+    // global variables must be known in advance (because of flow and variable
+    // indexes), so used ones are collected in missingMasterProjectAssets and
+    // the Assets is constructed again with them in includedMasterProjectAssets
+    // (see createAssets).
+    get isMasterProjectIncluded() {
+        return (
+            this.option == "buildAssets" &&
+            !!this.projectStore.masterProject &&
+            this.projectStore.project.settings.general.projectType ==
+                ProjectType.FIRMWARE
+        );
+    }
+
+    // Master project which assets are NOT part of this build
+    // (i.e. they are referenced by ID and child assets are using negative indexes)
+    get masterProject() {
+        return this.isMasterProjectIncluded
+            ? undefined
+            : this.projectStore.masterProject;
+    }
+
     collectProjects(project: Project) {
         if (this.projects.indexOf(project) === -1) {
             this.projects.push(project);
@@ -200,6 +225,37 @@ export class Assets {
                     this.collectProjects(importDirective.project);
                 }
             }
+        }
+    }
+
+    // asset ID's are irrelevant when master project is included
+    getAssetId(asset: { id?: number | undefined }) {
+        return this.isMasterProjectIncluded ? undefined : asset.id;
+    }
+
+    isIncludedMasterProjectAsset(asset: EezObject) {
+        return (
+            this.isMasterProjectIncluded &&
+            getProject(asset) == this.projectStore.masterProject
+        );
+    }
+
+    // returns true if master project asset is used but not yet included
+    markMasterProjectAssetUsed(asset: EezObject) {
+        if (
+            this.isIncludedMasterProjectAsset(asset) &&
+            !this.includedMasterProjectAssets.has(asset)
+        ) {
+            this.missingMasterProjectAssets.add(asset);
+            return true;
+        }
+        return false;
+    }
+
+    markMasterProjectActionUsed(object: EezObject, actionName: string) {
+        const action = findAction(getProject(object), actionName);
+        if (action) {
+            this.markMasterProjectAssetUsed(action);
         }
     }
 
@@ -214,13 +270,29 @@ export class Assets {
                 assets.push(...collection.filter(assetIncludePredicate));
             }
         }
+        if (this.isMasterProjectIncluded) {
+            const collection = getCollection(this.projectStore.masterProject!);
+            if (collection) {
+                assets.push(
+                    ...collection.filter(
+                        asset =>
+                            this.includedMasterProjectAssets.has(
+                                asset as EezObject
+                            ) && assetIncludePredicate(asset)
+                    )
+                );
+            }
+        }
         return assets;
     }
+
+    missingMasterProjectAssets = new Set<EezObject>();
 
     constructor(
         public rootProject: Project,
         buildConfiguration: BuildConfiguration | undefined,
-        public option: "check" | "buildAssets" | "buildFiles"
+        public option: "check" | "buildAssets" | "buildFiles",
+        public includedMasterProjectAssets = new Set<EezObject>()
     ) {
         this.map.displayWidth = rootProject.settings.general.displayWidth;
         this.map.displayHeight = rootProject.settings.general.displayHeight;
@@ -250,12 +322,12 @@ export class Assets {
 
         this.getAssets<Page>(
             project => project.pages,
-            page => assetIncludePredicate(page) && page.id != undefined
+            page => assetIncludePredicate(page) && this.getAssetId(page) != undefined
         ).forEach(page => (this.pages[page.id! - 1] = page));
 
         this.getAssets<Page>(
             project => project.pages,
-            page => assetIncludePredicate(page) && page.id == undefined
+            page => assetIncludePredicate(page) && this.getAssetId(page) == undefined
         ).forEach(page => this.pages.push(page));
 
         let missingPageIDs = [];
@@ -284,7 +356,7 @@ export class Assets {
                     project.actions.filter(
                         action =>
                             (this.option == "buildAssets" &&
-                                action.id == undefined) ||
+                                this.getAssetId(action) == undefined) ||
                             action.implementationType == "flow"
                     ),
                 assetIncludePredicate
@@ -310,7 +382,7 @@ export class Assets {
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
                 !isDibField(globalVariable) &&
-                ((this.option != "buildFiles" && globalVariable.id == undefined) ||
+                ((this.option != "buildFiles" && this.getAssetId(globalVariable) == undefined) ||
                     !globalVariable.native)
         ) : [];
 
@@ -322,7 +394,7 @@ export class Assets {
                 assetIncludePredicate(globalVariable) &&
                 !isDibField(globalVariable) &&
                 (!hasFlowSupport || globalVariable.native) &&
-                globalVariable.id != undefined
+                this.getAssetId(globalVariable) != undefined
         ).forEach(
             globalVariable =>
                 (nativeVariables[globalVariable.id! - 1] = globalVariable)
@@ -336,7 +408,7 @@ export class Assets {
                 !isDibField(globalVariable) &&
                 this.option == "buildFiles" &&
                 (!hasFlowSupport || globalVariable.native) &&
-                globalVariable.id == undefined
+                this.getAssetId(globalVariable) == undefined
         ).forEach(globalVariable => nativeVariables.push(globalVariable));
 
         for (let i = 0; i < nativeVariables.length; i++) {
@@ -371,7 +443,7 @@ export class Assets {
             project => project.actions,
             action =>
                 assetIncludePredicate(action) &&
-                ((this.option != "buildFiles" && action.id == undefined) ||
+                ((this.option != "buildFiles" && this.getAssetId(action) == undefined) ||
                     action.implementationType != "native")
         ) : [];
 
@@ -381,7 +453,7 @@ export class Assets {
             action =>
                 assetIncludePredicate(action) &&
                 (!hasFlowSupport || action.implementationType == "native") &&
-                action.id != undefined
+                this.getAssetId(action) != undefined
         ).forEach(action => (nativeActions[action.id! - 1] = action));
 
         this.getAssets<Action>(
@@ -390,7 +462,7 @@ export class Assets {
                 assetIncludePredicate(action) &&
                 this.option == "buildFiles" &&
                 (!hasFlowSupport || action.implementationType == "native") &&
-                action.id == undefined
+                this.getAssetId(action) == undefined
         ).forEach(action => nativeActions.push(action));
 
         for (let i = 0; i < nativeActions.length; i++) {
@@ -424,11 +496,11 @@ export class Assets {
         this.lvglStyles = [];
         this.getAssets<Style>(
             project => project.allStyles,
-            style => style.id != undefined
+            style => this.getAssetId(style) != undefined
         ).forEach(style => (this.styles[style.id! - 1] = style));
         this.getAssets<Style>(
             project => project.allStyles,
-            style => style.id == undefined && style.alwaysBuild
+            style => this.getAssetId(style) == undefined && style.alwaysBuild
         ).forEach(style => this.styles.push(style));
         const missingIDs: number[] = [];
         for (let i = 0; i < this.styles.length; i++) {
@@ -458,11 +530,11 @@ export class Assets {
         this.fonts = [];
         this.getAssets<Font>(
             project => project.fonts,
-            font => font.id != undefined
+            font => this.getAssetId(font) != undefined
         ).forEach(font => (this.fonts[font.id! - 1] = font));
         this.getAssets<Font>(
             project => project.fonts,
-            font => font.id == undefined && font.alwaysBuild
+            font => this.getAssetId(font) == undefined && font.alwaysBuild
         ).forEach(font => this.fonts.push(font));
         for (let i = 0; i < this.fonts.length; i++) {
             if (!this.fonts[i]) {
@@ -486,12 +558,12 @@ export class Assets {
         this.bitmaps = [];
         this.getAssets<Bitmap>(
             project => project.bitmaps,
-            bitmap => bitmap.id != undefined
+            bitmap => this.getAssetId(bitmap) != undefined
         ).forEach(bitmap => (this.bitmaps[bitmap.id! - 1] = bitmap));
         this.getAssets<Bitmap>(
             project => project.bitmaps,
             bitmap =>
-                bitmap.id == undefined &&
+                this.getAssetId(bitmap) == undefined &&
                 (bitmap.alwaysBuild ||
                     isDashboardProject(this.projectStore.project))
         ).forEach(bitmap => this.bitmaps.push(bitmap));
@@ -541,13 +613,13 @@ export class Assets {
             let assetIndex = collection.indexOf(asset);
             if (assetIndex == -1) {
                 const isMasterProjectAsset =
-                    this.projectStore.masterProject &&
-                    getProject(asset) == this.projectStore.masterProject;
+                    this.masterProject &&
+                    getProject(asset) == this.masterProject;
 
                 if (isMasterProjectAsset) {
                     if (collection as any == this.globalVariables) {
-                        if (this.projectStore.masterProject.variables) {
-                            for (const variable of this.projectStore.masterProject.variables.globalVariables) {
+                        if (this.masterProject.variables) {
+                            for (const variable of this.masterProject.variables.globalVariables) {
                                 if (variable.name == assetName && variable.id != undefined) {
                                     return this.globalVariables.length + variable.id;
                                 }
@@ -558,13 +630,15 @@ export class Assets {
                     }
 
                     return 0;
+                } else if (this.markMasterProjectAssetUsed(asset)) {
+                    return 0;
                 } else {
                     collection.push(asset);
                     assetIndex = collection.length - 1;
                 }
             }
             assetIndex++;
-            return this.projectStore.masterProject ? -assetIndex : assetIndex;
+            return this.masterProject ? -assetIndex : assetIndex;
         }
 
         return undefined;
@@ -649,19 +723,19 @@ export class Assets {
                 for (let i = 0; i < this.styles.length; i++) {
                     const style = this.styles[i];
                     if (style && style.name == styleName) {
-                        return this.projectStore.masterProject ? -(i + 1) : i + 1;
+                        return this.masterProject ? -(i + 1) : i + 1;
                     }
                 }
 
                 const style = findStyle(project, styleName);
                 if (style) {
-                    if (style.id != undefined) {
-                        return style.id;
+                    if (this.getAssetId(style) != undefined) {
+                        return style.id!;
                     }
 
                     const isMasterProjectStyle =
-                        this.projectStore.masterProject &&
-                        getProject(style) == this.projectStore.masterProject;
+                        this.masterProject &&
+                        getProject(style) == this.masterProject;
                     if (isMasterProjectStyle) {
                         this.projectStore.outputSectionsStore.write(
                             Section.OUTPUT,
@@ -671,7 +745,7 @@ export class Assets {
                         );
                     } else {
                         this.styles.push(style);
-                        return this.projectStore.masterProject
+                        return this.masterProject
                             ? -this.styles.length
                             : this.styles.length;
                     }
@@ -682,7 +756,7 @@ export class Assets {
                 const parentStyle = style.parentStyle;
                 if (parentStyle) {
                     if (style.compareTo(parentStyle)) {
-                        if (style.id != undefined) {
+                        if (this.getAssetId(style) != undefined) {
                             return style.id;
                         }
                         return this.doGetStyleIndex(project, parentStyle.name);
@@ -692,13 +766,13 @@ export class Assets {
                 for (let i = 0; i < this.styles.length; i++) {
                     const s = this.styles[i];
                     if (s && style.compareTo(s)) {
-                        return this.projectStore.masterProject ? -(i + 1) : i + 1;
+                        return this.masterProject ? -(i + 1) : i + 1;
                     }
                 }
 
                 const isMasterProjectStyle =
-                    this.projectStore.masterProject &&
-                    getProject(style) == this.projectStore.masterProject;
+                    this.masterProject &&
+                    getProject(style) == this.masterProject;
                 if (isMasterProjectStyle) {
                     if (style.id) {
                         return style.id;
@@ -712,7 +786,7 @@ export class Assets {
                     }
                 } else {
                     this.styles.push(style);
-                    return this.projectStore.masterProject
+                    return this.masterProject
                         ? -this.styles.length
                         : this.styles.length;
                 }
@@ -773,13 +847,13 @@ export class Assets {
         if (font) {
             for (let i = 0; i < this.fonts.length; i++) {
                 if (font == this.fonts[i]) {
-                    return this.projectStore.masterProject ? -(i + 1) : i + 1;
+                    return this.masterProject ? -(i + 1) : i + 1;
                 }
             }
 
             const isMasterProjectFont =
-                this.projectStore.masterProject &&
-                getProject(font) == this.projectStore.masterProject;
+                this.masterProject &&
+                getProject(font) == this.masterProject;
             if (isMasterProjectFont) {
                 if (font.id) {
                     return font.id;
@@ -793,7 +867,7 @@ export class Assets {
                 }
             } else {
                 this.fonts.push(font);
-                return this.projectStore.masterProject
+                return this.masterProject
                     ? -this.fonts.length
                     : this.fonts.length;
             }
@@ -814,13 +888,13 @@ export class Assets {
         if (bitmap) {
             for (let i = 0; i < this.bitmaps.length; i++) {
                 if (bitmap == this.bitmaps[i]) {
-                    return this.projectStore.masterProject ? -(i + 1) : i + 1;
+                    return this.masterProject ? -(i + 1) : i + 1;
                 }
             }
 
             const isMasterProjectBitmap =
-                this.projectStore.masterProject &&
-                getProject(bitmap) == this.projectStore.masterProject;
+                this.masterProject &&
+                getProject(bitmap) == this.masterProject;
             if (isMasterProjectBitmap) {
                 if (bitmap.id) {
                     return bitmap.id;
@@ -834,7 +908,7 @@ export class Assets {
                 }
             } else {
                 this.bitmaps.push(bitmap);
-                return this.projectStore.masterProject
+                return this.masterProject
                     ? -this.bitmaps.length
                     : this.bitmaps.length;
             }
@@ -864,7 +938,7 @@ export class Assets {
             }
         }
 
-        if (this.projectStore.project.masterProject) {
+        if (this.masterProject) {
             for (let i = 0; i < this.colors.length; i++) {
                 if (this.colors[i] == color) {
                     return 65534 - i;
@@ -1074,6 +1148,7 @@ export class Assets {
         }
         const action = this.actions.find(action => action.name == actionName);
         if (!action) {
+            this.markMasterProjectActionUsed(component, actionName);
             return -1;
         }
         return this.getFlowIndex(action);
@@ -1235,8 +1310,8 @@ export class Assets {
                 action => action.name == actionName
             );
             if (!action) {
-                if (this.projectStore.masterProject) {
-                    const action = this.projectStore.masterProject.actions.find(
+                if (this.masterProject) {
+                    const action = this.masterProject.actions.find(
                         action => action.name == actionName
                     );
 
@@ -1245,18 +1320,20 @@ export class Assets {
                     }
                 }
 
+                this.markMasterProjectActionUsed(widget, actionName);
+
                 return 0;
             }
 
             if (
-                (this.option == "buildFiles" || action.id != undefined) &&
+                (this.option == "buildFiles" || this.getAssetId(action) != undefined) &&
                 action.implementationType === "native"
             ) {
                 const actionIndex = this.actions
                     .filter(
                         action =>
                             (this.option == "buildFiles" ||
-                                action.id != undefined) &&
+                                this.getAssetId(action) != undefined) &&
                             action.implementationType === "native"
                     )
                     .findIndex(action => action.name == actionName);
@@ -1632,7 +1709,21 @@ export async function buildAssets(
 
     const result: any = {};
 
-    const assets = new Assets(project, buildConfiguration, option);
+    let assets = new Assets(project, buildConfiguration, option);
+
+    // include used master project pages, actions and global variables,
+    // repeat until there are no more new ones (they can use other master assets)
+    while (assets.missingMasterProjectAssets.size > 0) {
+        assets = new Assets(
+            project,
+            buildConfiguration,
+            option,
+            new Set([
+                ...assets.includedMasterProjectAssets,
+                ...assets.missingMasterProjectAssets
+            ])
+        );
+    }
 
     if (project.projectTypeTraits.isLVGL) {
         await assets.lvglBuild.firstPassFinish();

@@ -94,7 +94,7 @@ export function buildVariables(
             projectVariables = projectVariables.filter(
                 variable =>
                     (assets.option == "buildFiles" ||
-                        variable.id != undefined) &&
+                        assets.getAssetId(variable) != undefined) &&
                     variable.native
             );
         }
@@ -127,7 +127,7 @@ export function buildVariables(
 
 export function buildVariableNames(assets: Assets, dataBuffer: DataBuffer) {
     dataBuffer.writeArray(
-        assets.projectStore.masterProject ? assets.globalVariables : [],
+        assets.masterProject ? assets.globalVariables : [],
         variable => {
             dataBuffer.writeString(variable.fullName);
         }

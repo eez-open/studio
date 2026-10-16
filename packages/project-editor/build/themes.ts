@@ -58,7 +58,7 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeNumberArray(theme.colors, buildColor);
     }
 
-    if (!assets.projectStore.masterProject) {
+    if (!assets.masterProject) {
         dataBuffer.writeObjectOffset(() => {
             // themes
             dataBuffer.writeArray(
