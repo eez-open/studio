@@ -6889,6 +6889,14 @@ extern "C" int32_t _evalIntegerProperty(void *flowState, unsigned componentIndex
     if (!eez::flow::evalProperty((eez::flow::FlowState *)flowState, componentIndex, propertyIndex, value, eez::flow::FlowError::Plain(errorMessage, file, line))) {
         return 0;
     }
+    if (value.getType() == eez::VALUE_TYPE_UNDEFINED) {
+        // The expression evaluated to "undefined", most commonly because it reads a flow
+        // input (e.g. a widget's custom input) that hasn't been assigned a value yet, such
+        // as during the very first tick before the flow has started executing. Treat this
+        // the same way as text properties already do: silently keep the previous value
+        // instead of stopping the whole flow.
+        return 0;
+    }
     int err;
     int32_t intValue = value.toInt32(&err);
     if (err) {
@@ -6902,6 +6910,10 @@ extern "C" uint32_t _evalUnsignedIntegerProperty(void *flowState, unsigned compo
     if (!eez::flow::evalProperty((eez::flow::FlowState *)flowState, componentIndex, propertyIndex, value, eez::flow::FlowError::Plain(errorMessage, file, line))) {
         return 0;
     }
+    if (value.getType() == eez::VALUE_TYPE_UNDEFINED) {
+        // See the comment in _evalIntegerProperty.
+        return 0;
+    }
     int err;
     uint32_t intValue = (uint32_t)value.toInt32(&err);
     if (err) {
@@ -6913,6 +6925,10 @@ extern "C" uint32_t _evalUnsignedIntegerProperty(void *flowState, unsigned compo
 extern "C" bool _evalBooleanProperty(void *flowState, unsigned componentIndex, unsigned propertyIndex, const char *errorMessage, const char *file, int line) {
     eez::Value value;
     if (!eez::flow::evalProperty((eez::flow::FlowState *)flowState, componentIndex, propertyIndex, value, eez::flow::FlowError::Plain(errorMessage, file, line))) {
+        return 0;
+    }
+    if (value.getType() == eez::VALUE_TYPE_UNDEFINED) {
+        // See the comment in _evalIntegerProperty.
         return 0;
     }
     int err;
