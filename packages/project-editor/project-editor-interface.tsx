@@ -99,7 +99,8 @@ import type {
     LVGLButtonMatrixWidget,
     LVGLLedWidget,
     LVGLTabviewWidget,
-    LVGLDropdownWidget
+    LVGLDropdownWidget,
+    LVGLCalendarWidget
 } from "project-editor/lvgl/widgets";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
@@ -181,6 +182,7 @@ export interface IProjectEditor {
     LVGLTabviewWidgetClass: typeof LVGLTabviewWidget;
     LVGLTabWidgetClass: typeof LVGLTabWidget;
     LVGLDropdownWidgetClass: typeof LVGLDropdownWidget;
+    LVGLCalendarWidgetClass: typeof LVGLCalendarWidget;
     LVGLRollerWidgetClass: typeof LVGLRollerWidget;
     LVGLButtonMatrixWidgetClass: typeof LVGLButtonMatrixWidget;
     LVGLLedWidgetClass: typeof LVGLLedWidget;
