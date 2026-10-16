@@ -25,6 +25,26 @@ import { validators } from "eez-studio-shared/validation";
 import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 import { getValueType } from "project-editor/build/values";
 import type { Variable } from "project-editor/features/variable/variable";
+import {
+    SCPI_COMMAND_FLAG_QUERY,
+    SCPI_DEFAULT_TIMEOUT_MS,
+    SCPI_PARAM_FLAG_LIST,
+    SCPI_PARAM_FLAG_OPTIONAL,
+    SCPI_RESPONSE_ITEM_FLAG_LIST,
+    getEnumIndex,
+    getEnumeration,
+    getModuleScpiCommands,
+    getModuleScpiEnums,
+    getScpiAddressing,
+    getScpiAddressingKindValue,
+    getScpiCommandPattern,
+    getScpiResponseItems,
+    getSpecialValuesMask,
+    getUnitValue,
+    getWireTypeMask
+} from "project-editor/features/scpi/scpi-wire";
+
+const DEFAULT_SCPI_MAX_MESSAGE_SIZE = 1024;
 
 const DIB_MODULE_METADATA_ICON = (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -983,6 +1003,7 @@ export class DibModuleMetadata extends EezObject {
     firmwareVersion: string;
     channels: DibChannel[];
     moduleDataItems: ModuleDataItem[];
+    scpiMaxMessageSize: number;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -1021,8 +1042,16 @@ export class DibModuleMetadata extends EezObject {
                 name: "moduleDataItems",
                 type: PropertyType.Array,
                 typeClass: ModuleDataItem
+            },
+            {
+                name: "scpiMaxMessageSize",
+                displayName: "SCPI max. message size (bytes)",
+                type: PropertyType.Number
             }
         ],
+        defaultValue: {
+            scpiMaxMessageSize: DEFAULT_SCPI_MAX_MESSAGE_SIZE
+        },
         icon: DIB_MODULE_METADATA_ICON,
         check: (object: DibModuleMetadata, messages: IMessage[]) => {
             if (!object.moduleName) {
@@ -1050,6 +1079,16 @@ export class DibModuleMetadata extends EezObject {
                     propertyInvalidValueMessage(object, "firmwareVersion")
                 );
             }
+
+            if (
+                object.scpiMaxMessageSize != undefined &&
+                (object.scpiMaxMessageSize < 64 ||
+                    object.scpiMaxMessageSize > 65535)
+            ) {
+                messages.push(
+                    propertyInvalidValueMessage(object, "scpiMaxMessageSize")
+                );
+            }
         }
     };
 
@@ -1063,7 +1102,8 @@ export class DibModuleMetadata extends EezObject {
             moduleRevision: observable,
             firmwareVersion: observable,
             channels: observable,
-            moduleDataItems: observable
+            moduleDataItems: observable,
+            scpiMaxMessageSize: observable
         });
     }
 
@@ -1172,7 +1212,87 @@ export function writeDibModuleMetadata(metadata: DibModuleMetadata, dataBuffer: 
             dataBuffer.writeStringPtr(variable.name);
 
             offset += size;
-        })        
+        })
+
+        writeScpiMetadata(metadata, dataBuffer);
+    });
+}
+
+function writeScpiMetadata(metadata: DibModuleMetadata, dataBuffer: DataBuffer) {
+    const project = ProjectEditor.getProject(metadata);
+    const commands = getModuleScpiCommands(project);
+    const enums = getModuleScpiEnums(project);
+
+    // scpiMaxMessageSize
+    dataBuffer.writeUint32(
+        metadata.scpiMaxMessageSize || DEFAULT_SCPI_MAX_MESSAGE_SIZE
+    );
+
+    // scpiCommands, index is the command id on the wire
+    dataBuffer.writeArray(commands, command => {
+        // pattern
+        dataBuffer.writeStringPtr(getScpiCommandPattern(command));
+        // flags
+        dataBuffer.writeUint16(command.isQuery ? SCPI_COMMAND_FLAG_QUERY : 0);
+        // timeoutMs
+        dataBuffer.writeUint16(command.timeoutMs || SCPI_DEFAULT_TIMEOUT_MS);
+
+        // addressing
+        const addressing = getScpiAddressing(command);
+        dataBuffer.writeUint8(getScpiAddressingKindValue(addressing.kind));
+        dataBuffer.writeUint8(addressing.index);
+        dataBuffer.writeUint16(0); // reserved
+
+        // params
+        dataBuffer.writeArray(command.parameters || [], parameter => {
+            const specialMask = getSpecialValuesMask(parameter.specialValues);
+            // wireTypeMask
+            dataBuffer.writeUint16(
+                getWireTypeMask(parameter.type, specialMask != 0)
+            );
+            // flags
+            dataBuffer.writeUint16(
+                (parameter.isOptional ? SCPI_PARAM_FLAG_OPTIONAL : 0) |
+                    (parameter.repeat == "list" ? SCPI_PARAM_FLAG_LIST : 0)
+            );
+            // unit
+            dataBuffer.writeUint16(getUnitValue(parameter.unit));
+            // specialMask
+            dataBuffer.writeUint16(specialMask);
+            // enumIndex
+            dataBuffer.writeUint16(
+                getEnumIndex(enums, getEnumeration(parameter.type))
+            );
+            // reserved
+            dataBuffer.writeUint16(0);
+        });
+
+        // response
+        dataBuffer.writeArray(getScpiResponseItems(command), item => {
+            // wireTypeMask
+            dataBuffer.writeUint16(getWireTypeMask(item.types, false));
+            // flags
+            dataBuffer.writeUint16(
+                item.repeat == "list" ? SCPI_RESPONSE_ITEM_FLAG_LIST : 0
+            );
+            // unit
+            dataBuffer.writeUint16(getUnitValue(item.unit));
+            // enumIndex
+            dataBuffer.writeUint16(
+                getEnumIndex(enums, getEnumeration(item.types))
+            );
+        });
+    });
+
+    // scpiEnums
+    dataBuffer.writeArray(enums, scpiEnum => {
+        // members
+        dataBuffer.writeArray(scpiEnum.members, member => {
+            // name
+            dataBuffer.writeStringPtr(member.name);
+            // value
+            dataBuffer.writeInt32(parseInt(member.value) || 0);
+        });
     });
 }
 

@@ -15,7 +15,7 @@ function cleanUpCommandName(command: ScpiCommand) {
     return command.name.replace(/\[\<n\>\]/g, "<n>").replace(/\<n\>/g, "#");
 }
 
-function getCommandFuncName(command: ScpiCommand) {
+export function getCommandFuncName(command: ScpiCommand) {
     let name = cleanUpCommandName(command)
         .replace(/\*/g, "core_")
         .replace(/:/g, "_")
