@@ -26,6 +26,9 @@ export const SCPI_WIRE_TYPE_RAW = 8;
 
 export const SCPI_PARAM_FLAG_OPTIONAL = 1 << 0;
 export const SCPI_PARAM_FLAG_LIST = 1 << 1;
+// BB3+ checks the parameter against its calibration password (error 102 if
+// it doesn't match) and doesn't send it to the module
+export const SCPI_PARAM_FLAG_CALIBRATION_PASSWORD = 1 << 2;
 
 export const SCPI_RESPONSE_ITEM_FLAG_LIST = 1 << 0;
 

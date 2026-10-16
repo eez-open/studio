@@ -175,9 +175,12 @@ function getCommandInfo(command: ScpiCommand, id: number): CommandInfo {
         const specialMask = getSpecialValuesMask(parameter.specialValues);
         return {
             index,
-            cName: isAddressingParam(addressing, index)
-                ? undefined
-                : toCIdentifier(parameter.name, used),
+            // the calibration password is checked by BB3+ and not sent
+            cName:
+                isAddressingParam(addressing, index) ||
+                parameter.isCalibrationPassword
+                    ? undefined
+                    : toCIdentifier(parameter.name, used),
             wireTypes: getWireTypes(
                 getWireTypeMask(parameter.type, specialMask != 0)
             ),
@@ -805,7 +808,8 @@ function buildDispatchFunction(info: CommandInfo) {
         lines.push(`    }`);
 
         if (!param.cName) {
-            // addressing parameter, BB3+ sends it as NONE
+            // addressing parameter or calibration password, BB3+ sends it
+            // as NONE
             continue;
         }
 

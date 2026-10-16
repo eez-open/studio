@@ -221,6 +221,7 @@ export class ScpiParameter extends EezObject {
     unit?: string;
     specialValues?: string;
     repeat?: "once" | "list";
+    isCalibrationPassword?: boolean;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -397,6 +398,13 @@ export class ScpiParameter extends EezObject {
             },
             repeatProperty,
             {
+                name: "isCalibrationPassword",
+                displayName: "Is calibration password? (checked by BB3+, not sent to the module)",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                hideInPropertyGrid: hideIfNotModuleProject
+            },
+            {
                 name: "description",
                 type: PropertyType.MultilineText
             }
@@ -412,6 +420,22 @@ export class ScpiParameter extends EezObject {
             }
 
             checkTypeForModule(parameter, parameter.type, messages);
+
+            if (
+                parameter.isCalibrationPassword &&
+                !(
+                    parameter.type.length == 1 &&
+                    parameter.type[0].type == "quoted-string"
+                )
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Calibration password must be a quoted string`,
+                        getChildOfObject(parameter, "isCalibrationPassword")
+                    )
+                );
+            }
 
             const { invalid } = parseSpecialValues(parameter.specialValues);
             if (invalid.length > 0) {
@@ -469,7 +493,8 @@ export class ScpiParameter extends EezObject {
             description: observable,
             unit: observable,
             specialValues: observable,
-            repeat: observable
+            repeat: observable,
+            isCalibrationPassword: observable
         });
     }
 

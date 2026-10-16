@@ -28,6 +28,7 @@ import type { Variable } from "project-editor/features/variable/variable";
 import {
     SCPI_COMMAND_FLAG_QUERY,
     SCPI_DEFAULT_TIMEOUT_MS,
+    SCPI_PARAM_FLAG_CALIBRATION_PASSWORD,
     SCPI_PARAM_FLAG_LIST,
     SCPI_PARAM_FLAG_OPTIONAL,
     SCPI_RESPONSE_ITEM_FLAG_LIST,
@@ -1253,7 +1254,10 @@ function writeScpiMetadata(metadata: DibModuleMetadata, dataBuffer: DataBuffer) 
             // flags
             dataBuffer.writeUint16(
                 (parameter.isOptional ? SCPI_PARAM_FLAG_OPTIONAL : 0) |
-                    (parameter.repeat == "list" ? SCPI_PARAM_FLAG_LIST : 0)
+                    (parameter.repeat == "list" ? SCPI_PARAM_FLAG_LIST : 0) |
+                    (parameter.isCalibrationPassword
+                        ? SCPI_PARAM_FLAG_CALIBRATION_PASSWORD
+                        : 0)
             );
             // unit
             dataBuffer.writeUint16(getUnitValue(parameter.unit));
