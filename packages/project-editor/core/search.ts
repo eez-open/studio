@@ -48,8 +48,11 @@ import {
 } from "project-editor/features/variable/value-type";
 import type {
     Enum,
-    Structure
+    Structure,
+    Variable
 } from "project-editor/features/variable/variable";
+import type { Style } from "project-editor/features/style/style";
+import type { LVGLStyle } from "project-editor/lvgl/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -757,6 +760,125 @@ export function* searchForAllReferences(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface UnusedObject {
+    object: IEezObject;
+    group: string;
+    text: string;
+}
+
+function* isReferencedWithPause(
+    object: IEezObject
+): Generator<null, boolean, undefined> {
+    // styles, fonts and bitmaps marked with "Always build" are used
+    if (getProperty(object, "alwaysBuild")) {
+        return true;
+    }
+
+    const resultsGenerator = searchForReference(
+        getRootObject(object),
+        { type: "object", object },
+        true
+    );
+
+    while (true) {
+        const searchResult = resultsGenerator.next();
+        if (searchResult.done) {
+            return false;
+        }
+
+        if (searchResult.value) {
+            return true;
+        }
+
+        // pause
+        yield null;
+    }
+}
+
+export function* searchForUnusedObjects(
+    root: IEezObject
+): Generator<UnusedObject | null, void, undefined> {
+    const project = ProjectEditor.getProject(root);
+
+    function* checkObjects(
+        group: string,
+        objects: IEezObject[] | undefined,
+        getText: (object: IEezObject) => string = object =>
+            getProperty(object, "name")
+    ): Generator<UnusedObject | null, void, undefined> {
+        if (!objects) {
+            return;
+        }
+        for (const object of objects) {
+            if (!(yield* isReferencedWithPause(object))) {
+                yield { object, group, text: getText(object) };
+            }
+        }
+    }
+
+    // style is used if it or any of its child styles is used,
+    // because child styles inherit from their parent style
+    function* checkStyles(
+        group: string,
+        styles: (Style | LVGLStyle)[] | undefined
+    ): Generator<UnusedObject | null, boolean, undefined> {
+        let anyUsed = false;
+        if (styles) {
+            for (const style of styles) {
+                const childStylesUsed: boolean = yield* checkStyles(
+                    group,
+                    style.childStyles
+                );
+
+                if (
+                    childStylesUsed ||
+                    (yield* isReferencedWithPause(style))
+                ) {
+                    anyUsed = true;
+                } else {
+                    yield { object: style, group, text: style.name };
+                }
+            }
+        }
+        return anyUsed;
+    }
+
+    yield* checkObjects(
+        "Global Variables",
+        project.variables?.globalVariables
+    );
+
+    const flows = [
+        ...(project.userPages ?? []),
+        ...(project.userWidgets ?? []),
+        ...(project.actions ?? [])
+    ];
+    for (const flow of flows) {
+        yield* checkObjects(
+            "Local Variables",
+            flow.localVariables,
+            (localVariable: Variable) => `${flow.name}: ${localVariable.name}`
+        );
+    }
+
+    yield* checkObjects("Structures", project.variables?.structures);
+    yield* checkObjects("Enumerations", project.variables?.enums);
+
+    if (project.projectTypeTraits.isLVGL) {
+        yield* checkStyles("Styles", project.lvglStyles?.styles);
+    } else {
+        yield* checkStyles("Styles", project.styles);
+    }
+
+    yield* checkObjects("Fonts", project.fonts);
+    yield* checkObjects("Bitmaps", project.bitmaps);
+    yield* checkObjects("Theme Colors", project.colors);
+    yield* checkObjects("User Widgets", project.userWidgets);
+    yield* checkObjects("User Actions", project.actions);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 interface SearchCallbackMessageClear {
     type: "clear";
 }
@@ -770,6 +892,11 @@ interface SearchCallbackMessageValue {
     valueObject: EezValueObject;
 }
 
+interface SearchCallbackMessageUnused {
+    type: "unused";
+    unusedObject: UnusedObject;
+}
+
 interface SearchCallbackMessageFinish {
     type: "finish";
 }
@@ -778,6 +905,7 @@ export type SearchCallbackMessage =
     | SearchCallbackMessageClear
     | SearchCallbackMessageStart
     | SearchCallbackMessageValue
+    | SearchCallbackMessageUnused
     | SearchCallbackMessageFinish;
 
 export type SearchCallback = (message: SearchCallbackMessage) => boolean;
@@ -800,10 +928,15 @@ export interface SearchParamsReferences {
     type: "references";
 }
 
+export interface SearchParamsUnused {
+    type: "unused";
+}
+
 export type SearchParams = (
     | SearchParamsPattern
     | SearchParamsObject
     | SearchParamsReferences
+    | SearchParamsUnused
 ) & {
     searchCallback: SearchCallback;
 };
@@ -842,11 +975,15 @@ export class CurrentSearch {
         ) {
             searchParams.searchCallback({ type: "start" });
 
-            let searchResultsGenerator =
+            let searchResultsGenerator: Iterator<
+                SearchResult | UnusedObject | null
+            > =
                 searchParams.type == "pattern"
                     ? searchForPattern(root, searchParams, true)
                     : searchParams.type == "object"
                     ? searchForReference(root, searchParams, true)
+                    : searchParams.type == "unused"
+                    ? searchForUnusedObjects(root)
                     : searchForAllReferences(root, true);
 
             this.interval = setInterval(() => {
@@ -859,13 +996,20 @@ export class CurrentSearch {
                         return;
                     }
 
-                    let valueObject = searchResult.value;
-                    if (valueObject) {
+                    let result = searchResult.value;
+                    if (result) {
                         if (
-                            !searchParams.searchCallback({
-                                type: "value",
-                                valueObject
-                            })
+                            !searchParams.searchCallback(
+                                result instanceof EezValueObject
+                                    ? {
+                                          type: "value",
+                                          valueObject: result
+                                      }
+                                    : {
+                                          type: "unused",
+                                          unusedObject: result
+                                      }
+                            )
                         ) {
                             this.finishSearch();
                             return;

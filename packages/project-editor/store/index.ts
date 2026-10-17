@@ -527,6 +527,41 @@ export class ProjectStore {
         });
     }
 
+    findUnusedObjects() {
+        startNewSearch(this, {
+            type: "unused",
+            searchCallback: message => {
+                if (message.type == "clear") {
+                    this.outputSectionsStore.clear(Section.REFERENCES);
+                } else if (message.type == "start") {
+                    this.layoutModels.selectTab(
+                        this.layoutModels.root,
+                        LayoutModels.REFERENCES_TAB_ID
+                    );
+                    this.outputSectionsStore.setLoading(
+                        Section.REFERENCES,
+                        true
+                    );
+                } else if (message.type == "unused") {
+                    this.outputSectionsStore.writeInGroup(
+                        Section.REFERENCES,
+                        `Unused ${message.unusedObject.group}`,
+                        MessageType.SEARCH_RESULT,
+                        message.unusedObject.text,
+                        message.unusedObject.object
+                    );
+                } else if (message.type == "finish") {
+                    this.outputSectionsStore.setLoading(
+                        Section.REFERENCES,
+                        false
+                    );
+                }
+
+                return true;
+            }
+        });
+    }
+
     startBackgroundCheck() {
         if (this.uiStateStore.searchPattern) {
             this.startSearch();

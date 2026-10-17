@@ -489,6 +489,7 @@ export class OutputSections {
             setLoading: action,
             clear: action,
             write: action,
+            writeInGroup: action,
             setMessages: action
         });
 
@@ -562,6 +563,33 @@ export class OutputSections {
     ) {
         let section = this.sections[sectionType];
         section.messages.pushAsTree(new Message(type, text, object));
+    }
+
+    writeInGroup(
+        sectionType: Section,
+        groupText: string,
+        type: MessageType,
+        text: string,
+        object?: IEezObject
+    ) {
+        let section = this.sections[sectionType];
+
+        let groupMessage = section.messages.messages.find(
+            message =>
+                message.type == MessageType.GROUP && message.text == groupText
+        );
+        if (!groupMessage) {
+            groupMessage = new Message(
+                MessageType.GROUP,
+                groupText,
+                undefined,
+                [],
+                true
+            );
+            section.messages.messages.push(groupMessage);
+        }
+
+        groupMessage.messages!.push(new Message(type, text, object));
     }
 
     setMessages(sectionType: Section, messages: IMessage[]) {

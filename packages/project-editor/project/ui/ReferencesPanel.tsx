@@ -2,7 +2,7 @@ import React from "react";
 import { action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
-import { IconAction } from "eez-studio-ui/action";
+import { ButtonAction, IconAction } from "eez-studio-ui/action";
 
 import { ProjectContext } from "project-editor/project/context";
 import { Messages } from "project-editor/ui-components/Output";
@@ -119,6 +119,22 @@ const Toolbar = observer(
         render() {
             return (
                 <div className="EezStudio_ToolbarReferences">
+                    <div
+                        className="btn-group"
+                        role="group"
+                        style={{ marginRight: "auto" }}
+                    >
+                        <ButtonAction
+                            text="Search for Unused Items"
+                            title="Search for Unused Items"
+                            icon="material:search"
+                            iconSize={18}
+                            className="btn-secondary btn-sm"
+                            onClick={() =>
+                                this.context.findUnusedObjects()
+                            }
+                        />
+                    </div>
                     <div className="btn-group" role="group">
                         <IconAction
                             title="Next Result"
