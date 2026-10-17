@@ -87,6 +87,7 @@ import { Build, getName, NamingConvention } from "project-editor/build/helper";
 import { IconAction } from "eez-studio-ui/action";
 import { CodeEditor } from "eez-studio-ui/code-editor";
 import { Icon } from "eez-studio-ui/icon";
+import { DIB_FIELD_UNITS } from "project-editor/features/variable/dib-field-unit";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -337,6 +338,19 @@ export const NativeVariableImplementationInfoPropertyUI = observer(
 
 type DibField = "input" | "output" | "input-output" | undefined;
 
+
+function isNativeVariableDisabled(variable: Variable) {
+    const project = ProjectEditor.getProject(variable);
+    return (
+        !isGlobalVariable(variable) ||
+        !hasFlowSupport(variable) ||
+        !project.projectTypeTraits.isVariableTypeSupportedAsNative(
+            variable.type
+        ) ||
+        !!project.settings.general.masterProject
+    );
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class Variable extends EezObject {
@@ -351,6 +365,7 @@ export class Variable extends EezObject {
     persistent: boolean;
     native: boolean;
     dibField: DibField;
+    dibFieldUnit: string | undefined;
 
     constructor() {
         super();
@@ -374,7 +389,8 @@ export class Variable extends EezObject {
             usedIn: observable,
             persistent: observable,
             native: observable,
-            dibField: observable
+            dibField: observable,
+            dibFieldUnit: observable
         });
     }
 
@@ -448,19 +464,7 @@ export class Variable extends EezObject {
             {
                 name: "native",
                 type: PropertyType.Boolean,
-                disabled: (variable: Variable) => {
-                    const project = ProjectEditor.getProject(variable);
-                    return (
-                        !isGlobalVariable(variable) ||
-                        !hasFlowSupport(variable) ||
-                        !ProjectEditor.getProject(
-                            variable
-                        ).projectTypeTraits.isVariableTypeSupportedAsNative(
-                            variable.type
-                        ) ||
-                        project.masterProject != null
-                    );
-                },
+                disabled: isNativeVariableDisabled,
                 checkboxStyleSwitch: true
             },
             {
@@ -540,6 +544,20 @@ export class Variable extends EezObject {
                 disabled: (variable) =>
                     !isGlobalVariable(variable) ||
                     !ProjectEditor.getProject(variable).dibModuleMetadata
+            },
+            {
+                name: "dibFieldUnit",
+                displayName: "DIB field unit",
+                type: PropertyType.Enum,
+                enumItems: DIB_FIELD_UNITS.map(unit => ({
+                    id: unit.id,
+                    label: unit.label
+                })),
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
+                    variable.dibField == undefined ||
+                    variable.type != "float"
             }
         ],
         icon: VARIABLE_ICON,
@@ -590,6 +608,10 @@ export class Variable extends EezObject {
         },
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);
+
+            if (isNativeVariableDisabled(object)) {
+                objectJS.native = false;
+            }
         },
         newItem: async (parent: IEezObject) => {
             const project = ProjectEditor.getProject(parent);

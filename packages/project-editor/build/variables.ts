@@ -60,15 +60,18 @@ function buildDataArrayDef(projectVariables: Variable[]) {
 function buildDibModuleFieldTags(assets: Assets) {
     let fieldTags = [];
 
+    // the tag is the index in the DIB fields of the module metadata (only
+    // the global variables with dibField set), see DibModuleMetadata.dibFields
     const variables = assets.projectStore.project.variables.globalVariables;
+    let fieldIndex = 0;
     for (let i = 0; i < variables.length; i++) {
-        if (variables[i].dibField) {
+        if (variables[i].dibField != undefined) {
             fieldTags.push(
                 `${TAB}${getName(
                     "BB3P_CUSTOM_FIELD_TAG_",
                     variables[i],
                     NamingConvention.UnderscoreUpperCase
-                )} = BB3P_CUSTOM_FIELD_TAG_START + ${i}`
+                )} = BB3P_CUSTOM_FIELD_TAG_START + ${fieldIndex++}`
             );
         }
     }

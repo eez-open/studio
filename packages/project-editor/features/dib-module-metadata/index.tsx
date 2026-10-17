@@ -25,8 +25,11 @@ import { validators } from "eez-studio-shared/validation";
 import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 import { getValueType } from "project-editor/build/values";
 import type { Variable } from "project-editor/features/variable/variable";
+import { getDibFieldUnitValue } from "project-editor/features/variable/dib-field-unit";
 import {
     SCPI_COMMAND_FLAG_QUERY,
+    SCPI_COMMAND_FLAG_APPLY_ON_DIB_SYNC,
+    DIB_FIELD_FLAG_PERSISTENT,
     SCPI_DEFAULT_TIMEOUT_MS,
     SCPI_PARAM_FLAG_CALIBRATION_PASSWORD,
     SCPI_PARAM_FLAG_LIST,
@@ -1156,7 +1159,13 @@ function getDibFieldSize(variable: Variable) {
     return 0;
 }
 
-export function writeDibModuleMetadata(metadata: DibModuleMetadata, dataBuffer: DataBuffer) {
+// pageNames: names of the pages in the assets (index is page id - 1), BB3+ finds
+// the module pages (slot views, settings) by name
+export function writeDibModuleMetadata(
+    metadata: DibModuleMetadata,
+    dataBuffer: DataBuffer,
+    pageNames: string[]
+) {
     dataBuffer.writeObjectOffset(() => {
         // version
         dataBuffer.writeUint16(DIB_METADATA_SPECIFICATION_VERSION_1);
@@ -1199,8 +1208,10 @@ export function writeDibModuleMetadata(metadata: DibModuleMetadata, dataBuffer: 
                       : DIB_FIELD_DIRECTION_INPUT_OUTPUT
             );
 
-            // reserved
-            dataBuffer.writeUint8(0);
+            // flags
+            dataBuffer.writeUint8(
+                variable.persistent ? DIB_FIELD_FLAG_PERSISTENT : 0
+            );
 
             // offset
             dataBuffer.writeUint32(offset);
@@ -1212,10 +1223,20 @@ export function writeDibModuleMetadata(metadata: DibModuleMetadata, dataBuffer: 
             // name
             dataBuffer.writeStringPtr(variable.name);
 
+            // unit
+            dataBuffer.writeUint16(getDibFieldUnitValue(variable.dibFieldUnit));
+            // reserved
+            dataBuffer.writeUint16(0);
+
             offset += size;
         })
 
         writeScpiMetadata(metadata, dataBuffer);
+
+        // pageNames
+        dataBuffer.writeArray(pageNames, pageName => {
+            dataBuffer.writeString(pageName);
+        });
     });
 }
 
@@ -1234,7 +1255,10 @@ function writeScpiMetadata(metadata: DibModuleMetadata, dataBuffer: DataBuffer) 
         // pattern
         dataBuffer.writeStringPtr(getScpiCommandPattern(command));
         // flags
-        dataBuffer.writeUint16(command.isQuery ? SCPI_COMMAND_FLAG_QUERY : 0);
+        dataBuffer.writeUint16(
+            (command.isQuery ? SCPI_COMMAND_FLAG_QUERY : 0) |
+                (command.applyOnDibSync ? SCPI_COMMAND_FLAG_APPLY_ON_DIB_SYNC : 0)
+        );
         // timeoutMs
         dataBuffer.writeUint16(command.timeoutMs || SCPI_DEFAULT_TIMEOUT_MS);
 

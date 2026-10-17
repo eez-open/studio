@@ -1621,7 +1621,11 @@ export async function buildGuiAssetsData(
     // metadata
     const dibModuleMetadata = assets.projectStore.project.dibModuleMetadata
     if (dibModuleMetadata) {
-        ProjectEditor.writeDibModuleMetadata(dibModuleMetadata, dataBuffer);
+        ProjectEditor.writeDibModuleMetadata(
+            dibModuleMetadata,
+            dataBuffer,
+            assets.pages.map(page => (page ? page.name : ""))
+        );
     }
 
     dataBuffer.finalize();

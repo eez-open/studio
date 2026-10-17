@@ -1053,6 +1053,7 @@ export class ScpiCommand extends EezObject {
     sendsBackDataBlock: boolean;
     addressing?: ScpiAddressing;
     timeoutMs?: number;
+    applyOnDibSync?: boolean;
 
     constructor() {
         super();
@@ -1075,7 +1076,8 @@ export class ScpiCommand extends EezObject {
             response: observable,
             sendsBackDataBlock: observable,
             addressing: observable,
-            timeoutMs: observable
+            timeoutMs: observable,
+            applyOnDibSync: observable
         });
     }
 
@@ -1138,6 +1140,13 @@ export class ScpiCommand extends EezObject {
                 name: "timeoutMs",
                 displayName: `Timeout (ms, default ${SCPI_DEFAULT_TIMEOUT_MS})`,
                 type: PropertyType.Number,
+                hideInPropertyGrid: hideIfNotModuleProject
+            },
+            {
+                name: "applyOnDibSync",
+                displayName: "Apply on DIB SYNC (e.g. output enable, switched together in all the modules)",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
                 hideInPropertyGrid: hideIfNotModuleProject
             }
         ],

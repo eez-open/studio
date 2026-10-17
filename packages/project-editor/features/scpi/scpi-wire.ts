@@ -33,6 +33,13 @@ export const SCPI_PARAM_FLAG_CALIBRATION_PASSWORD = 1 << 2;
 export const SCPI_RESPONSE_ITEM_FLAG_LIST = 1 << 0;
 
 export const SCPI_COMMAND_FLAG_QUERY = 1 << 0;
+// BB3+ sends DIB SYNC after the command is executed by all the target modules,
+// so they apply it (e.g. output enable) at the same time
+export const SCPI_COMMAND_FLAG_APPLY_ON_DIB_SYNC = 1 << 1;
+
+// custom field (DIB field) flags in the metadata
+// BB3+ saves the field in the profile and restores it on recall
+export const DIB_FIELD_FLAG_PERSISTENT = 1 << 0;
 
 export const SCPI_ENUM_INDEX_NONE = 0xffff;
 
