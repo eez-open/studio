@@ -45,7 +45,10 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 
 import { AutoSize, Component, Widget } from "project-editor/flow/component";
-import { isTimelineEditorActive } from "project-editor/flow/timeline";
+import {
+    isTimelineEditorActive,
+    lvglCreateTimeline
+} from "project-editor/flow/timeline";
 
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { ProjectContext } from "project-editor/project/context";
@@ -1516,6 +1519,12 @@ export class LVGLWidget extends Widget {
         return ProjectEditor.getProject(this).lvglStyles.defaultStyles[this.type];
     }
 
+    // if true, timeline rotate/scale is applied with image functions
+    // (lv_img_set_angle/zoom) instead of style transform
+    get useImageTransformInTimeline() {
+        return false;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
@@ -1543,9 +1552,7 @@ export class LVGLWidget extends Widget {
         }
 
         // timeline
-        for (const keyframe of this.timeline) {
-            keyframe.lvglCreate(runtime, obj, runtime.lvglCreateContext.flowState);
-        }
+        lvglCreateTimeline(runtime, this, obj);
 
         // children
         this.children.map((widget: LVGLWidget) => widget.lvglCreate(runtime, obj));

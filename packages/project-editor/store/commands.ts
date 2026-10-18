@@ -136,6 +136,26 @@ export let insertObject = action(
     }
 );
 
+export let reorderObjects = action(
+    (array: EezObject[], newOrder: EezObject[]) => {
+        const oldOrder = array.slice();
+
+        getProjectStore(array).undoManager.executeCommand({
+            execute: action(() => {
+                array.splice(0, array.length, ...newOrder);
+            }),
+
+            undo: action(() => {
+                array.splice(0, array.length, ...oldOrder);
+            }),
+
+            get description() {
+                return "Reordered: " + getHumanReadableObjectPath(array);
+            }
+        });
+    }
+);
+
 class UpdateCommand implements ICommand {
     private oldValues: any = {};
     private newValues: any = {};

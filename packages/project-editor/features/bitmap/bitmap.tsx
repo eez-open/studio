@@ -44,7 +44,7 @@ import { getThemedColor } from "project-editor/features/style/theme";
 import { showGenericDialog } from "project-editor/core/util";
 
 import { MultipleAbsoluteFileInput } from "project-editor/ui-components/FileInput";
-import { findStyle } from "project-editor/project/project";
+import { findStyle, type Project } from "project-editor/project/project";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
@@ -107,6 +107,26 @@ const ExportBitmapFilePropertyGridUI = observer(
         }
     }
 );
+
+////////////////////////////////////////////////////////////////////////////////
+
+const LVGL_BINARY_OUTPUT_FORMATS = [
+    { id: 0, label: "RGB332" },
+    { id: 1, label: "RGB565" },
+    { id: 2, label: "RGB565 Swap" },
+    { id: 3, label: "RGB888" }
+];
+
+const LVGL_BINARY_OUTPUT_FORMAT_DEFAULT = 3;
+
+// binary output format is used only with LVGL 8.x and binary image export mode
+function isLvglBinaryOutputFormatUsed(project: Project) {
+    return (
+        project.projectTypeTraits.isLVGL &&
+        !project.settings.general.lvglVersion.startsWith("9.") &&
+        project.settings.build.imageExportMode == "binary"
+    );
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -194,26 +214,12 @@ export class Bitmap extends EezObject {
                 name: "lvglBinaryOutputFormat",
                 displayName: (bitmap: Bitmap) => "Binary output format",
                 type: PropertyType.Enum,
-                enumItems: [
-                    { id: 0, label: "RGB332" },
-                    { id: 1, label: "RGB565" },
-                    { id: 2, label: "RGB565 Swap" },
-                    { id: 3, label: "RGB888" }
-                ],
-                defaultValue: 3,
-                disabled: (bitmap: Bitmap) => {
-                    if (isNotLVGLProject(bitmap)) {
-                        return true;
-                    }
-
-                    const project = ProjectEditor.getProject(bitmap);
-
-                    if (project.settings.general.lvglVersion.startsWith("9.")) {
-                        return true;
-                    }
-
-                    return project.settings.build.imageExportMode != "binary";
-                }
+                enumItems: LVGL_BINARY_OUTPUT_FORMATS,
+                defaultValue: LVGL_BINARY_OUTPUT_FORMAT_DEFAULT,
+                disabled: (bitmap: Bitmap) =>
+                    !isLvglBinaryOutputFormatUsed(
+                        ProjectEditor.getProject(bitmap)
+                    )
             },
             {
                 name: "lvglDither",
@@ -339,7 +345,21 @@ export class Bitmap extends EezObject {
                                       type: "enum",
                                       enumItems:
                                           getLvglBitmapColorFormats(parent)
-                                  } as IFieldProperties
+                                  } as IFieldProperties,
+                                  ...(isLvglBinaryOutputFormatUsed(
+                                      ProjectEditor.getProject(parent)
+                                  )
+                                      ? [
+                                            {
+                                                name: "lvglBinaryOutputFormat",
+                                                displayName:
+                                                    "Binary output format",
+                                                type: "enum",
+                                                enumItems:
+                                                    LVGL_BINARY_OUTPUT_FORMATS
+                                            } as IFieldProperties
+                                        ]
+                                      : [])
                               ]
                             : projectStore.projectTypeTraits.isDashboard
                             ? []
@@ -356,13 +376,16 @@ export class Bitmap extends EezObject {
                 values: {
                     bpp: projectStore.projectTypeTraits.isLVGL
                         ? CF_TRUE_COLOR_ALPHA
-                        : 32
+                        : 32,
+                    lvglBinaryOutputFormat: LVGL_BINARY_OUTPUT_FORMAT_DEFAULT
                 },
                 modal: true,
                 backdrop: "static"
             });
 
             const bpp: number = result.values.bpp;
+            const lvglBinaryOutputFormat: number =
+                result.values.lvglBinaryOutputFormat;
 
             if (result.values.imageFilePaths.length == 1) {
                 const name: string = result.values.name;
@@ -372,7 +395,8 @@ export class Bitmap extends EezObject {
                     result.values.imageFilePaths[0],
                     undefined,
                     name,
-                    bpp
+                    bpp,
+                    lvglBinaryOutputFormat
                 );
             } else {
                 projectStore.undoManager.setCombineCommands(true);
@@ -391,7 +415,8 @@ export class Bitmap extends EezObject {
                         filePath,
                         undefined,
                         name,
-                        bpp
+                        bpp,
+                        lvglBinaryOutputFormat
                     );
                     if (bitmap) {
                         projectStore.addObject(parent, bitmap);
@@ -659,7 +684,8 @@ export async function createBitmap(
     filePath: string,
     fileType?: string,
     name?: string,
-    bpp?: number
+    bpp?: number,
+    lvglBinaryOutputFormat?: number
 ) {
     if (bpp == undefined) {
         bpp = projectStore.projectTypeTraits.isLVGL ? CF_TRUE_COLOR_ALPHA : 32;
@@ -697,6 +723,10 @@ export async function createBitmap(
             bpp,
             alwaysBuild: false
         };
+
+        if (lvglBinaryOutputFormat != undefined) {
+            bitmapProperties.lvglBinaryOutputFormat = lvglBinaryOutputFormat;
+        }
 
         const bitmap = createObject<Bitmap>(
             projectStore,
