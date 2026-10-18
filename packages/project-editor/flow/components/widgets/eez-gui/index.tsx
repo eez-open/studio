@@ -5275,8 +5275,12 @@ export class InputEmbeddedWidget extends Widget {
     min: string;
     max: string;
 
+    defaultValue: string;
+
     precision: string;
     unit: string;
+
+    info: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -5314,12 +5318,22 @@ export class InputEmbeddedWidget extends Widget {
                     widget.inputType === "text" ? "Max (chars)" : "Max"
             },
             {
+                ...makeDataPropertyInfo("defaultValue"),
+                disabled: (widget: InputEmbeddedWidget) =>
+                    widget.inputType != "number"
+            },
+            {
                 ...makeDataPropertyInfo("precision"),
                 disabled: (widget: InputEmbeddedWidget) =>
                     widget.inputType != "number"
             },
             {
                 ...makeDataPropertyInfo("unit"),
+                disabled: (widget: InputEmbeddedWidget) =>
+                    widget.inputType != "number"
+            },
+            {
+                ...makeDataPropertyInfo("info"),
                 disabled: (widget: InputEmbeddedWidget) =>
                     widget.inputType != "number"
             },
@@ -5371,7 +5385,7 @@ export class InputEmbeddedWidget extends Widget {
             }
 
             if (!widget.max) {
-                messages.push(propertyNotSetMessage(widget, "min"));
+                messages.push(propertyNotSetMessage(widget, "max"));
             }
 
             if (widget.type === "number") {
@@ -5396,8 +5410,10 @@ export class InputEmbeddedWidget extends Widget {
             password: observable,
             min: observable,
             max: observable,
+            defaultValue: observable,
             precision: observable,
-            unit: observable
+            unit: observable,
+            info: observable
         });
     }
 
@@ -5511,6 +5527,18 @@ export class InputEmbeddedWidget extends Widget {
 
         // component index
         dataBuffer.writeUint16(assets.getComponentIndex(this));
+
+        // info
+        dataBuffer.writeInt16(
+            this.inputType === "text"
+                ? 0
+                : assets.getWidgetDataItemIndex(this, "info"));
+
+        // defaultValue
+        dataBuffer.writeInt16(
+            this.inputType === "text"
+                ? 0
+                : assets.getWidgetDataItemIndex(this, "defaultValue"));
     }
 }
 
