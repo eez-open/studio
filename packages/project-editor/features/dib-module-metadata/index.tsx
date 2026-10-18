@@ -30,6 +30,7 @@ import {
     SCPI_COMMAND_FLAG_QUERY,
     SCPI_COMMAND_FLAG_APPLY_ON_DIB_SYNC,
     DIB_FIELD_FLAG_PERSISTENT,
+    DIB_FIELD_FLAG_SAMPLED,
     SCPI_DEFAULT_TIMEOUT_MS,
     SCPI_PARAM_FLAG_CALIBRATION_PASSWORD,
     SCPI_PARAM_FLAG_LIST,
@@ -1008,6 +1009,10 @@ export class DibModuleMetadata extends EezObject {
     channels: DibChannel[];
     moduleDataItems: ModuleDataItem[];
     scpiMaxMessageSize: number;
+    // name of the float DIB field with the seconds per sample of the slot YT
+    // graphs (e.g. ch_yt_view_rate), BB3+ requests the sampled fields at
+    // that period
+    ytRateField: string | undefined;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -1051,6 +1056,15 @@ export class DibModuleMetadata extends EezObject {
                 name: "scpiMaxMessageSize",
                 displayName: "SCPI max. message size (bytes)",
                 type: PropertyType.Number
+            },
+            {
+                name: "ytRateField",
+                displayName: "YT rate field",
+                type: PropertyType.Enum,
+                enumItems: (object: DibModuleMetadata) =>
+                    object.dibFields
+                        .filter(variable => variable.type == "float")
+                        .map(variable => ({ id: variable.name }))
             }
         ],
         defaultValue: {
@@ -1093,6 +1107,17 @@ export class DibModuleMetadata extends EezObject {
                     propertyInvalidValueMessage(object, "scpiMaxMessageSize")
                 );
             }
+
+            if (object.ytRateField) {
+                const ytRateField = object.dibFields.find(
+                    variable => variable.name == object.ytRateField
+                );
+                if (!ytRateField || ytRateField.type != "float") {
+                    messages.push(
+                        propertyInvalidValueMessage(object, "ytRateField")
+                    );
+                }
+            }
         }
     };
 
@@ -1107,7 +1132,8 @@ export class DibModuleMetadata extends EezObject {
             firmwareVersion: observable,
             channels: observable,
             moduleDataItems: observable,
-            scpiMaxMessageSize: observable
+            scpiMaxMessageSize: observable,
+            ytRateField: observable
         });
     }
 
@@ -1209,8 +1235,10 @@ export function writeDibModuleMetadata(
             );
 
             // flags
+            const maxSampleRate = getDibFieldMaxSampleRate(variable);
             dataBuffer.writeUint8(
-                variable.persistent ? DIB_FIELD_FLAG_PERSISTENT : 0
+                (variable.persistent ? DIB_FIELD_FLAG_PERSISTENT : 0) |
+                    (maxSampleRate > 0 ? DIB_FIELD_FLAG_SAMPLED : 0)
             );
 
             // offset
@@ -1228,6 +1256,9 @@ export function writeDibModuleMetadata(
             // reserved
             dataBuffer.writeUint16(0);
 
+            // maxSampleRate
+            dataBuffer.writeFloat(maxSampleRate);
+
             offset += size;
         })
 
@@ -1237,7 +1268,21 @@ export function writeDibModuleMetadata(
         dataBuffer.writeArray(pageNames, pageName => {
             dataBuffer.writeString(pageName);
         });
+
+        // ytRateField
+        dataBuffer.writeStringPtr(metadata.ytRateField || "");
     });
+}
+
+// samples per second, 0 if the field is not sampled
+function getDibFieldMaxSampleRate(variable: Variable) {
+    if (variable.type != "float" && variable.type != "integer") {
+        return 0;
+    }
+    return variable.dibFieldMaxSampleRate != undefined &&
+        variable.dibFieldMaxSampleRate > 0
+        ? variable.dibFieldMaxSampleRate
+        : 0;
 }
 
 function writeScpiMetadata(metadata: DibModuleMetadata, dataBuffer: DataBuffer) {

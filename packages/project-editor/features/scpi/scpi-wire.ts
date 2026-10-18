@@ -40,6 +40,9 @@ export const SCPI_COMMAND_FLAG_APPLY_ON_DIB_SYNC = 1 << 1;
 // custom field (DIB field) flags in the metadata
 // BB3+ saves the field in the profile and restores it on recall
 export const DIB_FIELD_FLAG_PERSISTENT = 1 << 0;
+// the module streams the field samples (YT graphs, data logging), see
+// BB3P_FIELD_TAG_FIELD_STREAM in bb3p-dib-module.h
+export const DIB_FIELD_FLAG_SAMPLED = 1 << 1;
 
 export const SCPI_ENUM_INDEX_NONE = 0xffff;
 

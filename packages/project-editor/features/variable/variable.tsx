@@ -366,6 +366,9 @@ export class Variable extends EezObject {
     native: boolean;
     dibField: DibField;
     dibFieldUnit: string | undefined;
+    // samples per second, if set the module streams the field samples (YT
+    // graphs, data logging) at the rate BB3+ asks for, up to this rate
+    dibFieldMaxSampleRate: number | undefined;
 
     constructor() {
         super();
@@ -390,7 +393,8 @@ export class Variable extends EezObject {
             persistent: observable,
             native: observable,
             dibField: observable,
-            dibFieldUnit: observable
+            dibFieldUnit: observable,
+            dibFieldMaxSampleRate: observable
         });
     }
 
@@ -558,6 +562,17 @@ export class Variable extends EezObject {
                     !ProjectEditor.getProject(variable).dibModuleMetadata ||
                     variable.dibField == undefined ||
                     variable.type != "float"
+            },
+            {
+                name: "dibFieldMaxSampleRate",
+                displayName: "DIB field max sample rate (S/s)",
+                type: PropertyType.Number,
+                isOptional: true,
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
+                    variable.dibField == undefined ||
+                    (variable.type != "float" && variable.type != "integer")
             }
         ],
         icon: VARIABLE_ICON,
@@ -589,6 +604,19 @@ export class Variable extends EezObject {
                         variable.persistent && (
                             <span className="EezStudio_ListLabel_Badge">
                                 PERSISTENT
+                            </span>
+                        )}
+                    {!isPropertyDisabled(
+                        variable,
+                        findPropertyByNameInObject(
+                            variable,
+                            "dibFieldMaxSampleRate"
+                        )!
+                    ) &&
+                        variable.dibFieldMaxSampleRate != undefined &&
+                        variable.dibFieldMaxSampleRate > 0 && (
+                            <span className="EezStudio_ListLabel_Badge">
+                                SAMPLED
                             </span>
                         )}
                     <span>{variable.name}</span>
