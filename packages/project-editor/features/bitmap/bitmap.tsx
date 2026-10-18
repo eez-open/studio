@@ -11,7 +11,7 @@ import {
     //,autorun
 } from "mobx";
 import { observer } from "mobx-react";
-import { dialog, getCurrentWindow } from "@electron/remote";
+import { dialog, getCurrentWindow, MenuItem } from "@electron/remote";
 
 import * as notification from "eez-studio-ui/notification";
 import { Button } from "eez-studio-ui/button";
@@ -26,6 +26,7 @@ import {
     PropertyProps,
     IMessage
 } from "project-editor/core/object";
+import { renameObjectsInSequence } from "project-editor/core/rename-sequence";
 import { validators } from "eez-studio-shared/validation";
 import { fileExistsSync } from "eez-studio-shared/util-electron";
 
@@ -34,6 +35,7 @@ import {
     getChildOfObject,
     getProjectStore,
     getUniquePropertyValue,
+    IContextMenuContext,
     Message,
     ProjectStore,
     propertyNotSetMessage
@@ -182,7 +184,8 @@ export class Bitmap extends EezObject {
             {
                 name: "name",
                 type: PropertyType.String,
-                unique: true
+                unique: true,
+                multiObjectsSequentialRename: true
             },
             {
                 name: "description",
@@ -429,6 +432,25 @@ export class Bitmap extends EezObject {
             }
         },
         icon: "material:image",
+        extendContextMenu: (
+            thisObject: Bitmap,
+            context: IContextMenuContext,
+            objects: IEezObject[],
+            menuItems: Electron.MenuItem[],
+            editable: boolean
+        ) => {
+            if (!editable || objects.length < 2) {
+                return;
+            }
+
+            menuItems.unshift(
+                new MenuItem({
+                    label: `Rename ${objects.length} Bitmaps...`,
+                    click: () => renameBitmapsInSequence(objects as Bitmap[])
+                }),
+                new MenuItem({ type: "separator" })
+            );
+        },
         updateObjectValueHook: (bitmap: Bitmap, values: any) => {
             if (values.image != undefined && bitmap.image != values.image) {
                 const project = ProjectEditor.getProject(bitmap);
@@ -678,6 +700,43 @@ export class Bitmap extends EezObject {
 }
 
 registerClass("Bitmap", Bitmap);
+
+// Asks for a name and renames the bitmaps to name_1, name_2... in list order.
+async function renameBitmapsInSequence(bitmaps: Bitmap[]) {
+    const projectStore = getProjectStore(bitmaps[0]);
+
+    let baseName: string;
+    try {
+        const result = await showGenericDialog(projectStore, {
+            dialogDefinition: {
+                title: `Rename ${bitmaps.length} Bitmaps`,
+                fields: [
+                    {
+                        name: "name",
+                        displayName: "Name (becomes name_1, name_2…)",
+                        type: "string",
+                        validators: [
+                            validators.required,
+                            validators.invalidCharacters(".")
+                        ]
+                    }
+                ]
+            },
+            values: { name: "" },
+            modal: true,
+            backdrop: "static"
+        });
+        baseName = result.values.name;
+    } catch (err) {
+        // dialog canceled
+        return;
+    }
+
+    const error = renameObjectsInSequence(bitmaps, "name", baseName);
+    if (error) {
+        notification.error(error);
+    }
+}
 
 export async function createBitmap(
     projectStore: ProjectStore,

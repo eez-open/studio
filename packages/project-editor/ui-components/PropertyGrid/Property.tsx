@@ -8,6 +8,7 @@ import { shell } from "electron";
 import { guid } from "eez-studio-shared/guid";
 import { humanize } from "eez-studio-shared/string";
 import { filterNumber } from "eez-studio-shared/validation";
+import { handleNumberArrowKey } from "project-editor/ui-components/numeric-input";
 
 import { confirm } from "eez-studio-ui/dialog-electron";
 
@@ -419,6 +420,26 @@ export const Property = observer(
         };
 
         onKeyDown = (event: React.KeyboardEvent) => {
+            if (
+                this.props.propertyInfo.type === PropertyType.Number &&
+                !this.props.readOnly &&
+                handleNumberArrowKey(
+                    event as React.KeyboardEvent<HTMLInputElement>,
+                    () => {
+                        if (this._value == undefined) {
+                            return undefined;
+                        }
+                        const value = filterNumber(this._value);
+                        return typeof value == "number" && !isNaN(value)
+                            ? value
+                            : undefined;
+                    },
+                    value => this.changeValue(String(value))
+                )
+            ) {
+                return;
+            }
+
             if (event.keyCode === 13) {
                 if (this.props.propertyInfo.type === PropertyType.Number) {
                     try {

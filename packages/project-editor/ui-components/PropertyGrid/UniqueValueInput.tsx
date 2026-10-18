@@ -11,6 +11,7 @@ import { validators as validatorsRenderer } from "eez-studio-shared/validation-r
 
 import { isPropertyOptional } from "project-editor/core/object";
 import { replaceObjectReference } from "project-editor/core/search";
+import { renameObjectsInSequence } from "project-editor/core/rename-sequence";
 import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +81,13 @@ export const UniqueValueInput = observer(
             this.resetChange();
         }
 
+        get isSequentialRename() {
+            return (
+                this.props.objects.length > 1 &&
+                !!this.props.propertyInfo.multiObjectsSequentialRename
+            );
+        }
+
         commitChange = async () => {
             if (this._value == undefined) {
                 return;
@@ -89,9 +97,16 @@ export const UniqueValueInput = observer(
 
             const valueValidators = [];
 
+            // with multiple objects the value is only the base of the new
+            // names (test -> test_1, test_2, ...), uniqueness is checked for
+            // the generated names when renaming
+            const isSequentialRename = this.isSequentialRename;
+
             const propertyInfoUnique = (this.props.propertyInfo.unique ||
                 this.props.propertyInfo.uniqueIdentifier)!;
-            if (typeof propertyInfoUnique === "boolean") {
+            if (isSequentialRename) {
+                // nothing to check
+            } else if (typeof propertyInfoUnique === "boolean") {
                 valueValidators.push(
                     validators.unique(
                         this.props.objects[0],
@@ -137,6 +152,23 @@ export const UniqueValueInput = observer(
                 }
             }
 
+            if (isSequentialRename) {
+                const error = renameObjectsInSequence(
+                    this.props.objects,
+                    this.props.propertyInfo.name,
+                    newValue
+                );
+                if (error) {
+                    runInAction(() => {
+                        this.error = error;
+                    });
+                    return;
+                }
+
+                this.resetChange();
+                return;
+            }
+
             let oldValue = this.props.value;
 
             if (newValue != oldValue) {
@@ -174,7 +206,15 @@ export const UniqueValueInput = observer(
                             onChange={this.onChange}
                             onKeyDown={this.onKeyDown}
                             onBlur={this.onBlur}
-                            readOnly={this.props.objects.length > 1}
+                            readOnly={
+                                this.props.objects.length > 1 &&
+                                !this.isSequentialRename
+                            }
+                            placeholder={
+                                this.isSequentialRename
+                                    ? "Rename all to name_1, name_2…"
+                                    : undefined
+                            }
                         />
                         {this._value != undefined && (
                             <>

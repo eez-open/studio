@@ -1,16 +1,13 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
-import { observer } from "mobx-react";
 
 import * as notification from "eez-studio-ui/notification";
-import { Button } from "eez-studio-ui/button";
 
 import {
     ClassInfo,
     EezObject,
     IMessage,
     makeDerivedClassInfo,
-    PropertyProps,
     PropertyType
 } from "project-editor/core/object";
 
@@ -24,11 +21,14 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     addObjects,
     createObject,
-    getProjectStore,
     propertyNotFoundMessage,
     propertyNotSetMessage,
     reorderObjects
 } from "project-editor/store";
+import {
+    SORT_ICON,
+    SortMenuButton
+} from "project-editor/ui-components/SortMenuButton";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
@@ -67,10 +67,13 @@ function getSequenceImages(firstImage: string, imageNames: string[]) {
         .map(({ name }) => name);
 }
 
-// Sort by sequence number inside each sequence (same name prefix). Sequences
-// stay in the order of their first frame, images without sequence number stay
-// where they are relative to the sequences.
-function sortImagesBySequence(images: LVGLAnimationImage[]) {
+// Sort by sequence number inside each sequence (same name prefix), ascending
+// or descending. Sequences stay in the order of their first frame, images
+// without sequence number stay where they are relative to the sequences.
+function sortImagesBySequence(
+    images: LVGLAnimationImage[],
+    direction: "asc" | "desc"
+) {
     const groups: {
         prefix: string | undefined;
         items: { image: LVGLAnimationImage; index: number }[];
@@ -94,55 +97,30 @@ function sortImagesBySequence(images: LVGLAnimationImage[]) {
 
     return groups.flatMap(group =>
         group.items
-            .sort((a, b) => a.index - b.index)
+            .sort((a, b) =>
+                direction == "asc" ? a.index - b.index : b.index - a.index
+            )
             .map(item => item.image)
     );
 }
 
-const SortImagesPropertyGridUI = observer(
-    class SortImagesPropertyGridUI extends React.Component<PropertyProps> {
-        sort = () => {
-            const widgets = this.props
-                .objects as LVGLAnimationImageWidget[];
+export function sortFrames(
+    widget: LVGLAnimationImageWidget,
+    direction: "asc" | "desc"
+) {
+    const sorted = sortImagesBySequence(widget.images, direction);
 
-            const toSort = widgets
-                .map(widget => ({
-                    images: widget.images,
-                    sorted: sortImagesBySequence(widget.images)
-                }))
-                .filter(({ images, sorted }) =>
-                    sorted.some((image, i) => image != images[i])
-                );
-
-            if (toSort.length == 0) {
-                notification.info("Frames are already in sequence order");
-                return;
-            }
-
-            const undoManager = getProjectStore(widgets[0]).undoManager;
-            undoManager.setCombineCommands(true);
-            for (const { images, sorted } of toSort) {
-                reorderObjects(images, sorted);
-            }
-            undoManager.setCombineCommands(false);
-        };
-
-        render() {
-            return (
-                <div style={{ marginTop: 5, marginBottom: 5 }}>
-                    <Button
-                        color="secondary"
-                        size="small"
-                        onClick={this.sort}
-                        title="Sort frames by the sequence number at the end of the image name"
-                    >
-                        Sort frames by sequence number
-                    </Button>
-                </div>
-            );
-        }
+    if (sorted.every((image, i) => image === widget.images[i])) {
+        notification.info(
+            direction == "asc"
+                ? "Frames are already in ascending order"
+                : "Frames are already in descending order"
+        );
+        return;
     }
-);
+
+    reorderObjects(widget.images, sorted);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -309,17 +287,27 @@ export class LVGLAnimationImageWidget extends LVGLWidget {
                 propertyGridGroup: specificGroup,
                 partOfNavigation: false,
                 enumerable: false,
-                defaultValue: []
-            },
-            {
-                name: "sortImages",
-                type: PropertyType.Any,
-                computed: true,
-                propertyGridGroup: specificGroup,
-                propertyGridRowComponent: SortImagesPropertyGridUI,
-                skipSearch: true,
-                hideInPropertyGrid: (widget: LVGLAnimationImageWidget) =>
-                    widget.images.length < 2
+                defaultValue: [],
+                arrayPropertyEditorLeadingButtons: (
+                    widget: LVGLAnimationImageWidget
+                ) => [
+                    <SortMenuButton
+                        key="sort"
+                        icon={SORT_ICON}
+                        title="Sort Frames by Sequence Number"
+                        enabled={widget.images.length > 1}
+                        items={[
+                            {
+                                label: "Ascending (name_1, name_2, name_3…)",
+                                onClick: () => sortFrames(widget, "asc")
+                            },
+                            {
+                                label: "Descending (name_3, name_2, name_1…)",
+                                onClick: () => sortFrames(widget, "desc")
+                            }
+                        ]}
+                    />
+                ]
             },
             {
                 name: "duration",

@@ -296,6 +296,19 @@ export interface PropertyInfo {
         projectStore: ProjectStore
     ) => React.ReactNode[];
 
+    // same as arrayPropertyEditorAdditionalButtons, but the buttons are shown
+    // at the start of the array property toolbar (before "Collapse All Items")
+    arrayPropertyEditorLeadingButtons?: (
+        parentObject: IEezObject,
+        propertyInfo: PropertyInfo,
+        projectStore: ProjectStore
+    ) => React.ReactNode[];
+
+    // Unique string property (for example name) that is shown also when
+    // multiple objects are selected: entering "test" renames the selected
+    // objects to test_1, test_2, ...
+    multiObjectsSequentialRename?: boolean;
+
     colorEditorForLiteral?: boolean;
 
     lvglActionPropertyType?: LvglActionPropertyType;

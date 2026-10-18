@@ -101,6 +101,19 @@ export function stringCompare(a: string, b: string) {
     return a < b ? -1 : a > b ? 1 : 0;
 }
 
+const naturalCollator = new Intl.Collator(undefined, {
+    numeric: true,
+    sensitivity: "base"
+});
+
+// Compare strings so that numbers inside them are compared by value:
+// "frame_2" < "frame_10" (stringCompare would give the opposite).
+export function naturalCompare(a: string, b: string) {
+    return (
+        naturalCollator.compare(a ?? "", b ?? "") || stringCompare(a ?? "", b ?? "")
+    );
+}
+
 export function firstWord(string: string) {
     string = string.trim();
     const i = string.indexOf(" ");

@@ -76,6 +76,7 @@ import {
 import { addAlphaToColor } from "eez-studio-shared/color";
 import { visitObjects } from "project-editor/core/search";
 import { evalConstantExpression } from "./expression";
+import { handleNumberArrowKey } from "project-editor/ui-components/numeric-input";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -677,7 +678,29 @@ const NumberInput = observer(
             this.props.onChange(value);
         });
 
+        setNumber = action((value: number) => {
+            this.value = value.toString();
+            this.numValue = value;
+            this.error = undefined;
+            this.props.onChange(value);
+        });
+
         onKeyDown = (event: React.KeyboardEvent) => {
+            if (
+                !this.props.readOnly &&
+                handleNumberArrowKey(
+                    event as React.KeyboardEvent<HTMLInputElement>,
+                    () => {
+                        const value = parseFloat(this.value);
+                        return isNaN(value) ? undefined : value;
+                    },
+                    this.setNumber,
+                    { min: this.props.min, max: this.props.max }
+                )
+            ) {
+                return;
+            }
+
             if (event.keyCode === 13) {
                 try {
                     const newValue = evalConstantExpression(
