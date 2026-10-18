@@ -102,6 +102,7 @@ import {
     WIDGET_TYPE_LINE_CHART,
     WIDGET_TYPE_BUTTON_GROUP,
     WIDGET_TYPE_QR_CODE,
+    WIDGET_TYPE_YT_CHART,
     WIDGET_TYPE_DROP_DOWN_LIST,
     WIDGET_TYPE_PROGRESS,
     WIDGET_TYPE_BUTTON,
@@ -2801,6 +2802,304 @@ export class YTGraphWidget extends Widget {
 }
 
 registerClass("YTGraphWidget", YTGraphWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// sampled DIB fields of the DIB module project (the fields with a YT history)
+function getSampledDibFields(object: IEezObject) {
+    const dibModuleMetadata = ProjectEditor.getProject(object).dibModuleMetadata;
+    if (!dibModuleMetadata) {
+        return [];
+    }
+    return dibModuleMetadata.dibFields.filter(
+        variable =>
+            (variable.type == "float" || variable.type == "integer") &&
+            variable.dibFieldMaxSampleRate != undefined &&
+            variable.dibFieldMaxSampleRate > 0
+    );
+}
+
+class YTChartTrace extends EezObject {
+    field: string;
+    color: string;
+    min: string;
+    max: string;
+    visible: string;
+
+    static classInfo: ClassInfo = {
+        listLabel: (trace: YTChartTrace) => trace.field || "",
+        properties: [
+            {
+                name: "field",
+                displayName: "DIB field",
+                type: PropertyType.Enum,
+                enumItems: (trace: YTChartTrace) =>
+                    getSampledDibFields(trace).map(variable => ({
+                        id: variable.name
+                    }))
+            },
+            {
+                name: "color",
+                type: PropertyType.Color,
+                propertyGridGroup: specificGroup
+            },
+            makeExpressionProperty(
+                {
+                    name: "min",
+                    type: PropertyType.MultilineText
+                },
+                "float"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "max",
+                    type: PropertyType.MultilineText
+                },
+                "float"
+            ),
+            makeExpressionProperty(
+                {
+                    name: "visible",
+                    type: PropertyType.MultilineText
+                },
+                "boolean"
+            )
+        ],
+        check: (trace: YTChartTrace, messages: IMessage[]) => {
+            if (!trace.field) {
+                messages.push(propertyNotSetMessage(trace, "field"));
+            } else if (
+                !getSampledDibFields(trace).find(
+                    variable => variable.name == trace.field
+                )
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `"${trace.field}" is not a sampled DIB field (set "DIB field max sample rate" of the variable)`,
+                        getChildOfObject(trace, "field")
+                    )
+                );
+            }
+
+            const widget = getParent(getParent(trace)!)! as YTChartWidget;
+            for (const propertyName of ["min", "max", "visible"]) {
+                try {
+                    checkExpression(widget, (trace as any)[propertyName]);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(trace, propertyName)
+                        )
+                    );
+                }
+            }
+        },
+        defaultValue: {
+            color: "#ffff00",
+            min: "0",
+            max: "1",
+            visible: "true"
+        }
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            field: observable,
+            color: observable,
+            min: observable,
+            max: observable,
+            visible: observable
+        });
+    }
+}
+
+// YT graph of any number of sampled DIB fields of the module, one value of
+// the field YT history (recorded by BB3+ at the slot YT rate) per pixel
+// column, in the scroll or the scan mode.
+export class YTChartWidget extends Widget {
+    traces: YTChartTrace[];
+    mode: string;
+
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (
+            projectType: ProjectType,
+            projectStore?: ProjectStore
+        ) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE &&
+            !!projectStore?.project.dibModuleMetadata,
+
+        componentPaletteGroupName: "!1Visualiser",
+
+        flowComponentId: WIDGET_TYPE_YT_CHART,
+
+        properties: [
+            Object.assign(makeDataPropertyInfo("data"), {
+                hideInPropertyGrid: true
+            }),
+            {
+                name: "traces",
+                type: PropertyType.Array,
+                typeClass: YTChartTrace,
+                propertyGridGroup: specificGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                defaultValue: []
+            },
+            makeDataPropertyInfo(
+                "mode",
+                { displayName: "Mode (0 - scroll, 1 - scan)" },
+                "integer"
+            )
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 320,
+            height: 160,
+            traces: [],
+            mode: "0"
+        },
+
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <line x1="4" y1="19" x2="20" y2="19"></line>
+                <polyline points="4 15 8 9 12 11 16 6 20 10"></polyline>
+                <polyline points="4 12 8 14 12 9 16 13 20 12"></polyline>
+            </svg>
+        ),
+
+        check: (object: YTChartWidget, messages: IMessage[]) => {
+            if (!getProject(object).dibModuleMetadata) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        "YTChart widget is supported only in the DIB module projects",
+                        object
+                    )
+                );
+            }
+        }
+    });
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            traces: observable,
+            mode: observable
+        });
+    }
+
+    override render(flowContext: IFlowContext, width: number, height: number) {
+        return (
+            <>
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+
+                        eezGuiDraw.drawBackground(
+                            ctx,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.style,
+                            true
+                        );
+
+                        // the traces as sine waves, to show their colors
+                        this.traces.forEach((trace, traceIndex) => {
+                            eezGuiDraw.setColor(trace.color);
+                            ctx.strokeStyle = eezGuiDraw.getColor();
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            for (let x = 0; x < width; x++) {
+                                const y =
+                                    height / 2 +
+                                    (height / 3) *
+                                        Math.sin(
+                                            (x / width) * 4 * Math.PI +
+                                                (traceIndex * Math.PI) / 3
+                                        );
+                                if (x == 0) {
+                                    ctx.moveTo(x + 0.5, y);
+                                } else {
+                                    ctx.lineTo(x + 0.5, y);
+                                }
+                            }
+                            ctx.stroke();
+                        });
+                    }}
+                />
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // mode
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "mode"));
+
+        // component index
+        dataBuffer.writeUint16(assets.getComponentIndex(this));
+    }
+
+    buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        const dibModuleMetadata = assets.projectStore.project.dibModuleMetadata;
+
+        // traces
+        dataBuffer.writeArray(this.traces, trace => {
+            // fieldIndex
+            const fieldIndex = dibModuleMetadata
+                ? dibModuleMetadata.getDibFieldIndex(trace.field)
+                : -1;
+            dataBuffer.writeUint16(fieldIndex != -1 ? fieldIndex : 0);
+
+            // color
+            let color = assets.getColorIndexFromColorValue(trace.color);
+            if (isNaN(color)) {
+                color = 0;
+            }
+            dataBuffer.writeUint16(color);
+
+            // min
+            dataBuffer.writeObjectOffset(() =>
+                buildExpression(assets, dataBuffer, this, trace.min)
+            );
+
+            // max
+            dataBuffer.writeObjectOffset(() =>
+                buildExpression(assets, dataBuffer, this, trace.max)
+            );
+
+            // visible
+            dataBuffer.writeObjectOffset(() =>
+                buildExpression(assets, dataBuffer, this, trace.visible)
+            );
+        });
+    }
+}
+
+registerClass("YTChartWidget", YTChartWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
