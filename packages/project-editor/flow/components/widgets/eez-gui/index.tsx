@@ -194,6 +194,7 @@ function findStartOfUnit(text: string) {
 }
 
 export class DisplayDataWidget extends Widget {
+    preview: string;
     focusStyle: Style;
     displayOption: DisplayOption;
     unitAndFractionFont: string;
@@ -209,6 +210,12 @@ export class DisplayDataWidget extends Widget {
 
         properties: [
             makeDataPropertyInfo("data", {}, "any"),
+            // shown in the editor instead of the data, not built
+            {
+                name: "preview",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup
+            },
             makeStylePropertyInfo("style", "Default style"),
             Object.assign(
                 makeStylePropertyInfo("focusStyle", "Focused style"),
@@ -332,6 +339,7 @@ export class DisplayDataWidget extends Widget {
         super.makeEditable();
 
         makeObservable(this, {
+            preview: observable,
             focusStyle: observable,
             displayOption: observable,
             unitAndFractionFont: observable,
@@ -389,13 +397,10 @@ export class DisplayDataWidget extends Widget {
     }
 
     override render(flowContext: IFlowContext, width: number, height: number) {
-        const result = getTextValue(
-            flowContext,
-            this,
-            "data",
-            undefined,
-            undefined
-        );
+        const result =
+            !flowContext.flowState && this.preview
+                ? this.preview
+                : getTextValue(flowContext, this, "data", undefined, undefined);
 
         let text = this.applyDisplayOption(
             typeof result == "object" ? result.text : result

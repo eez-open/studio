@@ -819,11 +819,12 @@ export function unescapeText(text: string) {
     }
 }
 
-// Integer part with the style font, unit (top) and fraction (bottom) with
-// unitAndFractionFont in a column right of the integer part. The integer part
-// is aligned as text (for the right alignment the right padding is the room
-// for the column, so the decimal point doesn't move), the column is moved left
-// if it doesn't fit. For the center alignment the whole value is centered.
+// Integer part with the style font, unit (top, aligned with the first digit of
+// the fraction) and fraction (on the baseline of the integer part) with
+// unitAndFractionFont in a column right of the integer part. The integer part is aligned as text (for the right alignment the right
+// padding is the room for the column, so the decimal point doesn't move), the
+// column is moved left if it doesn't fit. For the center alignment the whole
+// value is centered.
 // Keep in sync with drawIntegerUnitAndFraction in eez-framework gui/draw.cpp.
 export function drawIntegerUnitAndFraction(
     ctx: CanvasRenderingContext2D,
@@ -861,7 +862,12 @@ export function drawIntegerUnitAndFraction(
     const integerWidth = measureStr(integer, integerFont, 0);
     const unitWidth = measureStr(unit, smallFont, 0);
     const fractionWidth = measureStr(fraction, smallFont, 0);
-    const columnWidth = Math.max(unitWidth, fractionWidth);
+    // unit is aligned with the first digit of the fraction, not with the
+    // decimal point
+    const unitOffset = fraction.startsWith(".")
+        ? measureStr(".", smallFont, 0)
+        : 0;
+    const columnWidth = Math.max(unitOffset + unitWidth, fractionWidth);
 
     let x_integer: number;
     if (styleIsHorzAlignLeft(style)) {
@@ -890,7 +896,8 @@ export function drawIntegerUnitAndFraction(
         y_integer = Math.floor(y1 + (y2 - y1 + 1 - integerFont.height) / 2);
     }
     const y_unit = y1 + style.paddingRect.top;
-    const y_fraction = y2 - style.paddingRect.bottom - smallFont.height;
+    // fraction on the baseline of the integer part
+    const y_fraction = y_integer + integerFont.ascent - smallFont.ascent;
 
     setBackColor(styleBackgroundColor);
     setColor(styleColor);
@@ -904,7 +911,15 @@ export function drawIntegerUnitAndFraction(
         integerFont.height,
         integerFont
     );
-    drawStr(ctx, unit, x_column, y_unit, unitWidth, smallFont.height, smallFont);
+    drawStr(
+        ctx,
+        unit,
+        x_column + unitOffset,
+        y_unit,
+        unitWidth,
+        smallFont.height,
+        smallFont
+    );
     drawStr(
         ctx,
         fraction,
