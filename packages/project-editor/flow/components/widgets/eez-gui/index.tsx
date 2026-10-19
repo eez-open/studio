@@ -2902,15 +2902,27 @@ function getSampledDibFields(object: IEezObject) {
     );
 }
 
+// bit of a bit field (integer DIB field) drawn as a digital trace, its YT
+// history value is the AND of the samples in bits 0..7 and the OR in bits
+// 8..15, so only bits 0..7
+const YT_CHART_MAX_BIT = 7;
+
+function isBitTrace(trace: YTChartTrace) {
+    return trace.bit != undefined;
+}
+
 class YTChartTrace extends EezObject {
     field: string;
+    bit: number | undefined;
     color: string;
     min: string;
     max: string;
     visible: string;
 
     static classInfo: ClassInfo = {
-        listLabel: (trace: YTChartTrace) => trace.field || "",
+        listLabel: (trace: YTChartTrace) =>
+            (trace.field || "") +
+            (isBitTrace(trace) ? ` bit ${trace.bit}` : ""),
         properties: [
             {
                 name: "field",
@@ -2922,6 +2934,12 @@ class YTChartTrace extends EezObject {
                     }))
             },
             {
+                name: "bit",
+                displayName: `Bit (0 - ${YT_CHART_MAX_BIT}, a digital trace in its own lane)`,
+                type: PropertyType.Number,
+                isOptional: true
+            },
+            {
                 name: "color",
                 type: PropertyType.Color,
                 propertyGridGroup: specificGroup
@@ -2929,14 +2947,16 @@ class YTChartTrace extends EezObject {
             makeExpressionProperty(
                 {
                     name: "min",
-                    type: PropertyType.MultilineText
+                    type: PropertyType.MultilineText,
+                    disabled: isBitTrace
                 },
                 "float"
             ),
             makeExpressionProperty(
                 {
                     name: "max",
-                    type: PropertyType.MultilineText
+                    type: PropertyType.MultilineText,
+                    disabled: isBitTrace
                 },
                 "float"
             ),
@@ -2965,8 +2985,37 @@ class YTChartTrace extends EezObject {
                 );
             }
 
+            if (isBitTrace(trace)) {
+                const variable = getSampledDibFields(trace).find(
+                    variable => variable.name == trace.field
+                );
+                if (
+                    !Number.isInteger(trace.bit) ||
+                    trace.bit! < 0 ||
+                    trace.bit! > YT_CHART_MAX_BIT
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Bit must be 0 - ${YT_CHART_MAX_BIT}`,
+                            getChildOfObject(trace, "bit")
+                        )
+                    );
+                } else if (variable && variable.type != "integer") {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `A bit trace needs an integer DIB field (a bit field)`,
+                            getChildOfObject(trace, "bit")
+                        )
+                    );
+                }
+            }
+
             const widget = getParent(getParent(trace)!)! as YTChartWidget;
-            for (const propertyName of ["min", "max", "visible"]) {
+            for (const propertyName of isBitTrace(trace)
+                ? ["visible"]
+                : ["min", "max", "visible"]) {
                 try {
                     checkExpression(widget, (trace as any)[propertyName]);
                 } catch (err) {
@@ -2993,6 +3042,7 @@ class YTChartTrace extends EezObject {
 
         makeObservable(this, {
             field: observable,
+            bit: observable,
             color: observable,
             min: observable,
             max: observable,
@@ -3109,12 +3159,48 @@ export class YTChartWidget extends Widget {
                             true
                         );
 
-                        // the traces as sine waves, to show their colors
+                        // the value traces as sine waves, the bit traces
+                        // as square waves in their lanes, to show their
+                        // colors
+                        const bitTraces = this.traces.filter(isBitTrace);
                         this.traces.forEach((trace, traceIndex) => {
                             eezGuiDraw.setColor(trace.color);
                             ctx.strokeStyle = eezGuiDraw.getColor();
                             ctx.lineWidth = 1;
                             ctx.beginPath();
+                            const lane = bitTraces.indexOf(trace);
+                            if (lane != -1) {
+                                const laneTop = Math.floor(
+                                    (height * lane) / bitTraces.length
+                                );
+                                const laneHeight =
+                                    Math.floor(
+                                        (height * (lane + 1)) /
+                                            bitTraces.length
+                                    ) - laneTop;
+                                const margin =
+                                    laneHeight >= 5
+                                        ? Math.floor(laneHeight / 5)
+                                        : 0;
+                                const yHigh = laneTop + margin + 0.5;
+                                const yLow =
+                                    laneTop + laneHeight - 1 - margin + 0.5;
+                                // the bit of a binary counter
+                                const halfPeriod = 8 << lane;
+                                for (let x = 0; x < width; x++) {
+                                    const y =
+                                        Math.floor(x / halfPeriod) % 2
+                                            ? yHigh
+                                            : yLow;
+                                    if (x == 0) {
+                                        ctx.moveTo(x + 0.5, y);
+                                    } else {
+                                        ctx.lineTo(x + 0.5, y);
+                                    }
+                                }
+                                ctx.stroke();
+                                return;
+                            }
                             for (let x = 0; x < width; x++) {
                                 const y =
                                     height / 2 +
@@ -3163,6 +3249,12 @@ export class YTChartWidget extends Widget {
                 color = 0;
             }
             dataBuffer.writeUint16(color);
+
+            // bit, -1 for a value trace
+            dataBuffer.writeInt16(isBitTrace(trace) ? trace.bit! : -1);
+
+            // reserved
+            dataBuffer.writeUint16(0);
 
             // min
             dataBuffer.writeObjectOffset(() =>
