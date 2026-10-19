@@ -773,9 +773,7 @@ export function drawText(
         return;
     }
 
-    try {
-        text = JSON.parse('"' + text + '"');
-    } catch (e) {}
+    text = unescapeText(text);
 
     let width = measureStr(text, font, 0);
     let height = font.height;
@@ -811,6 +809,111 @@ export function drawText(
         }
         drawStr(ctx, text, x_offset, y_offset, width, height, font);
     }
+}
+
+export function unescapeText(text: string) {
+    try {
+        return JSON.parse('"' + text + '"');
+    } catch (e) {
+        return text;
+    }
+}
+
+// Integer part with the style font, unit (top) and fraction (bottom) with
+// unitAndFractionFont in a column right of the integer part. The integer part
+// is aligned as text (for the right alignment the right padding is the room
+// for the column, so the decimal point doesn't move), the column is moved left
+// if it doesn't fit. For the center alignment the whole value is centered.
+// Keep in sync with drawIntegerUnitAndFraction in eez-framework gui/draw.cpp.
+export function drawIntegerUnitAndFraction(
+    ctx: CanvasRenderingContext2D,
+    integer: string,
+    unit: string,
+    fraction: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    style: Style,
+    unitAndFractionFont: Font | undefined
+) {
+    const styleColor = style.colorProperty;
+    const styleBackgroundColor = style.backgroundColorProperty;
+
+    let { x1, y1, x2, y2 } = drawBackground(
+        ctx,
+        x,
+        y,
+        w,
+        h,
+        style,
+        false,
+        styleBackgroundColor
+    );
+
+    const integerFont = styleGetFont(style);
+    if (!integerFont) {
+        return;
+    }
+
+    const smallFont = unitAndFractionFont || integerFont;
+
+    const integerWidth = measureStr(integer, integerFont, 0);
+    const unitWidth = measureStr(unit, smallFont, 0);
+    const fractionWidth = measureStr(fraction, smallFont, 0);
+    const columnWidth = Math.max(unitWidth, fractionWidth);
+
+    let x_integer: number;
+    if (styleIsHorzAlignLeft(style)) {
+        x_integer = x1 + style.paddingRect.left;
+    } else if (styleIsHorzAlignRight(style)) {
+        x_integer = x2 - style.paddingRect.right - integerWidth;
+        if (x_integer + integerWidth + columnWidth > x2) {
+            x_integer = x2 - integerWidth - columnWidth;
+        }
+    } else {
+        x_integer = Math.floor(
+            x1 + (x2 - x1 + 1 - (integerWidth + columnWidth)) / 2
+        );
+        if (x_integer < x1) {
+            x_integer = x1;
+        }
+    }
+    const x_column = x_integer + integerWidth;
+
+    let y_integer: number;
+    if (styleIsVertAlignTop(style)) {
+        y_integer = y1 + style.paddingRect.top;
+    } else if (styleIsVertAlignBottom(style)) {
+        y_integer = y2 - style.paddingRect.bottom - integerFont.height;
+    } else {
+        y_integer = Math.floor(y1 + (y2 - y1 + 1 - integerFont.height) / 2);
+    }
+    const y_unit = y1 + style.paddingRect.top;
+    const y_fraction = y2 - style.paddingRect.bottom - smallFont.height;
+
+    setBackColor(styleBackgroundColor);
+    setColor(styleColor);
+
+    drawStr(
+        ctx,
+        integer,
+        x_integer,
+        y_integer,
+        integerWidth,
+        integerFont.height,
+        integerFont
+    );
+    drawStr(ctx, unit, x_column, y_unit, unitWidth, smallFont.height, smallFont);
+    drawStr(
+        ctx,
+        fraction,
+        x_column,
+        y_fraction,
+        fractionWidth,
+        smallFont.height,
+        smallFont
+    );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

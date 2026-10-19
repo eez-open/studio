@@ -16,6 +16,13 @@ let lz4_module: {
         srcSize: number,
         dstCapacity: number
     ) => number;
+    _encodeLzmaBound: (size: number) => number;
+    _encodeLzma: (
+        srcPtr: number,
+        dstPtr: number,
+        srcSize: number,
+        dstCapacity: number
+    ) => number;
 };
 
 export async function load_lz4_module() {
@@ -59,6 +66,37 @@ export function compress(buffer: Buffer, compressionLevel: number, with_hc: bool
     );
 
     lz4_module._free(dstPtr);
+
+    return { compressedBuffer, compressedSize };
+}
+
+// Output: LZMA properties (5 bytes) followed by the LZMA stream without
+// the end marker, so the decoder must know the decompressed size.
+export function compressLzma(buffer: Buffer) {
+    const srcPtr = lz4_module._malloc(buffer.length);
+    lz4_module.HEAPU8.set(buffer, srcPtr);
+
+    const dstCapacity = lz4_module._encodeLzmaBound(buffer.length);
+    const dstPtr = lz4_module._malloc(dstCapacity);
+
+    const compressedSize: number = lz4_module._encodeLzma(
+        srcPtr,
+        dstPtr,
+        buffer.length,
+        dstCapacity
+    );
+
+    lz4_module._free(srcPtr);
+
+    const compressedBuffer = Buffer.from(
+        new Uint8Array(lz4_module.HEAPU8.buffer, dstPtr, compressedSize)
+    );
+
+    lz4_module._free(dstPtr);
+
+    if (compressedSize == 0) {
+        throw "LZMA compression failed";
+    }
 
     return { compressedBuffer, compressedSize };
 }

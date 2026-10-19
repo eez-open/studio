@@ -1215,6 +1215,15 @@ export class Assets {
         if (!getProperty(widget, propertyName)) {
             return 0;
         }
+
+        if (this.projectStore.projectTypeTraits.isFirmware) {
+            let expression = getProperty(widget, propertyName).trim();
+            const globalVariableIndex = this.nativeGlobalVariables.findIndex(globalVariable => globalVariable.name == expression);
+            if (globalVariableIndex != -1) {
+                return globalVariableIndex + 1;
+            }
+        }
+
         const flowState = this.getFlowState(ProjectEditor.getFlow(widget));
         const path =
             getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;
@@ -1223,14 +1232,6 @@ export class Assets {
             index = flowState.flowWidgetDataIndexes.size;
             flowState.flowWidgetDataIndexes.set(path, index);
             flowState.flowWidgetFromDataIndex.set(index, widget);
-        }
-
-        if (this.projectStore.projectTypeTraits.isFirmware) {
-            let expression = getProperty(widget, propertyName).trim();
-            const globalVariableIndex = this.nativeGlobalVariables.findIndex(globalVariable => globalVariable.name == expression);
-            if (globalVariableIndex != -1) {
-                return globalVariableIndex + 1;
-            }
         }
 
         return -(index + 1);
@@ -1262,13 +1263,36 @@ export class Assets {
         }
 
         if (classInfo.getAdditionalFlowProperties) {
-            return [
+            properties = [
                 ...properties,
                 ...classInfo.getAdditionalFlowProperties(component)
             ];
-        } else {
-            return properties;
         }
+
+        // In the firmware projects widget properties are evaluated only through
+        // the widget data items, so build only the properties some widget data
+        // item refers to (not the empty ones, the ones bound to a native
+        // global variable or the dashboard only ones like tabTitle).
+        // UserWidgetWidget is excluded, its user properties must start at
+        // USER_WIDGET_WIDGET_USER_PROPERTIES_START.
+        if (
+            this.projectStore.projectTypeTraits.isFirmware &&
+            component instanceof ProjectEditor.WidgetClass &&
+            !(component instanceof ProjectEditor.UserWidgetWidgetClass)
+        ) {
+            const flowState = this.flowStates.get(
+                ProjectEditor.getFlow(component)
+            );
+            const componentPath =
+                getObjectPathAsString(component) + PATH_SEPARATOR;
+            properties = properties.filter(propertyInfo =>
+                flowState?.flowWidgetDataIndexes.has(
+                    componentPath + propertyInfo.name
+                )
+            );
+        }
+
+        return properties;
     }
 
     getComponentPropertyIndex(component: Component, propertyName: string) {
@@ -1524,11 +1548,16 @@ export class Assets {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// compression of the assets data, stored in the compressed assets header
+const ASSETS_COMPRESSION_LZ4 = 0;
+const ASSETS_COMPRESSION_LZMA = 1;
+
 function buildHeaderData(
     assets: Assets,
     uncompressedSize: number,
     dataBuffer: DataBuffer,
-    uncompressed: boolean
+    uncompressed: boolean,
+    compression: number = ASSETS_COMPRESSION_LZ4
 ) {
     // tag
     // HEADER_TAG = 0x5A45457E
@@ -1551,8 +1580,8 @@ function buildHeaderData(
         // reserved
         dataBuffer.writeUint32(0);
     } else {
-        // reserved
-        dataBuffer.writeUint8(0);
+        // compression (was reserved, 0 is LZ4)
+        dataBuffer.writeUint8(compression);
 
         // decompressedSize
         dataBuffer.writeUint32(uncompressedSize);
@@ -1652,19 +1681,34 @@ export async function buildGuiAssetsData(
         uncompressedSize
     );
 
+    // DIB module assets are stored in the module flash and decompressed by
+    // the BB3+, LZMA compresses them about two times better than LZ4
+    const compression = assets.projectStore.project.dibModuleMetadata
+        ? ASSETS_COMPRESSION_LZMA
+        : ASSETS_COMPRESSION_LZ4;
+
     //
     const COMPRESSION_LEVEL_FOR_DASHBOARD_PROJECTS = 1;
     const COMPRESSION_LEVEL_DEFAULT = 12;
-    const { compressedBuffer, compressedSize } = await dataBuffer.compress(
-        // use min compression level for dashboard projects to be faster,
-        // for other projects we
-        assets.projectStore.projectTypeTraits.isDashboard
-            ? COMPRESSION_LEVEL_FOR_DASHBOARD_PROJECTS
-            : COMPRESSION_LEVEL_DEFAULT
-    );
+    const { compressedBuffer, compressedSize } =
+        compression == ASSETS_COMPRESSION_LZMA
+            ? await dataBuffer.compressLzma()
+            : await dataBuffer.compress(
+                  // use min compression level for dashboard projects to be faster,
+                  // for other projects we
+                  assets.projectStore.projectTypeTraits.isDashboard
+                      ? COMPRESSION_LEVEL_FOR_DASHBOARD_PROJECTS
+                      : COMPRESSION_LEVEL_DEFAULT
+              );
 
     const compressedHeaderBuffer = new DataBuffer(assets.utf8Support);
-    buildHeaderData(assets, uncompressedSize, compressedHeaderBuffer, false);
+    buildHeaderData(
+        assets,
+        uncompressedSize,
+        compressedHeaderBuffer,
+        false,
+        compression
+    );
 
     const compressedData = Buffer.alloc(
         compressedHeaderBuffer.size + compressedSize
@@ -1691,7 +1735,9 @@ export async function buildGuiAssetsData(
     assets.projectStore.outputSectionsStore.write(
         Section.OUTPUT,
         MessageType.INFO,
-        "Compressed size: " + compressedSize
+        "Compressed size: " +
+            compressedSize +
+            (compression == ASSETS_COMPRESSION_LZMA ? " (LZMA)" : "")
     );
 
     return { uncompressedData, compressedData };

@@ -341,6 +341,9 @@ type DibField = "input" | "output" | "input-output" | undefined;
 
 function isNativeVariableDisabled(variable: Variable) {
     const project = ProjectEditor.getProject(variable);
+    if (!project.projectTypeTraits) {
+        return false;
+    }
     return (
         !isGlobalVariable(variable) ||
         !hasFlowSupport(variable) ||

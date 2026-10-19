@@ -52,6 +52,7 @@ import {
     checkObjectReference,
     findBitmap
 } from "project-editor/project/project";
+import { findFont } from "project-editor/project/assets";
 
 import type {
     IDataContext,
@@ -159,12 +160,43 @@ enum DisplayOption {
     FractionAndUnit = 2,
     Fraction = 3,
     Unit = 4,
-    IntegerAndFraction = 5
+    IntegerAndFraction = 5,
+    IntegerUnitAndFraction = 6
+}
+
+function findStartOfFraction(text: string) {
+    let i;
+    for (
+        i = 0;
+        text[i] &&
+        (text[i] == "<" ||
+            text[i] == " " ||
+            text[i] == "-" ||
+            (text[i] >= "0" && text[i] <= "9"));
+        i++
+    ) {}
+    return i;
+}
+
+function findStartOfUnit(text: string) {
+    let i;
+    for (
+        i = 0;
+        text[i] &&
+        (text[i] == "<" ||
+            text[i] == " " ||
+            text[i] == "-" ||
+            (text[i] >= "0" && text[i] <= "9") ||
+            text[i] == ".");
+        i++
+    ) {}
+    return i;
 }
 
 export class DisplayDataWidget extends Widget {
     focusStyle: Style;
     displayOption: DisplayOption;
+    unitAndFractionFont: string;
     refreshRate: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -212,9 +244,23 @@ export class DisplayDataWidget extends Widget {
                     {
                         id: DisplayOption.IntegerAndFraction,
                         label: "Integer and fraction"
+                    },
+                    {
+                        id: DisplayOption.IntegerUnitAndFraction,
+                        label: "Integer, unit and fraction"
                     }
                 ],
                 propertyGridGroup: specificGroup
+            },
+            {
+                name: "unitAndFractionFont",
+                displayName: "Unit and fraction font",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "fonts",
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (widget: DisplayDataWidget) =>
+                    widget.displayOption !=
+                    DisplayOption.IntegerUnitAndFraction
             },
             makeDataPropertyInfo("refreshRate", {
                 disabled: hasNotFlowSupport
@@ -273,6 +319,12 @@ export class DisplayDataWidget extends Widget {
                     );
                 }
             }
+
+            if (
+                object.displayOption === DisplayOption.IntegerUnitAndFraction
+            ) {
+                checkObjectReference(object, "unitAndFractionFont", messages);
+            }
         }
     });
 
@@ -282,6 +334,7 @@ export class DisplayDataWidget extends Widget {
         makeObservable(this, {
             focusStyle: observable,
             displayOption: observable,
+            unitAndFractionFont: observable,
             refreshRate: observable
         });
     }
@@ -289,53 +342,25 @@ export class DisplayDataWidget extends Widget {
     applyDisplayOption(text: string) {
         text = text.toString();
 
-        function findStartOfFraction() {
-            let i;
-            for (
-                i = 0;
-                text[i] &&
-                (text[i] == "<" ||
-                    text[i] == " " ||
-                    text[i] == "-" ||
-                    (text[i] >= "0" && text[i] <= "9"));
-                i++
-            ) {}
-            return i;
-        }
-
-        function findStartOfUnit(i: number) {
-            for (
-                i = 0;
-                text[i] &&
-                (text[i] == "<" ||
-                    text[i] == " " ||
-                    text[i] == "-" ||
-                    (text[i] >= "0" && text[i] <= "9") ||
-                    text[i] == ".");
-                i++
-            ) {}
-            return i;
-        }
-
         if (this.displayOption === DisplayOption.Integer) {
-            let i = findStartOfFraction();
+            let i = findStartOfFraction(text);
             text = text.substr(0, i);
         } else if (this.displayOption === DisplayOption.FractionAndUnit) {
-            let i = findStartOfFraction();
+            let i = findStartOfFraction(text);
             text = text.substr(i);
         } else if (this.displayOption === DisplayOption.Fraction) {
-            let i = findStartOfFraction();
-            let k = findStartOfUnit(i);
+            let i = findStartOfFraction(text);
+            let k = findStartOfUnit(text);
             if (i < k) {
                 text = text.substring(i, k);
             } else {
                 text = ".00";
             }
         } else if (this.displayOption === DisplayOption.Unit) {
-            let i = findStartOfUnit(0);
+            let i = findStartOfUnit(text);
             text = text.substr(i);
         } else if (this.displayOption === DisplayOption.IntegerAndFraction) {
-            let i = findStartOfUnit(0);
+            let i = findStartOfUnit(text);
             text = text.substr(0, i);
         }
 
@@ -344,6 +369,23 @@ export class DisplayDataWidget extends Widget {
         }
 
         return text;
+    }
+
+    // same split as in the firmware, text that is not a number (firmware:
+    // value that is not a float) is displayed whole as the integer part
+    splitIntegerUnitAndFraction(text: string) {
+        let i = findStartOfFraction(text);
+        let k = findStartOfUnit(text);
+
+        if (!/[0-9]/.test(text.substring(0, k))) {
+            return { integer: text.trim(), unit: "", fraction: "" };
+        }
+
+        return {
+            integer: text.substring(0, i).trim(),
+            unit: text.substring(k).trim(),
+            fraction: i < k ? text.substring(i, k).trim() : ".0"
+        };
     }
 
     override render(flowContext: IFlowContext, width: number, height: number) {
@@ -367,16 +409,41 @@ export class DisplayDataWidget extends Widget {
                     height={height}
                     draw={(ctx: CanvasRenderingContext2D) => {
                         eezGuiDraw.setProject(flowContext.projectStore.project);
-                        eezGuiDraw.drawText(
-                            ctx,
-                            text,
-                            0,
-                            0,
-                            width,
-                            height,
-                            this.style,
-                            false
-                        );
+                        if (
+                            this.displayOption ===
+                            DisplayOption.IntegerUnitAndFraction
+                        ) {
+                            const { integer, unit, fraction } =
+                                this.splitIntegerUnitAndFraction(
+                                    eezGuiDraw.unescapeText(text)
+                                );
+                            eezGuiDraw.drawIntegerUnitAndFraction(
+                                ctx,
+                                integer,
+                                unit,
+                                fraction,
+                                0,
+                                0,
+                                width,
+                                height,
+                                this.style,
+                                findFont(
+                                    getProject(this),
+                                    this.unitAndFractionFont
+                                )
+                            );
+                        } else {
+                            eezGuiDraw.drawText(
+                                ctx,
+                                text,
+                                0,
+                                0,
+                                width,
+                                height,
+                                this.style,
+                                false
+                            );
+                        }
                     }}
                 />
                 {super.render(flowContext, width, height)}
@@ -396,6 +463,17 @@ export class DisplayDataWidget extends Widget {
 
         // displayOption
         dataBuffer.writeUint8(this.displayOption || 0);
+
+        // reserved1
+        dataBuffer.writeUint8(0);
+
+        // unitAndFractionFont
+        dataBuffer.writeInt16(
+            this.displayOption == DisplayOption.IntegerUnitAndFraction &&
+                this.unitAndFractionFont
+                ? assets.getFontIndex(this, "unitAndFractionFont")
+                : 0
+        );
     }
 }
 

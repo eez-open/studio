@@ -91,6 +91,48 @@ function getFlowComponents(flow: Flow) {
     return components;
 }
 
+// In the firmware projects a widget needs its flow component only when the
+// widget data items, the widget actions or the connection lines refer to it.
+// Widgets that need it for something else (component specific data, execute
+// function) request their component index while the page is built.
+// Must be called before the component indexes of the flow are assigned.
+function removeUnreferencedWidgetComponents(
+    assets: Assets,
+    flow: Flow,
+    components: Component[]
+) {
+    if (!assets.projectStore.projectTypeTraits.isFirmware) {
+        return components;
+    }
+
+    const flowState = assets.getFlowState(flow);
+
+    const referencedComponents = new Set<Component>([
+        ...flowState.flowWidgetFromDataIndex.values(),
+        ...flowState.flowWidgetFromActionIndex.values()
+    ]);
+
+    for (const connectionLine of flow.connectionLines) {
+        if (!connectionLine.disabled) {
+            if (connectionLine.sourceComponent) {
+                referencedComponents.add(connectionLine.sourceComponent);
+            }
+            if (connectionLine.targetComponent) {
+                referencedComponents.add(connectionLine.targetComponent);
+            }
+        }
+    }
+
+    return components.filter(
+        component =>
+            !(component instanceof ProjectEditor.WidgetClass) ||
+            component instanceof ProjectEditor.UserWidgetWidgetClass ||
+            referencedComponents.has(component) ||
+            flowState.componentIndexes.has(component) ||
+            component.buildInputs.length > 0
+    );
+}
+
 function getComponentIdOfComponent(assets: Assets, component: Component) {
     const classInfo = getClassInfo(component);
     let flowComponentId = classInfo.flowComponentId;
@@ -375,7 +417,11 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
     };
 
     // components
-    const components = getFlowComponents(flow);
+    const components = removeUnreferencedWidgetComponents(
+        assets,
+        flow,
+        getFlowComponents(flow)
+    );
     components.sort(
         (a, b) => assets.getComponentIndex(a) - assets.getComponentIndex(b)
     );
