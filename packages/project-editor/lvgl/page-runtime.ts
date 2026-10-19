@@ -71,6 +71,7 @@ import {
     getName
 } from "project-editor/build/helper";
 import { SimulatorLVGLCode } from "project-editor/lvgl/to-lvgl-code";
+import { lvglApplyTimelineImageTransforms } from "project-editor/flow/timeline";
 import { ColorFormat } from "project-editor/features/style/color-format";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +125,10 @@ export abstract class LVGLPageRuntime {
         btnsArray: Uint32Array;
     }[];
     _isInsideUserWidget: number;
+    timelineImageTransforms: {
+        widget: LVGLWidget;
+        obj: number;
+    }[];
 
     constructor(public page: Page) {
         this.lvglVersion = this.project.settings.general.lvglVersion;
@@ -165,6 +170,7 @@ export abstract class LVGLPageRuntime {
         this.buttonMatrixBuffers = [];
         this.msgboxBuffers = [];
         this._isInsideUserWidget = 0;
+        this.timelineImageTransforms = [];
     }
 
     get projectStore() {
@@ -834,6 +840,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                         });
 
                         this.wasm._lvglClearTimeline();
+                        this.timelineImageTransforms = [];
 
                         const pointers = this.pointers.slice();
                         this.pointers = [];
@@ -863,6 +870,10 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 
                         if (pageTabState?.timeline?.isEditorActive) {
                             this.wasm._lvglSetTimelinePosition(
+                                pageTabState.timeline.position
+                            );
+                            lvglApplyTimelineImageTransforms(
+                                this,
                                 pageTabState.timeline.position
                             );
                         }

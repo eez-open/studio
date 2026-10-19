@@ -547,7 +547,8 @@ export function getCommonProperties(
                 propertyInfo.type !== PropertyType.Array &&
                 !(
                     propertyInfo.type === PropertyType.String &&
-                    (propertyInfo.unique || propertyInfo.uniqueIdentifier)
+                    (propertyInfo.unique || propertyInfo.uniqueIdentifier) &&
+                    !propertyInfo.multiObjectsSequentialRename
                 )
         );
 

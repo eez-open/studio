@@ -52,7 +52,10 @@ import { DataBuffer } from "project-editor/build/data-buffer";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
 import type { LVGLBuild } from "project-editor/lvgl/build";
 import type { Page } from "project-editor/features/page/page";
-import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type {
+    LVGLImageWidget,
+    LVGLWidget
+} from "project-editor/lvgl/widgets";
 import type { EditorFlowContext } from "project-editor/flow/editor/context";
 import { Svg } from "project-editor/flow/editor/render";
 import {
@@ -62,12 +65,18 @@ import {
 } from "project-editor/lvgl/style-catalog";
 import { getStylePropDefaultValue } from "project-editor/lvgl/style-helper";
 import {
+    LVGL_STYLE_PROP_CODES,
+    type LVGLStylePropCode
+} from "project-editor/lvgl/lvgl-constants";
+import { findBitmap } from "project-editor/project/assets";
+import {
     IPointerEvent,
     MouseHandlerWithSnapLines
 } from "project-editor/flow/editor/mouse-handler";
 import { addAlphaToColor } from "eez-studio-shared/color";
 import { visitObjects } from "project-editor/core/search";
 import { evalConstantExpression } from "./expression";
+import { handleNumberArrowKey } from "project-editor/ui-components/numeric-input";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -432,7 +441,12 @@ export class TimelineKeyframe extends EezObject {
         );
     }
 
-    lvglCreate(runtime: LVGLPageRuntime, obj: number, flowState: number) {
+    lvglCreate(
+        runtime: LVGLPageRuntime,
+        obj: number,
+        flowState: number,
+        skipScaleAndRotate: boolean
+    ) {
         // enabledProperties
         const WIDGET_TIMELINE_PROPERTY_X = 1 << 0;
         const WIDGET_TIMELINE_PROPERTY_Y = 1 << 1;
@@ -462,10 +476,10 @@ export class TimelineKeyframe extends EezObject {
         if (this.opacity.enabled) {
             enabledProperties |= WIDGET_TIMELINE_PROPERTY_OPACITY;
         }
-        if (this.scale.enabled) {
+        if (this.scale.enabled && !skipScaleAndRotate) {
             enabledProperties |= WIDGET_TIMELINE_PROPERTY_SCALE;
         }
-        if (this.rotate.enabled) {
+        if (this.rotate.enabled && !skipScaleAndRotate) {
             enabledProperties |= WIDGET_TIMELINE_PROPERTY_ROTATE;
         }
         if (this.controlPointsArray.length == 2) {
@@ -664,7 +678,29 @@ const NumberInput = observer(
             this.props.onChange(value);
         });
 
+        setNumber = action((value: number) => {
+            this.value = value.toString();
+            this.numValue = value;
+            this.error = undefined;
+            this.props.onChange(value);
+        });
+
         onKeyDown = (event: React.KeyboardEvent) => {
+            if (
+                !this.props.readOnly &&
+                handleNumberArrowKey(
+                    event as React.KeyboardEvent<HTMLInputElement>,
+                    () => {
+                        const value = parseFloat(this.value);
+                        return isNaN(value) ? undefined : value;
+                    },
+                    this.setNumber,
+                    { min: this.props.min, max: this.props.max }
+                )
+            ) {
+                return;
+            }
+
             if (event.keyCode === 13) {
                 try {
                     const newValue = evalConstantExpression(
@@ -2916,7 +2952,19 @@ export function getTimelineProperty(
     ) {
         value = widget[propertyName] ?? 0;
     } else {
-        if (widget instanceof ProjectEditor.LVGLWidgetClass) {
+        if (
+            widget instanceof ProjectEditor.LVGLWidgetClass &&
+            widget.useImageTransformInTimeline &&
+            (propertyName == "scale" || propertyName == "rotate")
+        ) {
+            // starts from the image zoom/angle, same as the generated code
+            // (LVGL keeps image angle in 0..3599 range)
+            const imageWidget = widget as LVGLImageWidget;
+            value =
+                propertyName == "scale"
+                    ? imageWidget.zoom
+                    : ((imageWidget.angle % 3600) + 3600) % 3600;
+        } else if (widget instanceof ProjectEditor.LVGLWidgetClass) {
             const page = ProjectEditor.getPage(widget);
 
             let stylePropertyInfo;
@@ -3113,6 +3161,164 @@ export function timelineStyleHook(
     }
 }
 
+function isTimelinePropertyEnabled(
+    widget: Widget,
+    propertyName: TimelineKeyframeProperty
+) {
+    return widget.timeline.some(keyframe => keyframe[propertyName].enabled);
+}
+
+export function lvglCreateTimeline(
+    runtime: LVGLPageRuntime,
+    widget: LVGLWidget,
+    obj: number
+) {
+    if (widget.timeline.length == 0) {
+        return;
+    }
+
+    // In the editor image rotate/scale is applied from here with
+    // lv_img_set_angle/zoom (see lvglApplyTimelineImageTransforms), the same
+    // way as in the generated code. In the simulator timeline position is
+    // known only inside WASM runtime, so there style transform is still used.
+    const applyImageTransform =
+        widget.useImageTransformInTimeline &&
+        runtime.isEditor &&
+        !runtime.isInsideUserWidget;
+
+    for (const keyframe of widget.timeline) {
+        keyframe.lvglCreate(
+            runtime,
+            obj,
+            runtime.lvglCreateContext.flowState,
+            applyImageTransform
+        );
+    }
+
+    if (applyImageTransform) {
+        runtime.timelineImageTransforms.push({ widget, obj });
+    } else if (widget.useImageTransformInTimeline) {
+        lvglMatchStyleTransformToImageTransform(
+            runtime,
+            widget as LVGLImageWidget,
+            obj
+        );
+    }
+}
+
+// Style transform is used instead of image transform: rotate/scale around the
+// image pivot starting from the image angle/zoom, like in the generated code.
+function lvglMatchStyleTransformToImageTransform(
+    runtime: LVGLPageRuntime,
+    widget: LVGLImageWidget,
+    obj: number
+) {
+    const rotate = isTimelinePropertyEnabled(widget, "rotate");
+    const scale = isTimelinePropertyEnabled(widget, "scale");
+    if (!rotate && !scale) {
+        return;
+    }
+
+    const wasm = runtime.wasm as any;
+
+    const setStyleProp = (code: LVGLStylePropCode, value: number) =>
+        runtime.wasm._lvglObjSetLocalStylePropNum(
+            obj,
+            runtime.getLvglStylePropCode(code),
+            value,
+            0 // LV_PART_MAIN | LV_STATE_DEFAULT
+        );
+
+    let pivot: { x: number; y: number } | undefined;
+    if (widget.setPivot) {
+        pivot = { x: widget.pivotX, y: widget.pivotY };
+    } else {
+        // default image pivot is the center of the image
+        const bitmap = findBitmap(
+            ProjectEditor.getProject(widget),
+            widget.image
+        );
+        const imageElement = bitmap?.imageElement;
+        if (imageElement) {
+            pivot = {
+                x: Math.floor(imageElement.width / 2),
+                y: Math.floor(imageElement.height / 2)
+            };
+        }
+    }
+    if (pivot) {
+        setStyleProp(LVGL_STYLE_PROP_CODES.LV_STYLE_TRANSFORM_PIVOT_X, pivot.x);
+        setStyleProp(LVGL_STYLE_PROP_CODES.LV_STYLE_TRANSFORM_PIVOT_Y, pivot.y);
+    }
+
+    if (rotate) {
+        if (runtime.isV9) {
+            wasm._lv_image_set_rotation(obj, 0);
+            setStyleProp(
+                LVGL_STYLE_PROP_CODES.LV_STYLE_TRANSFORM_ROTATION,
+                widget.angle
+            );
+        } else {
+            wasm._lv_img_set_angle(obj, 0);
+            setStyleProp(
+                LVGL_STYLE_PROP_CODES.LV_STYLE_TRANSFORM_ANGLE,
+                widget.angle
+            );
+        }
+    }
+
+    if (scale) {
+        if (runtime.isV9) {
+            wasm._lv_image_set_scale(obj, 256);
+            setStyleProp(
+                LVGL_STYLE_PROP_CODES.LV_STYLE_TRANSFORM_SCALE_X,
+                widget.zoom
+            );
+            setStyleProp(
+                LVGL_STYLE_PROP_CODES.LV_STYLE_TRANSFORM_SCALE_Y,
+                widget.zoom
+            );
+        } else {
+            wasm._lv_img_set_zoom(obj, 256);
+            setStyleProp(
+                LVGL_STYLE_PROP_CODES.LV_STYLE_TRANSFORM_ZOOM,
+                widget.zoom
+            );
+        }
+    }
+}
+
+export function lvglApplyTimelineImageTransforms(
+    runtime: LVGLPageRuntime,
+    timelinePosition: number
+) {
+    const wasm = runtime.wasm as any;
+
+    for (const { widget, obj } of runtime.timelineImageTransforms) {
+        if (isTimelinePropertyEnabled(widget, "scale")) {
+            const zoom = Math.round(
+                getTimelineProperty(widget, timelinePosition, "scale")
+            );
+            if (runtime.isV9) {
+                wasm._lv_image_set_scale(obj, zoom);
+            } else {
+                wasm._lv_img_set_zoom(obj, zoom);
+            }
+        }
+
+        if (isTimelinePropertyEnabled(widget, "rotate")) {
+            const angle = Math.round(
+                getTimelineProperty(widget, timelinePosition, "rotate")
+            );
+            if (runtime.isV9) {
+                wasm._lv_image_set_rotation(obj, angle);
+            } else {
+                wasm._lv_img_set_angle(obj, angle);
+            }
+        }
+    }
+}
+
 export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
     interface KeyframeProperty {
         name: keyof TimelineKeyframe;
@@ -3295,6 +3501,47 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
         return value;
     }
 
+    // rotate/scale applied with image functions instead of style transform,
+    // see LVGLImageWidget.timelineWithoutLayer
+    function getImageTransformFunctions(
+        lvglWidget: LVGLWidget,
+        keyframeProperty: KeyframeProperty
+    ) {
+        if (!lvglWidget.useImageTransformInTimeline) {
+            return undefined;
+        }
+
+        if (keyframeProperty.name == "rotate") {
+            return build.isV9
+                ? {
+                      get: "lv_image_get_rotation",
+                      set: "lv_image_set_rotation",
+                      type: "int32_t"
+                  }
+                : {
+                      get: "lv_img_get_angle",
+                      set: "lv_img_set_angle",
+                      type: "int16_t"
+                  };
+        }
+
+        if (keyframeProperty.name == "scale") {
+            return build.isV9
+                ? {
+                      get: "lv_image_get_scale",
+                      set: "lv_image_set_scale",
+                      type: "uint32_t"
+                  }
+                : {
+                      get: "lv_img_get_zoom",
+                      set: "lv_img_set_zoom",
+                      type: "uint16_t"
+                  };
+        }
+
+        return undefined;
+    }
+
     const hasTimeline = page._lvglWidgets.find(
         lvglWidget => lvglWidget.timeline.length > 0
     );
@@ -3352,17 +3599,31 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
                                 keyframeProperty.lvglName == propertyName
                         )!;
 
+                        const imageTransformFunctions =
+                            getImageTransformFunctions(
+                                lvglWidget,
+                                keyframeProperty
+                            );
+
                         build.line(
                             `anim_state.obj_${build.getLvglObjectIdentifierInSourceCode(
                                 lvglWidget
-                            )}_${propertyName}_init_value = ${lvglFromValue(
-                                keyframeProperty,
-                                `lv_obj_get_style_prop(${build.getLvglObjectAccessor(
-                                    lvglWidget
-                                )}, LV_PART_MAIN, LV_STYLE_${
-                                    keyframeProperty.lvglStylePropName
-                                }).num`
-                            )};`
+                            )}_${propertyName}_init_value = ${
+                                imageTransformFunctions
+                                    ? `${
+                                          imageTransformFunctions.get
+                                      }(${build.getLvglObjectAccessor(
+                                          lvglWidget
+                                      )})`
+                                    : lvglFromValue(
+                                          keyframeProperty,
+                                          `lv_obj_get_style_prop(${build.getLvglObjectAccessor(
+                                              lvglWidget
+                                          )}, LV_PART_MAIN, LV_STYLE_${
+                                              keyframeProperty.lvglStylePropName
+                                          }).num`
+                                      )
+                            };`
                         );
                     }
                 }
@@ -3545,17 +3806,48 @@ export function lvglBuildPageTimeline(build: LVGLBuild, page: Page) {
 
                             //
                             //
-                            build.line("");
-                            build.line("lv_style_value_t value;");
+                            const propertiesToApply = [...propertyNames].map(
+                                propertyName => {
+                                    const keyframeProperty =
+                                        KEYFRAME_PROPERTIES.find(
+                                            keyframeProperty =>
+                                                keyframeProperty.lvglName ==
+                                                propertyName
+                                        )!;
+                                    return {
+                                        keyframeProperty,
+                                        imageTransformFunctions:
+                                            getImageTransformFunctions(
+                                                lvglWidget,
+                                                keyframeProperty
+                                            )
+                                    };
+                                }
+                            );
 
-                            for (const propertyName of propertyNames) {
-                                const keyframeProperty =
-                                    KEYFRAME_PROPERTIES.find(
-                                        keyframeProperty =>
-                                            keyframeProperty.lvglName ==
-                                            propertyName
-                                    )!;
+                            if (
+                                propertiesToApply.some(
+                                    property =>
+                                        !property.imageTransformFunctions
+                                )
+                            ) {
                                 build.line("");
+                                build.line("lv_style_value_t value;");
+                            }
+
+                            for (const {
+                                keyframeProperty,
+                                imageTransformFunctions
+                            } of propertiesToApply) {
+                                build.line("");
+
+                                if (imageTransformFunctions) {
+                                    build.line(
+                                        `${imageTransformFunctions.set}(obj, (${imageTransformFunctions.type})roundf(${keyframeProperty.lvglName}_value));`
+                                    );
+                                    continue;
+                                }
+
                                 build.line(
                                     `value.num = (int32_t)roundf(${lvglToValue(
                                         keyframeProperty,

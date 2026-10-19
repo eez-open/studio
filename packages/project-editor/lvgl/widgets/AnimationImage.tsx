@@ -1,6 +1,8 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
 
+import * as notification from "eez-studio-ui/notification";
+
 import {
     ClassInfo,
     EezObject,
@@ -20,11 +22,105 @@ import {
     addObjects,
     createObject,
     propertyNotFoundMessage,
-    propertyNotSetMessage
+    propertyNotSetMessage,
+    reorderObjects
 } from "project-editor/store";
+import {
+    SORT_ICON,
+    SortMenuButton
+} from "project-editor/ui-components/SortMenuButton";
 import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
+
+////////////////////////////////////////////////////////////////////////////////
+
+// "frame_0001" -> { prefix: "frame_", index: 1 }
+function parseSequenceName(name: string) {
+    const match = /^(.*?)(\d+)$/.exec(name);
+    if (!match) {
+        return undefined;
+    }
+    return { prefix: match[1], index: parseInt(match[2]) };
+}
+
+// all images with the same prefix as the first image and the same or greater
+// sequence number, sorted by sequence number
+function getSequenceImages(firstImage: string, imageNames: string[]) {
+    const first = parseSequenceName(firstImage);
+    if (!first) {
+        notification.warn(
+            `Image name "${firstImage}" doesn't end with a sequence number`
+        );
+        return [firstImage];
+    }
+
+    return imageNames
+        .map(name => ({ name, sequence: parseSequenceName(name) }))
+        .filter(
+            ({ sequence }) =>
+                sequence &&
+                sequence.prefix == first.prefix &&
+                sequence.index >= first.index
+        )
+        .sort((a, b) => a.sequence!.index - b.sequence!.index)
+        .map(({ name }) => name);
+}
+
+// Sort by sequence number inside each sequence (same name prefix), ascending
+// or descending. Sequences stay in the order of their first frame, images
+// without sequence number stay where they are relative to the sequences.
+function sortImagesBySequence(
+    images: LVGLAnimationImage[],
+    direction: "asc" | "desc"
+) {
+    const groups: {
+        prefix: string | undefined;
+        items: { image: LVGLAnimationImage; index: number }[];
+    }[] = [];
+
+    for (const image of images) {
+        const sequence = image.image
+            ? parseSequenceName(image.image)
+            : undefined;
+
+        let group = sequence
+            ? groups.find(group => group.prefix === sequence.prefix)
+            : undefined;
+        if (!group) {
+            group = { prefix: sequence?.prefix, items: [] };
+            groups.push(group);
+        }
+
+        group.items.push({ image, index: sequence?.index ?? 0 });
+    }
+
+    return groups.flatMap(group =>
+        group.items
+            .sort((a, b) =>
+                direction == "asc" ? a.index - b.index : b.index - a.index
+            )
+            .map(item => item.image)
+    );
+}
+
+export function sortFrames(
+    widget: LVGLAnimationImageWidget,
+    direction: "asc" | "desc"
+) {
+    const sorted = sortImagesBySequence(widget.images, direction);
+
+    if (sorted.every((image, i) => image === widget.images[i])) {
+        notification.info(
+            direction == "asc"
+                ? "Frames are already in ascending order"
+                : "Frames are already in descending order"
+        );
+        return;
+    }
+
+    reorderObjects(widget.images, sorted);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -97,11 +193,19 @@ class LVGLAnimationImage extends EezObject {
                 }))
             });
 
+            fields.push({
+                name: "importSequence",
+                displayName:
+                    "Add all frames of the sequence (name_1… or name_0001…)",
+                type: "boolean"
+            });
+
             if (parentObject.length == 0) {
                 fields.push({
                     name: "numImages",
                     displayName: "No. of images",
-                    type: "integer"
+                    type: "integer",
+                    visible: (values: any) => !values.importSequence
                 });
             }
 
@@ -111,33 +215,42 @@ class LVGLAnimationImage extends EezObject {
                 },
                 values: {
                     image: bitmaps.length > 0 ? bitmaps[0].name : undefined,
+                    importSequence: false,
                     numImages: 1
                 },
                 dialogContext: project
             });
 
-            const objects = [];
+            let images: (string | undefined)[] = [];
 
-            const numImages = result.values.numImages ?? 1;
-
-            let bitmapIndex = bitmaps.findIndex(
-                bitmap => bitmap.name == result.values.image
-            );
-
-            for (let i = 0; i < numImages; i++, bitmapIndex++) {
-                objects.push(
-                    createObject<LVGLAnimationImage>(
-                        project._store,
-                        {
-                            image:
-                                bitmapIndex >= 0 && bitmapIndex < bitmaps.length
-                                    ? bitmaps[bitmapIndex].name
-                                    : undefined
-                        },
-                        LVGLAnimationImage
-                    )
+            if (result.values.importSequence) {
+                images = getSequenceImages(
+                    result.values.image,
+                    bitmaps.map(bitmap => bitmap.name)
                 );
+            } else {
+                const numImages = result.values.numImages ?? 1;
+
+                let bitmapIndex = bitmaps.findIndex(
+                    bitmap => bitmap.name == result.values.image
+                );
+
+                for (let i = 0; i < numImages; i++, bitmapIndex++) {
+                    images.push(
+                        bitmapIndex >= 0 && bitmapIndex < bitmaps.length
+                            ? bitmaps[bitmapIndex].name
+                            : undefined
+                    );
+                }
             }
+
+            const objects = images.map(image =>
+                createObject<LVGLAnimationImage>(
+                    project._store,
+                    { image },
+                    LVGLAnimationImage
+                )
+            );
 
             if (objects.length > 1) {
                 addObjects(parentObject, objects);
@@ -174,7 +287,27 @@ export class LVGLAnimationImageWidget extends LVGLWidget {
                 propertyGridGroup: specificGroup,
                 partOfNavigation: false,
                 enumerable: false,
-                defaultValue: []
+                defaultValue: [],
+                arrayPropertyEditorLeadingButtons: (
+                    widget: LVGLAnimationImageWidget
+                ) => [
+                    <SortMenuButton
+                        key="sort"
+                        icon={SORT_ICON}
+                        title="Sort Frames by Sequence Number"
+                        enabled={widget.images.length > 1}
+                        items={[
+                            {
+                                label: "Ascending (name_1, name_2, name_3…)",
+                                onClick: () => sortFrames(widget, "asc")
+                            },
+                            {
+                                label: "Descending (name_3, name_2, name_1…)",
+                                onClick: () => sortFrames(widget, "desc")
+                            }
+                        ]}
+                    />
+                ]
             },
             {
                 name: "duration",

@@ -38,6 +38,7 @@ export class LVGLImageWidget extends LVGLWidget {
     pivotY: number;
     zoom: number;
     angle: number;
+    timelineWithoutLayer: boolean;
     innerAlign: keyof typeof LV_IMAGE_ALIGN;
     sizeMode: keyof typeof LV_IMG_SIZE_MODE;
     value: number | string;
@@ -108,6 +109,17 @@ export class LVGLImageWidget extends LVGLWidget {
                     widget.isScaleNeedle
             },
             {
+                // Timeline rotate/scale with image functions (lv_img_set_angle/zoom)
+                // instead of style transform: LVGL then doesn't need a layer buffer
+                // as large as the whole widget for every redraw.
+                name: "timelineWithoutLayer",
+                displayName: "Timeline rotate/scale without layer",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (widget: LVGLImageWidget) =>
+                    widget.isScaleNeedle
+            },
+            {
                 name: "innerAlign",
                 type: PropertyType.Enum,
                 enumItems: Object.keys(LV_IMAGE_ALIGN).map(id => ({
@@ -170,6 +182,7 @@ export class LVGLImageWidget extends LVGLWidget {
             pivotY: 0,
             zoom: 256,
             angle: 0,
+            timelineWithoutLayer: false,
             value: 0,
             valueType: "literal",
             previewValue: 0
@@ -189,6 +202,10 @@ export class LVGLImageWidget extends LVGLWidget {
 
             if (jsObject.setPivot == undefined) {
                 jsObject.setPivot = true;
+            }
+
+            if (jsObject.timelineWithoutLayer == undefined) {
+                jsObject.timelineWithoutLayer = false;
             }
         },
 
@@ -264,6 +281,7 @@ export class LVGLImageWidget extends LVGLWidget {
             pivotY: observable,
             zoom: observable,
             angle: observable,
+            timelineWithoutLayer: observable,
             innerAlign: observable,
             sizeMode: observable,
             value: observable,
@@ -276,6 +294,10 @@ export class LVGLImageWidget extends LVGLWidget {
         const parentChildren = getParent(this);
         const parentWidget = getParent(parentChildren as any);
         return parentWidget instanceof LVGLScaleWidget;
+    }
+
+    override get useImageTransformInTimeline() {
+        return this.timelineWithoutLayer && !this.isScaleNeedle;
     }
 
     override toLVGLCode(code: LVGLCode) {

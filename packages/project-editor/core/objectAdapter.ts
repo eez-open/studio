@@ -11,7 +11,7 @@ import {
 import { createTransformer } from "mobx-utils";
 import { map, find, each, pickBy } from "lodash-es";
 
-import { stringCompare } from "eez-studio-shared/string";
+import { naturalCompare } from "eez-studio-shared/string";
 import { Point, Rect } from "eez-studio-shared/geometry";
 
 import {
@@ -862,11 +862,11 @@ export class TreeAdapter {
 
             if (sortDirection === "asc") {
                 itemChildren = itemChildren.sort((a, b) =>
-                    stringCompare(getLabel(a.object), getLabel(b.object))
+                    naturalCompare(getLabel(a.object), getLabel(b.object))
                 );
             } else if (sortDirection === "desc") {
                 itemChildren = itemChildren.sort((a, b) =>
-                    stringCompare(getLabel(b.object), getLabel(a.object))
+                    naturalCompare(getLabel(b.object), getLabel(a.object))
                 );
             }
 

@@ -190,6 +190,16 @@ export const ArrayProperty = observer(
         render() {
             const buttons = [];
 
+            if (this.props.propertyInfo.arrayPropertyEditorLeadingButtons) {
+                buttons.push(
+                    ...this.props.propertyInfo.arrayPropertyEditorLeadingButtons(
+                        this.props.objects[0],
+                        this.props.propertyInfo,
+                        this.context
+                    )
+                );
+            }
+
             if (this.objects.length > 0) {
                 buttons.push(
                     <IconAction

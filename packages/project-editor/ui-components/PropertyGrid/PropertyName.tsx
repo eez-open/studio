@@ -6,9 +6,12 @@ import { Icon } from "eez-studio-ui/icon";
 
 import {
     PropertyProps,
+    PropertyType,
     getObjectPropertyDisplayName
 } from "project-editor/core/object";
 import { getNumModifications } from "project-editor/store";
+
+import { PropertyScrubLabel } from "./PropertyScrubLabel";
 
 import { propertyCollapsedStore } from "./PropertyCollapsedStore";
 import classNames from "classnames";
@@ -83,6 +86,20 @@ export const PropertyName = observer(
                             <span title={propertyName}>{propertyName}</span>
                         </div>
                     </div>
+                );
+            } else if (
+                propertyInfo.type === PropertyType.Number &&
+                !propertyInfo.computed &&
+                !this.props.readOnly
+            ) {
+                return (
+                    <PropertyScrubLabel
+                        {...this.props}
+                        className="property-name"
+                        title={propertyName}
+                    >
+                        {propertyName}
+                    </PropertyScrubLabel>
                 );
             } else {
                 return (

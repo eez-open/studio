@@ -45,7 +45,10 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 
 import { AutoSize, Component, Widget } from "project-editor/flow/component";
-import { isTimelineEditorActive } from "project-editor/flow/timeline";
+import {
+    isTimelineEditorActive,
+    lvglCreateTimeline
+} from "project-editor/flow/timeline";
 
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { ProjectContext } from "project-editor/project/context";
@@ -57,6 +60,7 @@ import type {
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
+import { PropertyScrubLabel } from "project-editor/ui-components/PropertyGrid/PropertyScrubLabel";
 
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
@@ -164,9 +168,31 @@ export const GeometryProperties = observer(
                     object => (object as any).heightUnit == "content"
                 ) != undefined;
 
+            const label = (
+                text: string,
+                propertyName: string,
+                readOnly: boolean,
+                title?: string
+            ) => (
+                <PropertyScrubLabel
+                    propertyInfo={
+                        findPropertyByNameInClassInfo(
+                            LVGLWidget.classInfo,
+                            propertyName
+                        )!
+                    }
+                    objects={this.props.objects}
+                    readOnly={this.props.readOnly || readOnly}
+                    updateObject={this.props.updateObject}
+                    title={title}
+                >
+                    {text}
+                </PropertyScrubLabel>
+            );
+
             return (
                 <div className="EezStudio_LVGLWidgetGeometryProperty">
-                    <div>X</div>
+                    {label("X", "left", false, "X")}
                     <Property
                         propertyInfo={
                             findPropertyByNameInClassInfo(
@@ -190,7 +216,7 @@ export const GeometryProperties = observer(
                         updateObject={this.props.updateObject}
                     />
 
-                    <div>Y</div>
+                    {label("Y", "top", false, "Y")}
                     <Property
                         propertyInfo={
                             findPropertyByNameInClassInfo(
@@ -214,7 +240,7 @@ export const GeometryProperties = observer(
                         updateObject={this.props.updateObject}
                     />
 
-                    <div title="Width">W</div>
+                    {label("W", "width", widthReadOnly, "Width")}
                     <Property
                         propertyInfo={
                             findPropertyByNameInClassInfo(
@@ -238,7 +264,7 @@ export const GeometryProperties = observer(
                         updateObject={this.props.updateObject}
                     />
 
-                    <div title="Height">H</div>
+                    {label("H", "height", heightReadOnly, "Height")}
                     <Property
                         propertyInfo={
                             findPropertyByNameInClassInfo(
@@ -1516,6 +1542,12 @@ export class LVGLWidget extends Widget {
         return ProjectEditor.getProject(this).lvglStyles.defaultStyles[this.type];
     }
 
+    // if true, timeline rotate/scale is applied with image functions
+    // (lv_img_set_angle/zoom) instead of style transform
+    get useImageTransformInTimeline() {
+        return false;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////
@@ -1543,9 +1575,7 @@ export class LVGLWidget extends Widget {
         }
 
         // timeline
-        for (const keyframe of this.timeline) {
-            keyframe.lvglCreate(runtime, obj, runtime.lvglCreateContext.flowState);
-        }
+        lvglCreateTimeline(runtime, this, obj);
 
         // children
         this.children.map((widget: LVGLWidget) => widget.lvglCreate(runtime, obj));
