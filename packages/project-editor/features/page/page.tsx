@@ -5,11 +5,8 @@ import { observer } from "mobx-react";
 
 import {
     IEezObject,
-    EezObject,
-    ClassInfo,
     registerClass,
     PropertyType,
-    getParent,
     getId,
     makeDerivedClassInfo,
     MessageType,
@@ -54,7 +51,7 @@ import {
     ComponentCanvas
 } from "project-editor/flow/editor/render";
 
-import { AutoSize, Component, Widget } from "project-editor/flow/component";
+import { AutoSize, Widget } from "project-editor/flow/component";
 import {
     generalGroup,
     styleGroup,
@@ -99,107 +96,6 @@ export interface ICustomWidgetCreateParams {
     width: number;
     height: number;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-export class PageOrientation extends EezObject {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    style?: string;
-    components: Component[];
-
-    static classInfo: ClassInfo = {
-        properties: [
-            {
-                name: "x",
-                type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
-            },
-            {
-                name: "y",
-                type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
-            },
-            {
-                name: "width",
-                type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
-            },
-            {
-                name: "height",
-                type: PropertyType.Number,
-                propertyGridGroup: geometryGroup
-            },
-            {
-                name: "style",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "allStyles",
-                propertyGridGroup: styleGroup
-            },
-            {
-                name: "components",
-                type: PropertyType.Array,
-                typeClass: Component,
-                hideInPropertyGrid: true
-            }
-        ],
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            if (jsObject.widgets) {
-                jsObject.components = jsObject.widgets;
-                delete jsObject.widgets;
-            }
-        }
-    };
-
-    constructor() {
-        super();
-
-        makeObservable(this, {
-            left: computed,
-            top: computed,
-            rect: computed,
-            closePageIfTouchedOutside: computed
-        });
-    }
-
-    override makeEditable() {
-        super.makeEditable();
-
-        makeObservable(this, {
-            x: observable,
-            y: observable,
-            width: observable,
-            height: observable,
-            style: observable,
-            components: observable
-        });
-    }
-
-    get left() {
-        return this.x;
-    }
-
-    get top() {
-        return this.y;
-    }
-
-    get rect() {
-        return {
-            left: this.x,
-            top: this.y,
-            width: this.width,
-            height: this.height
-        };
-    }
-
-    get closePageIfTouchedOutside() {
-        return (getParent(this) as Page).closePageIfTouchedOutside;
-    }
-}
-
-registerClass("PageOrientation", PageOrientation);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -287,8 +183,6 @@ export class Page extends Flow {
 
     allowOverlappingChildren?: boolean;
 
-    portrait: PageOrientation;
-
     isUsedAsUserWidget: boolean;
 
     dataContextOverrides: string;
@@ -342,7 +236,6 @@ export class Page extends Flow {
             height: observable,
             scaleToFit: observable,
             allowOverlappingChildren: observable,
-            portrait: observable,
             isUsedAsUserWidget: observable,
             dataContextOverrides: observable,
             _lvglRuntime: observable,
@@ -479,14 +372,6 @@ export class Page extends Flow {
                 propertyGridGroup: generalGroup,
                 disabled: object =>
                     isDashboardProject(object) || isLVGLProject(object)
-            },
-            {
-                name: "portrait",
-                type: PropertyType.Object,
-                typeClass: PageOrientation,
-                isOptional: true,
-                hideInPropertyGrid: true,
-                enumerable: false
             },
             {
                 name: "isUsedAsUserWidget",
