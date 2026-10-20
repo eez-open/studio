@@ -66,6 +66,7 @@ import { showGenericDialog } from "project-editor/core/util";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
+    convertGlyphBitmap,
     deserializePixelArray,
     EditorImageHitTestResult,
     formatEncoding,
@@ -885,19 +886,23 @@ export class Glyph extends EezObject {
                     const b = buffer[(y * width + x) * 4 + 2];
                     const a = buffer[(y * width + x) * 4 + 3];
 
-                    pixelArray[y * width + x] =
-                        (255 - (r + g + b) / 3) * (a / 255);
+                    pixelArray[y * width + x] = Math.round(
+                        (255 - (r + g + b) / 3) * (a / 255)
+                    );
                 }
             }
+
+            // pixelArray is 8bpp, convert it to the font's bpp (packed format)
+            const glyphBitmap = convertGlyphBitmap(
+                { width, height, pixelArray },
+                8,
+                this.font.bpp
+            );
 
             getProjectStore(this).updateObject(this, {
                 width,
                 height,
-                glyphBitmap: {
-                    width,
-                    height,
-                    pixelArray
-                }
+                glyphBitmap
             });
         }
     }

@@ -1168,7 +1168,8 @@ export class Assets {
             this.constants.push({
                 type: getValueType(valueType),
                 value,
-                valueType
+                valueType,
+                persistent: false
             });
             this.constantsMap.set(key, index);
         }

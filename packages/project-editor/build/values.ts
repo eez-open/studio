@@ -13,6 +13,7 @@ import { evalConstantExpression } from "project-editor/flow/expression";
 import { Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
 import {
+    VALUE_OPTIONS_PERSISTENT,
     FLOW_VALUE_TYPE_ARRAY_ASSET,
     FLOW_VALUE_TYPE_BOOLEAN,
     FLOW_VALUE_TYPE_DATE,
@@ -35,6 +36,7 @@ export interface FlowValue {
     type: number;
     value: any;
     valueType: ValueType;
+    persistent: boolean;
 }
 
 export function getValueType(valueType: ValueType) {
@@ -102,7 +104,8 @@ function getVariableFlowValue(
         return {
             type,
             value,
-            valueType: variable.type
+            valueType: variable.type,
+            persistent: variable.persistent ? true : false
         };
     } catch (err: any) {
         assets.projectStore.outputSectionsStore.write(
@@ -115,7 +118,8 @@ function getVariableFlowValue(
         return {
             type,
             value: null,
-            valueType: "null"
+            valueType: "null",
+            persistent: false
         };
     }
 }
@@ -177,24 +181,29 @@ function buildFlowValue(
     dataBuffer: DataBuffer,
     flowValue: FlowValue
 ) {
+    let options = 0;
+    if (flowValue.persistent) {
+        options |= VALUE_OPTIONS_PERSISTENT;
+    }
+
     if (flowValue.value === undefined) {
         dataBuffer.writeUint8(FLOW_VALUE_TYPE_UNDEFINED); // type_
         dataBuffer.writeUint8(0); // unit_
-        dataBuffer.writeUint16(0); // options_
+        dataBuffer.writeUint16(options); // options_
         dataBuffer.writeUint32(0); // reserved_
         dataBuffer.writeUint32(0);
         dataBuffer.writeUint32(0);
     } else if (flowValue.value === null) {
         dataBuffer.writeUint8(FLOW_VALUE_TYPE_NULL); // type_
         dataBuffer.writeUint8(0); // unit_
-        dataBuffer.writeUint16(0); // options_
+        dataBuffer.writeUint16(options); // options_
         dataBuffer.writeUint32(0); // reserved_
         dataBuffer.writeUint32(0);
         dataBuffer.writeUint32(0);
     } else {
         dataBuffer.writeUint8(flowValue.type); // type_
         dataBuffer.writeUint8(0); // unit_
-        dataBuffer.writeUint16(0); // options_
+        dataBuffer.writeUint16(options); // options_
         dataBuffer.writeUint32(0); // reserved_
         // union
         if (flowValue.type == FLOW_VALUE_TYPE_BOOLEAN) {
@@ -238,7 +247,8 @@ function buildFlowValue(
                     elements = flowValue.value.map((element: any) => ({
                         type: getValueType(elementType),
                         value: element,
-                        valueType: elementType
+                        valueType: elementType,
+                        persistent: false
                     }));
                 } else {
                     const elementType = assets.projectStore.typesStore.getType(
@@ -256,7 +266,8 @@ function buildFlowValue(
                                       assets.projectStore.project,
                                       field.valueType
                                   ),
-                        valueType: field.valueType
+                        valueType: field.valueType,
+                        persistent: false
                     }));
                 }
 

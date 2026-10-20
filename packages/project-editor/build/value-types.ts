@@ -82,3 +82,6 @@ export const basicFlowValueTypes: ValueType[] = [
     "_t13" as any, // FLOW_VALUE_TYPE_JSON_MEMBER_VALUE: 36
     "event" // FLOW_VALUE_TYPE_EVENT: 37
 ];
+
+export const VALUE_OPTIONS_REF = (1 << 0);
+export const VALUE_OPTIONS_PERSISTENT = (1 << 1);
