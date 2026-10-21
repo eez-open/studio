@@ -967,6 +967,12 @@ export interface IEezFlowEditor {
         objectVariableType: IObjectVariableType
     ): void;
 
+    registerEnumVariableType(definition: IExtensionEnumDefinition): void;
+
+    registerStructureVariableType(
+        definition: IExtensionStructureDefinition
+    ): void;
+
     showGenericDialog(
         conf: GenericDialogConfiguration
     ): Promise<GenericDialogResult>;

@@ -1185,6 +1185,10 @@ export function getEnumFromType(project: Project, type: string) {
     return project.variables.enumsMap.get(enumTypeName);
 }
 
+export function getTypeShortName(name: string) {
+    return name.substring(name.lastIndexOf("/") + 1);
+}
+
 export function getObjectVariableTypeFromType(
     projectStore: ProjectStore,
     type: string

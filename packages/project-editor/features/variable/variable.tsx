@@ -69,7 +69,8 @@ import {
     isEnumType,
     getEnumTypeNameFromType,
     isArrayType,
-    getArrayElementTypeFromType
+    getArrayElementTypeFromType,
+    getTypeShortName
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -1828,6 +1829,13 @@ export class ProjectVariables extends EezObject {
         for (const enumDef of systemEnums) {
             map.set(enumDef.name, enumDef);
         }
+        for (const enumDef of projectStore.importedEnums.values()) {
+            for (const name of [enumDef.name, getTypeShortName(enumDef.name)]) {
+                if (!map.has(name)) {
+                    map.set(name, enumDef);
+                }
+            }
+        }
         return map;
     }
 
@@ -1838,6 +1846,12 @@ export class ProjectVariables extends EezObject {
         }
         for (const structure of SYSTEM_STRUCTURES) {
             map.set(structure.name, structure);
+        }
+        const projectStore = ProjectEditor.getProjectStore(this);
+        for (const structure of projectStore.importedStructures.values()) {
+            if (!map.has(structure.name)) {
+                map.set(structure.name, structure);
+            }
         }
         return map;
     }
