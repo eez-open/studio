@@ -170,6 +170,26 @@ async function loadTemplateFile(
 
 const SAVED_OPTIONS_VERSION = 12;
 
+const LVGL_VERSIONS: LVGLVersion[] = [
+    "8.4.0",
+    "9.2.2",
+    "9.3.0",
+    "9.4.0",
+    "9.5.0"
+];
+
+// Options saved by older versions can have "8.3" or "9.0" (same mapping as
+// when a project is loaded), anything unknown falls back to 8.4.0.
+function migrateLvglVersion(lvglVersion: any): LVGLVersion {
+    if (lvglVersion == "8.3") {
+        return "8.4.0";
+    }
+    if (lvglVersion == "9.0") {
+        return "9.2.2";
+    }
+    return LVGL_VERSIONS.includes(lvglVersion) ? lvglVersion : "8.4.0";
+}
+
 enum SaveOptionsFlags {
     All,
     View
@@ -342,7 +362,7 @@ export class WizardModel {
                     this.projectVersion = options.projectVersion;
                     this.gitClone = options.gitClone;
                     this.gitInit = options.gitInit;
-                    this.lvglVersion = options.lvglVersion ?? "8.4.0";
+                    this.lvglVersion = migrateLvglVersion(options.lvglVersion);
                     this.commandsProtocol = options.commandsProtocol ?? "SCPI";
                 }
             } catch (err) {
@@ -1100,6 +1120,10 @@ export class WizardModel {
                 } else {
                     projectFilePath = urlDef[this.lvglVersion];
                 }
+            }
+
+            if (!projectFilePath) {
+                throw `Can't load EEZ-PROJECT file: no template for LVGL version ${this.lvglVersion}`;
             }
         } else {
             projectFilePath = this.type!;

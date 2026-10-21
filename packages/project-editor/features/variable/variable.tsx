@@ -339,7 +339,11 @@ export const NativeVariableImplementationInfoPropertyUI = observer(
 type DibField = "input" | "output" | "input-output" | undefined;
 
 
-function isNativeVariableDisabled(variable: Variable) {
+// type can be given explicitly when variable.type is not set yet (while loading)
+function isNativeVariableDisabled(
+    variable: Variable,
+    type: ValueType = variable.type
+) {
     const project = ProjectEditor.getProject(variable);
     if (!project.projectTypeTraits) {
         return false;
@@ -347,9 +351,7 @@ function isNativeVariableDisabled(variable: Variable) {
     return (
         !isGlobalVariable(variable) ||
         !hasFlowSupport(variable) ||
-        !project.projectTypeTraits.isVariableTypeSupportedAsNative(
-            variable.type
-        ) ||
+        !project.projectTypeTraits.isVariableTypeSupportedAsNative(type) ||
         !!project.settings.general.masterProject
     );
 }
@@ -471,7 +473,8 @@ export class Variable extends EezObject {
             {
                 name: "native",
                 type: PropertyType.Boolean,
-                disabled: isNativeVariableDisabled,
+                disabled: (variable: Variable) =>
+                    isNativeVariableDisabled(variable),
                 checkboxStyleSwitch: true
             },
             {
@@ -640,7 +643,8 @@ export class Variable extends EezObject {
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);
 
-            if (isNativeVariableDisabled(object)) {
+            // object properties are not loaded yet, use the type from objectJS
+            if (isNativeVariableDisabled(object, objectJS.type)) {
                 objectJS.native = false;
             }
         },
