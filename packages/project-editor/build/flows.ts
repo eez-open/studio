@@ -38,6 +38,7 @@ import {
 } from "project-editor/build/values";
 import { makeEndInstruction } from "project-editor/flow/expression/instructions";
 import {
+    COMPONENT_TYPE_NOOP_ACTION,
     FIRST_DASHBOARD_ACTION_COMPONENT_TYPE,
     FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE,
     FIRST_LVGL_WIDGET_COMPONENT_TYPE
@@ -195,6 +196,31 @@ function buildComponent(
 
     // type
     let flowComponentId = getComponentIdOfComponent(assets, component);
+    if (
+        flowComponentId != undefined &&
+        assets.projectStore.projectTypeTraits.isLVGL &&
+        flowComponentId >= FIRST_DASHBOARD_ACTION_COMPONENT_TYPE &&
+        flowComponentId < FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE
+    ) {
+        // action component from an extension
+        if (getClassInfo(component).isNative) {
+            assets.extensionActionComponents.set(
+                component.type,
+                flowComponentId
+            );
+        } else {
+            assets.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                "Component is not implemented for the build target",
+                component
+            );
+        }
+        // the simulator has no implementation, run it as a Noop
+        if (assets.option != "buildFiles") {
+            flowComponentId = COMPONENT_TYPE_NOOP_ACTION;
+        }
+    }
     if (flowComponentId != undefined) {
         dataBuffer.writeUint16(flowComponentId);
     } else {

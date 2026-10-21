@@ -181,6 +181,9 @@ export class Assets {
         [componentType: number]: string;
     } = {};
 
+    // LVGL: native action components from extensions, class name -> type
+    extensionActionComponents = new Map<string, number>();
+
     // text ids used in T"..." expressions, collected during the flow build
     // (LVGL only), emitted in screens.c for "lv_i18n extract"
     lvglTranslatedTextIds = new Set<string>();
