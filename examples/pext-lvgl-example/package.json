@@ -1,0 +1,27 @@
+{
+    "name": "pext-lvgl-example",
+    "displayName": "PEXT LVGL example",
+    "version": "1.0.0",
+    "author": "Envox",
+    "description": "Example of an EEZ Flow extension for LVGL projects: an enum, a structure and a native action component",
+    "license": "GPL-3.0-only",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "cd src && tsc",
+        "watch": "cd src && tsc -w"
+    },
+    "keywords": [
+        "eez-studio-pext",
+        "eez-studio",
+        "eez-flow"
+    ],
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "@types/react": "^18.0.0",
+        "eez-studio-types": "^0.0.63",
+        "typescript": "^5.0.0"
+    },
+    "eez-studio": {
+        "node-module": true
+    }
+}
