@@ -37,10 +37,7 @@ import type { RuntimeBase } from "project-editor/flow/runtime/runtime";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-import type {
-    ExtensionDirective,
-    Project
-} from "project-editor/project/project";
+import type { Project } from "project-editor/project/project";
 
 import {
     findPropertyByNameInObject,
@@ -77,7 +74,8 @@ import { RuntimeType } from "project-editor/project/project-type-traits";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import {
     extensions,
-    installExtension
+    installExtension,
+    loadLocalExtension
 } from "eez-studio-shared/extensions/extensions";
 import type { InstrumentObject } from "instrument/instrument-object";
 
@@ -1419,12 +1417,9 @@ export class ProjectStore {
         this.editorsStore.refresh(true);
     }
 
-    buildImportedExtensions(project: Project) {
-        // build importedExtensionToExtensionContent
-        const importedExtensionToExtensionContent = new Map<
-            ExtensionDirective,
-            ExtensionContent
-        >();
+    buildImportedExtensions(project: Project, filePath?: string) {
+        // collect imported extensions
+        const importedExtensions: IExtension[] = [];
 
         const extensionDirectives = project.settings?.general?.extensions;
         if (extensionDirectives) {
@@ -1433,72 +1428,93 @@ export class ProjectStore {
                     const extension = extensions.get(
                         extensionDirective.extensionName
                     );
-
-                    if (!extension) {
-                        continue;
-                    }
-
-                    if (!extension.eezFlowExtensionInit) {
-                        continue;
-                    }
-
-                    try {
-                        const extensionContent: ExtensionContent = {
-                            extensionName: extension.name,
-                            actionComponentClasses: [],
-                            objectVariableTypes: []
-                        };
-
-                        extension.eezFlowExtensionInit({
-                            registerActionComponent: (
-                                actionComponentDefinition: IActionComponentDefinition
-                            ) => {
-                                const { className, actionComponentClass } =
-                                    ProjectEditor.createActionComponentClass(
-                                        actionComponentDefinition,
-                                        `${extension.name}/${actionComponentDefinition.name}`
-                                    );
-
-                                if (!className || !actionComponentClass) {
-                                    throw new Error(
-                                        `Failed to create action component class for "${extension.name}/${actionComponentDefinition.name}"`
-                                    );
-                                }
-
-                                extensionContent.actionComponentClasses.push({
-                                    className,
-                                    actionComponentClass
-                                });
-                            },
-
-                            registerObjectVariableType: (
-                                name: string,
-                                objectVariableType: IObjectVariableType
-                            ) => {
-                                extensionContent.objectVariableTypes.push({
-                                    name: `${extension.name}/${name}`,
-                                    type: createObjectVariableType(
-                                        objectVariableType
-                                    )
-                                });
-                            },
-
-                            showGenericDialog,
-
-                            validators: {
-                                required: validators.required,
-                                rangeInclusive: validators.rangeInclusive
-                            }
-                        });
-
-                        importedExtensionToExtensionContent.set(
-                            extensionDirective,
-                            extensionContent
-                        );
-                    } catch (err) {
-                        console.error(err);
+                    if (extension) {
+                        importedExtensions.push(extension);
                     }
                 }
+            }
+        }
+
+        const localExtensionDirectives =
+            project.settings?.general?.localExtensions;
+        const projectFilePath = filePath ?? this.filePath;
+        if (localExtensionDirectives && projectFilePath) {
+            for (const localExtensionDirective of localExtensionDirectives) {
+                if (localExtensionDirective.folderPath) {
+                    const extension = loadLocalExtension(
+                        path.resolve(
+                            path.dirname(projectFilePath),
+                            localExtensionDirective.folderPath.replace(
+                                /(\\|\/)/g,
+                                path.sep
+                            )
+                        )
+                    );
+                    if (extension) {
+                        importedExtensions.push(extension);
+                    }
+                }
+            }
+        }
+
+        // build extensionContents
+        const extensionContents: ExtensionContent[] = [];
+
+        for (const extension of importedExtensions) {
+            if (!extension.eezFlowExtensionInit) {
+                continue;
+            }
+
+            try {
+                const extensionContent: ExtensionContent = {
+                    extensionName: extension.name,
+                    actionComponentClasses: [],
+                    objectVariableTypes: []
+                };
+
+                extension.eezFlowExtensionInit({
+                    registerActionComponent: (
+                        actionComponentDefinition: IActionComponentDefinition
+                    ) => {
+                        const { className, actionComponentClass } =
+                            ProjectEditor.createActionComponentClass(
+                                actionComponentDefinition,
+                                `${extension.name}/${actionComponentDefinition.name}`
+                            );
+
+                        if (!className || !actionComponentClass) {
+                            throw new Error(
+                                `Failed to create action component class for "${extension.name}/${actionComponentDefinition.name}"`
+                            );
+                        }
+
+                        extensionContent.actionComponentClasses.push({
+                            className,
+                            actionComponentClass
+                        });
+                    },
+
+                    registerObjectVariableType: (
+                        name: string,
+                        objectVariableType: IObjectVariableType
+                    ) => {
+                        extensionContent.objectVariableTypes.push({
+                            name: `${extension.name}/${name}`,
+                            type: createObjectVariableType(objectVariableType)
+                        });
+                    },
+
+                    showGenericDialog,
+
+                    validators: {
+                        required: validators.required,
+                        rangeInclusive: validators.rangeInclusive
+                    }
+                });
+
+                extensionContents.push(extensionContent);
+            } catch (err) {
+                console.error(err);
             }
         }
 
@@ -1515,7 +1531,7 @@ export class ProjectStore {
         }
 
         // insert object variable types from imported extensions
-        for (const extensionContent of importedExtensionToExtensionContent.values()) {
+        for (const extensionContent of extensionContents) {
             for (const objectVariableType of extensionContent.objectVariableTypes) {
                 this.objectVariableTypes.set(
                     objectVariableType.name,
@@ -1533,7 +1549,7 @@ export class ProjectStore {
         >();
 
         // insert action component classes from imported extensions
-        for (const extensionContent of importedExtensionToExtensionContent.values()) {
+        for (const extensionContent of extensionContents) {
             for (const actionComponentClass of extensionContent.actionComponentClasses) {
                 this.importedActionComponentClasses.set(
                     actionComponentClass.className,

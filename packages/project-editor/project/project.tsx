@@ -706,6 +706,61 @@ registerClass("ExtensionDirective", ExtensionDirective);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export class LocalExtensionDirective extends EezObject {
+    folderPath: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "folderPath",
+                displayName: "Folder",
+                type: PropertyType.RelativeFolder,
+                isOptional: false
+            }
+        ],
+        listLabel: (object: LocalExtensionDirective, collapsed: boolean) => {
+            if (!collapsed) return "";
+            return object.folderPath;
+        },
+        defaultValue: {},
+        check: (object: LocalExtensionDirective, messages: IMessage[]) => {
+            if (object.folderPath) {
+                if (
+                    !fileExistsSync(
+                        getProjectStore(object).getAbsoluteFilePath(
+                            object.folderPath
+                        ) +
+                            "/" +
+                            "package.json"
+                    )
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            "package.json not found",
+                            getChildOfObject(object, "folderPath")
+                        )
+                    );
+                }
+            } else {
+                messages.push(propertyNotSetMessage(object, "folderPath"));
+            }
+        }
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            folderPath: observable
+        });
+    }
+}
+
+registerClass("LocalExtensionDirective", LocalExtensionDirective);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class ResourceFile extends EezObject {
     filePath: string;
 
@@ -783,6 +838,7 @@ export class General extends EezObject {
     commandsDocFolder?: string;
     masterProject: string;
     extensions: ExtensionDirective[];
+    localExtensions: LocalExtensionDirective[];
     imports: ImportDirective[];
     flowSupport: boolean;
     displayWidth: number;
@@ -948,6 +1004,19 @@ export class General extends EezObject {
                 enumerable: false,
                 formText:
                     "After adding an extension, you need to reload the project to see the changes. To reload the project select 'Reload Project' from the 'File' menu.",
+                disabled: (general: General) =>
+                    ProjectEditor.getProject(general).projectTypeTraits.isIEXT
+            },
+            {
+                name: "localExtensions",
+                displayName: "Local extensions",
+                type: PropertyType.Array,
+                typeClass: LocalExtensionDirective,
+                defaultValue: [],
+                partOfNavigation: false,
+                enumerable: false,
+                formText:
+                    "Extensions loaded from a folder relative to the project file, so they can be versioned with the project. After adding or changing a local extension, reload the project ('Reload Project' from the 'File' menu). As with installed extensions, changes to the extension code are picked up after restarting EEZ Studio.",
                 disabled: (general: General) =>
                     ProjectEditor.getProject(general).projectTypeTraits.isIEXT
             },
@@ -1331,6 +1400,7 @@ export class General extends EezObject {
             commandsDocFolder: observable,
             masterProject: observable,
             extensions: observable,
+            localExtensions: observable,
             imports: observable,
             flowSupport: observable,
             displayWidth: observable,
