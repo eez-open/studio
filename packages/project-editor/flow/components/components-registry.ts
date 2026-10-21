@@ -39,10 +39,13 @@ export function getAllComponentClasses(
                 objectClassInfo.objectClass.classInfo.flowComponentId !=
                     undefined ||
                 (projectStore.projectTypeTraits.isLVGL &&
-                    isProperSubclassOf(
+                    (isProperSubclassOf(
                         objectClassInfo.objectClass.classInfo,
                         ProjectEditor.WidgetClass.classInfo
-                    ))
+                    ) ||
+                        projectStore.importedActionComponentClasses.has(
+                            objectClassInfo.name
+                        )))
             );
         }
 
