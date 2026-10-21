@@ -53,9 +53,14 @@ import {
     getArrayElementTypeFromType,
     isEnumType,
     getEnumTypeNameFromType,
-    objectVariableTypes
+    objectVariableTypes,
+    getSystemEnums,
+    getTypeShortName
 } from "project-editor/features/variable/value-type";
-import type { Structure } from "project-editor/features/variable/variable";
+import type {
+    IEnum,
+    IStructure
+} from "project-editor/features/variable/variable";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 function getComponentName(componentType: IObjectClassInfo) {
@@ -791,6 +796,18 @@ export function buildFlowDefs(assets: Assets) {
     return defs.join("\n\n");
 }
 
+function getCTypeName(name: string) {
+    return getTypeShortName(name).replace(/[^a-zA-Z_0-9]/g, "_");
+}
+
+// project and extension structures, without system structures
+function getFlowStructures(assets: Assets) {
+    const systemStructures = new Set<IStructure>(SYSTEM_STRUCTURES);
+    return [
+        ...assets.projectStore.project.variables.structsMap.values()
+    ].filter(structure => !systemStructures.has(structure));
+}
+
 export function buildFlowStructs(assets: Assets) {
     if (
         assets.projectStore.projectTypeTraits.isLVGL &&
@@ -801,9 +818,11 @@ export function buildFlowStructs(assets: Assets) {
 
     const defs = [];
 
+    const structures = getFlowStructures(assets);
+
     // enum FlowStructures
     const structureEnumItems = [];
-    for (const structure of assets.projectStore.project.variables.structures) {
+    for (const structure of structures) {
         structureEnumItems.push(
             `${TAB}${getName(
                 "FLOW_STRUCTURE_",
@@ -823,7 +842,7 @@ export function buildFlowStructs(assets: Assets) {
 
     // enum FlowArrayOfStructures
     const arrayOfStructureEnumItems = [];
-    for (const structure of assets.projectStore.project.variables.structures) {
+    for (const structure of structures) {
         arrayOfStructureEnumItems.push(
             `${TAB}${getName(
                 "FLOW_ARRAY_OF_STRUCTURE_",
@@ -842,7 +861,7 @@ export function buildFlowStructs(assets: Assets) {
         );
     }
 
-    for (const structure of assets.projectStore.project.variables.structures) {
+    for (const structure of structures) {
         const fieldEnumItems = [];
         for (const field of structure.fields) {
             fieldEnumItems.push(
@@ -870,9 +889,9 @@ export function buildFlowStructs(assets: Assets) {
         );
 
         defs.push(
-            `enum ${structure.name}FlowStructureFields {\n${fieldEnumItems.join(
-                ",\n"
-            )}\n};`
+            `enum ${getCTypeName(
+                structure.name
+            )}FlowStructureFields {\n${fieldEnumItems.join(",\n")}\n};`
         );
     }
 
@@ -893,7 +912,7 @@ export function buildFlowStructValues(assets: Assets) {
 
     const builded = new Set<string>();
 
-    function buildStructure(structure: Structure) {
+    function buildStructure(structure: IStructure) {
         if (builded.has(structure.name)) {
             return;
         }
@@ -906,7 +925,7 @@ export function buildFlowStructValues(assets: Assets) {
                 field.type
             );
             if (fieldStructure) {
-                buildStructure(fieldStructure as Structure);
+                buildStructure(fieldStructure);
             } else {
                 const elementType = getArrayElementTypeFromType(field.type);
                 if (elementType) {
@@ -915,20 +934,22 @@ export function buildFlowStructValues(assets: Assets) {
                         elementType
                     );
                     if (fieldStructure) {
-                        buildStructure(fieldStructure as Structure);
+                        buildStructure(fieldStructure);
                     }
                 }
             }
         }
 
-        build.line(`struct ${structure.name}Value {`);
+        const typeName = getCTypeName(structure.name);
+
+        build.line(`struct ${typeName}Value {`);
         build.indent();
 
         build.line(`Value value;`);
 
         build.line("");
 
-        build.line(`${structure.name}Value() {`);
+        build.line(`${typeName}Value() {`);
         build.indent();
 
         build.line(
@@ -948,7 +969,7 @@ export function buildFlowStructValues(assets: Assets) {
 
         build.line("");
 
-        build.line(`${structure.name}Value(Value value) : value(value) {}`);
+        build.line(`${typeName}Value(Value value) : value(value) {}`);
 
         build.line("");
 
@@ -995,7 +1016,9 @@ export function buildFlowStructValues(assets: Assets) {
                 get = ".getString()";
                 set = `StringValue(${field.name})`;
             } else if (isEnumType(field.type)) {
-                const enumType = getEnumTypeNameFromType(field.type);
+                const enumType = getCTypeName(
+                    getEnumTypeNameFromType(field.type)!
+                );
                 nativeType = `${enumType} `;
                 get = ".getInt()";
                 set = `IntegerValue((int)${field.name})`;
@@ -1003,8 +1026,8 @@ export function buildFlowStructValues(assets: Assets) {
             } else if (isArrayType(field.type)) {
                 const elementType = getArrayElementTypeFromType(field.type)!;
                 if (isStructType(elementType)) {
-                    nativeType = `ArrayOf${getStructTypeNameFromType(
-                        elementType
+                    nativeType = `ArrayOf${getCTypeName(
+                        getStructTypeNameFromType(elementType)!
                     )}Value `;
                     get = "";
                     set = `${field.name}.value`;
@@ -1034,7 +1057,9 @@ export function buildFlowStructValues(assets: Assets) {
                     set = `${field.name}`;
                 }
             } else if (isStructType(field.type)) {
-                nativeType = `${getStructTypeNameFromType(field.type)}Value `;
+                nativeType = `${getCTypeName(
+                    getStructTypeNameFromType(field.type)!
+                )}Value `;
                 get = "";
                 set = `${field.name}`;
             } else {
@@ -1068,15 +1093,15 @@ export function buildFlowStructValues(assets: Assets) {
         build.line("");
 
         build.line(
-            `typedef ArrayOf<${structure.name}Value, ${getName(
+            `typedef ArrayOf<${typeName}Value, ${getName(
                 "FLOW_ARRAY_OF_STRUCTURE_",
                 structure.name,
                 NamingConvention.UnderscoreUpperCase
-            )}> ArrayOf${structure.name}Value;`
+            )}> ArrayOf${typeName}Value;`
         );
     }
 
-    for (const structure of assets.projectStore.project.variables.structures) {
+    for (const structure of getFlowStructures(assets)) {
         buildStructure(structure);
     }
 
@@ -1086,18 +1111,20 @@ export function buildFlowStructValues(assets: Assets) {
 export function buildFlowEnums(assets: Assets) {
     const defs: string[] = [];
 
-    for (const enumObject of assets.projectStore.project.variables.enums) {
+    const systemEnums = new Set<IEnum>(getSystemEnums(assets.projectStore));
+    const enums = [
+        ...new Set(assets.projectStore.project.variables.enumsMap.values())
+    ].filter(enumDef => !systemEnums.has(enumDef));
+
+    for (const enumObject of enums) {
+        const typeName = getCTypeName(enumObject.name);
         const enumItems: string[] = [];
 
         for (const item of enumObject.members) {
-            enumItems.push(
-                `${TAB}${enumObject.name}_${item.name} = ${item.value}`
-            );
+            enumItems.push(`${TAB}${typeName}_${item.name} = ${item.value}`);
         }
 
-        defs.push(
-            `typedef enum {\n${enumItems.join(",\n")}\n} ${enumObject.name};`
-        );
+        defs.push(`typedef enum {\n${enumItems.join(",\n")}\n} ${typeName};`);
     }
 
     return defs.join("\n\n");
