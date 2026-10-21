@@ -4750,7 +4750,21 @@ export function createActionComponentClass(
                 actionComponentDefinition.componentHeaderColor,
             componentPaletteGroupName,
             execute: actionComponentDefinition.execute,
-            isNative: actionComponentDefinition.isNative
+            isNative: actionComponentDefinition.isNative,
+            check: (component: Component, messages: IMessage[]) => {
+                if (
+                    getProjectStore(component).projectTypeTraits.isLVGL &&
+                    !actionComponentDefinition.isNative
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            "Component is not implemented for the build target",
+                            component
+                        )
+                    );
+                }
+            }
         });
 
         override makeEditable() {

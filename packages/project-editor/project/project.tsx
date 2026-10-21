@@ -69,6 +69,7 @@ import { createProjectTypeTraits } from "./project-type-traits";
 import type { LVGLStyle, LVGLStyles } from "project-editor/lvgl/style";
 import { Assets } from "project-editor/project/assets";
 import { getProject } from "project-editor/project/helper";
+import { getTypeShortName } from "project-editor/features/variable/value-type";
 import { ImportDirectiveCustomUI } from "project-editor/project/ui/AssetsUsage";
 import { observer } from "mobx-react";
 import { extensions } from "eez-studio-shared/extensions/extensions";
@@ -1205,6 +1206,41 @@ export class General extends EezObject {
                             getChildOfObject(general, "displayHeight")
                         )
                     );
+                }
+            }
+
+            for (const error of projectStore.extensionErrors) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        error,
+                        getChildOfObject(general, "extensions")
+                    )
+                );
+            }
+
+            const project = getProject(general);
+            for (const [types, importedTypes] of [
+                [project.variables?.enums ?? [], projectStore.importedEnums],
+                [
+                    project.variables?.structures ?? [],
+                    projectStore.importedStructures
+                ]
+            ] as [{ name: string }[], Map<string, { name: string }>][]) {
+                for (const type of types) {
+                    const importedType = [...importedTypes.values()].find(
+                        importedType =>
+                            getTypeShortName(importedType.name) == type.name
+                    );
+                    if (importedType) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `Type "${type.name}" conflicts with "${importedType.name}"`,
+                                getChildOfObject(general, "extensions")
+                            )
+                        );
+                    }
                 }
             }
         },
