@@ -1521,7 +1521,6 @@ export class ProjectStore {
         //
         // build objectVariableTypes
         //
-        this.objectVariableTypes = new Map<string, IObjectVariableType>();
 
         const globalObjectVariableTypes = objectVariableTypes;
 
@@ -1543,10 +1542,6 @@ export class ProjectStore {
         //
         // build importedActionComponentClasses
         //
-        this.importedActionComponentClasses = new Map<
-            string,
-            typeof ActionComponent
-        >();
 
         // insert action component classes from imported extensions
         for (const extensionContent of extensionContents) {
