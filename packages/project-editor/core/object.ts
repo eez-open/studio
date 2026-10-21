@@ -304,6 +304,11 @@ export interface PropertyInfo {
     hideElementIndexInPropertyGrid?: boolean;
 
     noColSpanForArray?: boolean;
+
+    // widget property which value can be different in each page layout
+    // (see PageLayout), the values which are different from the default
+    // are stored in the Widget.layoutProperties
+    layoutSpecific?: boolean;
 }
 
 export type InheritedValue =

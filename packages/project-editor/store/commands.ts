@@ -203,6 +203,24 @@ export let updateObject = action((object: IEezObject, values: any) => {
         updateObjectValueHook(object, values);
     }
 
+    // values of the layout specific widget properties are changed in the page
+    // layout selected in the editor
+    if (ProjectEditor.isPageLayoutUpdate(object, values)) {
+        if (!undoManager.combineCommands) {
+            undoManager.setCombineCommands(true);
+            closeCombineCommands = true;
+        }
+
+        values = ProjectEditor.updatePageLayoutValues(object, values);
+
+        if (Object.keys(values).length == 0) {
+            if (closeCombineCommands) {
+                undoManager.setCombineCommands(false);
+            }
+            return;
+        }
+    }
+
     let previousCommand;
 
     // TODO this should be moved to undoManager implementation

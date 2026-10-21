@@ -7,11 +7,15 @@ import { humanize } from "eez-studio-shared/string";
 
 import { PropertyProps } from "project-editor/core/object";
 import { getPropertySourceInfo, objectToString } from "project-editor/store";
+import { getPageLayoutPropertySourceInfo } from "project-editor/features/page/page-layouts";
 
 export const PropertyMenu = observer(
     class PropertyMenu extends React.Component<PropertyProps> {
         get sourceInfo() {
-            return getPropertySourceInfo(this.props);
+            return (
+                getPageLayoutPropertySourceInfo(this.props) ??
+                getPropertySourceInfo(this.props)
+            );
         }
 
         onClicked = (event: React.MouseEvent) => {
@@ -50,10 +54,14 @@ export const PropertyMenu = observer(
         };
 
         render() {
-            let title = humanize(this.sourceInfo.source);
-            if (this.sourceInfo.inheritedFrom) {
-                title +=
-                    " from " + objectToString(this.sourceInfo.inheritedFrom);
+            let title = this.sourceInfo.title;
+            if (title == undefined) {
+                title = humanize(this.sourceInfo.source);
+                if (this.sourceInfo.inheritedFrom) {
+                    title +=
+                        " from " +
+                        objectToString(this.sourceInfo.inheritedFrom);
+                }
             }
 
             return (

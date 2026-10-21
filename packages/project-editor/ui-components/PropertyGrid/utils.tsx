@@ -18,13 +18,25 @@ import {
 
 import { isArray } from "eez-studio-shared/util";
 
+import { getEditorLayoutPropertyValue } from "project-editor/features/page/page-layouts";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function getObjectPropertyValue(
     object: IEezObject,
     propertyInfo: PropertyInfo
 ) {
-    let value = (object as any)[propertyInfo.name];
+    let value;
+
+    if (propertyInfo.layoutSpecific) {
+        // value in the page layout selected in the editor
+        value = getEditorLayoutPropertyValue(object, propertyInfo.name);
+        if (value === undefined) {
+            value = propertyInfo.defaultValue;
+        }
+    } else {
+        value = (object as any)[propertyInfo.name];
+    }
 
     if (value === undefined && propertyInfo.inheritable) {
         let inheritedValue = getInheritedValue(object, propertyInfo.name);

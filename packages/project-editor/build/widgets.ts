@@ -32,17 +32,29 @@ export function buildWidget(
     }
     dataBuffer.writeInt16(action);
 
+    // position and size in the page layout which is built
+    let width;
+    let height;
+    if (object instanceof ProjectEditor.WidgetClass) {
+        width = assets.getPropertyValue(object, "width");
+        height = assets.getPropertyValue(object, "height");
+    } else {
+        const pageLayout = assets.getObjectPageLayout(object);
+        width = pageLayout ? pageLayout.width : object.width;
+        height = pageLayout ? pageLayout.height : object.height;
+    }
+
     // x
-    dataBuffer.writeInt16(object.left || 0);
+    dataBuffer.writeInt16(assets.getPropertyValue(object, "left") || 0);
 
     // y
-    dataBuffer.writeInt16(object.top || 0);
+    dataBuffer.writeInt16(assets.getPropertyValue(object, "top") || 0);
 
     // width
-    dataBuffer.writeInt16(object.width || 0);
+    dataBuffer.writeInt16(width || 0);
 
     // height
-    dataBuffer.writeInt16(object.height || 0);
+    dataBuffer.writeInt16(height || 0);
 
     // style
     dataBuffer.writeInt16(assets.getStyleIndex(object, "style"));
@@ -50,9 +62,10 @@ export function buildWidget(
     // flags
     let flags = 0;
     if (object instanceof ProjectEditor.WidgetClass) {
-        if (object.resizing) {
-            flags |= object.resizing.pinToEdge;
-            flags |= object.resizing.fixSize << 4;
+        const resizing = assets.getPropertyValue(object, "resizing");
+        if (resizing) {
+            flags |= resizing.pinToEdge;
+            flags |= resizing.fixSize << 4;
         }
     }
     dataBuffer.writeUint16(flags);

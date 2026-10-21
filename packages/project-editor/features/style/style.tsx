@@ -17,7 +17,8 @@ import {
     PropertyProps,
     getParent,
     IMessage,
-    getKey
+    getKey,
+    setParent
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -64,6 +65,7 @@ import {
 } from "project-editor/flow/component";
 import { checkExpression } from "project-editor/flow/expression";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
+import type { PageLayout } from "project-editor/features/page/page";
 import { ColorFormat } from "./color-format";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2260,6 +2262,103 @@ export class Style extends EezObject {
 }
 
 registerClass("Style", Style);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// widget style properties that can be changed in the page layout
+const pageLayoutStyleProperties = properties.filter(
+    propertyInfo =>
+        (propertyInfo.inheritable || propertyInfo == useStyleProperty) &&
+        propertyInfo.type != PropertyType.Array &&
+        propertyInfo.type != PropertyType.Object
+);
+
+function definePageLayoutStyleProperties(
+    style: Style,
+    getValue: (propertyName: string) => any
+) {
+    for (const propertyInfo of pageLayoutStyleProperties) {
+        Object.defineProperty(style, propertyInfo.name, {
+            get: () => getValue(propertyInfo.name),
+            enumerable: true,
+            configurable: true
+        });
+    }
+}
+
+// Style of the widget in the page layout (see PageLayout). The values changed
+// in the page layout (stored in the Widget.layoutProperties) are the own values
+// of this style and all other values are inherited from the widget style.
+// This style is not part of the project, changes are stored by the
+// updatePageLayoutValues.
+export class PageLayoutStyle extends Style {
+    private baseStyleWithLayoutUseStyle: Style | undefined;
+
+    constructor(
+        public widget: Widget,
+        public stylePropertyName: string,
+        public pageLayout: PageLayout,
+        private isApplyToAllLayouts: () => boolean
+    ) {
+        super();
+
+        definePageLayoutStyleProperties(this, propertyName => {
+            const value = this.pageLayoutValues?.[propertyName];
+            if (value !== undefined) {
+                return value;
+            }
+
+            // when the changes are applied to all page layouts, the widget
+            // style is edited
+            if (this.isApplyToAllLayouts()) {
+                return (this.baseStyle as any)[propertyName];
+            }
+
+            // if not changed in the page layout, the style used by the widget
+            // style is used (see parentStyle)
+            if (propertyName == "useStyle") {
+                return this.baseStyle.useStyle;
+            }
+
+            return undefined;
+        });
+
+        setParent(this, widget);
+    }
+
+    get baseStyle(): Style {
+        return (this.widget as any)[this.stylePropertyName];
+    }
+
+    get pageLayoutValues(): { [propertyName: string]: any } | undefined {
+        return this.widget.layoutProperties?.[this.pageLayout.name]?.[
+            this.stylePropertyName
+        ];
+    }
+
+    override get parentStyle(): Style | undefined {
+        if (this.pageLayoutValues?.useStyle === undefined) {
+            return this.baseStyle;
+        }
+
+        // widget style inherits from the style selected in the page layout
+        if (!this.baseStyleWithLayoutUseStyle) {
+            const style = new Style();
+
+            definePageLayoutStyleProperties(style, propertyName =>
+                propertyName == "useStyle"
+                    ? this.pageLayoutValues?.useStyle
+                    : (this.baseStyle as any)[propertyName]
+            );
+
+            setParent(style, this.widget);
+
+            this.baseStyleWithLayoutUseStyle = style;
+        }
+
+        return this.baseStyleWithLayoutUseStyle;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

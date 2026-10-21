@@ -16,6 +16,10 @@ import { strokeWidth } from "project-editor/flow/connection-line/ConnectionLineC
 import { DragAndDropManager } from "project-editor/core/dd";
 import { resizeWidget } from "./resizing-widget-property";
 import { getBooleanValue } from "project-editor/flow/helper";
+import {
+    getEditorLayoutPropertyValue,
+    isWidgetVisibleInEditorLayout
+} from "project-editor/features/page/page-layouts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -88,7 +92,7 @@ export const ComponentsContainerEnclosure = observer(
                             width: this.props.width,
                             height: this.props.height
                         },
-                        component.resizing
+                        getEditorLayoutPropertyValue(component, "resizing")
                     );
 
                     ({ left, top, width, height } = rect);
@@ -268,7 +272,10 @@ export const ComponentEnclosure = observer(
                         return null;
                     }
                 } else {
-                    if (component.hiddenInEditor) {
+                    if (
+                        component.hiddenInEditor ||
+                        !isWidgetVisibleInEditorLayout(component)
+                    ) {
                         return null;
                     }
                 }
@@ -530,12 +537,13 @@ export function calcComponentGeometry(
         };
     }
 
+    // size in the page layout selected in the editor
     if (!(component.autoSize == "width" || component.autoSize == "both")) {
-        rect.width = component.width;
+        rect.width = getEditorLayoutPropertyValue(component, "width");
     }
 
     if (!(component.autoSize == "height" || component.autoSize == "both")) {
-        rect.height = component.height;
+        rect.height = getEditorLayoutPropertyValue(component, "height");
     }
 
     const inputs: PortsGeometry = {};

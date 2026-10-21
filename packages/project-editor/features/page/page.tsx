@@ -3,11 +3,16 @@ import { observable, computed, makeObservable } from "mobx";
 import classNames from "classnames";
 import { observer } from "mobx-react";
 
+import type { Rect } from "eez-studio-shared/geometry";
+
 import {
     IEezObject,
+    EezObject,
+    ClassInfo,
     registerClass,
     PropertyType,
     getId,
+    getParent,
     makeDerivedClassInfo,
     MessageType,
     PropertyInfo,
@@ -23,7 +28,8 @@ import {
     getLabel,
     Message,
     propertyInvalidValueMessage,
-    propertyNotFoundMessage
+    propertyNotFoundMessage,
+    propertyNotSetMessage
 } from "project-editor/store";
 import {
     hasFlowSupport,
@@ -84,6 +90,16 @@ import { PAGES_ICON } from "project-editor/ui-components/icons";
 import { ProjectContext } from "project-editor/project/context";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { EezGuiLitePage } from "project-editor/eez-gui-lite/Page";
+import {
+    deletePageLayout,
+    findPageLayoutPage,
+    getEditorPageLayout,
+    getPageLayoutPageName,
+    getPageLayouts,
+    getPageOfPageLayout,
+    isPageLayoutsSupported,
+    renamePageLayout
+} from "project-editor/features/page/page-layouts";
 
 export const FLOW_FRAGMENT_PAGE_NAME = "$FlowFragment";
 
@@ -96,6 +112,168 @@ export interface ICustomWidgetCreateParams {
     width: number;
     height: number;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+const MAX_PAGE_WIDTH = 4096;
+const MAX_PAGE_HEIGHT = 4096;
+
+// The same page (with all its widgets) for the different page size. Layout
+// specific widget properties (see PropertyInfo.layoutSpecific) can be changed
+// in each page layout and one page is built for each page layout.
+export class PageLayout extends EezObject {
+    name: string;
+    width: number;
+    height: number;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                unique: true
+            },
+            {
+                name: "width",
+                type: PropertyType.Number
+            },
+            {
+                name: "height",
+                type: PropertyType.Number
+            }
+        ],
+
+        label: (pageLayout: PageLayout) =>
+            `${pageLayout.name} (${pageLayout.width} x ${pageLayout.height})`,
+
+        newItem: async (parent: IEezObject) => {
+            const page = getParent(parent) as Page;
+            const project = ProjectEditor.getProject(page);
+
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New Page Layout",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        },
+                        {
+                            name: "width",
+                            type: "number",
+                            validators: [
+                                validators.rangeInclusive(1, MAX_PAGE_WIDTH)
+                            ]
+                        },
+                        {
+                            name: "height",
+                            type: "number",
+                            validators: [
+                                validators.rangeInclusive(1, MAX_PAGE_HEIGHT)
+                            ]
+                        }
+                    ]
+                },
+                values: {
+                    name: "",
+                    width: page.width,
+                    height: page.height
+                }
+            });
+
+            return createObject<PageLayout>(
+                project._store,
+                {
+                    name: result.values.name,
+                    width: result.values.width,
+                    height: result.values.height
+                },
+                PageLayout
+            );
+        },
+
+        check: (pageLayout: PageLayout, messages: IMessage[]) => {
+            const page = getPageOfPageLayout(pageLayout);
+            if (!isPageLayoutsSupported(page)) {
+                return;
+            }
+
+            if (!pageLayout.name) {
+                messages.push(propertyNotSetMessage(pageLayout, "name"));
+            } else {
+                const project = ProjectEditor.getProject(page);
+                const pageName = getPageLayoutPageName(page, pageLayout);
+
+                if (
+                    project.pages.find(page => page.name == pageName) ||
+                    findPageLayoutPage(project, pageName)?.pageLayout !=
+                        pageLayout
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Page "${pageName}" built for this layout already exists`,
+                            getChildOfObject(pageLayout, "name")
+                        )
+                    );
+                }
+            }
+
+            if (
+                !(pageLayout.width >= 1 && pageLayout.width <= MAX_PAGE_WIDTH)
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Width must be between 1 and ${MAX_PAGE_WIDTH}`,
+                        getChildOfObject(pageLayout, "width")
+                    )
+                );
+            }
+
+            if (
+                !(
+                    pageLayout.height >= 1 &&
+                    pageLayout.height <= MAX_PAGE_HEIGHT
+                )
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Height must be between 1 and ${MAX_PAGE_HEIGHT}`,
+                        getChildOfObject(pageLayout, "height")
+                    )
+                );
+            }
+        },
+
+        updateObjectValueHook: (pageLayout: PageLayout, values: any) => {
+            if (values.name != undefined) {
+                renamePageLayout(pageLayout, values.name);
+            }
+        },
+
+        deleteObjectRefHook: (pageLayout: PageLayout) => {
+            deletePageLayout(pageLayout);
+        }
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            name: observable,
+            width: observable,
+            height: observable
+        });
+    }
+}
+
+registerClass("PageLayout", PageLayout);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -166,6 +344,12 @@ export const GeometryProperties = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// If the page has the page layouts then the page size is defined by each page
+// layout, and the page's own position and size are not shown.
+function isPageGeometryHidden(page: Page) {
+    return isLVGLProject(page) || getPageLayouts(page).length > 0;
+}
+
 export class Page extends Flow {
     id: number | undefined;
     name: string;
@@ -178,6 +362,8 @@ export class Page extends Flow {
     top: number;
     width: number;
     height: number;
+
+    layouts?: PageLayout[];
 
     scaleToFit: boolean;
 
@@ -234,6 +420,7 @@ export class Page extends Flow {
             top: observable,
             width: observable,
             height: observable,
+            layouts: observable,
             scaleToFit: observable,
             allowOverlappingChildren: observable,
             isUsedAsUserWidget: observable,
@@ -316,25 +503,37 @@ export class Page extends Flow {
                 name: "left",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: isPageGeometryHidden
             },
             {
                 name: "top",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: isPageGeometryHidden
             },
             {
                 name: "width",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: isPageGeometryHidden
             },
             {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: isPageGeometryHidden
+            },
+            {
+                name: "layouts",
+                type: PropertyType.Array,
+                typeClass: PageLayout,
+                isOptional: true,
+                propertyGridGroup: geometryGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                hideInPropertyGrid: (page: Page) =>
+                    !isPageLayoutsSupported(page),
+                formText: `For each layout a page is built, named as this page with the layout name appended. Select the layout in the toolbar to change the position, size, style and visibility of the widgets in that layout.`
             },
             {
                 name: "geometryProperties",
@@ -733,13 +932,8 @@ export class Page extends Flow {
         }
     });
 
-    get rect() {
-        return {
-            left: this.left,
-            top: this.top,
-            width: this.width,
-            height: this.height
-        };
+    get rect(): Rect {
+        return this.pageRect;
     }
 
     get autoSize(): AutoSize {
@@ -774,12 +968,14 @@ export class Page extends Flow {
         }
     }
 
-    get pageRect() {
+    // in the editor, page has the size of the selected page layout
+    get pageRect(): Rect {
+        const pageLayout = getEditorPageLayout(this);
         return {
             left: this.left,
             top: this.top,
-            width: this.width,
-            height: this.height
+            width: pageLayout ? pageLayout.width : this.width,
+            height: pageLayout ? pageLayout.height : this.height
         };
     }
 
@@ -1062,7 +1258,9 @@ export class Page extends Flow {
         const widgets = assets.projectStore.projectTypeTraits.isDashboard
             ? []
             : (this.components.filter(
-                widget => widget instanceof Widget
+                widget =>
+                    widget instanceof Widget &&
+                    assets.isWidgetVisibleInPageLayout(widget)
             ) as Widget[]);
 
         dataBuffer.writeArray(widgets, widget =>

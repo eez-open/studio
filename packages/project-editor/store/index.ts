@@ -14,6 +14,7 @@ import {
 import type * as MousetrapModule from "mousetrap";
 import update, { Spec } from "immutability-helper";
 
+import { isArray } from "eez-studio-shared/util";
 import { confirmSave } from "eez-studio-shared/util-renderer";
 
 import * as notification from "eez-studio-ui/notification";
@@ -27,6 +28,9 @@ import {
     EezObject,
     PropertyInfo,
     setParent,
+    setKey,
+    getPropertyInfo,
+    setPropertyInfo,
     MessageType
 } from "project-editor/core/object";
 import { CurrentSearch, startNewSearch } from "project-editor/core/search";
@@ -1080,13 +1084,27 @@ export class ProjectStore {
                                 propertyInfo.type === PropertyType.Array) &&
                             value !== undefined
                         ) {
-                            if (!isEezObject(value)) {
+                            if (
+                                !isEezObject(value) ||
+                                // isEezObject is true for any empty array,
+                                // e.g. when the first item is added to the
+                                // optional array
+                                (isArray(value) &&
+                                    value.length == 0 &&
+                                    !getPropertyInfo(value))
+                            ) {
                                 // make an EezObject
                                 value = createObject(
                                     this,
                                     value,
                                     propertyInfo.typeClass!
                                 );
+
+                                if (isArray(value)) {
+                                    // as when the array is loaded
+                                    setKey(value, propertyInfo.name);
+                                    setPropertyInfo(value, propertyInfo);
+                                }
                             }
 
                             setParent(value, object);

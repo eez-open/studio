@@ -150,7 +150,12 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         // backgroundImage
         let backgroundImage: number = 0;
         if (style.backgroundImageProperty) {
-            backgroundImage = assets.getBitmapIndex(style, "backgroundImage");
+            // inherited value, the style of the widget in the page layout
+            // inherits it from the widget style
+            backgroundImage = assets.getBitmapIndex(
+                style,
+                "backgroundImageProperty"
+            );
         }
         dataBuffer.writeInt16(backgroundImage);
     }

@@ -5,6 +5,7 @@ import { observer } from "mobx-react";
 import { Rect } from "eez-studio-shared/geometry";
 
 import { getProperty, PropertyProps } from "project-editor/core/object";
+import { getEditorLayoutPropertyValue } from "project-editor/features/page/page-layouts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -202,7 +203,8 @@ export const ResizingProperty = observer(
         }
 
         get resizing() {
-            return getProperty(
+            // in the page layout selected in the editor
+            return getEditorLayoutPropertyValue(
                 this.props.objects[0],
                 this.props.propertyInfo.name
             ) as IResizing;

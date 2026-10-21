@@ -20,7 +20,11 @@ import type {
     ImportDirective,
     BuildFile
 } from "project-editor/project/project";
-import type { Page } from "project-editor/features/page/page";
+import type { Page, PageLayout } from "project-editor/features/page/page";
+import type {
+    isPageLayoutUpdate,
+    updatePageLayoutValues
+} from "project-editor/features/page/page-layouts";
 import type {
     ActionComponent,
     Component,
@@ -112,7 +116,10 @@ import type {
     EnumMember
 } from "project-editor/features/variable/variable";
 
-import type { Style } from "project-editor/features/style/style";
+import type {
+    Style,
+    PageLayoutStyle
+} from "project-editor/features/style/style";
 import type { evalProperty } from "project-editor/flow/helper";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
@@ -144,6 +151,7 @@ export interface IProjectEditor {
     FlowClass: typeof Flow;
     FlowFragmentClass: typeof FlowFragment;
     PageClass: typeof Page;
+    PageLayoutClass: typeof PageLayout;
     ActionClass: typeof Action;
     ComponentClass: typeof Component;
     ActionComponentClass: typeof ActionComponent;
@@ -169,6 +177,7 @@ export interface IProjectEditor {
     ScpiCommandClass: typeof ScpiCommand;
     ScpiSubsystemClass: typeof ScpiSubsystem;
     StyleClass: typeof Style;
+    PageLayoutStyleClass: typeof PageLayoutStyle;
     BitmapClass: typeof Bitmap;
     FontClass: typeof Font;
     ColorClass: typeof Color;
@@ -226,6 +235,8 @@ export interface IProjectEditor {
     FlowEditorClass: typeof FlowEditor;
     newComponentMenuItem: typeof newComponentMenuItem;
     writeDibModuleMetadata: typeof writeDibModuleMetadata;
+    isPageLayoutUpdate: typeof isPageLayoutUpdate;
+    updatePageLayoutValues: typeof updatePageLayoutValues;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

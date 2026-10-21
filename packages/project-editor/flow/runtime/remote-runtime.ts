@@ -1499,6 +1499,12 @@ export abstract class DebuggerConnectionBase {
                             return;
                         }
 
+                        runInAction(() => {
+                            this.runtime.selectedPageLayoutName =
+                                this.runtime.assetsMap.flows[
+                                    pageId
+                                ].pageLayout;
+                        });
                         this.runtime.selectedPage = page;
                     }
                     break;

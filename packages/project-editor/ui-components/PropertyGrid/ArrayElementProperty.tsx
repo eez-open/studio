@@ -117,12 +117,13 @@ export const ArrayProperty = observer(
             return this.value ?? [];
         }
 
-        onAdd = (event: any) => {
+        onAdd = async (event: any) => {
             event.preventDefault();
 
             this.context.undoManager.setCombineCommands(true);
 
             let value = this.value;
+            let isNewArray = false;
             if (value === undefined) {
                 this.context.updateObject(this.props.objects[0], {
                     [this.props.propertyInfo.name]: []
@@ -131,12 +132,25 @@ export const ArrayProperty = observer(
                 value = (this.props.objects[0] as any)[
                     this.props.propertyInfo.name
                 ] as EezObject[];
+
+                isNewArray = true;
             }
 
             const typeClass = this.props.propertyInfo.typeClass!;
 
             if (typeClass.classInfo.newItem) {
-                addItem(value);
+                let newObject;
+                try {
+                    newObject = await addItem(value);
+                } finally {
+                    this.context.undoManager.setCombineCommands(false);
+                }
+
+                if (!newObject && isNewArray) {
+                    // nothing is added (e.g. dialog is canceled), so remove
+                    // the array that was just created
+                    this.context.undoManager.undo();
+                }
             } else {
                 if (!typeClass.classInfo.defaultValue) {
                     console.error(

@@ -38,7 +38,11 @@ import {
     checkProperty
 } from "project-editor/flow/component";
 
-import { Page } from "project-editor/features/page/page";
+import { Page, PageLayout } from "project-editor/features/page/page";
+import {
+    isPageLayoutUpdate,
+    updatePageLayoutValues
+} from "project-editor/features/page/page-layouts";
 import { Widget } from "project-editor/flow/component";
 import { Glyph } from "project-editor/features/font/font";
 import { Flow, FlowFragment } from "project-editor/flow/flow";
@@ -134,7 +138,7 @@ import {
     EnumMember
 } from "project-editor/features/variable/variable";
 
-import { Style } from "project-editor/features/style/style";
+import { Style, PageLayoutStyle } from "project-editor/features/style/style";
 
 import { evalProperty } from "project-editor/flow/helper";
 import { migrateLvglVersion } from "./lvgl/migrate";
@@ -187,6 +191,7 @@ export function createProjectEditor(
         FlowClass: Flow,
         FlowFragmentClass: FlowFragment,
         PageClass: Page,
+        PageLayoutClass: PageLayout,
         ActionClass: Action,
         ComponentClass: Component,
         ActionComponentClass: ActionComponent,
@@ -212,6 +217,7 @@ export function createProjectEditor(
         ScpiCommandClass: ScpiCommand,
         ScpiSubsystemClass: ScpiSubsystem,
         StyleClass: Style,
+        PageLayoutStyleClass: PageLayoutStyle,
         BitmapClass: Bitmap,
         FontClass: Font,
         ColorClass: Color,
@@ -268,7 +274,9 @@ export function createProjectEditor(
         BuildFileClass: BuildFile,
         FlowEditorClass: FlowEditor,
         newComponentMenuItem,
-        writeDibModuleMetadata
+        writeDibModuleMetadata,
+        isPageLayoutUpdate,
+        updatePageLayoutValues
     };
 
     return projectEditor;

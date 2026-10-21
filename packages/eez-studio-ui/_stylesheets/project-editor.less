@@ -2184,6 +2184,78 @@
     }
 }
 
+// floating over the page editor, at the top center
+.EezStudio_PageLayoutsToolbar {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 4px 10px;
+    border: 1px solid @borderColor;
+    border-radius: 6px;
+    background-color: @panelHeaderColor;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    white-space: nowrap;
+    opacity: 0.85;
+
+    // all the buttons have the same size, i.e. the size of the largest one
+    .btn-group {
+        display: inline-grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        align-items: stretch;
+
+        // buttons have no border, so they are not overlapped as in Bootstrap
+        > .btn.EezStudio_ButtonAction {
+            margin-left: 0;
+        }
+    }
+
+    // page layout rectangle above the page layout name
+    .EezStudio_ButtonAction {
+        flex-direction: column;
+        gap: 3px;
+        padding: 6px 10px;
+    }
+
+    // the rectangle is centered in the space above the name
+    .EezStudio_PageLayoutsToolbar_LayoutRect {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+
+        svg {
+            display: block;
+        }
+    }
+
+    // between the page layout buttons and the switch
+    .EezStudio_PageLayoutsToolbar_Separator {
+        align-self: stretch;
+        width: 1px;
+        background-color: @borderColor;
+    }
+
+    .form-switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        padding-left: 0;
+
+        .form-check-input {
+            float: none;
+            margin: 0;
+        }
+    }
+}
+
 @timelineHeight: 40px;
 @timelineScrollBarSize: 20px;
 @timelineRowHeight: 20px;

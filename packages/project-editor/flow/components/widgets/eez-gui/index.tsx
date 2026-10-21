@@ -40,7 +40,8 @@ import {
     isNotProjectWithFlowSupport,
     isV3OrNewerProject,
     hasNotFlowSupport,
-    hasFlowSupport
+    hasFlowSupport,
+    isEezGuiLiteProject
 } from "project-editor/project/project-type-traits";
 
 import {
@@ -84,6 +85,16 @@ import {
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import type { Rect } from "eez-studio-shared/geometry";
 import { isTimelineEditorActive } from "project-editor/flow/timeline";
+import type { PageLayout } from "project-editor/features/page/page";
+import {
+    getEditorLayoutPropertyValue,
+    getLayoutPropertyValue,
+    getLayoutsPage,
+    getPageLayouts,
+    getWidgetStyleInLayout,
+    isLayoutPropertyChanged,
+    isWidgetShownInLayout
+} from "project-editor/features/page/page-layouts";
 import {
     WIDGET_TYPE_DISPLAY_DATA,
     WIDGET_TYPE_MULTILINE_TEXT,
@@ -257,7 +268,8 @@ export class DisplayDataWidget extends Widget {
                         label: "Integer, unit and fraction"
                     }
                 ],
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                layoutSpecific: true
             },
             {
                 name: "unitAndFractionFont",
@@ -266,8 +278,9 @@ export class DisplayDataWidget extends Widget {
                 referencedObjectCollectionPath: "fonts",
                 propertyGridGroup: specificGroup,
                 hideInPropertyGrid: (widget: DisplayDataWidget) =>
-                    widget.displayOption !=
-                    DisplayOption.IntegerUnitAndFraction
+                    getEditorLayoutPropertyValue(widget, "displayOption") !=
+                    DisplayOption.IntegerUnitAndFraction,
+                layoutSpecific: true
             },
             makeDataPropertyInfo("refreshRate", {
                 disabled: hasNotFlowSupport
@@ -327,8 +340,28 @@ export class DisplayDataWidget extends Widget {
                 }
             }
 
+            // The widget's own unit and fraction font is used if the display
+            // option is "Integer, unit and fraction". With the page layouts,
+            // it is used in the page layouts in which it is not changed.
+            const layoutsPage = getLayoutsPage(object);
             if (
-                object.displayOption === DisplayOption.IntegerUnitAndFraction
+                layoutsPage
+                    ? getPageLayouts(layoutsPage).some(
+                          pageLayout =>
+                              isWidgetShownInLayout(object, pageLayout) &&
+                              getLayoutPropertyValue(
+                                  object,
+                                  "displayOption",
+                                  pageLayout
+                              ) === DisplayOption.IntegerUnitAndFraction &&
+                              !isLayoutPropertyChanged(
+                                  object,
+                                  "unitAndFractionFont",
+                                  pageLayout
+                              )
+                      )
+                    : object.displayOption ===
+                      DisplayOption.IntegerUnitAndFraction
             ) {
                 checkObjectReference(object, "unitAndFractionFont", messages);
             }
@@ -350,13 +383,19 @@ export class DisplayDataWidget extends Widget {
     applyDisplayOption(text: string) {
         text = text.toString();
 
-        if (this.displayOption === DisplayOption.Integer) {
+        // display option in the page layout selected in the editor
+        const displayOption = getEditorLayoutPropertyValue(
+            this,
+            "displayOption"
+        );
+
+        if (displayOption === DisplayOption.Integer) {
             let i = findStartOfFraction(text);
             text = text.substr(0, i);
-        } else if (this.displayOption === DisplayOption.FractionAndUnit) {
+        } else if (displayOption === DisplayOption.FractionAndUnit) {
             let i = findStartOfFraction(text);
             text = text.substr(i);
-        } else if (this.displayOption === DisplayOption.Fraction) {
+        } else if (displayOption === DisplayOption.Fraction) {
             let i = findStartOfFraction(text);
             let k = findStartOfUnit(text);
             if (i < k) {
@@ -364,10 +403,10 @@ export class DisplayDataWidget extends Widget {
             } else {
                 text = ".00";
             }
-        } else if (this.displayOption === DisplayOption.Unit) {
+        } else if (displayOption === DisplayOption.Unit) {
             let i = findStartOfUnit(text);
             text = text.substr(i);
-        } else if (this.displayOption === DisplayOption.IntegerAndFraction) {
+        } else if (displayOption === DisplayOption.IntegerAndFraction) {
             let i = findStartOfUnit(text);
             text = text.substr(0, i);
         }
@@ -415,8 +454,10 @@ export class DisplayDataWidget extends Widget {
                     draw={(ctx: CanvasRenderingContext2D) => {
                         eezGuiDraw.setProject(flowContext.projectStore.project);
                         if (
-                            this.displayOption ===
-                            DisplayOption.IntegerUnitAndFraction
+                            getEditorLayoutPropertyValue(
+                                this,
+                                "displayOption"
+                            ) === DisplayOption.IntegerUnitAndFraction
                         ) {
                             const { integer, unit, fraction } =
                                 this.splitIntegerUnitAndFraction(
@@ -431,10 +472,13 @@ export class DisplayDataWidget extends Widget {
                                 0,
                                 width,
                                 height,
-                                this.style,
+                                this.layoutStyle,
                                 findFont(
                                     getProject(this),
-                                    this.unitAndFractionFont
+                                    getEditorLayoutPropertyValue(
+                                        this,
+                                        "unitAndFractionFont"
+                                    )
                                 )
                             );
                         } else {
@@ -445,7 +489,7 @@ export class DisplayDataWidget extends Widget {
                                 0,
                                 width,
                                 height,
-                                this.style,
+                                this.layoutStyle,
                                 false
                             );
                         }
@@ -466,16 +510,17 @@ export class DisplayDataWidget extends Widget {
             );
         }
 
-        // displayOption
-        dataBuffer.writeUint8(this.displayOption || 0);
+        // displayOption, in the page layout which is built
+        const displayOption = assets.getPropertyValue(this, "displayOption");
+        dataBuffer.writeUint8(displayOption || 0);
 
         // reserved1
         dataBuffer.writeUint8(0);
 
         // unitAndFractionFont
         dataBuffer.writeInt16(
-            this.displayOption == DisplayOption.IntegerUnitAndFraction &&
-                this.unitAndFractionFont
+            displayOption == DisplayOption.IntegerUnitAndFraction &&
+                assets.getPropertyValue(this, "unitAndFractionFont")
                 ? assets.getFontIndex(this, "unitAndFractionFont")
                 : 0
         );
@@ -491,6 +536,7 @@ type TextWidgetFitToContent = "none" | "width" | "height" | "both";
 export class TextWidget extends Widget {
     name: string;
     text?: string;
+    preview: string;
     ignoreLuminocity: boolean;
     focusStyle: Style;
     fitToContent: TextWidgetFitToContent;
@@ -543,6 +589,13 @@ export class TextWidget extends Widget {
                 displayName: "Static text",
                 disabled: isProjectWithFlowSupport
             }),
+            // shown in the editor instead of the data, not built
+            {
+                name: "preview",
+                type: PropertyType.String,
+                propertyGridGroup: specificGroup,
+                disabled: isEezGuiLiteProject
+            },
             {
                 name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
@@ -583,24 +636,27 @@ export class TextWidget extends Widget {
                 value.top ?? widget.rect.top
             );
 
-            if (left !== widget.left) {
+            // compare with the values in the page layout selected in the editor
+            if (left !== getEditorLayoutPropertyValue(widget, "left")) {
                 props.left = left;
             }
 
-            if (top !== widget.top) {
+            if (top !== getEditorLayoutPropertyValue(widget, "top")) {
                 props.top = top;
             }
 
             if (!widget.isFitToContentWidth) {
                 const width = value.width ?? widget.rect.width;
-                if (width !== widget.width) {
+                if (width !== getEditorLayoutPropertyValue(widget, "width")) {
                     props.width = width;
                 }
             }
 
             if (!widget.isFitToContentHeight) {
                 const height = value.height ?? widget.rect.height;
-                if (height !== widget.height) {
+                if (
+                    height !== getEditorLayoutPropertyValue(widget, "height")
+                ) {
                     props.height = height;
                 }
             }
@@ -624,13 +680,15 @@ export class TextWidget extends Widget {
             const isFitHeight = (fitToContent: TextWidgetFitToContent) =>
                 fitToContent == "height" || fitToContent == "both";
 
+            // content size and size in the page layout selected in the editor
             const contentSize = widget.contentSize;
 
             if (
                 (isFitWidth(widget.fitToContent) ||
                     isFitWidth(values.fitToContent)) &&
                 values.width == undefined &&
-                widget.width != contentSize.width
+                getEditorLayoutPropertyValue(widget, "width") !=
+                    contentSize.width
             ) {
                 values.width = contentSize.width;
             }
@@ -639,7 +697,8 @@ export class TextWidget extends Widget {
                 (isFitHeight(widget.fitToContent) ||
                     isFitHeight(values.fitToContent)) &&
                 values.height == undefined &&
-                widget.height != contentSize.height
+                getEditorLayoutPropertyValue(widget, "height") !=
+                    contentSize.height
             ) {
                 values.height = contentSize.height;
             }
@@ -742,6 +801,7 @@ export class TextWidget extends Widget {
         makeObservable(this, {
             name: observable,
             text: observable,
+            preview: observable,
             ignoreLuminocity: observable,
             focusStyle: observable,
             fitToContent: observable,
@@ -758,8 +818,12 @@ export class TextWidget extends Widget {
     }
 
     // text displayed in the editor when there is no runtime,
-    // must be kept in sync with getTextValue
+    // must be kept in sync with getTextValue (and the preview in render)
     get editorText(): string {
+        if (this.preview) {
+            return this.preview;
+        }
+
         const project = ProjectEditor.getProject(this);
 
         if (project.projectTypeTraits.hasFlowSupport) {
@@ -797,9 +861,13 @@ export class TextWidget extends Widget {
         return "<no text>";
     }
 
-    // must be kept in sync with TextWidget_autoSize in eez-framework
+    // in the page layout selected in the editor
     get contentSize() {
-        const style = this.style;
+        return this.getContentSize(this.layoutStyle);
+    }
+
+    // must be kept in sync with TextWidget_autoSize in eez-framework
+    getContentSize(style: Style) {
         const border = style.borderSizeRect;
         const padding = style.paddingRect;
         const font = eezGuiDraw.styleGetFont(style);
@@ -846,6 +914,24 @@ export class TextWidget extends Widget {
         return super.componentHeight;
     }
 
+    override getRectInPageLayout(pageLayout: PageLayout | undefined): Rect {
+        const rect = super.getRectInPageLayout(pageLayout);
+
+        if (this.isFitToContentWidth || this.isFitToContentHeight) {
+            const contentSize = this.getContentSize(
+                getWidgetStyleInLayout(this, "style", pageLayout)
+            );
+            if (this.isFitToContentWidth) {
+                rect.width = contentSize.width;
+            }
+            if (this.isFitToContentHeight) {
+                rect.height = contentSize.height;
+            }
+        }
+
+        return rect;
+    }
+
     override getResizeHandlers(): IResizeHandler[] | undefined | false {
         if (isTimelineEditorActive(this)) {
             return [];
@@ -876,6 +962,7 @@ export class TextWidget extends Widget {
         const jsObject = objectToJS(this);
 
         jsObject.type = "MultilineTextWidget";
+        delete jsObject.preview;
         delete jsObject.ignoreLuminocity;
         delete jsObject.focusStyle;
         delete jsObject.fitToContent;
@@ -897,11 +984,11 @@ export class TextWidget extends Widget {
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         super.styleHook(style, flowContext);
 
-        if (this.style.alignHorizontalProperty == "left") {
+        if (this.layoutStyle.alignHorizontalProperty == "left") {
             style.textAlign = "left";
-        } else if (this.style.alignHorizontalProperty == "center") {
+        } else if (this.layoutStyle.alignHorizontalProperty == "center") {
             style.textAlign = "center";
-        } else if (this.style.alignHorizontalProperty == "right") {
+        } else if (this.layoutStyle.alignHorizontalProperty == "right") {
             style.textAlign = "right";
         }
     }
@@ -911,13 +998,10 @@ export class TextWidget extends Widget {
             return super.render(flowContext, width, height);
         }
 
-        const result = getTextValue(
-            flowContext,
-            this,
-            "data",
-            this.name,
-            this.text
-        );
+        const result =
+            !flowContext.flowState && this.preview
+                ? this.preview
+                : getTextValue(flowContext, this, "data", this.name, this.text);
         let text: string;
         if (typeof result == "object") {
             text = result.text;
@@ -943,7 +1027,7 @@ export class TextWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             false
                         );
                     }}
@@ -1366,7 +1450,7 @@ export class MultilineTextWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             this.firstLineIndent || 0,
                             this.hangingIndent || 0
                         );
@@ -1483,7 +1567,7 @@ export class RectangleWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             invertColors
                         );
                     }}
@@ -1745,7 +1829,7 @@ export class BitmapWidget extends Widget {
 
                         const w = width;
                         const h = height;
-                        const style = this.style;
+                        const style = this.layoutStyle;
 
                         if (bitmap) {
                             const imageElement = bitmap.imageElement;
@@ -1983,7 +2067,7 @@ export class ButtonWidget extends Widget {
             flowContext.flowState ? !this.enabled : true
         );
 
-        let buttonStyle = buttonEnabled ? this.style : this.disabledStyle;
+        let buttonStyle = buttonEnabled ? this.layoutStyle : this.disabledStyle;
 
         const style: React.CSSProperties = {};
         this.styleHook(style, flowContext);
@@ -2121,7 +2205,7 @@ export class ToggleButtonWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             false
                         );
                     }}
@@ -2293,7 +2377,7 @@ export class ButtonGroupWidget extends Widget {
                                         buttonHeight,
                                         i == selectedButton
                                             ? this.selectedStyle
-                                            : this.style,
+                                            : this.layoutStyle,
                                         false
                                     );
                                     x += buttonWidth;
@@ -2307,7 +2391,7 @@ export class ButtonGroupWidget extends Widget {
                                         buttonHeight,
                                         i == selectedButton
                                             ? this.selectedStyle
-                                            : this.style,
+                                            : this.layoutStyle,
                                         false
                                     );
                                 }
@@ -2353,7 +2437,7 @@ export class ButtonGroupWidget extends Widget {
                                         y,
                                         buttonWidth,
                                         labelHeight,
-                                        this.style,
+                                        this.layoutStyle,
                                         false
                                     );
                                 }
@@ -2425,12 +2509,14 @@ export class BarGraphWidget extends Widget {
                     {
                         id: "bottom-top"
                     }
-                ]
+                ],
+                layoutSpecific: true
             },
             {
                 name: "displayValue",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup
+                propertyGridGroup: specificGroup,
+                layoutSpecific: true
             },
             makeDataPropertyInfo("data"),
             makeDataPropertyInfo("line1Data", { displayName: "Threshold1" }),
@@ -2541,7 +2627,13 @@ export class BarGraphWidget extends Widget {
                         eezGuiDraw.setProject(flowContext.projectStore.project);
 
                         let barGraphWidget = this;
-                        let style = barGraphWidget.style;
+                        let style = barGraphWidget.layoutStyle;
+
+                        // orientation in the page layout selected in the editor
+                        const orientation = getEditorLayoutPropertyValue(
+                            barGraphWidget,
+                            "orientation"
+                        );
 
                         let valueText =
                             (barGraphWidget.data &&
@@ -2554,8 +2646,8 @@ export class BarGraphWidget extends Widget {
                             value = 0;
                         }
                         let horizontal =
-                            barGraphWidget.orientation == "left-right" ||
-                            barGraphWidget.orientation == "right-left";
+                            orientation == "left-right" ||
+                            orientation == "right-left";
 
                         let d = horizontal ? width : height;
 
@@ -2572,12 +2664,12 @@ export class BarGraphWidget extends Widget {
 
                         let pos = calcPos(value);
 
-                        if (barGraphWidget.orientation == "left-right") {
+                        if (orientation == "left-right") {
                             eezGuiDraw.setColor(style.colorProperty);
                             eezGuiDraw.fillRect(ctx, 0, 0, pos - 1, height - 1);
                             eezGuiDraw.setColor(style.backgroundColorProperty);
                             eezGuiDraw.fillRect(ctx, pos, 0, width - 1, height - 1);
-                        } else if (barGraphWidget.orientation == "right-left") {
+                        } else if (orientation == "right-left") {
                             eezGuiDraw.setColor(style.backgroundColorProperty);
                             eezGuiDraw.fillRect(
                                 ctx,
@@ -2594,7 +2686,7 @@ export class BarGraphWidget extends Widget {
                                 width - 1,
                                 height - 1
                             );
-                        } else if (barGraphWidget.orientation == "top-bottom") {
+                        } else if (orientation == "top-bottom") {
                             eezGuiDraw.setColor(style.colorProperty);
                             eezGuiDraw.fillRect(ctx, 0, 0, width - 1, pos - 1);
                             eezGuiDraw.setColor(style.backgroundColorProperty);
@@ -2618,7 +2710,12 @@ export class BarGraphWidget extends Widget {
                             );
                         }
 
-                        if (this.displayValue) {
+                        if (
+                            getEditorLayoutPropertyValue(
+                                barGraphWidget,
+                                "displayValue"
+                            )
+                        ) {
                             if (horizontal) {
                                 let textStyle = barGraphWidget.textStyle;
                                 const font = eezGuiDraw.styleGetFont(textStyle);
@@ -2681,14 +2778,14 @@ export class BarGraphWidget extends Widget {
                                 pos = d - 1;
                             }
                             eezGuiDraw.setColor(lineStyle.colorProperty);
-                            if (barGraphWidget.orientation == "left-right") {
+                            if (orientation == "left-right") {
                                 eezGuiDraw.drawVLine(ctx, pos, 0, height - 1);
                             } else if (
-                                barGraphWidget.orientation == "right-left"
+                                orientation == "right-left"
                             ) {
                                 eezGuiDraw.drawVLine(ctx, width - pos, 0, height - 1);
                             } else if (
-                                barGraphWidget.orientation == "top-bottom"
+                                orientation == "top-bottom"
                             ) {
                                 eezGuiDraw.drawHLine(ctx, 0, pos, width - 1);
                             } else {
@@ -2742,9 +2839,9 @@ export class BarGraphWidget extends Widget {
             );
         }
 
-        // orientation
+        // orientation, in the page layout which is built
         let orientation: number;
-        switch (this.orientation) {
+        switch (assets.getPropertyValue(this, "orientation")) {
             case "left-right":
                 orientation = BAR_GRAPH_ORIENTATION_LEFT_RIGHT;
                 break;
@@ -2758,7 +2855,8 @@ export class BarGraphWidget extends Widget {
                 orientation = BAR_GRAPH_ORIENTATION_BOTTOM_TOP;
         }
 
-        if (!this.displayValue) {
+        // displayValue, in the page layout which is built
+        if (!assets.getPropertyValue(this, "displayValue")) {
             orientation |= BAR_GRAPH_DO_NOT_DISPLAY_VALUE;
         }
 
@@ -2871,7 +2969,7 @@ export class YTGraphWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             true
                         );
                     }}
@@ -3155,7 +3253,7 @@ export class YTChartWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             true
                         );
 
@@ -3390,7 +3488,7 @@ export class UpDownWidget extends Widget {
                         eezGuiDraw.setProject(flowContext.projectStore.project);
 
                         let upDownWidget = this;
-                        let style = upDownWidget.style;
+                        let style = upDownWidget.layoutStyle;
                         let buttonsStyle = upDownWidget.buttonsStyle;
 
                         const buttonsFont = eezGuiDraw.styleGetFont(buttonsStyle);
@@ -3594,7 +3692,7 @@ export class ListGraphWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             true
                         );
                     }}
@@ -3767,12 +3865,12 @@ export class ProgressWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             true
                         );
 
                         // draw thumb
-                        eezGuiDraw.setColor(this.style.colorProperty);
+                        eezGuiDraw.setColor(this.layoutStyle.colorProperty);
                         if (isHorizontal) {
                             eezGuiDraw.drawBackground(
                                 ctx,
@@ -3780,7 +3878,7 @@ export class ProgressWidget extends Widget {
                                 0,
                                 (percent * width) / 100 - 1,
                                 height - 1,
-                                this.style,
+                                this.layoutStyle,
                                 false
                             );
                         } else {
@@ -3790,7 +3888,7 @@ export class ProgressWidget extends Widget {
                                 height - (percent * height) / 100,
                                 width - 1,
                                 height - 1,
-                                this.style,
+                                this.layoutStyle,
                                 false
                             );
                         }
@@ -3914,7 +4012,7 @@ export class AppViewWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             true
                         );
                     }}
@@ -4054,7 +4152,7 @@ export class ScrollBarWidget extends Widget {
                             h = height - 2 * buttonSize;
                         }
 
-                        eezGuiDraw.setColor(this.style.colorProperty);
+                        eezGuiDraw.setColor(this.layoutStyle.colorProperty);
                         eezGuiDraw.fillRect(ctx, x, y, x + w - 1, y + h - 1);
 
                         // draw thumb
@@ -4199,7 +4297,7 @@ export class CanvasWidget extends Widget {
                     draw={(ctx: CanvasRenderingContext2D) => {
                         eezGuiDraw.setProject(flowContext.projectStore.project);
 
-                        eezGuiDraw.setColor(this.style.backgroundColorProperty);
+                        eezGuiDraw.setColor(this.layoutStyle.backgroundColorProperty);
                         eezGuiDraw.fillRect(ctx, 0, 0, width - 1, height - 1);
                     }}
                 />
@@ -4841,7 +4939,7 @@ export class LineChartEmbeddedWidget extends Widget {
                                 }
                             };
 
-                            eezGuiDraw.setColor(this.style.borderColorProperty);
+                            eezGuiDraw.setColor(this.layoutStyle.borderColorProperty);
 
                             drawVerticalGrid(
                                 gridRect.y,
@@ -5063,31 +5161,31 @@ export class LineChartEmbeddedWidget extends Widget {
 
                         const marginLeft =
                             this.margin.left +
-                            this.style.borderSizeRect.left +
+                            this.layoutStyle.borderSizeRect.left +
                             Math.max(
-                                this.style.borderRadiusSpec.topLeftX,
-                                this.style.borderRadiusSpec.bottomLeftX
+                                this.layoutStyle.borderRadiusSpec.topLeftX,
+                                this.layoutStyle.borderRadiusSpec.bottomLeftX
                             );
                         const marginTop =
                             this.margin.top +
-                            this.style.borderSizeRect.top +
+                            this.layoutStyle.borderSizeRect.top +
                             Math.max(
-                                this.style.borderRadiusSpec.topLeftY,
-                                this.style.borderRadiusSpec.topRightY
+                                this.layoutStyle.borderRadiusSpec.topLeftY,
+                                this.layoutStyle.borderRadiusSpec.topRightY
                             );
                         const marginRight =
                             Math.max(this.margin.right, legendWidth) +
-                            this.style.borderSizeRect.right +
+                            this.layoutStyle.borderSizeRect.right +
                             Math.max(
-                                this.style.borderRadiusSpec.topRightX,
-                                this.style.borderRadiusSpec.bottomRightX
+                                this.layoutStyle.borderRadiusSpec.topRightX,
+                                this.layoutStyle.borderRadiusSpec.bottomRightX
                             );
                         const marginBottom =
                             this.margin.bottom +
-                            this.style.borderSizeRect.bottom +
+                            this.layoutStyle.borderSizeRect.bottom +
                             Math.max(
-                                this.style.borderRadiusSpec.bottomLeftY,
-                                this.style.borderRadiusSpec.bottomRightY
+                                this.layoutStyle.borderRadiusSpec.bottomLeftY,
+                                this.layoutStyle.borderRadiusSpec.bottomRightY
                             );
 
                         let gridRect = {
@@ -5144,7 +5242,7 @@ export class LineChartEmbeddedWidget extends Widget {
                             widgetRect.y,
                             widgetRect.w,
                             widgetRect.h,
-                            this.style,
+                            this.layoutStyle,
                             true
                         );
 
@@ -5359,7 +5457,7 @@ export class GaugeEmbeddedWidget extends Widget {
 
     override render(flowContext: IFlowContext, width: number, height: number) {
         let widget = this;
-        let style = widget.style;
+        let style = widget.layoutStyle;
 
         // draw border
         function arcBorder(
@@ -5513,7 +5611,7 @@ export class GaugeEmbeddedWidget extends Widget {
             let w = width;
             let h = height;
 
-            eezGuiDraw.drawBackground(ctx, 0, 0, width, height, this.style, true);
+            eezGuiDraw.drawBackground(ctx, 0, 0, width, height, this.layoutStyle, true);
 
             const PADDING_HORZ = 56;
             const TICK_LINE_LENGTH = 5;
@@ -5950,7 +6048,7 @@ export class InputEmbeddedWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             false
                         );
                     }}
@@ -6153,7 +6251,7 @@ export class RollerWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             true
                         );
 
@@ -6264,22 +6362,22 @@ export class SwitchWidget extends Widget {
                     draw={(ctx: CanvasRenderingContext2D) => {
                         eezGuiDraw.setProject(flowContext.projectStore.project);
 
-                        let x = this.style.paddingRect.left;
-                        let y = this.style.paddingRect.top;
+                        let x = this.layoutStyle.paddingRect.left;
+                        let y = this.layoutStyle.paddingRect.top;
                         let w =
                             width -
-                            this.style.paddingRect.left -
-                            this.style.paddingRect.right;
+                            this.layoutStyle.paddingRect.left -
+                            this.layoutStyle.paddingRect.right;
                         let h =
                             height -
-                            this.style.paddingRect.top -
-                            this.style.paddingRect.bottom;
+                            this.layoutStyle.paddingRect.top -
+                            this.layoutStyle.paddingRect.bottom;
 
-                        eezGuiDraw.setColor(this.style.borderColorProperty);
+                        eezGuiDraw.setColor(this.layoutStyle.borderColorProperty);
                         eezGuiDraw.setBackColor(
                             enabled
-                                ? this.style.activeBackgroundColorProperty
-                                : this.style.backgroundColorProperty
+                                ? this.layoutStyle.activeBackgroundColorProperty
+                                : this.layoutStyle.backgroundColorProperty
                         );
                         eezGuiDraw.fillRoundedRect(
                             ctx,
@@ -6287,21 +6385,21 @@ export class SwitchWidget extends Widget {
                             y,
                             x + w - 1,
                             y + h - 1,
-                            this.style.borderSizeRect.left,
+                            this.layoutStyle.borderSizeRect.left,
                             h / 2
                         );
 
-                        h -= 2 * (2 + this.style.borderSizeRect.left);
-                        y += 2 + this.style.borderSizeRect.left;
+                        h -= 2 * (2 + this.layoutStyle.borderSizeRect.left);
+                        y += 2 + this.layoutStyle.borderSizeRect.left;
 
                         if (enabled) {
-                            x += w - h - (1 + this.style.borderSizeRect.left);
+                            x += w - h - (1 + this.layoutStyle.borderSizeRect.left);
                         } else {
-                            x += 1 + this.style.borderSizeRect.left;
+                            x += 1 + this.layoutStyle.borderSizeRect.left;
                         }
                         w = h;
 
-                        eezGuiDraw.setBackColor(this.style.colorProperty);
+                        eezGuiDraw.setBackColor(this.layoutStyle.colorProperty);
                         eezGuiDraw.fillRoundedRect(
                             ctx,
                             x,
@@ -6413,16 +6511,16 @@ export class SliderWidget extends Widget {
                     draw={(ctx: CanvasRenderingContext2D) => {
                         eezGuiDraw.setProject(flowContext.projectStore.project);
 
-                        let x = this.style.paddingRect.left;
-                        let y = this.style.paddingRect.top;
+                        let x = this.layoutStyle.paddingRect.left;
+                        let y = this.layoutStyle.paddingRect.top;
                         let w =
                             width -
-                            this.style.paddingRect.left -
-                            this.style.paddingRect.right;
+                            this.layoutStyle.paddingRect.left -
+                            this.layoutStyle.paddingRect.right;
                         let h =
                             height -
-                            this.style.paddingRect.top -
-                            this.style.paddingRect.bottom;
+                            this.layoutStyle.paddingRect.top -
+                            this.layoutStyle.paddingRect.bottom;
 
                         const barX = x + h / 2.0;
                         const barW = w - h;
@@ -6453,7 +6551,7 @@ export class SliderWidget extends Widget {
                         const knobW = h;
                         const knobH = h;
 
-                        eezGuiDraw.setBackColor(this.style.backgroundColorProperty);
+                        eezGuiDraw.setBackColor(this.layoutStyle.backgroundColorProperty);
                         eezGuiDraw.fillRoundedRect(
                             ctx,
                             barX - barBorderRadius,
@@ -6464,7 +6562,7 @@ export class SliderWidget extends Widget {
                             barBorderRadius
                         );
 
-                        eezGuiDraw.setBackColor(this.style.colorProperty);
+                        eezGuiDraw.setBackColor(this.layoutStyle.colorProperty);
                         eezGuiDraw.fillRoundedRect(
                             ctx,
                             knobX - knobRadius,
@@ -6576,7 +6674,7 @@ export class DropDownListWidget extends Widget {
                             0,
                             width,
                             height,
-                            this.style,
+                            this.layoutStyle,
                             true
                         );
 
@@ -6601,7 +6699,7 @@ export class DropDownListWidget extends Widget {
                             y,
                             w - h + (2 * h) / 6,
                             h,
-                            this.style,
+                            this.layoutStyle,
                             false,
                             undefined,
                             true
@@ -6619,7 +6717,7 @@ export class DropDownListWidget extends Widget {
                         ctx.moveTo(x, y);
                         ctx.lineTo(x + w / 2, y + h);
                         ctx.lineTo(x + w, y);
-                        ctx.strokeStyle = this.style.colorProperty;
+                        ctx.strokeStyle = this.layoutStyle.colorProperty;
                         ctx.lineWidth = h / 3;
                         ctx.stroke();
                     }}
@@ -6727,7 +6825,7 @@ export class QRCodeWidget extends Widget {
         super.styleHook(style, flowContext);
 
         style.backgroundColor = ProjectEditor.getProject(this).toColorBpp(
-            this.style.backgroundColorProperty
+            this.layoutStyle.backgroundColorProperty
         );
     }
 
@@ -6765,8 +6863,8 @@ export class QRCodeWidget extends Widget {
         const svg = QRCodeWidget.toSvgString(
             qr0,
             1,
-            flowContext.projectStore.project.toColorBpp(this.style.backgroundColorProperty),
-            flowContext.projectStore.project.toColorBpp(this.style.colorProperty)
+            flowContext.projectStore.project.toColorBpp(this.layoutStyle.backgroundColorProperty),
+            flowContext.projectStore.project.toColorBpp(this.layoutStyle.colorProperty)
         );
 
         return (

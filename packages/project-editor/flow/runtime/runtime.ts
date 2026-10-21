@@ -32,6 +32,7 @@ import type {
     IRuntime
 } from "project-editor/flow/flow-interfaces";
 import { Page } from "project-editor/features/page/page";
+import { getPageLayouts } from "project-editor/features/page/page-layouts";
 import {
     ActionEndLogItem,
     LogItem,
@@ -85,6 +86,8 @@ export abstract class RuntimeBase implements IRuntime {
     isDebuggerActive = false;
 
     _selectedPage: Page;
+    // if selected page has layouts, the name of the page layout which is shown
+    selectedPageLayoutName: string | undefined;
     selectedFlowState: FlowState | undefined;
     selectedQueueTask: QueueTask | undefined;
 
@@ -133,6 +136,24 @@ export abstract class RuntimeBase implements IRuntime {
         return this._selectedPage;
     }
 
+    // rect of the shown page, page with layouts has the size of the page layout
+    get selectedPageRect() {
+        const page = this.selectedPage;
+        const pageLayout =
+            this.selectedPageLayoutName != undefined
+                ? getPageLayouts(page).find(
+                      pageLayout =>
+                          pageLayout.name == this.selectedPageLayoutName
+                  )
+                : undefined;
+        return {
+            left: page.left,
+            top: page.top,
+            width: pageLayout ? pageLayout.width : page.width,
+            height: pageLayout ? pageLayout.height : page.height
+        };
+    }
+
     selectedPageTimeout: any;
 
     set selectedPage(value: Page) {
@@ -162,6 +183,7 @@ export abstract class RuntimeBase implements IRuntime {
             state: observable,
             isDebuggerActive: observable,
             _selectedPage: observable,
+            selectedPageLayoutName: observable,
             selectedFlowState: observable,
             selectedQueueTask: observable,
             error: observable,

@@ -566,9 +566,10 @@ export function getCommonProperties(
     return properties;
 }
 
-interface PropertyValueSourceInfo {
+export interface PropertyValueSourceInfo {
     source: "" | "default" | "modified" | "inherited";
     inheritedFrom?: IEezObject;
+    title?: string;
 }
 
 export function getPropertySourceInfo(

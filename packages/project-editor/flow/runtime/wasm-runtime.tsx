@@ -698,10 +698,10 @@ export class WasmRuntime extends RemoteRuntime {
             this.displayHeight
         );
 
-        const left = this.selectedPage.left;
-        const top = this.selectedPage.top;
-        const width = this.selectedPage.width;
-        const height = this.selectedPage.height;
+        const left = this.selectedPageRect.left;
+        const top = this.selectedPageRect.top;
+        const width = this.selectedPageRect.width;
+        const height = this.selectedPageRect.height;
 
         this.ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);
         this.ctx.putImageData(
@@ -1361,10 +1361,10 @@ export const WasmCanvas = observer(
 
             var bbox = canvas.getBoundingClientRect();
 
-            const left = wasmRuntime.selectedPage.left;
-            const top = wasmRuntime.selectedPage.top;
-            const width = wasmRuntime.selectedPage.width;
-            const height = wasmRuntime.selectedPage.height;
+            const left = wasmRuntime.selectedPageRect.left;
+            const top = wasmRuntime.selectedPageRect.top;
+            const width = wasmRuntime.selectedPageRect.width;
+            const height = wasmRuntime.selectedPageRect.height;
 
             const x =
                 (event.clientX -

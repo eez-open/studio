@@ -68,6 +68,7 @@ import {
 import { addAlphaToColor } from "eez-studio-shared/color";
 import { visitObjects } from "project-editor/core/search";
 import { evalConstantExpression } from "./expression";
+import { getEditorLayoutPropertyValue } from "project-editor/features/page/page-layouts";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2656,7 +2657,8 @@ export function setWidgetRectInTimelineEditor(
 
             if (
                 keyframe.left.enabled ||
-                newKeyframe.left.value != widget.left
+                newKeyframe.left.value !=
+                    getEditorLayoutPropertyValue(widget, "left")
             ) {
                 changes.left = {
                     enabled: true,
@@ -2667,7 +2669,11 @@ export function setWidgetRectInTimelineEditor(
                 };
             }
 
-            if (keyframe.top.enabled || newKeyframe.top.value != widget.top) {
+            if (
+                keyframe.top.enabled ||
+                newKeyframe.top.value !=
+                    getEditorLayoutPropertyValue(widget, "top")
+            ) {
                 changes.top = {
                     enabled: true,
                     value: newKeyframe.top.value,
@@ -2679,7 +2685,8 @@ export function setWidgetRectInTimelineEditor(
 
             if (
                 keyframe.width.enabled ||
-                newKeyframe.width.value != widget.width
+                newKeyframe.width.value !=
+                    getEditorLayoutPropertyValue(widget, "width")
             ) {
                 changes.width = {
                     enabled: newKeyframe.width.enabled,
@@ -2692,7 +2699,8 @@ export function setWidgetRectInTimelineEditor(
 
             if (
                 keyframe.height.enabled ||
-                newKeyframe.height.value != widget.height
+                newKeyframe.height.value !=
+                    getEditorLayoutPropertyValue(widget, "height")
             ) {
                 changes.height = {
                     enabled: newKeyframe.height.enabled,
@@ -2770,10 +2778,11 @@ export function getTimelineRect(
         project.projectTypeTraits.isFirmware &&
         project.projectTypeTraits.hasFlowSupport;
 
-    let left = widget.left;
-    let top = widget.top;
-    let width = widget.width ?? 0;
-    let height = widget.height ?? 0;
+    // in the page layout selected in the editor
+    let left = getEditorLayoutPropertyValue(widget, "left");
+    let top = getEditorLayoutPropertyValue(widget, "top");
+    let width = getEditorLayoutPropertyValue(widget, "width") ?? 0;
+    let height = getEditorLayoutPropertyValue(widget, "height") ?? 0;
 
     for (const keyframe of widget.timeline) {
         if (timelinePosition < keyframe.start) {
@@ -2914,7 +2923,7 @@ export function getTimelineProperty(
         propertyName == "width" ||
         propertyName == "height"
     ) {
-        value = widget[propertyName] ?? 0;
+        value = getEditorLayoutPropertyValue(widget, propertyName) ?? 0;
     } else {
         if (widget instanceof ProjectEditor.LVGLWidgetClass) {
             const page = ProjectEditor.getPage(widget);

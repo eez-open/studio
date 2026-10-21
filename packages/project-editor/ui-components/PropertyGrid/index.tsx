@@ -24,6 +24,7 @@ import {
 import { isAnyObjectReadOnly } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getPageLayoutPropertySourceInfo } from "project-editor/features/page/page-layouts";
 
 import { Property } from "./Property";
 import { PropertyName } from "./PropertyName";
@@ -169,6 +170,9 @@ export const PropertyGrid = observer(
             if (
                 !readOnly &&
                 (propertyInfo.inheritable ||
+                    // shows if value is changed in the page layout
+                    (propertyInfo.layoutSpecific &&
+                        getPageLayoutPropertySourceInfo(propertyProps)) ||
                     (propertyInfo.propertyMenu &&
                         propertyInfo.propertyMenu(propertyProps).length > 0))
             ) {

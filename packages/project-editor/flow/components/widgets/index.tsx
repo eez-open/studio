@@ -101,7 +101,16 @@ import {
 } from "project-editor/flow/helper";
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 import { getComponentName } from "project-editor/flow/components/components-registry";
-import type { Page } from "project-editor/features/page/page";
+import type { Page, PageLayout } from "project-editor/features/page/page";
+import {
+    getLayoutPropertyValue,
+    getLayoutsPage,
+    getPageLayouts,
+    getUnenclosedWidgetLayoutValues,
+    isWidgetShownInLayout,
+    newPageLayoutMessage,
+    omitLayoutValues
+} from "project-editor/features/page/page-layouts";
 import { visitObjects } from "project-editor/core/search";
 
 import { isArray } from "eez-studio-shared/util";
@@ -546,8 +555,12 @@ export class ContainerWidget extends Widget {
 
         const childJsObjects = this.widgets.map(widget => {
             const jsObject = objectToJS(widget);
-            jsObject.left = widget.left + this.left;
-            jsObject.top = widget.top + this.top;
+            // position relative to the container parent, also in each
+            // page layout
+            Object.assign(
+                jsObject,
+                getUnenclosedWidgetLayoutValues(widget, this)
+            );
             return jsObject;
         });
 
@@ -722,7 +735,7 @@ export class ContainerWidget extends Widget {
             if (this.shadow) {
                 style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
             }
-            style.opacity = this.style.opacityProperty / 255;
+            style.opacity = this.layoutStyle.opacityProperty / 255;
         }
     }
 
@@ -863,7 +876,7 @@ export class ContainerWidget extends Widget {
                                 0,
                                 containerWidth,
                                 containerHeight,
-                                this.style,
+                                this.layoutStyle,
                                 true
                             );
                         }}
@@ -897,8 +910,11 @@ export class ContainerWidget extends Widget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // widgets
-        dataBuffer.writeArray(this.widgets, widget =>
-            buildWidget(widget, assets, dataBuffer)
+        dataBuffer.writeArray(
+            this.widgets.filter(widget =>
+                assets.isWidgetVisibleInPageLayout(widget)
+            ),
+            widget => buildWidget(widget, assets, dataBuffer)
         );
 
         let overlay = assets.getWidgetDataItemIndex(this, "overlay");
@@ -1495,25 +1511,50 @@ export class SelectWidget extends Widget {
                 }
             }
 
-            object.widgets.forEach(childObject => {
-                if (childObject.width != object.width) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            "Child of Select widget has different width",
-                            childObject
-                        )
-                    );
-                }
+            // with the page layouts, the size is compared in each page layout
+            // in which the Select widget is built
+            const layoutsPage = getLayoutsPage(object);
+            const pageLayouts: (PageLayout | undefined)[] = layoutsPage
+                ? getPageLayouts(layoutsPage).filter(pageLayout =>
+                      isWidgetShownInLayout(object, pageLayout)
+                  )
+                : [undefined];
 
-                if (childObject.height != object.height) {
-                    messages.push(
-                        new Message(
-                            MessageType.WARNING,
-                            "Child of Select widget has different height",
-                            childObject
-                        )
-                    );
+            object.widgets.forEach(childObject => {
+                for (const pageLayout of pageLayouts) {
+                    const newMessage = (text: string) =>
+                        pageLayout
+                            ? newPageLayoutMessage(
+                                  MessageType.WARNING,
+                                  `${text} in the "${pageLayout.name}" layout`,
+                                  childObject
+                              )
+                            : new Message(MessageType.WARNING, text, childObject);
+
+                    if (
+                        getLayoutPropertyValue(childObject, "width", pageLayout) !=
+                        getLayoutPropertyValue(object, "width", pageLayout)
+                    ) {
+                        messages.push(
+                            newMessage(
+                                "Child of Select widget has different width"
+                            )
+                        );
+                    }
+
+                    if (
+                        getLayoutPropertyValue(
+                            childObject,
+                            "height",
+                            pageLayout
+                        ) != getLayoutPropertyValue(object, "height", pageLayout)
+                    ) {
+                        messages.push(
+                            newMessage(
+                                "Child of Select widget has different height"
+                            )
+                        );
+                    }
                 }
             });
         }
@@ -1657,7 +1698,7 @@ export class SelectWidget extends Widget {
                                 0,
                                 width,
                                 height,
-                                this.style,
+                                this.layoutStyle,
                                 true
                             );
                         }}
@@ -2118,7 +2159,7 @@ export class UserWidgetWidget extends Widget {
                                 0,
                                 width,
                                 height,
-                                this.style,
+                                this.layoutStyle,
                                 true
                             );
                         }}
@@ -2164,6 +2205,11 @@ export class UserWidgetWidget extends Widget {
             containerWidgetJsObject.top = this.top;
             containerWidgetJsObject.width = this.width;
             containerWidgetJsObject.height = this.height;
+
+            // position, size and visibility in the page layouts
+            containerWidgetJsObject.layoutProperties = omitLayoutValues(this, [
+                "style"
+            ]);
 
             const projectStore = getProjectStore(this);
 

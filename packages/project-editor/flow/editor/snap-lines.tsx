@@ -15,6 +15,7 @@ import { ComponentGroup } from "project-editor/flow/component-group";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects";
+import { isWidgetVisibleInEditorLayout } from "project-editor/features/page/page-layouts";
 import type { EditorFlowContext } from "project-editor/flow/editor/context";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,7 +242,10 @@ export function findSnapLines(
         }
 
         if (node.object instanceof ProjectEditor.WidgetClass) {
-            if (node.object.hiddenInEditor) {
+            if (
+                node.object.hiddenInEditor ||
+                !isWidgetVisibleInEditorLayout(node.object)
+            ) {
                 return;
             }
 
