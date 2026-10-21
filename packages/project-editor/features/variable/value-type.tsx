@@ -702,9 +702,20 @@ export const VariableTypeSelect = observer(
                       )
                     : [];
 
+            const importedEnums = this.props.project.projectTypeTraits
+                .hasFlowSupport
+                ? [...project._store.importedEnums.values()]
+                : [];
+
+            const importedStructures = this.props.project.projectTypeTraits
+                .hasFlowSupport
+                ? [...project._store.importedStructures.values()]
+                : [];
+
             const enumTypes = [
                 ...project.variables.enums,
-                ...getSystemEnums(this.props.project._store)
+                ...getSystemEnums(this.props.project._store),
+                ...importedEnums
             ];
 
             const enums = enumTypes.map(enumDef => (
@@ -724,7 +735,8 @@ export const VariableTypeSelect = observer(
                 ...project.variables.structures,
                 ...(this.props.project.projectTypeTraits.isLVGL
                     ? []
-                    : SYSTEM_STRUCTURES)
+                    : SYSTEM_STRUCTURES),
+                ...importedStructures
             ];
 
             const structures = this.props.project.projectTypeTraits
@@ -789,7 +801,7 @@ export const VariableTypeSelect = observer(
 
             const arrayOfEnums = this.props.project.projectTypeTraits
                 .hasFlowSupport
-                ? project.variables.enums.map(enumDef => (
+                ? [...project.variables.enums, ...importedEnums].map(enumDef => (
                       <li
                           key={enumDef.name}
                           value={addType(`array:enum:${enumDef.name}`)}

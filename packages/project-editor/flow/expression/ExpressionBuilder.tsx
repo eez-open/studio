@@ -42,7 +42,8 @@ import {
     isStructType,
     isObjectType,
     getObjectVariableTypeFromType,
-    getSystemEnums
+    getSystemEnums,
+    getTypeShortName
 } from "project-editor/features/variable/value-type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
@@ -964,7 +965,8 @@ const SelectItemDialog = observer(
 
                 const enumTypes = [
                     ...this.context.project.variables.enums,
-                    ...getSystemEnums(this.context)
+                    ...getSystemEnums(this.context),
+                    ...this.context.importedEnums.values()
                 ];
 
                 if (enumTypes.length) {
@@ -975,7 +977,9 @@ const SelectItemDialog = observer(
                             id: enumeration.name,
                             label: enumeration.name,
                             children: enumeration.members.map(member => {
-                                const data = `${enumeration.name}.${member.name}`;
+                                const data = `${getTypeShortName(
+                                    enumeration.name
+                                )}.${member.name}`;
                                 return {
                                     id: member.name,
                                     label: member.name,
