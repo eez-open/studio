@@ -311,6 +311,9 @@ export interface IActionComponentDefinition {
     migrateProperties?: (component: IActionComponent) => void;
 
     execute?: (context: IDashboardComponentContext) => void;
+
+    // LVGL projects: the component is implemented in the firmware
+    isNative?: boolean;
 }
 
 interface IMessageFromWorker {
@@ -938,12 +941,38 @@ export interface IDashboardComponentContext {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface IExtensionEnumMember {
+    name: string;
+    value: number;
+}
+
+export interface IExtensionEnumDefinition {
+    name: string;
+    members: IExtensionEnumMember[];
+}
+
+export interface IExtensionStructureField {
+    name: string;
+    type: ValueType;
+}
+
+export interface IExtensionStructureDefinition {
+    name: string;
+    fields: IExtensionStructureField[];
+}
+
 export interface IEezFlowEditor {
     registerActionComponent(definition: IActionComponentDefinition): void;
 
     registerObjectVariableType(
         name: string,
         objectVariableType: IObjectVariableType
+    ): void;
+
+    registerEnumVariableType(definition: IExtensionEnumDefinition): void;
+
+    registerStructureVariableType(
+        definition: IExtensionStructureDefinition
     ): void;
 
     showGenericDialog(

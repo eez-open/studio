@@ -478,6 +478,8 @@ export interface ClassInfo {
 
     execute?: (context: IDashboardComponentContext) => void;
 
+    isNative?: boolean;
+
     findChildIndex?: (parent: IEezObject[], child: IEezObject) => number;
 
     widgetEvents?: WidgetEvents | ((object: IEezObject) => WidgetEvents);

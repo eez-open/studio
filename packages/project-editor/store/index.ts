@@ -35,16 +35,17 @@ import {
 } from "project-editor/core/object";
 import { CurrentSearch, startNewSearch } from "project-editor/core/search";
 
-import type { DataContext } from "project-editor/features/variable/variable";
+import type {
+    DataContext,
+    IEnum,
+    IStructure
+} from "project-editor/features/variable/variable";
 
 import type { RuntimeBase } from "project-editor/flow/runtime/runtime";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-import type {
-    ExtensionDirective,
-    Project
-} from "project-editor/project/project";
+import type { Project } from "project-editor/project/project";
 
 import {
     findPropertyByNameInObject,
@@ -91,10 +92,14 @@ import { ActionComponent } from "project-editor/flow/component";
 import {
     AssetsMap,
     IActionComponentDefinition,
-    IObjectVariableType
+    IExtensionEnumDefinition,
+    IExtensionStructureDefinition,
+    IObjectVariableType,
+    ValueType
 } from "eez-studio-types";
 import {
     createObjectVariableType,
+    getTypeShortName,
     objectVariableTypes
 } from "project-editor/features/variable/value-type";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -137,6 +142,73 @@ interface ExtensionContent {
         name: string;
         type: IObjectVariableType;
     }[];
+
+    enums: IEnum[];
+
+    structures: IStructure[];
+}
+
+const EXTENSION_IDENTIFIER_REGEXP = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+function checkExtensionIdentifiers(
+    extensionName: string,
+    typeName: string,
+    members: { name: string }[],
+    errors: string[]
+) {
+    const invalidName = [typeName, ...members.map(member => member.name)].find(
+        name => !EXTENSION_IDENTIFIER_REGEXP.test(name)
+    );
+    if (invalidName == undefined) {
+        return true;
+    }
+    errors.push(
+        `Extension "${extensionName}": "${invalidName}"${
+            invalidName == typeName ? "" : ` in "${typeName}"`
+        } is not a valid identifier`
+    );
+    return false;
+}
+
+// "enum:X" and "struct:X" fields, where X is a type of the same extension,
+// are resolved to "<extension>/X"
+function qualifyExtensionTypes(
+    extensionName: string,
+    extensionContent: ExtensionContent
+) {
+    const typeNames = new Set(
+        [...extensionContent.enums, ...extensionContent.structures].map(type =>
+            getTypeShortName(type.name)
+        )
+    );
+    for (const structure of extensionContent.structures) {
+        for (const field of structure.fields) {
+            const match = field.type.match(/^(array:)?(enum|struct):([^/]+)$/);
+            if (match && typeNames.has(match[3])) {
+                field.type = `${match[1] ?? ""}${match[2]}:${extensionName}/${
+                    match[3]
+                }` as ValueType;
+            }
+        }
+    }
+}
+
+function addImportedTypes<T extends { name: string }>(
+    types: T[],
+    map: Map<string, T>,
+    errors: string[]
+) {
+    for (const type of types) {
+        const shortName = getTypeShortName(type.name);
+        const existing = [...map.values()].find(
+            existing => getTypeShortName(existing.name) == shortName
+        );
+        if (existing) {
+            errors.push(`Type "${type.name}" conflicts with "${existing.name}"`);
+        } else {
+            map.set(type.name, type);
+        }
+    }
 }
 
 type ProjectStoreContext =
@@ -198,6 +270,9 @@ export class ProjectStore {
     extensionNames: string[];
     objectVariableTypes = new Map<string, IObjectVariableType>();
     importedActionComponentClasses = new Map<string, typeof ActionComponent>();
+    importedEnums = new Map<string, IEnum>();
+    importedStructures = new Map<string, IStructure>();
+    extensionErrors: string[] = [];
 
     objectCollapsedStore = observable.box<
         { object: IEezObject; collapsed: Set<IEezObject> }[]
@@ -264,7 +339,10 @@ export class ProjectStore {
             setProject: action,
             setEditorMode: action,
             onSetEditorMode: action,
-            missingExtensionsResolved: observable
+            missingExtensionsResolved: observable,
+            importedEnums: observable.shallow,
+            importedStructures: observable.shallow,
+            extensionErrors: observable.shallow
         });
 
         this.currentSearch = new ProjectEditor.documentSearch.CurrentSearch(
@@ -1438,85 +1516,139 @@ export class ProjectStore {
     }
 
     buildImportedExtensions(project: Project) {
-        // build importedExtensionToExtensionContent
-        const importedExtensionToExtensionContent = new Map<
-            ExtensionDirective,
-            ExtensionContent
-        >();
-
-        const extensionDirectives = project.settings?.general?.extensions;
-        if (extensionDirectives) {
-            for (const extensionDirective of extensionDirectives) {
+        const extensionNames = new Set<string>();
+        for (const openProject of [
+            project,
+            ...this.openProjectsManager.openProjects.map(
+                openProject => openProject.project
+            )
+        ]) {
+            for (const extensionDirective of openProject.settings?.general
+                ?.extensions ?? []) {
                 if (extensionDirective.extensionName) {
-                    const extension = extensions.get(
-                        extensionDirective.extensionName
-                    );
-
-                    if (!extension) {
-                        continue;
-                    }
-
-                    if (!extension.eezFlowExtensionInit) {
-                        continue;
-                    }
-
-                    try {
-                        const extensionContent: ExtensionContent = {
-                            extensionName: extension.name,
-                            actionComponentClasses: [],
-                            objectVariableTypes: []
-                        };
-
-                        extension.eezFlowExtensionInit({
-                            registerActionComponent: (
-                                actionComponentDefinition: IActionComponentDefinition
-                            ) => {
-                                const { className, actionComponentClass } =
-                                    ProjectEditor.createActionComponentClass(
-                                        actionComponentDefinition,
-                                        `${extension.name}/${actionComponentDefinition.name}`
-                                    );
-
-                                if (!className || !actionComponentClass) {
-                                    throw new Error(
-                                        `Failed to create action component class for "${extension.name}/${actionComponentDefinition.name}"`
-                                    );
-                                }
-
-                                extensionContent.actionComponentClasses.push({
-                                    className,
-                                    actionComponentClass
-                                });
-                            },
-
-                            registerObjectVariableType: (
-                                name: string,
-                                objectVariableType: IObjectVariableType
-                            ) => {
-                                extensionContent.objectVariableTypes.push({
-                                    name: `${extension.name}/${name}`,
-                                    type: createObjectVariableType(
-                                        objectVariableType
-                                    )
-                                });
-                            },
-
-                            showGenericDialog,
-
-                            validators: {
-                                required: validators.required,
-                                rangeInclusive: validators.rangeInclusive
-                            }
-                        });
-
-                        importedExtensionToExtensionContent.set(
-                            extensionDirective,
-                            extensionContent
-                        );
-                    } catch (err) {
-                        console.error(err);
-                    }
+                    extensionNames.add(extensionDirective.extensionName);
                 }
+            }
+        }
+
+        const extensionContents: ExtensionContent[] = [];
+        const extensionErrors: string[] = [];
+
+        for (const extensionName of extensionNames) {
+            const extension = extensions.get(extensionName);
+
+            if (!extension) {
+                continue;
+            }
+
+            if (!extension.eezFlowExtensionInit) {
+                continue;
+            }
+
+            try {
+                const extensionContent: ExtensionContent = {
+                    extensionName: extension.name,
+                    actionComponentClasses: [],
+                    objectVariableTypes: [],
+                    enums: [],
+                    structures: []
+                };
+
+                extension.eezFlowExtensionInit({
+                    registerActionComponent: (
+                        actionComponentDefinition: IActionComponentDefinition
+                    ) => {
+                        const { className, actionComponentClass } =
+                            ProjectEditor.createActionComponentClass(
+                                actionComponentDefinition,
+                                `${extension.name}/${actionComponentDefinition.name}`
+                            );
+
+                        if (!className || !actionComponentClass) {
+                            throw new Error(
+                                `Failed to create action component class for "${extension.name}/${actionComponentDefinition.name}"`
+                            );
+                        }
+
+                        extensionContent.actionComponentClasses.push({
+                            className,
+                            actionComponentClass
+                        });
+                    },
+
+                    registerObjectVariableType: (
+                        name: string,
+                        objectVariableType: IObjectVariableType
+                    ) => {
+                        extensionContent.objectVariableTypes.push({
+                            name: `${extension.name}/${name}`,
+                            type: createObjectVariableType(objectVariableType)
+                        });
+                    },
+
+                    registerEnumVariableType: (
+                        definition: IExtensionEnumDefinition
+                    ) => {
+                        const members = definition.members.map(member => ({
+                            name: member.name,
+                            value: member.value
+                        }));
+                        if (
+                            checkExtensionIdentifiers(
+                                extension.name,
+                                definition.name,
+                                members,
+                                extensionErrors
+                            )
+                        ) {
+                            extensionContent.enums.push({
+                                name: `${extension.name}/${definition.name}`,
+                                members,
+                                membersMap: new Map(
+                                    members.map(member => [member.name, member])
+                                )
+                            });
+                        }
+                    },
+
+                    registerStructureVariableType: (
+                        definition: IExtensionStructureDefinition
+                    ) => {
+                        const fields = definition.fields.map(field => ({
+                            name: field.name,
+                            type: field.type
+                        }));
+                        if (
+                            checkExtensionIdentifiers(
+                                extension.name,
+                                definition.name,
+                                fields,
+                                extensionErrors
+                            )
+                        ) {
+                            extensionContent.structures.push({
+                                name: `${extension.name}/${definition.name}`,
+                                fields,
+                                fieldsMap: new Map(
+                                    fields.map(field => [field.name, field])
+                                )
+                            });
+                        }
+                    },
+
+                    showGenericDialog,
+
+                    validators: {
+                        required: validators.required,
+                        rangeInclusive: validators.rangeInclusive
+                    }
+                });
+
+                qualifyExtensionTypes(extension.name, extensionContent);
+
+                extensionContents.push(extensionContent);
+            } catch (err) {
+                console.error(err);
             }
         }
 
@@ -1533,7 +1665,7 @@ export class ProjectStore {
         }
 
         // insert object variable types from imported extensions
-        for (const extensionContent of importedExtensionToExtensionContent.values()) {
+        for (const extensionContent of extensionContents) {
             for (const objectVariableType of extensionContent.objectVariableTypes) {
                 this.objectVariableTypes.set(
                     objectVariableType.name,
@@ -1551,7 +1683,7 @@ export class ProjectStore {
         >();
 
         // insert action component classes from imported extensions
-        for (const extensionContent of importedExtensionToExtensionContent.values()) {
+        for (const extensionContent of extensionContents) {
             for (const actionComponentClass of extensionContent.actionComponentClasses) {
                 this.importedActionComponentClasses.set(
                     actionComponentClass.className,
@@ -1559,6 +1691,31 @@ export class ProjectStore {
                 );
             }
         }
+
+        //
+        // build importedEnums and importedStructures
+        //
+        const importedEnums = new Map<string, IEnum>();
+        const importedStructures = new Map<string, IStructure>();
+
+        for (const extensionContent of extensionContents) {
+            addImportedTypes(
+                extensionContent.enums,
+                importedEnums,
+                extensionErrors
+            );
+            addImportedTypes(
+                extensionContent.structures,
+                importedStructures,
+                extensionErrors
+            );
+        }
+
+        runInAction(() => {
+            this.importedEnums = importedEnums;
+            this.importedStructures = importedStructures;
+            this.extensionErrors = extensionErrors;
+        });
     }
 
     getClassByName(className: string) {

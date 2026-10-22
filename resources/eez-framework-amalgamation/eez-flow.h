@@ -2675,6 +2675,7 @@ void eez_flow_delete_screen_on_unload(int screenIndex);
 void flowOnPageLoaded(unsigned pageIndex);
 void *getFlowState(void *flowState, unsigned userWidgetComponentIndexOrPageIndex);
 void deletePageFlowState(unsigned pageIndex);
+void eez_flow_register_ext_component(unsigned componentType, void (*executeComponentFunction)(void *flowState, unsigned componentIndex));
 void eez_flow_set_translate_hook(const char *(*hook)(const char *textId));
 void flowPropagateValue(void *flowState, unsigned componentIndex, unsigned outputIndex);
 void flowPropagateValueInt32(void *flowState, unsigned componentIndex, unsigned outputIndex, int32_t value);

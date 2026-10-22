@@ -541,6 +541,16 @@ export class LVGLBuild extends Build {
         );
     }
 
+    getExtensionComponentFunctionName(className: string) {
+        return `eez_flow_ext_${className.replace(/[^a-zA-Z_0-9]/g, "_")}`;
+    }
+
+    get extensionActionComponents() {
+        return [...this.assets.extensionActionComponents].sort(([a], [b]) =>
+            a.localeCompare(b)
+        );
+    }
+
     getVariableGetterFunctionName(variableName: string) {
         return getName(
             "get_var_",
@@ -2119,6 +2129,18 @@ export class LVGLBuild extends Build {
 
         build.blockStart("void create_screens() {");
 
+        if (this.extensionActionComponents.length > 0) {
+            for (const [className, componentType] of this
+                .extensionActionComponents) {
+                build.line(
+                    `eez_flow_register_ext_component(${componentType}, ${this.getExtensionComponentFunctionName(
+                        className
+                    )});`
+                );
+            }
+            build.line("");
+        }
+
         if (
             this.assets.projectStore.projectTypeTraits.hasFlowSupport &&
             this.styles.length > 0
@@ -2693,6 +2715,14 @@ extern ext_font_desc_t fonts[];
                     build.line("");
                 }
             }
+        }
+
+        for (const [className] of this.extensionActionComponents) {
+            build.line(
+                `extern void ${this.getExtensionComponentFunctionName(
+                    className
+                )}(void *flowState, unsigned componentIndex);`
+            );
         }
 
         return this.result;

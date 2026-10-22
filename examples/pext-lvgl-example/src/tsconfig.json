@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "node16",
+        "moduleResolution": "node16",
+        "esModuleInterop": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "skipLibCheck": true,
+        "types": ["node", "react"],
+        "paths": {
+            "eez-studio-types": ["../../../packages/eez-studio-types"]
+        },
+        "outDir": "../dist"
+    },
+    "include": ["./**/*.ts"]
+}
