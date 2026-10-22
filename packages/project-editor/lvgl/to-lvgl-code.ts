@@ -58,6 +58,12 @@ export interface LVGLCode {
     createObjectWithoutPosAndSize(createObjectFunction: string, ...args: any[]): any;
     getObject(getObjectFunction: string, ...args: any[]): any;
     getParentObject(getObjectFunction: string, ...args: any[]): any;
+    // Fetches lv_obj_get_child(lv_obj_get_child(parentObj, outerIndex), innerIndex)
+    // instead of creating a new object. Used to hook a widget onto a
+    // grandchild that some LVGL widgets create internally (e.g. the
+    // buttons/label/dropdowns inside a Calendar header), which aren't
+    // otherwise reachable as a single-level "get object" call.
+    getGrandchildObject(outerIndex: number, innerIndex: number): any;
 
     //
     callObjectFunction(func: string, ...args: any[]): any;
@@ -408,6 +414,23 @@ export class SimulatorLVGLCode implements LVGLCode {
         );
 
         this.obj = this.callFreeFunction(getObjectFunction, parentObj, ...args);
+        this.callObjectFunction(
+            "setObjectIndex",
+            this.runtime.getCreateWidgetIndex(this.widget)
+        );
+    }
+
+    getGrandchildObject(outerIndex: number, innerIndex: number) {
+        const outerObj = this.callFreeFunction(
+            "lv_obj_get_child",
+            this.parentObj,
+            outerIndex
+        );
+        this.obj = this.callFreeFunction(
+            "lv_obj_get_child",
+            outerObj,
+            innerIndex
+        );
         this.callObjectFunction(
             "setObjectIndex",
             this.runtime.getCreateWidgetIndex(this.widget)
@@ -1005,6 +1028,16 @@ export class BuildLVGLCode implements LVGLCode {
                 "lv_obj_get_parent(parent_obj)",
                 ...args
             ].join(", ")});`
+        );
+
+        this.build.buildWidgetAssign(this.widget);
+
+        return "obj";
+    }
+
+    getGrandchildObject(outerIndex: number, innerIndex: number) {
+        this.build.line(
+            `lv_obj_t *obj = lv_obj_get_child(lv_obj_get_child(parent_obj, ${outerIndex}), ${innerIndex});`
         );
 
         this.build.buildWidgetAssign(this.widget);
