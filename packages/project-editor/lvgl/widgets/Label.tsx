@@ -24,6 +24,7 @@ export class LVGLLabelWidget extends LVGLWidget {
     text: string;
     previewValue: string;
     textType: LVGLPropertyType;
+    textWrapper: string;
     longMode: keyof typeof LONG_MODE_CODES;
     recolor: boolean;
     useStaticText: boolean;
@@ -156,6 +157,7 @@ export class LVGLLabelWidget extends LVGLWidget {
         makeObservable(this, {
             text: observable,
             textType: observable,
+            textWrapper: observable,
             longMode: observable,
             recolor: observable,
             previewValue: observable,
@@ -187,12 +189,22 @@ export class LVGLLabelWidget extends LVGLWidget {
             if (this.textType == "literal" && code.lvglBuild && this.longMode != "DOT" && this.useStaticText) {
                 code.callObjectFunction(
                     "lv_label_set_text_static",
-                    code.stringProperty(this.textType, this.text, this.previewValue)
+                    code.stringProperty(
+                        this.textType,
+                        this.text,
+                        this.textWrapper,
+                        this.previewValue
+                    )
                 );
             } else {
                 code.callObjectFunction(
                     "lv_label_set_text",
-                    code.stringProperty(this.textType, this.text, this.previewValue)
+                    code.stringProperty(
+                        this.textType,
+                        this.text,
+                        this.textWrapper,
+                        this.previewValue
+                    )
                 );
             }
         });

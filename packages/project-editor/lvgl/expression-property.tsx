@@ -7,13 +7,19 @@ import {
     FlowPropertyType,
     getProperty,
     IEezObject,
+    IMessage,
     IOnSelectParams,
+    MessageType,
     PropertyInfo,
     PropertyProps,
     PropertyType
 } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
-import { getClassInfo } from "project-editor/store";
+import {
+    getChildOfObject,
+    getClassInfo,
+    Message
+} from "project-editor/store";
 import { findBitmap } from "project-editor/project/project";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { expressionBuilder } from "project-editor/flow/expression/ExpressionBuilder";
@@ -178,7 +184,7 @@ export function makeLvglExpressionProperty(
     types: LVGLPropertyType[],
     props: Partial<PropertyInfo>
 ) {
-    return [
+    const properties: PropertyInfo[] = [
         Object.assign(
             {
                 name,
@@ -295,4 +301,70 @@ export function makeLvglExpressionProperty(
             hideInPropertyGrid: true
         } as PropertyInfo
     ];
+
+    if (types.indexOf("translated-literal") != -1) {
+        properties.push({
+            name: name + "Wrapper",
+            type: PropertyType.String,
+            formText: 'Wrapper function, e.g. "_" (default) or "lv_tr"',
+            hideInPropertyGrid: (object: EezObject) =>
+                (object as any)[name + "Type"] != "translated-literal" ||
+                ProjectEditor.getProject(object).settings.build
+                    .useCommonWrapperForTranslatedLiterals,
+            propertyGridGroup: props.propertyGridGroup
+        } as PropertyInfo);
+    }
+
+    return properties;
+}
+
+const WRAPPER_FUNCTION_NAME_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+export function checkTranslatedLiteralWrappers(
+    object: EezObject,
+    messages: IMessage[]
+) {
+    if (
+        ProjectEditor.getProject(object).settings.build
+            .useCommonWrapperForTranslatedLiterals
+    ) {
+        // common wrapper is used for all translated literals,
+        // so per property wrappers are ignored
+        return;
+    }
+
+    for (const propertyInfo of getClassInfo(object).properties) {
+        if (!propertyInfo.name.endsWith("Wrapper")) {
+            continue;
+        }
+
+        const name = propertyInfo.name.substring(
+            0,
+            propertyInfo.name.length - "Wrapper".length
+        );
+
+        if ((object as any)[name + "Type"] != "translated-literal") {
+            continue;
+        }
+
+        const wrapper = (object as any)[propertyInfo.name];
+        if (typeof wrapper != "string") {
+            continue;
+        }
+
+        const wrapperFunction = wrapper.trim();
+        if (wrapperFunction.length == 0) {
+            continue;
+        }
+
+        if (!WRAPPER_FUNCTION_NAME_REGEX.test(wrapperFunction)) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    `Invalid wrapper function name "${wrapperFunction}". Wrapper must be a valid C function name, e.g. "_" or "lv_tr".`,
+                    getChildOfObject(object, propertyInfo.name)
+                )
+            );
+        }
+    }
 }

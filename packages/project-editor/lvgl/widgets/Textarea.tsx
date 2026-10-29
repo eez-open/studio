@@ -20,6 +20,7 @@ import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 export class LVGLTextareaWidget extends LVGLWidget {
     text: string;
     textType: LVGLPropertyType;
+    textWrapper: string;
     placeholder: string;
     oneLineMode: boolean;
     passwordMode: boolean;
@@ -124,6 +125,7 @@ export class LVGLTextareaWidget extends LVGLWidget {
         makeObservable(this, {
             text: observable,
             textType: observable,
+            textWrapper: observable,
             placeholder: observable,
             oneLineMode: observable,
             passwordMode: observable,
@@ -157,7 +159,11 @@ export class LVGLTextareaWidget extends LVGLWidget {
             ) {
                 code.callObjectFunction(
                     "lv_textarea_set_text",
-                    code.stringProperty(this.textType, this.text)
+                    code.stringProperty(
+                        this.textType,
+                        this.text,
+                        this.textWrapper
+                    )
                 );
             } else {
                 code.addToTick("text", () => {

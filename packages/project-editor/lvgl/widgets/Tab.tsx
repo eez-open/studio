@@ -95,13 +95,15 @@ export class LVGLTabWidget extends LVGLWidget {
 
     tabName: string;
     tabNameType: LVGLPropertyType;
+    tabNameWrapper: string;
 
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
             tabName: observable,
-            tabNameType: observable
+            tabNameType: observable,
+            tabNameWrapper: observable
         });
     }
 
@@ -159,6 +161,7 @@ export class LVGLTabWidget extends LVGLWidget {
                     code.stringProperty(
                         this.tabNameType,
                         this.tabName,
+                        this.tabNameWrapper,
                         undefined,
                         true
                     )
@@ -169,6 +172,7 @@ export class LVGLTabWidget extends LVGLWidget {
                     code.stringProperty(
                         this.tabNameType,
                         this.tabName,
+                        this.tabNameWrapper,
                         undefined,
                         true
                     )

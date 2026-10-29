@@ -71,7 +71,8 @@ import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 
 import {
     LVGLPropertyType,
-    makeLvglExpressionProperty
+    makeLvglExpressionProperty,
+    checkTranslatedLiteralWrappers
 } from "project-editor/lvgl/expression-property";
 import { LVGLStyle } from "project-editor/lvgl/style";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -1287,6 +1288,8 @@ export class LVGLWidget extends Widget {
             if (widget.group && !projectStore.project.lvglGroups.groups.find(group => group.name == widget.group)) {
                 messages.push(propertyNotFoundMessage(widget, "group"));
             }
+
+            checkTranslatedLiteralWrappers(widget, messages);
 
             widget.localStyles.check(messages);
         },
