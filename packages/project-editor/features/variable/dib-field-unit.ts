@@ -20,3 +20,20 @@ export function getDibFieldUnitValue(dibFieldUnit: string | undefined) {
     const unit = DIB_FIELD_UNITS.find(unit => unit.id == dibFieldUnit);
     return unit ? unit.value : DIB_FIELD_UNIT_NONE;
 }
+
+// Channel measurement of a sampled DIB field, BB3P_MEASUREMENT_... in
+// bb3p-dib-module.h: BB3+ finds the stream of a channel measurement (data
+// logging, YT) by it instead of by the field name.
+export const DIB_FIELD_MEASUREMENTS = [
+    { id: "none", label: "None", value: 0 },
+    { id: "voltage", label: "Voltage (MEASure:VOLTage)", value: 1 },
+    { id: "current", label: "Current (MEASure:CURRent)", value: 2 },
+    { id: "power", label: "Power (MEASure:POWer)", value: 3 },
+    { id: "analog", label: "Analog input (voltage or current)", value: 4 },
+    { id: "digital", label: "Digital input pins", value: 5 }
+];
+
+export function getDibFieldMeasurementValue(measurement: string | undefined) {
+    const item = DIB_FIELD_MEASUREMENTS.find(item => item.id == measurement);
+    return item ? item.value : 0;
+}

@@ -121,7 +121,8 @@ function hasChannelArg(addressing: ScpiAddressingInfo) {
     return (
         addressing.kind == "power-channel-param" ||
         addressing.kind == "power-channel-suffix" ||
-        addressing.kind == "selected"
+        addressing.kind == "selected" ||
+        addressing.kind == "internal"
     );
 }
 

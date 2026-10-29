@@ -86,7 +86,8 @@ export type ScpiAddressingKind =
     | "power-channel-suffix"
     | "slot-suffix"
     | "selected"
-    | "module";
+    | "module"
+    | "internal";
 
 export const SCPI_ADDRESSING_KINDS: {
     id: ScpiAddressingKind;
@@ -100,7 +101,10 @@ export const SCPI_ADDRESSING_KINDS: {
     { id: "power-channel-suffix", label: "Power channel header suffix", value: 3 },
     { id: "slot-suffix", label: "Slot header suffix", value: 4 },
     { id: "selected", label: "Selected channel", value: 5 },
-    { id: "module", label: "Module", value: 6 }
+    { id: "module", label: "Module", value: 6 },
+    // the module implements the command, BB3+ calls it itself (e.g. *RST,
+    // INITiate) and doesn't add it to the BB3+ command tree
+    { id: "internal", label: "Internal (called by BB3+)", value: 7 }
 ];
 
 const CHANNEL_ENUMS = ["Channel", "ChannelWithAll"];

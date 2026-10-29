@@ -30,7 +30,10 @@ import { validators } from "eez-studio-shared/validation";
 import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 import { getValueType } from "project-editor/build/values";
 import type { Variable } from "project-editor/features/variable/variable";
-import { getDibFieldUnitValue } from "project-editor/features/variable/dib-field-unit";
+import {
+    getDibFieldMeasurementValue,
+    getDibFieldUnitValue
+} from "project-editor/features/variable/dib-field-unit";
 import {
     SCPI_COMMAND_FLAG_QUERY,
     SCPI_COMMAND_FLAG_APPLY_ON_DIB_SYNC,
@@ -1255,8 +1258,15 @@ export function writeDibModuleMetadata(
 
             // unit
             dataBuffer.writeUint16(getDibFieldUnitValue(variable.dibFieldUnit));
-            // reserved
-            dataBuffer.writeUint16(0);
+            // measurement (BB3P_MEASUREMENT_...) and its module channel
+            const measurement =
+                maxSampleRate > 0
+                    ? getDibFieldMeasurementValue(variable.dibFieldMeasurement)
+                    : 0;
+            dataBuffer.writeUint8(measurement);
+            dataBuffer.writeUint8(
+                measurement != 0 ? variable.dibFieldMeasurementChannel ?? 0 : 0
+            );
 
             // maxSampleRate
             dataBuffer.writeFloat(maxSampleRate);

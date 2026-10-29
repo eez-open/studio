@@ -90,7 +90,10 @@ import { Build, getName, NamingConvention } from "project-editor/build/helper";
 import { IconAction } from "eez-studio-ui/action";
 import { CodeEditor } from "eez-studio-ui/code-editor";
 import { Icon } from "eez-studio-ui/icon";
-import { DIB_FIELD_UNITS } from "project-editor/features/variable/dib-field-unit";
+import {
+    DIB_FIELD_MEASUREMENTS,
+    DIB_FIELD_UNITS
+} from "project-editor/features/variable/dib-field-unit";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -375,6 +378,11 @@ export class Variable extends EezObject {
     // samples per second, if set the module streams the field samples (YT
     // graphs, data logging) at the rate BB3+ asks for, up to this rate
     dibFieldMaxSampleRate: number | undefined;
+    // the channel measurement the sampled field is (BB3+ finds the stream
+    // of a channel measurement by it, e.g. for the data logging) and the
+    // module channel index
+    dibFieldMeasurement: string | undefined;
+    dibFieldMeasurementChannel: number | undefined;
     // range of an input field, the module (bb3p-dib-link) clamps the
     // received values to it
     dibFieldMin: number | undefined;
@@ -408,6 +416,8 @@ export class Variable extends EezObject {
             dibField: observable,
             dibFieldUnit: observable,
             dibFieldMaxSampleRate: observable,
+            dibFieldMeasurement: observable,
+            dibFieldMeasurementChannel: observable,
             dibFieldMin: observable,
             dibFieldMax: observable,
             dibFieldUpdatePeriod: observable
@@ -590,6 +600,31 @@ export class Variable extends EezObject {
                     variable.dibField == undefined ||
                     variable.dibField == "input" ||
                     (variable.type != "float" && !isIntegerType(variable.type))
+            },
+            {
+                name: "dibFieldMeasurement",
+                displayName: "DIB field measurement",
+                type: PropertyType.Enum,
+                enumItems: DIB_FIELD_MEASUREMENTS.map(measurement => ({
+                    id: measurement.id,
+                    label: measurement.label
+                })),
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
+                    !variable.dibFieldMaxSampleRate
+            },
+            {
+                name: "dibFieldMeasurementChannel",
+                displayName: "DIB field measurement channel (module channel index)",
+                type: PropertyType.Number,
+                isOptional: true,
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
+                    !variable.dibFieldMaxSampleRate ||
+                    !variable.dibFieldMeasurement ||
+                    variable.dibFieldMeasurement == "none"
             },
             {
                 name: "dibFieldMin",
