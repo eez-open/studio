@@ -20,7 +20,12 @@ import { DataBuffer } from "project-editor/build/data-buffer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { ValueType } from "eez-studio-types";
-import { VariableTypeFieldComponent, variableTypeProperty } from "project-editor/features/variable/value-type";
+import {
+    DIB_FIELD_TYPES,
+    VariableTypeFieldComponent,
+    isIntegerType,
+    variableTypeProperty
+} from "project-editor/features/variable/value-type";
 import { validators } from "eez-studio-shared/validation";
 import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 import { getValueType } from "project-editor/build/values";
@@ -1175,14 +1180,11 @@ registerClass("DibModuleMetadata", DibModuleMetadata);
 
 const DIB_METADATA_SPECIFICATION_VERSION_1 = 1;
 
+// size of the field value on the wire and in the BB3+ copy, 0 for a type
+// that is not supported (the project check reports it)
 function getDibFieldSize(variable: Variable) {
-    if (variable.type == "float") {
-        return 4;
-    }
-    if (variable.type == "integer") {
-        return 4;
-    }    
-    return 0;
+    const dibFieldType = DIB_FIELD_TYPES[variable.type];
+    return dibFieldType ? dibFieldType.size : 0;
 }
 
 // pageNames: names of the pages in the assets (index is page id - 1), BB3+ finds
@@ -1276,7 +1278,7 @@ export function writeDibModuleMetadata(
 
 // samples per second, 0 if the field is not sampled
 function getDibFieldMaxSampleRate(variable: Variable) {
-    if (variable.type != "float" && variable.type != "integer") {
+    if (variable.type != "float" && !isIntegerType(variable.type)) {
         return 0;
     }
     return variable.dibFieldMaxSampleRate != undefined &&

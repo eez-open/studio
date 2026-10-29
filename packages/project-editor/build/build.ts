@@ -36,6 +36,7 @@ import {
 import { buildAssets } from "project-editor/build/assets";
 import { buildScpi } from "project-editor/build/scpi";
 import { buildDibScpi } from "project-editor/build/dib-scpi";
+import { buildDibFields } from "project-editor/build/dib-fields";
 import { generateSourceCodeForEezFramework } from "project-editor/lvgl/build";
 import { cleanupSourceFile } from "project-editor/build/cleanup-c-source-files";
 import { generateSourceCodeForEezGuiLite } from "project-editor/eez-gui-lite/build";
@@ -265,6 +266,10 @@ async function getBuildResults(
 
     if (project.scpi && project.dibModuleMetadata) {
         buildResults.push(buildDibScpi(project, sectionNames));
+    }
+
+    if (project.dibModuleMetadata) {
+        buildResults.push(buildDibFields(project, sectionNames));
     }
 
     return buildResults;

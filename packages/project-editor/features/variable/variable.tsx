@@ -69,7 +69,10 @@ import {
     isEnumType,
     getEnumTypeNameFromType,
     isArrayType,
-    getArrayElementTypeFromType
+    getArrayElementTypeFromType,
+    isDibFieldType,
+    isDibFieldFloatType,
+    isIntegerType
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -372,6 +375,13 @@ export class Variable extends EezObject {
     // samples per second, if set the module streams the field samples (YT
     // graphs, data logging) at the rate BB3+ asks for, up to this rate
     dibFieldMaxSampleRate: number | undefined;
+    // range of an input field, the module (bb3p-dib-link) clamps the
+    // received values to it
+    dibFieldMin: number | undefined;
+    dibFieldMax: number | undefined;
+    // ms, an output field that changes continuously (a measurement) is sent
+    // to BB3+ at most this often, 0 or not set: whenever it changes
+    dibFieldUpdatePeriod: number | undefined;
 
     constructor() {
         super();
@@ -397,7 +407,10 @@ export class Variable extends EezObject {
             native: observable,
             dibField: observable,
             dibFieldUnit: observable,
-            dibFieldMaxSampleRate: observable
+            dibFieldMaxSampleRate: observable,
+            dibFieldMin: observable,
+            dibFieldMax: observable,
+            dibFieldUpdatePeriod: observable
         });
     }
 
@@ -564,7 +577,7 @@ export class Variable extends EezObject {
                     !isGlobalVariable(variable) ||
                     !ProjectEditor.getProject(variable).dibModuleMetadata ||
                     variable.dibField == undefined ||
-                    variable.type != "float"
+                    !isDibFieldFloatType(variable.type)
             },
             {
                 name: "dibFieldMaxSampleRate",
@@ -575,7 +588,45 @@ export class Variable extends EezObject {
                     !isGlobalVariable(variable) ||
                     !ProjectEditor.getProject(variable).dibModuleMetadata ||
                     variable.dibField == undefined ||
-                    (variable.type != "float" && variable.type != "integer")
+                    variable.dibField == "input" ||
+                    (variable.type != "float" && !isIntegerType(variable.type))
+            },
+            {
+                name: "dibFieldMin",
+                displayName: "DIB field min",
+                type: PropertyType.Number,
+                isOptional: true,
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
+                    variable.dibField == undefined ||
+                    variable.dibField == "output" ||
+                    variable.type == "boolean" ||
+                    !isDibFieldType(variable.type)
+            },
+            {
+                name: "dibFieldMax",
+                displayName: "DIB field max",
+                type: PropertyType.Number,
+                isOptional: true,
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
+                    variable.dibField == undefined ||
+                    variable.dibField == "output" ||
+                    variable.type == "boolean" ||
+                    !isDibFieldType(variable.type)
+            },
+            {
+                name: "dibFieldUpdatePeriod",
+                displayName: "DIB field update period (ms)",
+                type: PropertyType.Number,
+                isOptional: true,
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
+                    variable.dibField == undefined ||
+                    variable.dibField == "input"
             }
         ],
         icon: VARIABLE_ICON,
@@ -825,6 +876,37 @@ export class Variable extends EezObject {
                 messages.push(
                     new Message(MessageType.ERROR, `Invalid type`, variable)
                 );
+            }
+
+            if (
+                variable.dibField != undefined &&
+                !isPropertyDisabled(
+                    variable,
+                    findPropertyByNameInObject(variable, "dibField")!
+                )
+            ) {
+                if (!isDibFieldType(variable.type)) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `A DIB field must be a boolean, integer or floating point type`,
+                            getChildOfObject(variable, "type")
+                        )
+                    );
+                }
+                if (
+                    variable.dibFieldMin != undefined &&
+                    variable.dibFieldMax != undefined &&
+                    variable.dibFieldMin > variable.dibFieldMax
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `DIB field min is greater than max`,
+                            getChildOfObject(variable, "dibFieldMin")
+                        )
+                    );
+                }
             }
 
             if (!variable.defaultValue) {

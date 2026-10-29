@@ -20,7 +20,13 @@ import {
     FLOW_VALUE_TYPE_DOUBLE,
     FLOW_VALUE_TYPE_EVENT,
     FLOW_VALUE_TYPE_FLOAT,
+    FLOW_VALUE_TYPE_INT8,
+    FLOW_VALUE_TYPE_UINT8,
+    FLOW_VALUE_TYPE_INT16,
+    FLOW_VALUE_TYPE_UINT16,
     FLOW_VALUE_TYPE_INT32,
+    FLOW_VALUE_TYPE_INT64,
+    FLOW_VALUE_TYPE_UINT64,
     FLOW_VALUE_TYPE_JSON,
     FLOW_VALUE_TYPE_NULL,
     FLOW_VALUE_TYPE_STRING_ASSET,
@@ -44,8 +50,22 @@ export function getValueType(valueType: ValueType) {
         return FLOW_VALUE_TYPE_UNDEFINED;
     } else if (valueType == "null") {
         return FLOW_VALUE_TYPE_NULL;
-    } else if (valueType == "integer") {
+    } else if (valueType == "integer" || valueType == "int32") {
         return FLOW_VALUE_TYPE_INT32;
+    } else if (valueType == "int8") {
+        return FLOW_VALUE_TYPE_INT8;
+    } else if (valueType == "uint8") {
+        return FLOW_VALUE_TYPE_UINT8;
+    } else if (valueType == "int16") {
+        return FLOW_VALUE_TYPE_INT16;
+    } else if (valueType == "uint16") {
+        return FLOW_VALUE_TYPE_UINT16;
+    } else if (valueType == "uint32") {
+        return FLOW_VALUE_TYPE_UINT32;
+    } else if (valueType == "int64") {
+        return FLOW_VALUE_TYPE_INT64;
+    } else if (valueType == "uint64") {
+        return FLOW_VALUE_TYPE_UINT64;
     } else if (valueType == "float") {
         return FLOW_VALUE_TYPE_FLOAT;
     } else if (valueType == "double") {
@@ -209,7 +229,16 @@ function buildFlowValue(
         if (flowValue.type == FLOW_VALUE_TYPE_BOOLEAN) {
             dataBuffer.writeUint32(flowValue.value);
             dataBuffer.writeUint32(0);
-        } else if (flowValue.type == FLOW_VALUE_TYPE_INT32) {
+        } else if (
+            flowValue.type == FLOW_VALUE_TYPE_INT32 ||
+            flowValue.type == FLOW_VALUE_TYPE_INT8 ||
+            flowValue.type == FLOW_VALUE_TYPE_UINT8 ||
+            flowValue.type == FLOW_VALUE_TYPE_INT16 ||
+            flowValue.type == FLOW_VALUE_TYPE_UINT16 ||
+            flowValue.type == FLOW_VALUE_TYPE_UINT32
+        ) {
+            // the narrower members of the union start at the same address
+            // (little endian)
             if (
                 flowValue.value >= -2147483648 &&
                 flowValue.value <= 2147483647
@@ -219,6 +248,11 @@ function buildFlowValue(
                 dataBuffer.writeUint32(flowValue.value);
             }
             dataBuffer.writeUint32(0);
+        } else if (
+            flowValue.type == FLOW_VALUE_TYPE_INT64 ||
+            flowValue.type == FLOW_VALUE_TYPE_UINT64
+        ) {
+            dataBuffer.writeUint64(flowValue.value);
         } else if (flowValue.type == FLOW_VALUE_TYPE_FLOAT) {
             dataBuffer.writeFloat(flowValue.value);
             dataBuffer.writeUint32(0);

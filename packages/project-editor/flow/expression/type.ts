@@ -9,7 +9,8 @@ import {
 import {
     getArrayElementTypeFromType,
     getEnumTypeNameFromType,
-    isEnumType
+    isEnumType,
+    isNarrowIntegerType
 } from "project-editor/features/variable/value-type";
 
 import {
@@ -375,7 +376,7 @@ export function findValueTypeInExpressionNode(
                                 globalVariable.name == variableName
                         );
                     if (globalVariable) {
-                        node.valueType = globalVariable.type;
+                        node.valueType = getType(project, globalVariable.type);
                         node.property.identifierType = "global-variable";
                     }
                 }
@@ -538,6 +539,11 @@ export function isImplicitConversionPossible(
 }
 
 function getType(project: Project, valueType: ValueType): ValueType {
+    // int8 .. uint64 (DIB module projects) are integers in the expressions
+    if (isNarrowIntegerType(valueType)) {
+        return "integer";
+    }
+
     if (valueType == "any") {
         return project._store.typesStore.createOpenType();
     }
