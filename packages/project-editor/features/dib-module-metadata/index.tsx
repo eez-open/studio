@@ -17,15 +17,10 @@ import type { ProjectEditorFeature } from "project-editor/store/features";
 import { DataBuffer } from "project-editor/build/data-buffer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
-import { ValueType } from "eez-studio-types";
 import {
     DIB_FIELD_TYPES,
-    VariableTypeFieldComponent,
     isIntegerType,
-    variableTypeProperty
 } from "project-editor/features/variable/value-type";
-import { validators } from "eez-studio-shared/validation";
-import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 import { getValueType } from "project-editor/build/values";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
@@ -65,123 +60,6 @@ const DIB_MODULE_METADATA_ICON = (
         />
     </svg>
 );
-
-////////////////////////////////////////////////////////////////////////////////
-
-class ModuleDataItem extends EezObject {
-    name: string;
-    description: string;
-    type: ValueType;
-    direction: "input" | "output" | "input-output";
-
-    static classInfo: ClassInfo = {
-        properties: [
-            {
-                name: "name",
-                type: PropertyType.String,
-                uniqueIdentifier: true
-            },
-            {
-                name: "description",
-                type: PropertyType.MultilineText
-            },
-            variableTypeProperty,
-            {
-                name: "direction",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "input"
-                    },
-                    {
-                        id: "output"
-                    },
-                    {
-                        id: "input-output",
-                        label: "Input and output"
-                    }
-                ]
-            }
-        ],
-        defaultValue: {
-            direction: "output"
-        },
-        newItem: async (parent: ModuleDataItem[]) => {
-            const result = await showGenericDialog({
-                dialogDefinition: {
-                    title: "New Module Data Item",
-                    fields: [
-                        {
-                            name: "name",
-                            type: "string",
-                            validators: [
-                                validators.required,
-                                validatorsRenderer.identifierValidator,
-                                validators.unique({}, parent)
-                            ]
-                        },
-                        {
-                            name: "type",
-                            type: VariableTypeFieldComponent,
-                            validators: [validators.required]
-                        },
-                        {
-                            name: "direction",
-                            type: "enum",
-                            enumItems: [
-                                {
-                                    id: "input",
-                                    label: "Input"
-                                },
-                                {
-                                    id: "output",
-                                    label: "Output"
-                                },
-                                {
-                                    id: "input-output",
-                                    label: "Input and output"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                values: {
-                    direction: "output"
-                },
-                dialogContext: ProjectEditor.getProject(parent),
-                modal: true,
-                backdrop: "static"
-            });
-
-            const moduleDataItemProperties: Partial<ModuleDataItem> = {
-                name: result.values.name,
-                type: result.values.type,
-                direction: result.values.direction
-            };
-
-            const project = ProjectEditor.getProject(parent);
-
-            const moduleDataItem = createObject<ModuleDataItem>(
-                project._store,
-                moduleDataItemProperties,
-                ModuleDataItem
-            );
-
-            return moduleDataItem;
-        }
-    };
-
-    override makeEditable() {
-        super.makeEditable();
-
-        makeObservable(this, {
-            name: observable,
-            type: observable,
-            direction: observable,
-            description: observable
-        });
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
