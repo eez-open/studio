@@ -184,7 +184,7 @@ export class LVGLLedWidget extends LVGLWidget {
                     const build = code.lvglBuild;
                     if (code.isV9) {
                         build.line(
-                            `uint32_t cur_val = lv_color_to_u32(((lv_led_t *)${code.objectAccessor})->color);`
+                            `uint32_t cur_val = lv_color_to_u32(lv_led_get_color(${code.objectAccessor}));`
                         );
                     } else {
                         build.line(
