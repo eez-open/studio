@@ -57,21 +57,21 @@ function buildDataArrayDef(projectVariables: Variable[]) {
     )}\n};`;
 }
 
-function buildDibModuleFieldTags(assets: Assets) {
+function buildBB3ModuleFieldTags(assets: Assets) {
     let fieldTags = [];
 
-    // the tag is the index in the DIB fields of the module metadata (only
-    // the global variables with dibField set), see DibModuleMetadata.dibFields
+    // the tag is the index in the BB3 module fields of the BB3 module metadata (only
+    // the global variables with bb3ModuleField set), see BB3ModuleMetadata.bb3ModuleFields
     const variables = assets.projectStore.project.variables.globalVariables;
     let fieldIndex = 0;
     for (let i = 0; i < variables.length; i++) {
-        if (variables[i].dibField != undefined) {
+        if (variables[i].bb3ModuleField != undefined) {
             fieldTags.push(
                 `${TAB}${getName(
-                    "BB3P_CUSTOM_FIELD_TAG_",
+                    "BB3_CUSTOM_FIELD_TAG_",
                     variables[i],
                     NamingConvention.UnderscoreUpperCase
-                )} = BB3P_CUSTOM_FIELD_TAG_START + ${fieldIndex++}`
+                )} = BB3_CUSTOM_FIELD_TAG_START + ${fieldIndex++}`
             );
         }
     }
@@ -118,9 +118,9 @@ export function buildVariables(
             result.DATA_ARRAY_DEF = buildDataArrayDef(projectVariables);
         }
 
-        if (assets.projectStore.project.dibModuleMetadata) {
-            if (!sectionNames || sectionNames.indexOf("DIB_MODULE_FIELD_TAGS") !== -1) {
-                result.DIB_MODULE_FIELD_TAGS = buildDibModuleFieldTags(assets);
+        if (assets.projectStore.project.bb3ModuleMetadata) {
+            if (!sectionNames || sectionNames.indexOf("BB3_MODULE_FIELD_TAGS") !== -1) {
+                result.BB3_MODULE_FIELD_TAGS = buildBB3ModuleFieldTags(assets);
             }
         }
 

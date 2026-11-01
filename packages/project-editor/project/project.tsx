@@ -62,7 +62,7 @@ import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Texts } from "project-editor/features/texts";
 import { Readme } from "project-editor/features/readme";
-import { DibModuleMetadata } from "project-editor/features/dib-module-metadata";
+import { BB3ModuleMetadata } from "project-editor/features/bb3-module-metadata";
 import { Changes } from "project-editor/features/changes";
 import { validators } from "eez-studio-shared/validation";
 import { createProjectTypeTraits } from "./project-type-traits";
@@ -1782,7 +1782,7 @@ export class Project extends EezObject {
     fonts: Font[];
     texts: Texts;
     readme: Readme;
-    dibModuleMetadata: DibModuleMetadata;
+    bb3ModuleMetadata: BB3ModuleMetadata;
     scpi: Scpi;
     instrumentCommands: InstrumentCommands;
     shortcuts: Shortcuts;
@@ -1832,7 +1832,7 @@ export class Project extends EezObject {
             fonts: observable,
             texts: observable,
             readme: observable,
-            dibModuleMetadata: observable,
+            bb3ModuleMetadata: observable,
             bitmaps: observable,
             scpi: observable,
             instrumentCommands: observable,

@@ -1,7 +1,7 @@
-// Unit of a float DIB field: BB3+ gives the value with this unit to the flows
+// Unit of a float BB3 module field: BB3+ gives the value with this unit to the flows
 // (e.g. displayed as "1.5 V" or "250 mA"). Value is the eez-framework Unit
 // enum value.
-export const DIB_FIELD_UNITS = [
+export const BB3_MODULE_FIELD_UNITS = [
     { id: "volt", label: "Volt (V)", value: 1 },
     { id: "amper", label: "Amper (A)", value: 3 },
     { id: "watt", label: "Watt (W)", value: 6 },
@@ -14,17 +14,17 @@ export const DIB_FIELD_UNITS = [
 ];
 
 // UNIT_UNKNOWN
-const DIB_FIELD_UNIT_NONE = 255;
+const BB3_MODULE_FIELD_UNIT_NONE = 255;
 
-export function getDibFieldUnitValue(dibFieldUnit: string | undefined) {
-    const unit = DIB_FIELD_UNITS.find(unit => unit.id == dibFieldUnit);
-    return unit ? unit.value : DIB_FIELD_UNIT_NONE;
+export function getBB3ModuleFieldUnitValue(bb3ModuleFieldUnit: string | undefined) {
+    const unit = BB3_MODULE_FIELD_UNITS.find(unit => unit.id == bb3ModuleFieldUnit);
+    return unit ? unit.value : BB3_MODULE_FIELD_UNIT_NONE;
 }
 
-// Channel measurement of a sampled DIB field, BB3P_MEASUREMENT_... in
-// bb3p-dib-module.h: BB3+ finds the stream of a channel measurement (data
+// Channel measurement of a sampled BB3 module field, BB3_MEASUREMENT_... in
+// bb3-module.h: BB3+ finds the stream of a channel measurement (data
 // logging, YT) by it instead of by the field name.
-export const DIB_FIELD_MEASUREMENTS = [
+export const BB3_MODULE_FIELD_MEASUREMENTS = [
     { id: "none", label: "None", value: 0 },
     { id: "voltage", label: "Voltage (MEASure:VOLTage)", value: 1 },
     { id: "current", label: "Current (MEASure:CURRent)", value: 2 },
@@ -33,7 +33,7 @@ export const DIB_FIELD_MEASUREMENTS = [
     { id: "digital", label: "Digital input pins", value: 5 }
 ];
 
-export function getDibFieldMeasurementValue(measurement: string | undefined) {
-    const item = DIB_FIELD_MEASUREMENTS.find(item => item.id == measurement);
+export function getBB3ModuleFieldMeasurementValue(measurement: string | undefined) {
+    const item = BB3_MODULE_FIELD_MEASUREMENTS.find(item => item.id == measurement);
     return item ? item.value : 0;
 }

@@ -130,7 +130,7 @@ import type { FlowEditor } from "project-editor/flow/editor/editor";
 import type { newComponentMenuItem } from "project-editor/flow/editor/ComponentsPalette";
 
 import type { LVGLPageEditorRuntime } from "project-editor/lvgl/page-runtime";
-import type { writeDibModuleMetadata } from "project-editor/features/dib-module-metadata";
+import type { writeBB3ModuleMetadata } from "project-editor/features/bb3-module-metadata";
 
 export interface IProjectEditor {
     homeTabs?: Tabs;
@@ -234,7 +234,7 @@ export interface IProjectEditor {
     BuildFileClass: typeof BuildFile;
     FlowEditorClass: typeof FlowEditor;
     newComponentMenuItem: typeof newComponentMenuItem;
-    writeDibModuleMetadata: typeof writeDibModuleMetadata;
+    writeBB3ModuleMetadata: typeof writeBB3ModuleMetadata;
     isPageLayoutUpdate: typeof isPageLayoutUpdate;
     updatePageLayoutValues: typeof updatePageLayoutValues;
 }

@@ -70,8 +70,8 @@ import {
     getEnumTypeNameFromType,
     isArrayType,
     getArrayElementTypeFromType,
-    isDibFieldType,
-    isDibFieldFloatType,
+    isBB3ModuleFieldType,
+    isBB3ModuleFieldFloatType,
     isIntegerType
 } from "project-editor/features/variable/value-type";
 import {
@@ -91,9 +91,9 @@ import { IconAction } from "eez-studio-ui/action";
 import { CodeEditor } from "eez-studio-ui/code-editor";
 import { Icon } from "eez-studio-ui/icon";
 import {
-    DIB_FIELD_MEASUREMENTS,
-    DIB_FIELD_UNITS
-} from "project-editor/features/variable/dib-field-unit";
+    BB3_MODULE_FIELD_MEASUREMENTS,
+    BB3_MODULE_FIELD_UNITS
+} from "project-editor/features/variable/bb3-module-field-unit";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -342,7 +342,7 @@ export const NativeVariableImplementationInfoPropertyUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type DibField = "input" | "output" | "input-output" | undefined;
+type BB3ModuleField = "input" | "output" | "input-output" | undefined;
 
 
 function isNativeVariableDisabled(variable: Variable) {
@@ -373,23 +373,23 @@ export class Variable extends EezObject {
     usedIn?: string[];
     persistent: boolean;
     native: boolean;
-    dibField: DibField;
-    dibFieldUnit: string | undefined;
+    bb3ModuleField: BB3ModuleField;
+    bb3ModuleFieldUnit: string | undefined;
     // samples per second, if set the module streams the field samples (YT
     // graphs, data logging) at the rate BB3+ asks for, up to this rate
-    dibFieldMaxSampleRate: number | undefined;
+    bb3ModuleFieldMaxSampleRate: number | undefined;
     // the channel measurement the sampled field is (BB3+ finds the stream
     // of a channel measurement by it, e.g. for the data logging) and the
     // module channel index
-    dibFieldMeasurement: string | undefined;
-    dibFieldMeasurementChannel: number | undefined;
-    // range of an input field, the module (bb3p-dib-link) clamps the
+    bb3ModuleFieldMeasurement: string | undefined;
+    bb3ModuleFieldMeasurementChannel: number | undefined;
+    // range of an input field, the module (bb3-link) clamps the
     // received values to it
-    dibFieldMin: number | undefined;
-    dibFieldMax: number | undefined;
+    bb3ModuleFieldMin: number | undefined;
+    bb3ModuleFieldMax: number | undefined;
     // ms, an output field that changes continuously (a measurement) is sent
     // to BB3+ at most this often, 0 or not set: whenever it changes
-    dibFieldUpdatePeriod: number | undefined;
+    bb3ModuleFieldUpdatePeriod: number | undefined;
 
     constructor() {
         super();
@@ -413,14 +413,14 @@ export class Variable extends EezObject {
             usedIn: observable,
             persistent: observable,
             native: observable,
-            dibField: observable,
-            dibFieldUnit: observable,
-            dibFieldMaxSampleRate: observable,
-            dibFieldMeasurement: observable,
-            dibFieldMeasurementChannel: observable,
-            dibFieldMin: observable,
-            dibFieldMax: observable,
-            dibFieldUpdatePeriod: observable
+            bb3ModuleField: observable,
+            bb3ModuleFieldUnit: observable,
+            bb3ModuleFieldMaxSampleRate: observable,
+            bb3ModuleFieldMeasurement: observable,
+            bb3ModuleFieldMeasurementChannel: observable,
+            bb3ModuleFieldMin: observable,
+            bb3ModuleFieldMax: observable,
+            bb3ModuleFieldUpdatePeriod: observable
         });
     }
 
@@ -557,8 +557,8 @@ export class Variable extends EezObject {
                     variable.type == "object:TCPSocket"
             },
             {
-                name: "dibField",
-                displayName: "DIB field",
+                name: "bb3ModuleField",
+                displayName: "BB3 module field",
                 type: PropertyType.Enum,
                 enumItems: [
                     {
@@ -573,95 +573,95 @@ export class Variable extends EezObject {
                 ],
                 disabled: (variable) =>
                     !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).dibModuleMetadata
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata
             },
             {
-                name: "dibFieldUnit",
-                displayName: "DIB field unit",
+                name: "bb3ModuleFieldUnit",
+                displayName: "BB3 module field unit",
                 type: PropertyType.Enum,
-                enumItems: DIB_FIELD_UNITS.map(unit => ({
+                enumItems: BB3_MODULE_FIELD_UNITS.map(unit => ({
                     id: unit.id,
                     label: unit.label
                 })),
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
-                    variable.dibField == undefined ||
-                    !isDibFieldFloatType(variable.type)
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    variable.bb3ModuleField == undefined ||
+                    !isBB3ModuleFieldFloatType(variable.type)
             },
             {
-                name: "dibFieldMaxSampleRate",
-                displayName: "DIB field max sample rate (S/s)",
+                name: "bb3ModuleFieldMaxSampleRate",
+                displayName: "BB3 module field max sample rate (S/s)",
                 type: PropertyType.Number,
                 isOptional: true,
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
-                    variable.dibField == undefined ||
-                    variable.dibField == "input" ||
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    variable.bb3ModuleField == undefined ||
+                    variable.bb3ModuleField == "input" ||
                     (variable.type != "float" && !isIntegerType(variable.type))
             },
             {
-                name: "dibFieldMeasurement",
-                displayName: "DIB field measurement",
+                name: "bb3ModuleFieldMeasurement",
+                displayName: "BB3 module field measurement",
                 type: PropertyType.Enum,
-                enumItems: DIB_FIELD_MEASUREMENTS.map(measurement => ({
+                enumItems: BB3_MODULE_FIELD_MEASUREMENTS.map(measurement => ({
                     id: measurement.id,
                     label: measurement.label
                 })),
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
-                    !variable.dibFieldMaxSampleRate
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    !variable.bb3ModuleFieldMaxSampleRate
             },
             {
-                name: "dibFieldMeasurementChannel",
-                displayName: "DIB field measurement channel (module channel index)",
+                name: "bb3ModuleFieldMeasurementChannel",
+                displayName: "BB3 module field measurement channel (module channel index)",
                 type: PropertyType.Number,
                 isOptional: true,
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
-                    !variable.dibFieldMaxSampleRate ||
-                    !variable.dibFieldMeasurement ||
-                    variable.dibFieldMeasurement == "none"
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    !variable.bb3ModuleFieldMaxSampleRate ||
+                    !variable.bb3ModuleFieldMeasurement ||
+                    variable.bb3ModuleFieldMeasurement == "none"
             },
             {
-                name: "dibFieldMin",
-                displayName: "DIB field min",
+                name: "bb3ModuleFieldMin",
+                displayName: "BB3 module field min",
                 type: PropertyType.Number,
                 isOptional: true,
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
-                    variable.dibField == undefined ||
-                    variable.dibField == "output" ||
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    variable.bb3ModuleField == undefined ||
+                    variable.bb3ModuleField == "output" ||
                     variable.type == "boolean" ||
-                    !isDibFieldType(variable.type)
+                    !isBB3ModuleFieldType(variable.type)
             },
             {
-                name: "dibFieldMax",
-                displayName: "DIB field max",
+                name: "bb3ModuleFieldMax",
+                displayName: "BB3 module field max",
                 type: PropertyType.Number,
                 isOptional: true,
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
-                    variable.dibField == undefined ||
-                    variable.dibField == "output" ||
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    variable.bb3ModuleField == undefined ||
+                    variable.bb3ModuleField == "output" ||
                     variable.type == "boolean" ||
-                    !isDibFieldType(variable.type)
+                    !isBB3ModuleFieldType(variable.type)
             },
             {
-                name: "dibFieldUpdatePeriod",
-                displayName: "DIB field update period (ms)",
+                name: "bb3ModuleFieldUpdatePeriod",
+                displayName: "BB3 module field update period (ms)",
                 type: PropertyType.Number,
                 isOptional: true,
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).dibModuleMetadata ||
-                    variable.dibField == undefined ||
-                    variable.dibField == "input"
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    variable.bb3ModuleField == undefined ||
+                    variable.bb3ModuleField == "input"
             }
         ],
         icon: VARIABLE_ICON,
@@ -679,11 +679,11 @@ export class Variable extends EezObject {
                         )}
                     {!isPropertyDisabled(
                         variable,
-                        findPropertyByNameInObject(variable, "dibField")!
+                        findPropertyByNameInObject(variable, "bb3ModuleField")!
                     ) &&
-                        variable.dibField && (
+                        variable.bb3ModuleField && (
                             <span className="EezStudio_ListLabel_Badge">
-                                {variable.dibField.toUpperCase()}
+                                {variable.bb3ModuleField.toUpperCase()}
                             </span>
                         )}
                     {!isPropertyDisabled(
@@ -699,11 +699,11 @@ export class Variable extends EezObject {
                         variable,
                         findPropertyByNameInObject(
                             variable,
-                            "dibFieldMaxSampleRate"
+                            "bb3ModuleFieldMaxSampleRate"
                         )!
                     ) &&
-                        variable.dibFieldMaxSampleRate != undefined &&
-                        variable.dibFieldMaxSampleRate > 0 && (
+                        variable.bb3ModuleFieldMaxSampleRate != undefined &&
+                        variable.bb3ModuleFieldMaxSampleRate > 0 && (
                             <span className="EezStudio_ListLabel_Badge">
                                 SAMPLED
                             </span>
@@ -914,31 +914,31 @@ export class Variable extends EezObject {
             }
 
             if (
-                variable.dibField != undefined &&
+                variable.bb3ModuleField != undefined &&
                 !isPropertyDisabled(
                     variable,
-                    findPropertyByNameInObject(variable, "dibField")!
+                    findPropertyByNameInObject(variable, "bb3ModuleField")!
                 )
             ) {
-                if (!isDibFieldType(variable.type)) {
+                if (!isBB3ModuleFieldType(variable.type)) {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            `A DIB field must be a boolean, integer or floating point type`,
+                            `A BB3 module field must be a boolean, integer or floating point type`,
                             getChildOfObject(variable, "type")
                         )
                     );
                 }
                 if (
-                    variable.dibFieldMin != undefined &&
-                    variable.dibFieldMax != undefined &&
-                    variable.dibFieldMin > variable.dibFieldMax
+                    variable.bb3ModuleFieldMin != undefined &&
+                    variable.bb3ModuleFieldMax != undefined &&
+                    variable.bb3ModuleFieldMin > variable.bb3ModuleFieldMax
                 ) {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            `DIB field min is greater than max`,
-                            getChildOfObject(variable, "dibFieldMin")
+                            `BB3 module field min is greater than max`,
+                            getChildOfObject(variable, "bb3ModuleFieldMin")
                         )
                     );
                 }

@@ -160,20 +160,20 @@ function getDiscreteTypeEnumeration(object: ScpiTypedObject) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// SCPI commands of a DIB module project are forwarded by BB3+ to the module,
+// SCPI commands of a module project are forwarded by BB3+ to the module,
 // so they need the extra details (units, special values, addressing, ...)
-export function isScpiModuleProject(object: IEezObject) {
-    return !!ProjectEditor.getProject(object).dibModuleMetadata;
+export function isBB3ModuleScpiProject(object: IEezObject) {
+    return !!ProjectEditor.getProject(object).bb3ModuleMetadata;
 }
 
-const hideIfNotModuleProject = (object: IEezObject) =>
-    !isScpiModuleProject(object);
+const hideIfNotBB3ModuleProject = (object: IEezObject) =>
+    !isBB3ModuleScpiProject(object);
 
 const unitProperty: PropertyInfo = {
     name: "unit",
     type: PropertyType.Enum,
     enumItems: SCPI_UNITS.map(unit => ({ id: unit.id, label: unit.label })),
-    hideInPropertyGrid: hideIfNotModuleProject
+    hideInPropertyGrid: hideIfNotBB3ModuleProject
 };
 
 const repeatProperty: PropertyInfo = {
@@ -183,10 +183,10 @@ const repeatProperty: PropertyInfo = {
         { id: "once", label: "Once" },
         { id: "list", label: "List (one or more values)" }
     ],
-    hideInPropertyGrid: hideIfNotModuleProject
+    hideInPropertyGrid: hideIfNotBB3ModuleProject
 };
 
-function checkTypeForModule(
+function checkTypeForBB3Module(
     object: IEezObject,
     types: (ScpiParameterType | ScpiResponseType)[],
     messages: IMessage[]
@@ -394,7 +394,7 @@ export class ScpiParameter extends EezObject {
                 name: "specialValues",
                 displayName: "Special values (MIN, MAX, DEF, UP, DOWN, NAN, INF, NINF, AUTO)",
                 type: PropertyType.String,
-                hideInPropertyGrid: hideIfNotModuleProject
+                hideInPropertyGrid: hideIfNotBB3ModuleProject
             },
             repeatProperty,
             {
@@ -402,7 +402,7 @@ export class ScpiParameter extends EezObject {
                 displayName: "Is calibration password? (checked by BB3+, not sent to the module)",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
-                hideInPropertyGrid: hideIfNotModuleProject
+                hideInPropertyGrid: hideIfNotBB3ModuleProject
             },
             {
                 name: "description",
@@ -415,11 +415,11 @@ export class ScpiParameter extends EezObject {
         },
 
         check: (parameter: ScpiParameter, messages: IMessage[]) => {
-            if (!isScpiModuleProject(parameter)) {
+            if (!isBB3ModuleScpiProject(parameter)) {
                 return;
             }
 
-            checkTypeForModule(parameter, parameter.type, messages);
+            checkTypeForBB3Module(parameter, parameter.type, messages);
 
             if (
                 parameter.isCalibrationPassword &&
@@ -824,8 +824,8 @@ export class ScpiResponseItem extends EezObject {
 
             if (getWireTypeMask(item.type, false) == 0) {
                 messages.push(propertyNotSetMessage(item, "type"));
-            } else if (isScpiModuleProject(item)) {
-                checkTypeForModule(item, item.type, messages);
+            } else if (isBB3ModuleScpiProject(item)) {
+                checkTypeForBB3Module(item, item.type, messages);
             }
 
             const items = getParent(item) as ScpiResponseItem[];
@@ -883,7 +883,7 @@ export class ScpiResponse extends EezObject {
                 type: PropertyType.Array,
                 typeClass: ScpiResponseItem,
                 defaultValue: [],
-                hideInPropertyGrid: hideIfNotModuleProject
+                hideInPropertyGrid: hideIfNotBB3ModuleProject
             },
             {
                 name: "description",
@@ -903,7 +903,7 @@ export class ScpiResponse extends EezObject {
             }
         },
         check: (response: ScpiResponse, messages: IMessage[]) => {
-            if (!isScpiModuleProject(response)) {
+            if (!isBB3ModuleScpiProject(response)) {
                 return;
             }
 
@@ -917,7 +917,7 @@ export class ScpiResponse extends EezObject {
             }
 
             if (!response.items || response.items.length == 0) {
-                checkTypeForModule(response, response.type, messages);
+                checkTypeForBB3Module(response, response.type, messages);
             }
         }
     };
@@ -1053,7 +1053,7 @@ export class ScpiCommand extends EezObject {
     sendsBackDataBlock: boolean;
     addressing?: ScpiAddressing;
     timeoutMs?: number;
-    applyOnDibSync?: boolean;
+    applyOnSync?: boolean;
 
     constructor() {
         super();
@@ -1077,7 +1077,7 @@ export class ScpiCommand extends EezObject {
             sendsBackDataBlock: observable,
             addressing: observable,
             timeoutMs: observable,
-            applyOnDibSync: observable
+            applyOnSync: observable
         });
     }
 
@@ -1134,24 +1134,24 @@ export class ScpiCommand extends EezObject {
                 type: PropertyType.Object,
                 typeClass: ScpiAddressing,
                 defaultValue: {},
-                hideInPropertyGrid: hideIfNotModuleProject
+                hideInPropertyGrid: hideIfNotBB3ModuleProject
             },
             {
                 name: "timeoutMs",
                 displayName: `Timeout (ms, default ${SCPI_DEFAULT_TIMEOUT_MS})`,
                 type: PropertyType.Number,
-                hideInPropertyGrid: hideIfNotModuleProject
+                hideInPropertyGrid: hideIfNotBB3ModuleProject
             },
             {
-                name: "applyOnDibSync",
-                displayName: "Apply on DIB SYNC (e.g. output enable, switched together in all the modules)",
+                name: "applyOnSync",
+                displayName: "Apply on sync (e.g. output enable, switched together in all the modules)",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
-                hideInPropertyGrid: hideIfNotModuleProject
+                hideInPropertyGrid: hideIfNotBB3ModuleProject
             }
         ],
         check: (command: ScpiCommand, messages: IMessage[]) => {
-            if (!isScpiModuleProject(command)) {
+            if (!isBB3ModuleScpiProject(command)) {
                 return;
             }
 

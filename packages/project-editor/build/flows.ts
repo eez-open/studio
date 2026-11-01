@@ -547,7 +547,7 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
                         !(
                             (assets.option == "buildFiles" ||
                                 assets.getAssetId(globalVariable) != undefined) &&
-                            (globalVariable.native || assets.projectStore.project.dibModuleMetadata && globalVariable.dibField != undefined)
+                            (globalVariable.native || assets.projectStore.project.bb3ModuleMetadata && globalVariable.bb3ModuleField != undefined)
                         ) // only non-native variables
                 ),
                 globalVariable =>

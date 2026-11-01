@@ -81,7 +81,7 @@ export const FIRMWARE_BASIC_TYPE_NAMES = [
     "any"
 ];
 
-export const DIB_MODULE_FIRMWARE_BASIC_TYPE_NAMES = [
+export const BB3_MODULE_FIRMWARE_BASIC_TYPE_NAMES = [
     "integer", // same as "int32"
     `int8`,
     `uint8`,
@@ -668,8 +668,8 @@ export const VariableTypeSelect = observer(
                     : LVGL_BASIC_TYPE_NAMES
                 : this.props.project.projectTypeTraits.isDashboard
                 ? BASIC_TYPE_NAMES
-                : this.props.project.dibModuleMetadata ?
-                DIB_MODULE_FIRMWARE_BASIC_TYPE_NAMES : FIRMWARE_BASIC_TYPE_NAMES;
+                : this.props.project.bb3ModuleMetadata ?
+                BB3_MODULE_FIRMWARE_BASIC_TYPE_NAMES : FIRMWARE_BASIC_TYPE_NAMES;
 
             const basicTypes = basicTypeNames.map(basicTypeName => {
                 return (
@@ -1104,7 +1104,7 @@ export function isIntegerType(type: string) {
     return type == "integer" || isNarrowIntegerType(type);
 }
 
-// The integer types other than "integer" (int32), only in DIB module
+// The integer types other than "integer" (int32), only in module
 // projects: int8 .. uint64. In the expressions they are integers.
 export function isNarrowIntegerType(type: string) {
     return (
@@ -1119,62 +1119,62 @@ export function isNarrowIntegerType(type: string) {
     );
 }
 
-// Types of the DIB fields (the custom fields of a DIB module): the C type of
+// Types of the BB3 module fields (the custom fields of a BB3 module): the C type of
 // the field in the module firmware, its size on the wire (and in the BB3+
-// copy) and the member of bb3p_field_value_t (bb3p-dib-link.h)
-export const DIB_FIELD_TYPES: {
+// copy) and the member of bb3_field_value_t (bb3-link.h)
+export const BB3_MODULE_FIELD_TYPES: {
     [type: string]: {
         cType: string;
         size: number;
         valueMember: string;
-        bb3pType: string;
+        bb3Type: string;
     };
 } = {
-    boolean: { cType: "bool", size: 1, valueMember: "b", bb3pType: "BOOL" },
-    int8: { cType: "int8_t", size: 1, valueMember: "i8", bb3pType: "INT8" },
-    uint8: { cType: "uint8_t", size: 1, valueMember: "u8", bb3pType: "UINT8" },
-    int16: { cType: "int16_t", size: 2, valueMember: "i16", bb3pType: "INT16" },
+    boolean: { cType: "bool", size: 1, valueMember: "b", bb3Type: "BOOL" },
+    int8: { cType: "int8_t", size: 1, valueMember: "i8", bb3Type: "INT8" },
+    uint8: { cType: "uint8_t", size: 1, valueMember: "u8", bb3Type: "UINT8" },
+    int16: { cType: "int16_t", size: 2, valueMember: "i16", bb3Type: "INT16" },
     uint16: {
         cType: "uint16_t",
         size: 2,
         valueMember: "u16",
-        bb3pType: "UINT16"
+        bb3Type: "UINT16"
     },
     integer: {
         cType: "int32_t",
         size: 4,
         valueMember: "i32",
-        bb3pType: "INT32"
+        bb3Type: "INT32"
     },
-    int32: { cType: "int32_t", size: 4, valueMember: "i32", bb3pType: "INT32" },
+    int32: { cType: "int32_t", size: 4, valueMember: "i32", bb3Type: "INT32" },
     uint32: {
         cType: "uint32_t",
         size: 4,
         valueMember: "u32",
-        bb3pType: "UINT32"
+        bb3Type: "UINT32"
     },
-    int64: { cType: "int64_t", size: 8, valueMember: "i64", bb3pType: "INT64" },
+    int64: { cType: "int64_t", size: 8, valueMember: "i64", bb3Type: "INT64" },
     uint64: {
         cType: "uint64_t",
         size: 8,
         valueMember: "u64",
-        bb3pType: "UINT64"
+        bb3Type: "UINT64"
     },
-    float: { cType: "float", size: 4, valueMember: "f", bb3pType: "FLOAT" },
-    double: { cType: "double", size: 8, valueMember: "d", bb3pType: "DOUBLE" }
+    float: { cType: "float", size: 4, valueMember: "f", bb3Type: "FLOAT" },
+    double: { cType: "double", size: 8, valueMember: "d", bb3Type: "DOUBLE" }
 };
 
-export function isDibFieldType(type: string) {
-    return DIB_FIELD_TYPES[type] != undefined;
+export function isBB3ModuleFieldType(type: string) {
+    return BB3_MODULE_FIELD_TYPES[type] != undefined;
 }
 
-export function isDibFieldFloatType(type: string) {
+export function isBB3ModuleFieldFloatType(type: string) {
     return type == "float" || type == "double";
 }
 
 export function isBasicType(project: Project, type: string) {
-    if (project.dibModuleMetadata) {
-        return DIB_MODULE_FIRMWARE_BASIC_TYPE_NAMES.indexOf(type) != -1;
+    if (project.bb3ModuleMetadata) {
+        return BB3_MODULE_FIRMWARE_BASIC_TYPE_NAMES.indexOf(type) != -1;
     }
     return BASIC_TYPE_NAMES.indexOf(type) != -1;
 }

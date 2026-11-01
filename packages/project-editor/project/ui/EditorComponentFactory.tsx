@@ -26,7 +26,7 @@ import { Font } from "project-editor/features/font/font";
 import { ScpiCommand, ScpiSubsystem } from "project-editor/features/scpi/scpi";
 import { getAncestorOfType } from "project-editor/store";
 import { ReadmeEditor } from "project-editor/features/readme/navigation";
-import { DibModuleMetadataEditor } from "project-editor/features/dib-module-metadata/navigation";
+import { BB3ModuleMetadataEditor } from "project-editor/features/bb3-module-metadata/navigation";
 import { ChangesEditor } from "project-editor/features/changes/editor";
 import { isLVGLProject } from "project-editor/project/project-type-traits";
 
@@ -99,11 +99,11 @@ export function getEditorComponent(
         };
     }
 
-    if (isAncestor(object, project.dibModuleMetadata)) {
+    if (isAncestor(object, project.bb3ModuleMetadata)) {
         return {
-            object: project.dibModuleMetadata,
+            object: project.bb3ModuleMetadata,
             subObject: object,
-            EditorComponent: DibModuleMetadataEditor
+            EditorComponent: BB3ModuleMetadataEditor
         };
     }
 

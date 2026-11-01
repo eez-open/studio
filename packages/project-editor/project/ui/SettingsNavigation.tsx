@@ -378,7 +378,7 @@ export const SettingsContent = observer(
                             );
                         }
 
-                        if (extension.key == "dibModuleMetadata") {
+                        if (extension.key == "bb3ModuleMetadata") {
                             return (
                                 this.context.project.settings.general
                                     .projectType == ProjectType.FIRMWARE &&

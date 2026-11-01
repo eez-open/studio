@@ -2986,21 +2986,21 @@ registerClass("YTGraphWidget", YTGraphWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// sampled DIB fields of the DIB module project (the fields with a YT history)
-function getSampledDibFields(object: IEezObject) {
-    const dibModuleMetadata = ProjectEditor.getProject(object).dibModuleMetadata;
-    if (!dibModuleMetadata) {
+// sampled BB3 module fields of the module project (the fields with a YT history)
+function getSampledBB3ModuleFields(object: IEezObject) {
+    const bb3ModuleMetadata = ProjectEditor.getProject(object).bb3ModuleMetadata;
+    if (!bb3ModuleMetadata) {
         return [];
     }
-    return dibModuleMetadata.dibFields.filter(
+    return bb3ModuleMetadata.bb3ModuleFields.filter(
         variable =>
             (variable.type == "float" || variable.type == "integer") &&
-            variable.dibFieldMaxSampleRate != undefined &&
-            variable.dibFieldMaxSampleRate > 0
+            variable.bb3ModuleFieldMaxSampleRate != undefined &&
+            variable.bb3ModuleFieldMaxSampleRate > 0
     );
 }
 
-// bit of a bit field (integer DIB field) drawn as a digital trace, its YT
+// bit of a bit field (integer module field) drawn as a digital trace, its YT
 // history value is the AND of the samples in bits 0..7 and the OR in bits
 // 8..15, so only bits 0..7
 const YT_CHART_MAX_BIT = 7;
@@ -3024,10 +3024,10 @@ class YTChartTrace extends EezObject {
         properties: [
             {
                 name: "field",
-                displayName: "DIB field",
+                displayName: "BB3 module field",
                 type: PropertyType.Enum,
                 enumItems: (trace: YTChartTrace) =>
-                    getSampledDibFields(trace).map(variable => ({
+                    getSampledBB3ModuleFields(trace).map(variable => ({
                         id: variable.name
                     }))
             },
@@ -3070,21 +3070,21 @@ class YTChartTrace extends EezObject {
             if (!trace.field) {
                 messages.push(propertyNotSetMessage(trace, "field"));
             } else if (
-                !getSampledDibFields(trace).find(
+                !getSampledBB3ModuleFields(trace).find(
                     variable => variable.name == trace.field
                 )
             ) {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
-                        `"${trace.field}" is not a sampled DIB field (set "DIB field max sample rate" of the variable)`,
+                        `"${trace.field}" is not a sampled BB3 module field (set "Module field max sample rate" of the variable)`,
                         getChildOfObject(trace, "field")
                     )
                 );
             }
 
             if (isBitTrace(trace)) {
-                const variable = getSampledDibFields(trace).find(
+                const variable = getSampledBB3ModuleFields(trace).find(
                     variable => variable.name == trace.field
                 );
                 if (
@@ -3103,7 +3103,7 @@ class YTChartTrace extends EezObject {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            `A bit trace needs an integer DIB field (a bit field)`,
+                            `A bit trace needs an integer BB3 module field (a bit field)`,
                             getChildOfObject(trace, "bit")
                         )
                     );
@@ -3149,7 +3149,7 @@ class YTChartTrace extends EezObject {
     }
 }
 
-// YT graph of any number of sampled DIB fields of the module, one value of
+// YT graph of any number of sampled BB3 module fields of the module, one value of
 // the field YT history (recorded by BB3+ at the slot YT rate) per pixel
 // column, in the scroll or the scan mode.
 export class YTChartWidget extends Widget {
@@ -3164,7 +3164,7 @@ export class YTChartWidget extends Widget {
             projectType !== ProjectType.LVGL &&
             projectType !== ProjectType.DASHBOARD &&
             projectType !== ProjectType.EEZ_GUI_LITE &&
-            !!projectStore?.project.dibModuleMetadata,
+            !!projectStore?.project.bb3ModuleMetadata,
 
         componentPaletteGroupName: "!1Visualiser",
 
@@ -3216,11 +3216,11 @@ export class YTChartWidget extends Widget {
         ),
 
         check: (object: YTChartWidget, messages: IMessage[]) => {
-            if (!getProject(object).dibModuleMetadata) {
+            if (!getProject(object).bb3ModuleMetadata) {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
-                        "YTChart widget is supported only in the DIB module projects",
+                        "YTChart widget is supported only in the module projects",
                         object
                     )
                 );
@@ -3331,13 +3331,13 @@ export class YTChartWidget extends Widget {
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        const dibModuleMetadata = assets.projectStore.project.dibModuleMetadata;
+        const bb3ModuleMetadata = assets.projectStore.project.bb3ModuleMetadata;
 
         // traces
         dataBuffer.writeArray(this.traces, trace => {
             // fieldIndex
-            const fieldIndex = dibModuleMetadata
-                ? dibModuleMetadata.getDibFieldIndex(trace.field)
+            const fieldIndex = bb3ModuleMetadata
+                ? bb3ModuleMetadata.getBB3ModuleFieldIndex(trace.field)
                 : -1;
             dataBuffer.writeUint16(fieldIndex != -1 ? fieldIndex : 0);
 

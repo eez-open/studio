@@ -6,8 +6,8 @@ import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import { IPanel } from "project-editor/store";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 
-export const DibModuleMetadataEditor = observer(
-    class DibModuleMetadataEditor
+export const BB3ModuleMetadataEditor = observer(
+    class BB3ModuleMetadataEditor
         extends EditorComponent
         implements IPanel
     {
@@ -40,13 +40,13 @@ export const DibModuleMetadataEditor = observer(
             return (
                 <div
                     ref={this.divRef}
-                    className="EezStudio_DibModuleMetadata_Container"
+                    className="EezStudio_BB3ModuleMetadata_Container"
                     onFocus={this.onFocus}
                     tabIndex={0}
                     style={{ overflow: "auto", height: "100%", padding: 10 }}
                 >
                     <PropertyGrid
-                        objects={[this.context.project.dibModuleMetadata]}
+                        objects={[this.context.project.bb3ModuleMetadata]}
                     />
                 </div>
             );

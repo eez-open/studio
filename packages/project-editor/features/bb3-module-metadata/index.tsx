@@ -16,20 +16,20 @@ import type { ProjectEditorFeature } from "project-editor/store/features";
 import { DataBuffer } from "project-editor/build/data-buffer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
-    DIB_FIELD_TYPES,
+    BB3_MODULE_FIELD_TYPES,
     isIntegerType,
 } from "project-editor/features/variable/value-type";
 import { getValueType } from "project-editor/build/values";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
-    getDibFieldMeasurementValue,
-    getDibFieldUnitValue
-} from "project-editor/features/variable/dib-field-unit";
+    getBB3ModuleFieldMeasurementValue,
+    getBB3ModuleFieldUnitValue
+} from "project-editor/features/variable/bb3-module-field-unit";
 import {
     SCPI_COMMAND_FLAG_QUERY,
-    SCPI_COMMAND_FLAG_APPLY_ON_DIB_SYNC,
-    DIB_FIELD_FLAG_PERSISTENT,
-    DIB_FIELD_FLAG_SAMPLED,
+    SCPI_COMMAND_FLAG_APPLY_ON_SYNC,
+    BB3_MODULE_FIELD_FLAG_PERSISTENT,
+    BB3_MODULE_FIELD_FLAG_SAMPLED,
     SCPI_DEFAULT_TIMEOUT_MS,
     SCPI_PARAM_FLAG_CALIBRATION_PASSWORD,
     SCPI_PARAM_FLAG_LIST,
@@ -37,8 +37,8 @@ import {
     SCPI_RESPONSE_ITEM_FLAG_LIST,
     getEnumIndex,
     getEnumeration,
-    getModuleScpiCommands,
-    getModuleScpiEnums,
+    getBB3ModuleScpiCommands,
+    getBB3ModuleScpiEnums,
     getScpiAddressing,
     getScpiAddressingKindValue,
     getScpiCommandPattern,
@@ -50,7 +50,7 @@ import {
 
 const DEFAULT_SCPI_MAX_MESSAGE_SIZE = 1024;
 
-const DIB_MODULE_METADATA_ICON = (
+const BB3_MODULE_METADATA_ICON = (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path
             fill="currentColor"
@@ -61,14 +61,14 @@ const DIB_MODULE_METADATA_ICON = (
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DibModuleMetadata extends EezObject {
+export class BB3ModuleMetadata extends EezObject {
     moduleName: string;
     moduleBrand: string;
     moduleType: string;
     moduleRevision: string;
     firmwareVersion: string;
     scpiMaxMessageSize: number;
-    // name of the float DIB field with the seconds per sample of the slot YT
+    // name of the float BB3 module field with the seconds per sample of the slot YT
     // graphs (e.g. ch_yt_view_rate), BB3+ requests the sampled fields at
     // that period
     ytRateField: string | undefined;
@@ -107,8 +107,8 @@ export class DibModuleMetadata extends EezObject {
                 name: "ytRateField",
                 displayName: "YT rate field",
                 type: PropertyType.Enum,
-                enumItems: (object: DibModuleMetadata) =>
-                    object.dibFields
+                enumItems: (object: BB3ModuleMetadata) =>
+                    object.bb3ModuleFields
                         .filter(variable => variable.type == "float")
                         .map(variable => ({ id: variable.name }))
             }
@@ -116,8 +116,8 @@ export class DibModuleMetadata extends EezObject {
         defaultValue: {
             scpiMaxMessageSize: DEFAULT_SCPI_MAX_MESSAGE_SIZE
         },
-        icon: DIB_MODULE_METADATA_ICON,
-        check: (object: DibModuleMetadata, messages: IMessage[]) => {
+        icon: BB3_MODULE_METADATA_ICON,
+        check: (object: BB3ModuleMetadata, messages: IMessage[]) => {
             if (!object.moduleName) {
                 messages.push(propertyNotSetMessage(object, "moduleName"));
             }
@@ -155,7 +155,7 @@ export class DibModuleMetadata extends EezObject {
             }
 
             if (object.ytRateField) {
-                const ytRateField = object.dibFields.find(
+                const ytRateField = object.bb3ModuleFields.find(
                     variable => variable.name == object.ytRateField
                 );
                 if (!ytRateField || ytRateField.type != "float") {
@@ -199,43 +199,43 @@ export class DibModuleMetadata extends EezObject {
             : 0;
     }
 
-    get dibFields() {
+    get bb3ModuleFields() {
         const project = ProjectEditor.getProject(this);
         return project.variables.globalVariables.filter(
-            globalVariable => globalVariable.dibField != undefined
+            globalVariable => globalVariable.bb3ModuleField != undefined
         );
     }
 
-    getDibFieldIndex(name: string) {
-        return this.dibFields.findIndex(
+    getBB3ModuleFieldIndex(name: string) {
+        return this.bb3ModuleFields.findIndex(
             globalVariable => globalVariable.name == name
         );
     }
 }
 
-registerClass("DibModuleMetadata", DibModuleMetadata);
+registerClass("BB3ModuleMetadata", BB3ModuleMetadata);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const DIB_METADATA_SPECIFICATION_VERSION_1 = 1;
+const BB3_MODULE_METADATA_SPECIFICATION_VERSION_1 = 1;
 
 // size of the field value on the wire and in the BB3+ copy, 0 for a type
 // that is not supported (the project check reports it)
-function getDibFieldSize(variable: Variable) {
-    const dibFieldType = DIB_FIELD_TYPES[variable.type];
-    return dibFieldType ? dibFieldType.size : 0;
+function getBB3ModuleFieldSize(variable: Variable) {
+    const bb3ModuleFieldType = BB3_MODULE_FIELD_TYPES[variable.type];
+    return bb3ModuleFieldType ? bb3ModuleFieldType.size : 0;
 }
 
 // pageNames: names of the pages in the assets (index is page id - 1), BB3+ finds
 // the module pages (slot views, settings) by name
-export function writeDibModuleMetadata(
-    metadata: DibModuleMetadata,
+export function writeBB3ModuleMetadata(
+    metadata: BB3ModuleMetadata,
     dataBuffer: DataBuffer,
     pageNames: string[]
 ) {
     dataBuffer.writeObjectOffset(() => {
         // version
-        dataBuffer.writeUint16(DIB_METADATA_SPECIFICATION_VERSION_1);
+        dataBuffer.writeUint16(BB3_MODULE_METADATA_SPECIFICATION_VERSION_1);
         // moduleType
         dataBuffer.writeUint16(metadata.moduleTypeNum);
         // moduleRevision
@@ -249,49 +249,49 @@ export function writeDibModuleMetadata(
 
         // customFields
         let offset = 0;
-        dataBuffer.writeArray(metadata.dibFields, variable => {
+        dataBuffer.writeArray(metadata.bb3ModuleFields, variable => {
             // valueType
             dataBuffer.writeUint16(getValueType(variable.type));
 
             // direction
-            const DIB_FIELD_DIRECTION_INPUT = 0;
-            const DIB_FIELD_DIRECTION_OUTPUT = 1;
-            const DIB_FIELD_DIRECTION_INPUT_OUTPUT = 2;
+            const BB3_MODULE_FIELD_DIRECTION_INPUT = 0;
+            const BB3_MODULE_FIELD_DIRECTION_OUTPUT = 1;
+            const BB3_MODULE_FIELD_DIRECTION_INPUT_OUTPUT = 2;
             dataBuffer.writeUint8(
-                variable.dibField == "input"
-                    ? DIB_FIELD_DIRECTION_INPUT
-                    : variable.dibField == "output"
-                      ? DIB_FIELD_DIRECTION_OUTPUT
-                      : DIB_FIELD_DIRECTION_INPUT_OUTPUT
+                variable.bb3ModuleField == "input"
+                    ? BB3_MODULE_FIELD_DIRECTION_INPUT
+                    : variable.bb3ModuleField == "output"
+                      ? BB3_MODULE_FIELD_DIRECTION_OUTPUT
+                      : BB3_MODULE_FIELD_DIRECTION_INPUT_OUTPUT
             );
 
             // flags
-            const maxSampleRate = getDibFieldMaxSampleRate(variable);
+            const maxSampleRate = getBB3ModuleFieldMaxSampleRate(variable);
             dataBuffer.writeUint8(
-                (variable.persistent ? DIB_FIELD_FLAG_PERSISTENT : 0) |
-                    (maxSampleRate > 0 ? DIB_FIELD_FLAG_SAMPLED : 0)
+                (variable.persistent ? BB3_MODULE_FIELD_FLAG_PERSISTENT : 0) |
+                    (maxSampleRate > 0 ? BB3_MODULE_FIELD_FLAG_SAMPLED : 0)
             );
 
             // offset
             dataBuffer.writeUint32(offset);
 
             // size
-            const size = getDibFieldSize(variable);
+            const size = getBB3ModuleFieldSize(variable);
             dataBuffer.writeUint32(size);
 
             // name
             dataBuffer.writeStringPtr(variable.name);
 
             // unit
-            dataBuffer.writeUint16(getDibFieldUnitValue(variable.dibFieldUnit));
-            // measurement (BB3P_MEASUREMENT_...) and its module channel
+            dataBuffer.writeUint16(getBB3ModuleFieldUnitValue(variable.bb3ModuleFieldUnit));
+            // measurement (BB3_MEASUREMENT_...) and its module channel
             const measurement =
                 maxSampleRate > 0
-                    ? getDibFieldMeasurementValue(variable.dibFieldMeasurement)
+                    ? getBB3ModuleFieldMeasurementValue(variable.bb3ModuleFieldMeasurement)
                     : 0;
             dataBuffer.writeUint8(measurement);
             dataBuffer.writeUint8(
-                measurement != 0 ? variable.dibFieldMeasurementChannel ?? 0 : 0
+                measurement != 0 ? variable.bb3ModuleFieldMeasurementChannel ?? 0 : 0
             );
 
             // maxSampleRate
@@ -313,20 +313,20 @@ export function writeDibModuleMetadata(
 }
 
 // samples per second, 0 if the field is not sampled
-function getDibFieldMaxSampleRate(variable: Variable) {
+function getBB3ModuleFieldMaxSampleRate(variable: Variable) {
     if (variable.type != "float" && !isIntegerType(variable.type)) {
         return 0;
     }
-    return variable.dibFieldMaxSampleRate != undefined &&
-        variable.dibFieldMaxSampleRate > 0
-        ? variable.dibFieldMaxSampleRate
+    return variable.bb3ModuleFieldMaxSampleRate != undefined &&
+        variable.bb3ModuleFieldMaxSampleRate > 0
+        ? variable.bb3ModuleFieldMaxSampleRate
         : 0;
 }
 
-function writeScpiMetadata(metadata: DibModuleMetadata, dataBuffer: DataBuffer) {
+function writeScpiMetadata(metadata: BB3ModuleMetadata, dataBuffer: DataBuffer) {
     const project = ProjectEditor.getProject(metadata);
-    const commands = getModuleScpiCommands(project);
-    const enums = getModuleScpiEnums(project);
+    const commands = getBB3ModuleScpiCommands(project);
+    const enums = getBB3ModuleScpiEnums(project);
 
     // scpiMaxMessageSize
     dataBuffer.writeUint32(
@@ -340,7 +340,7 @@ function writeScpiMetadata(metadata: DibModuleMetadata, dataBuffer: DataBuffer) 
         // flags
         dataBuffer.writeUint16(
             (command.isQuery ? SCPI_COMMAND_FLAG_QUERY : 0) |
-                (command.applyOnDibSync ? SCPI_COMMAND_FLAG_APPLY_ON_DIB_SYNC : 0)
+                (command.applyOnSync ? SCPI_COMMAND_FLAG_APPLY_ON_SYNC : 0)
         );
         // timeoutMs
         dataBuffer.writeUint16(command.timeoutMs || SCPI_DEFAULT_TIMEOUT_MS);
@@ -424,17 +424,17 @@ function isValidHex(value: string | undefined, numBits: number) {
 ////////////////////////////////////////////////////////////////////////////////
 
 const feature: ProjectEditorFeature = {
-    name: "eezstudio-project-feature-dib-module-metadata",
+    name: "eezstudio-project-feature-bb3-module-metadata",
     version: "0.1.0",
-    description: "DIB module metadata",
+    description: "BB3 module metadata",
     author: "EEZ",
     authorLogo: "../eez-studio-ui/_images/eez_logo.png",
-    displayName: "DIB Module Metadata",
+    displayName: "BB3 Module Metadata",
     mandatory: false,
-    key: "dibModuleMetadata",
+    key: "bb3ModuleMetadata",
     type: PropertyType.Object,
-    typeClass: DibModuleMetadata,
-    icon: DIB_MODULE_METADATA_ICON,
+    typeClass: BB3ModuleMetadata,
+    icon: BB3_MODULE_METADATA_ICON,
     create: () => ({})
 };
 

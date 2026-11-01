@@ -539,7 +539,7 @@ export function isImplicitConversionPossible(
 }
 
 function getType(project: Project, valueType: ValueType): ValueType {
-    // int8 .. uint64 (DIB module projects) are integers in the expressions
+    // int8 .. uint64 (module projects) are integers in the expressions
     if (isNarrowIntegerType(valueType)) {
         return "integer";
     }

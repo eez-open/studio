@@ -1,28 +1,28 @@
-// Generates the DIB fields of a DIB module: the global variables of the
-// project with "DIB field" set, exchanged with BB3+ as custom fields (tag
-// BB3P_CUSTOM_FIELD_TAG_START + index). The module firmware includes the
-// generic runtime bb3p-dib-link.c (eez-bb3plus-cm5-firmware/bb3-plus-dib-
+// Generates the BB3 module fields of a BB3 module: the global variables of the
+// project with "BB3 module field" set, exchanged with BB3+ as custom fields (tag
+// BB3_CUSTOM_FIELD_TAG_START + index). The module firmware includes the
+// generic runtime bb3-link.c (eez-bb3plus-cm5-firmware/bb3-plus-dib-
 // interface), which uses these definitions by their fixed names.
-//   DIB_FIELDS_DECL - index enum, dib_fields_t (one member per field) and
-//                     the declarations of dib_fields and dib_field_defs
-//   DIB_FIELDS_DEF  - dib_fields with the default values of the variables
-//                     and dib_field_defs (type, direction, flags, offset,
+//   BB3_MODULE_FIELDS_DECL - index enum, module_fields_t (one member per field) and
+//                     the declarations of module_fields and module_field_defs
+//   BB3_MODULE_FIELDS_DEF  - module_fields with the default values of the variables
+//                     and module_field_defs (type, direction, flags, offset,
 //                     update period, min, max of each field)
 
 import type { Project } from "project-editor/project/project";
 import type { Variable } from "project-editor/features/variable/variable";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
-import { DIB_FIELD_TYPES } from "project-editor/features/variable/value-type";
+import { BB3_MODULE_FIELD_TYPES } from "project-editor/features/variable/value-type";
 import { evalConstantExpression } from "project-editor/flow/expression";
 
 function getFieldIndexName(variable: Variable) {
-    return getName("DIB_FIELD_", variable, NamingConvention.UnderscoreUpperCase);
+    return getName("MODULE_FIELD_", variable, NamingConvention.UnderscoreUpperCase);
 }
 
 function getDirectionName(variable: Variable) {
-    return variable.dibField == "input"
+    return variable.bb3ModuleField == "input"
         ? "INPUT"
-        : variable.dibField == "output"
+        : variable.bb3ModuleField == "output"
         ? "OUTPUT"
         : "INPUT_OUTPUT";
 }
@@ -76,27 +76,27 @@ function getDefaultValue(project: Project, variable: Variable) {
 
 function getFieldComment(variable: Variable) {
     const parts: string[] = [];
-    parts.push(variable.dibField == "input-output" ? "input-output" : variable.dibField!);
+    parts.push(variable.bb3ModuleField == "input-output" ? "input-output" : variable.bb3ModuleField!);
     if (variable.persistent) {
         parts.push("persistent");
     }
     let type = variable.type;
-    if (variable.dibFieldUnit) {
-        type += ` [${variable.dibFieldUnit}]`;
+    if (variable.bb3ModuleFieldUnit) {
+        type += ` [${variable.bb3ModuleFieldUnit}]`;
     }
     parts.push(type);
-    if (variable.dibFieldMin != undefined || variable.dibFieldMax != undefined) {
+    if (variable.bb3ModuleFieldMin != undefined || variable.bb3ModuleFieldMax != undefined) {
         parts.push(
-            `${variable.dibFieldMin != undefined ? variable.dibFieldMin : ""} .. ${
-                variable.dibFieldMax != undefined ? variable.dibFieldMax : ""
+            `${variable.bb3ModuleFieldMin != undefined ? variable.bb3ModuleFieldMin : ""} .. ${
+                variable.bb3ModuleFieldMax != undefined ? variable.bb3ModuleFieldMax : ""
             }`
         );
     }
-    if (variable.dibFieldUpdatePeriod) {
-        parts.push(`every ${variable.dibFieldUpdatePeriod} ms`);
+    if (variable.bb3ModuleFieldUpdatePeriod) {
+        parts.push(`every ${variable.bb3ModuleFieldUpdatePeriod} ms`);
     }
-    if (variable.dibFieldMaxSampleRate) {
-        parts.push(`sampled up to ${variable.dibFieldMaxSampleRate} S/s`);
+    if (variable.bb3ModuleFieldMaxSampleRate) {
+        parts.push(`sampled up to ${variable.bb3ModuleFieldMaxSampleRate} S/s`);
     }
     return parts.join(", ");
 }
@@ -111,39 +111,39 @@ function buildDecl(fields: Variable[]) {
 
     const members = fields.map(
         variable =>
-            `${TAB}${DIB_FIELD_TYPES[variable.type]?.cType ?? "int32_t"} ${
+            `${TAB}${BB3_MODULE_FIELD_TYPES[variable.type]?.cType ?? "int32_t"} ${
                 variable.name
             };`
     );
 
     return `////////////////////////////////////////////////////////////////////////////////
-// DIB fields: the global variables of the project with "DIB field" set, in
+// Module fields: the global variables of the project with "BB3 module field" set, in
 // the order of the module metadata. BB3+ has a copy of them: it sends the
 // input fields it changes (e.g. from the module GUI pages) and the module
-// sends the fields it changes back, see bb3p-dib-link.h for the runtime.
+// sends the fields it changes back, see bb3-link.h for the runtime.
 // Generated by EEZ Studio.
 
-// index of each field, its tag on the wire is DIB_FIELD_TAG(index)
-enum DibFieldIndex {
+// index of each field, its tag on the wire is MODULE_FIELD_TAG(index)
+enum ModuleFieldIndex {
 ${indexes.join("\n")}
 };
 
-#define DIB_NUM_FIELDS ${fields.length}
-#define DIB_FIELD_TAG(index) ((uint16_t)(BB3P_CUSTOM_FIELD_TAG_START + (index)))
+#define MODULE_NUM_FIELDS ${fields.length}
+#define MODULE_FIELD_TAG(index) ((uint16_t)(BB3_CUSTOM_FIELD_TAG_START + (index)))
 
 typedef struct {
 ${members.join("\n")}
-} dib_fields_t;
+} module_fields_t;
 
 // The field values. The module writes the output fields (and the
 // input-output fields when it changes them on its own), the runtime stores
 // the input fields received from BB3+ (after the on_field_set callback) and
 // sends every change to BB3+.
-extern dib_fields_t dib_fields;
+extern module_fields_t module_fields;
 
 // type, direction, flags, size, offset, update period, min and max of each
 // field, for the runtime
-extern const bb3p_field_def_t dib_field_defs[DIB_NUM_FIELDS];`;
+extern const bb3_field_def_t module_field_defs[MODULE_NUM_FIELDS];`;
 }
 
 function buildDef(project: Project, fields: Variable[]) {
@@ -156,88 +156,88 @@ function buildDef(project: Project, fields: Variable[]) {
     );
 
     const defs = fields.map(variable => {
-        const dibFieldType = DIB_FIELD_TYPES[variable.type] ?? DIB_FIELD_TYPES.integer;
+        const bb3ModuleFieldType = BB3_MODULE_FIELD_TYPES[variable.type] ?? BB3_MODULE_FIELD_TYPES.integer;
 
         const flags: string[] = [];
         if (variable.persistent) {
-            flags.push("BB3P_FIELD_FLAG_PERSISTENT");
+            flags.push("BB3_FIELD_FLAG_PERSISTENT");
         }
-        if (variable.dibFieldMaxSampleRate && variable.dibFieldMaxSampleRate > 0) {
-            flags.push("BB3P_FIELD_FLAG_SAMPLED");
+        if (variable.bb3ModuleFieldMaxSampleRate && variable.bb3ModuleFieldMaxSampleRate > 0) {
+            flags.push("BB3_FIELD_FLAG_SAMPLED");
         }
-        const hasMin = variable.dibFieldMin != undefined && variable.type != "boolean";
-        const hasMax = variable.dibFieldMax != undefined && variable.type != "boolean";
+        const hasMin = variable.bb3ModuleFieldMin != undefined && variable.type != "boolean";
+        const hasMax = variable.bb3ModuleFieldMax != undefined && variable.type != "boolean";
         if (hasMin) {
-            flags.push("BB3P_FIELD_FLAG_HAS_MIN");
+            flags.push("BB3_FIELD_FLAG_HAS_MIN");
         }
         if (hasMax) {
-            flags.push("BB3P_FIELD_FLAG_HAS_MAX");
+            flags.push("BB3_FIELD_FLAG_HAS_MAX");
         }
 
         const min = hasMin
-            ? `{ .${dibFieldType.valueMember} = ${getCLiteral(
+            ? `{ .${bb3ModuleFieldType.valueMember} = ${getCLiteral(
                   variable.type,
-                  variable.dibFieldMin
+                  variable.bb3ModuleFieldMin
               )} }`
             : "{ 0 }";
         const max = hasMax
-            ? `{ .${dibFieldType.valueMember} = ${getCLiteral(
+            ? `{ .${bb3ModuleFieldType.valueMember} = ${getCLiteral(
                   variable.type,
-                  variable.dibFieldMax
+                  variable.bb3ModuleFieldMax
               )} }`
             : "{ 0 }";
 
         const period =
-            variable.dibFieldUpdatePeriod && variable.dibFieldUpdatePeriod > 0
-                ? Math.round(variable.dibFieldUpdatePeriod)
+            variable.bb3ModuleFieldUpdatePeriod && variable.bb3ModuleFieldUpdatePeriod > 0
+                ? Math.round(variable.bb3ModuleFieldUpdatePeriod)
                 : 0;
 
-        return `${TAB}/* ${variable.name} */ { BB3P_FIELD_TYPE_${
-            dibFieldType.bb3pType
-        }, BB3P_FIELD_DIRECTION_${getDirectionName(variable)}, ${
+        return `${TAB}/* ${variable.name} */ { BB3_FIELD_TYPE_${
+            bb3ModuleFieldType.bb3Type
+        }, BB3_FIELD_DIRECTION_${getDirectionName(variable)}, ${
             flags.length > 0 ? flags.join(" | ") : "0"
-        }, sizeof(${dibFieldType.cType}), offsetof(dib_fields_t, ${
+        }, sizeof(${bb3ModuleFieldType.cType}), offsetof(module_fields_t, ${
             variable.name
         }), ${period}, ${min}, ${max} },`;
     });
 
     return `////////////////////////////////////////////////////////////////////////////////
-// DIB fields, generated by EEZ Studio (see the declarations)
+// Module fields, generated by EEZ Studio (see the declarations)
 
-dib_fields_t dib_fields = {
+module_fields_t module_fields = {
 ${values.join("\n")}
 };
 
-const bb3p_field_def_t dib_field_defs[DIB_NUM_FIELDS] = {
+const bb3_field_def_t module_field_defs[MODULE_NUM_FIELDS] = {
 ${defs.join("\n")}
 };`;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function buildDibFields(
+export function buildBB3ModuleFields(
     project: Project,
     sectionNames: string[] | undefined
 ) {
     const result: { [sectionName: string]: string } = {};
 
     const wantDecl =
-        !sectionNames || sectionNames.indexOf("DIB_FIELDS_DECL") !== -1;
+        !sectionNames || sectionNames.indexOf("BB3_MODULE_FIELDS_DECL") !== -1;
     const wantDef =
-        !sectionNames || sectionNames.indexOf("DIB_FIELDS_DEF") !== -1;
+        !sectionNames || sectionNames.indexOf("BB3_MODULE_FIELDS_DEF") !== -1;
 
     if (!wantDecl && !wantDef) {
         return result;
     }
 
-    const fields = project.dibModuleMetadata.dibFields;
+    const fields = project.bb3ModuleMetadata.bb3ModuleFields;
 
     if (wantDecl) {
-        result.DIB_FIELDS_DECL = buildDecl(fields);
+        result.BB3_MODULE_FIELDS_DECL = buildDecl(fields);
     }
 
     if (wantDef) {
-        result.DIB_FIELDS_DEF = buildDef(project, fields);
+        result.BB3_MODULE_FIELDS_DEF = buildDef(project, fields);
     }
 
     return result;

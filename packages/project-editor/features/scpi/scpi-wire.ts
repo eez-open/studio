@@ -1,7 +1,7 @@
 // Mapping of the SCPI command definitions to the wire format used between
-// BB3+ and the DIB modules (see BB3+ docs, "Modular SCPI"). Studio types are
+// BB3+ and the modules (see BB3+ docs, "Modular SCPI"). Studio types are
 // normalized to the wire types, which the BB3+ parser, the BB3+ serializer and
-// the code generated for the DIB module all agree on.
+// the code generated for the module all agree on.
 
 import type {
     ScpiCommand,
@@ -33,16 +33,16 @@ export const SCPI_PARAM_FLAG_CALIBRATION_PASSWORD = 1 << 2;
 export const SCPI_RESPONSE_ITEM_FLAG_LIST = 1 << 0;
 
 export const SCPI_COMMAND_FLAG_QUERY = 1 << 0;
-// BB3+ sends DIB SYNC after the command is executed by all the target modules,
+// BB3+ sends sync after the command is executed by all the target modules,
 // so they apply it (e.g. output enable) at the same time
-export const SCPI_COMMAND_FLAG_APPLY_ON_DIB_SYNC = 1 << 1;
+export const SCPI_COMMAND_FLAG_APPLY_ON_SYNC = 1 << 1;
 
-// custom field (DIB field) flags in the metadata
+// custom field (BB3 module field) flags in the metadata
 // BB3+ saves the field in the profile and restores it on recall
-export const DIB_FIELD_FLAG_PERSISTENT = 1 << 0;
+export const BB3_MODULE_FIELD_FLAG_PERSISTENT = 1 << 0;
 // the module streams the field samples (YT graphs, data logging), see
-// BB3P_FIELD_TAG_FIELD_STREAM in bb3p-dib-module.h
-export const DIB_FIELD_FLAG_SAMPLED = 1 << 1;
+// BB3_FIELD_TAG_FIELD_STREAM in bb3-module.h
+export const BB3_MODULE_FIELD_FLAG_SAMPLED = 1 << 1;
 
 export const SCPI_ENUM_INDEX_NONE = 0xffff;
 
@@ -363,7 +363,7 @@ export function getScpiAddressingLabel(addressing: ScpiAddressingInfo) {
 
 // Commands forwarded to the module, in the order written to the metadata:
 // the index in this list is the command id on the wire.
-export function getModuleScpiCommands(project: Project) {
+export function getBB3ModuleScpiCommands(project: Project) {
     const commands: ScpiCommand[] = [];
     if (project.scpi) {
         for (const subsystem of project.scpi.subsystems) {
@@ -377,6 +377,6 @@ export function getModuleScpiCommands(project: Project) {
     return commands;
 }
 
-export function getModuleScpiEnums(project: Project): ScpiEnum[] {
+export function getBB3ModuleScpiEnums(project: Project): ScpiEnum[] {
     return project.scpi ? project.scpi.enums : [];
 }

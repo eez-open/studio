@@ -282,7 +282,7 @@ function buildExpressionNode(
             node.name,
             (project, assetName) => {
                 const variable = findVariable(project, assetName);
-                if (!variable || assets.projectStore.project.dibModuleMetadata && variable.dibField != undefined) {
+                if (!variable || assets.projectStore.project.bb3ModuleMetadata && variable.bb3ModuleField != undefined) {
                     return undefined;
                 }
                 return variable;
@@ -298,12 +298,12 @@ function buildExpressionNode(
             return [makePushGlobalVariableInstruction(globalVariableIndex - 1)];
         }
 
-        if (assets.projectStore.project.dibModuleMetadata) {
-            let dibFieldIndex = assets.projectStore.project.dibModuleMetadata.getDibFieldIndex(node.name);
-            if (dibFieldIndex != -1) {
+        if (assets.projectStore.project.bb3ModuleMetadata) {
+            let bb3ModuleFieldIndex = assets.projectStore.project.bb3ModuleMetadata.getBB3ModuleFieldIndex(node.name);
+            if (bb3ModuleFieldIndex != -1) {
                 return [
-                    makePushConstantInstruction(assets, dibFieldIndex, "integer"),
-                    makeOperationInstruction(operationIndexes["DibModule.field"])
+                    makePushConstantInstruction(assets, bb3ModuleFieldIndex, "integer"),
+                    makeOperationInstruction(operationIndexes["BB3Module.field"])
                 ]
             }
         }

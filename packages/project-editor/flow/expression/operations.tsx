@@ -1537,7 +1537,7 @@ export const builtInFunctions: {
         enabled: projectStore => projectStore.projectTypeTraits.isLVGL
     },
 
-    "DibModule.field": {
+    "BB3Module.field": {
         operationIndex: 96,
         arity: 1,
         args: ["globalVariableIndex"],

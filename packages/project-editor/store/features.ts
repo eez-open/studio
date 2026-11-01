@@ -25,7 +25,7 @@ import shortcutsFeature from "project-editor/features/shortcuts/project-shortcut
 import microPythonFeature from "project-editor/features/micropython/micropython";
 import textsFeature from "project-editor/features/texts";
 import readmeFeature from "project-editor/features/readme";
-import dibModuleMetadataFeature from "project-editor/features/dib-module-metadata";
+import bb3ModuleMetadataFeature from "project-editor/features/bb3-module-metadata";
 import diffFeature from "project-editor/features/changes";
 import jsonStylesFeature from "project-editor/lvgl/style";
 import lvglGroupsFeature from "project-editor/lvgl/groups";
@@ -84,7 +84,7 @@ export function getProjectFeatures() {
             microPythonFeature,
             diffFeature,
             readmeFeature,
-            dibModuleMetadataFeature,
+            bb3ModuleMetadataFeature,
             lvglGroupsFeature
         ];
     }

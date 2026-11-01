@@ -487,16 +487,16 @@ export class Assets {
         //
         // global variables
         //
-        const isDibField = (globalVariable: Variable) =>
-            this.projectStore.project.dibModuleMetadata &&
-            globalVariable.dibField != undefined;
+        const isBB3ModuleField = (globalVariable: Variable) =>
+            this.projectStore.project.bb3ModuleMetadata &&
+            globalVariable.bb3ModuleField != undefined;
 
         const nonNativeVariables = hasFlowSupport ? this.getAssets<Variable>(
             project =>
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
-                !isDibField(globalVariable) &&
+                !isBB3ModuleField(globalVariable) &&
                 ((this.option != "buildFiles" && this.getAssetId(globalVariable) == undefined) ||
                     !globalVariable.native)
         ) : [];
@@ -507,7 +507,7 @@ export class Assets {
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
-                !isDibField(globalVariable) &&
+                !isBB3ModuleField(globalVariable) &&
                 (!hasFlowSupport || globalVariable.native) &&
                 this.getAssetId(globalVariable) != undefined
         ).forEach(
@@ -520,7 +520,7 @@ export class Assets {
                 project.variables ? project.variables.globalVariables : [],
             globalVariable =>
                 assetIncludePredicate(globalVariable) &&
-                !isDibField(globalVariable) &&
+                !isBB3ModuleField(globalVariable) &&
                 this.option == "buildFiles" &&
                 (!hasFlowSupport || globalVariable.native) &&
                 this.getAssetId(globalVariable) == undefined
@@ -1817,10 +1817,10 @@ export async function buildGuiAssetsData(
     // languages
     buildLanguages(assets, dataBuffer);
     // metadata
-    const dibModuleMetadata = assets.projectStore.project.dibModuleMetadata
-    if (dibModuleMetadata) {
-        ProjectEditor.writeDibModuleMetadata(
-            dibModuleMetadata,
+    const bb3ModuleMetadata = assets.projectStore.project.bb3ModuleMetadata
+    if (bb3ModuleMetadata) {
+        ProjectEditor.writeBB3ModuleMetadata(
+            bb3ModuleMetadata,
             dataBuffer,
             assets.pages.map((page, i) => (page ? assets.getPageName(i) : ""))
         );
@@ -1850,9 +1850,9 @@ export async function buildGuiAssetsData(
         uncompressedSize
     );
 
-    // DIB module assets are stored in the module flash and decompressed by
+    // Module assets are stored in the module flash and decompressed by
     // the BB3+, LZMA compresses them about two times better than LZ4
-    const compression = assets.projectStore.project.dibModuleMetadata
+    const compression = assets.projectStore.project.bb3ModuleMetadata
         ? ASSETS_COMPRESSION_LZMA
         : ASSETS_COMPRESSION_LZ4;
 
