@@ -9,14 +9,12 @@ import {
     registerClass
 } from "project-editor/core/object";
 import {
-    createObject,
     propertyInvalidValueMessage,
     propertyNotSetMessage
 } from "project-editor/store";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import { DataBuffer } from "project-editor/build/data-buffer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import {
     DIB_FIELD_TYPES,
     isIntegerType,
@@ -63,110 +61,12 @@ const DIB_MODULE_METADATA_ICON = (
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const DIB_CHANNEL_TYPES = {
-    Power: "Power",
-    DigitalInput: "Digital input",
-    DigitalOutput: "Digital output",
-    AnalogInput: "Analog input",
-    AnalogOutput: "Analog output",
-    PWMSource: "PWM source",
-    Relay: "Relay",
-    Route: "Route",
-    Temperature: "Temperature"
-};
-
-const DIB_CHANNEL_TYPE_ID = {
-    Power: 0,
-    DigitalInput: 1,
-    DigitalOutput: 2,
-    AnalogInput: 3,
-    AnalogOutput: 4,
-    PWMSource: 5,
-    Relay: 6,
-    Route: 7,
-    Temperature: 8
-}
-
-type DibChannelType = keyof typeof DIB_CHANNEL_TYPES;
-
-class DibChannel extends EezObject {
-    type: DibChannelType;
-
-    static classInfo: ClassInfo = {
-        properties: [
-            {
-                name: "type",
-                type: PropertyType.Enum,
-                enumItems: Object.keys(DIB_CHANNEL_TYPES).map((id: DibChannelType) => ({
-                    id,
-                    label: DIB_CHANNEL_TYPES[id]
-                })),
-                enumDisallowUndefined: true,
-                hideInPropertyGrid: true
-            }
-        ],
-
-        listLabel: (channel: DibChannel, collapsed: boolean) =>
-            `${DIB_CHANNEL_TYPES[channel.type] ?? channel.type}`,
-
-        newItem: async (object: DibChannel[]) => {
-            const project = ProjectEditor.getProject(object);
-
-            const result = await showGenericDialog({
-                dialogDefinition: {
-                    title: "New Channel",
-                    fields: [
-                        {
-                            name: "type",
-                            displayName: "Channel type",
-                            type: "enum",
-                            enumItems: Object.keys(DIB_CHANNEL_TYPES).map(
-                                id => ({
-                                    id,
-                                    label: DIB_CHANNEL_TYPES[
-                                        id as DibChannelType
-                                    ]
-                                })
-                            )
-                        }
-                    ]
-                },
-                values: {
-                    type: "Power"
-                },
-                dialogContext: project,
-                modal: true,
-                backdrop: "static"
-            });
-
-            return createObject<DibChannel>(
-                project._store,
-                { type: result.values.type },
-                DibChannel
-            );
-        }
-    };
-
-    override makeEditable() {
-        super.makeEditable();
-
-        makeObservable(this, {
-            type: observable
-        });
-    }
-}
-
-registerClass("DibChannel", DibChannel);
-
-////////////////////////////////////////////////////////////////////////////////
-
 export class DibModuleMetadata extends EezObject {
     moduleName: string;
     moduleBrand: string;
     moduleType: string;
     moduleRevision: string;
     firmwareVersion: string;
-    channels: DibChannel[];
     scpiMaxMessageSize: number;
     // name of the float DIB field with the seconds per sample of the slot YT
     // graphs (e.g. ch_yt_view_rate), BB3+ requests the sampled fields at
@@ -197,14 +97,6 @@ export class DibModuleMetadata extends EezObject {
                 name: "firmwareVersion",
                 type: PropertyType.String,
                 monospaceFont: true
-            },
-            {
-                name: "channels",
-                type: PropertyType.Array,
-                typeClass: DibChannel,
-                partOfNavigation: false,
-                enumerable: false,
-                defaultValue: []
             },
             {
                 name: "scpiMaxMessageSize",
@@ -284,7 +176,6 @@ export class DibModuleMetadata extends EezObject {
             moduleType: observable,
             moduleRevision: observable,
             firmwareVersion: observable,
-            channels: observable,
             scpiMaxMessageSize: observable,
             ytRateField: observable
         });
@@ -356,14 +247,6 @@ export function writeDibModuleMetadata(
         // moduleBrand
         dataBuffer.writeStringPtr(metadata.moduleBrand);
 
-        // channels
-        dataBuffer.writeArray(metadata.channels, channel => {
-            // type
-            dataBuffer.writeUint16(DIB_CHANNEL_TYPE_ID[channel.type]);
-            // reserved
-            dataBuffer.writeUint16(0); // reserved
-        })
-        
         // customFields
         let offset = 0;
         dataBuffer.writeArray(metadata.dibFields, variable => {
