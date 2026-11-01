@@ -383,7 +383,7 @@ export class Variable extends EezObject {
     // module channel index
     bb3ModuleFieldMeasurement: string | undefined;
     bb3ModuleFieldMeasurementChannel: number | undefined;
-    // range of an input field, the module (bb3-link) clamps the
+    // range of an input field, the module (bb3-module.c) clamps the
     // received values to it
     bb3ModuleFieldMin: number | undefined;
     bb3ModuleFieldMax: number | undefined;

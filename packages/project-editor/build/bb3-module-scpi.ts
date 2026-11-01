@@ -3,7 +3,8 @@
 //   BB3_MODULE_SCPI_DEF  - runtime (request reassembly, decoding, response encoding)
 //                   and the dispatch table
 // The module implements one handler per command, BB3+ does all the SCPI text
-// parsing and formatting. Wire format is described in bb3-module.h.
+// parsing and formatting. Wire format is described in
+// eez-bb3plus-module-interface/docs/module_protocol.md.
 
 import type { Project } from "project-editor/project/project";
 import type { ScpiCommand } from "project-editor/features/scpi/scpi";

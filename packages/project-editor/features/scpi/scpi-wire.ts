@@ -41,7 +41,7 @@ export const SCPI_COMMAND_FLAG_APPLY_ON_SYNC = 1 << 1;
 // BB3+ saves the field in the profile and restores it on recall
 export const BB3_MODULE_FIELD_FLAG_PERSISTENT = 1 << 0;
 // the module streams the field samples (YT graphs, data logging), see
-// BB3_FIELD_TAG_FIELD_STREAM in bb3-module.h
+// "Field sample streams" in eez-bb3plus-module-interface/docs/module_protocol.md
 export const BB3_MODULE_FIELD_FLAG_SAMPLED = 1 << 1;
 
 export const SCPI_ENUM_INDEX_NONE = 0xffff;

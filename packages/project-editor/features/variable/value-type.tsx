@@ -1121,7 +1121,7 @@ export function isNarrowIntegerType(type: string) {
 
 // Types of the BB3 module fields (the custom fields of a BB3 module): the C type of
 // the field in the module firmware, its size on the wire (and in the BB3+
-// copy) and the member of bb3_field_value_t (bb3-link.h)
+// copy) and the member of bb3_field_value_t (bb3-module.h)
 export const BB3_MODULE_FIELD_TYPES: {
     [type: string]: {
         cType: string;
