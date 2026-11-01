@@ -5,6 +5,7 @@ import { isDev, writeTextFile } from "eez-studio-shared/util-electron";
 import { getColorRGB } from "eez-studio-shared/color";
 
 import { Assets } from "project-editor/build/assets";
+import { addGeneratedFileNote } from "project-editor/build/build";
 import { Build, NamingConvention, getName } from "project-editor/build/helper";
 import {
     ButtonWidget,
@@ -1444,11 +1445,17 @@ export async function generateSourceCodeForEezGuiLite(project: Project, destinat
         eezGuiLitePath + "/eez-gui-lite.c",
         "utf-8"
     );
-    await writeTextFile(destinationFolderPath + "/eez-gui-lite.c", eezGuiLiteC);
+    await writeTextFile(
+        destinationFolderPath + "/eez-gui-lite.c",
+        addGeneratedFileNote(project, "eez-gui-lite.c", eezGuiLiteC)
+    );
 
     const eezGuiLiteH = await fs.promises.readFile(
         eezGuiLitePath + "/eez-gui-lite.h",
         "utf-8"
     );
-    await writeTextFile(destinationFolderPath + "/eez-gui-lite.h", eezGuiLiteH);
+    await writeTextFile(
+        destinationFolderPath + "/eez-gui-lite.h",
+        addGeneratedFileNote(project, "eez-gui-lite.h", eezGuiLiteH)
+    );
 }
