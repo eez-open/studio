@@ -40,6 +40,7 @@ import {
     LVGLTabWidget,
     LVGLTextareaWidget,
     LVGLTileViewWidget,
+    LVGLTileWidget,
     LVGLUserWidgetWidget,
     LVGLWindowWidget
 } from "./internal";
@@ -164,6 +165,7 @@ registerClass("LVGLTabviewWidget", LVGLTabviewWidget);
 registerClass("LVGLTabWidget", LVGLTabWidget);
 registerClass("LVGLTextareaWidget", LVGLTextareaWidget);
 registerClass("LVGLTileViewWidget", LVGLTileViewWidget);
+registerClass("LVGLTileWidget", LVGLTileWidget);
 registerClass("LVGLUserWidgetWidget", LVGLUserWidgetWidget);
 registerClass("LVGLWindowWidget", LVGLWindowWidget);
 
