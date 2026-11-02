@@ -40,6 +40,7 @@ export interface LVGLCode {
     stringProperty(
         type: string,
         value: string,
+        wrapper?: string,
         previewValue?: string,
         nonEmpty?: boolean
     ): any;
@@ -288,6 +289,7 @@ export class SimulatorLVGLCode implements LVGLCode {
     stringProperty(
         type: string,
         value: string,
+        wrapper?: string,
         previewValue?: string,
         nonEmpty?: boolean
     ) {
@@ -915,6 +917,7 @@ export class BuildLVGLCode implements LVGLCode {
     stringProperty(
         type: string,
         value: string,
+        wrapper?: string,
         previewValue?: string,
         nonEmpty?: boolean
     ) {
@@ -923,7 +926,25 @@ export class BuildLVGLCode implements LVGLCode {
         }
 
         if (type == "translated-literal") {
-            return `_(${this.stringLiteral(value)})`;
+            const buildSettings = this.project.settings.build;
+
+            let wrapperFunction;
+            if (buildSettings.useCommonWrapperForTranslatedLiterals) {
+                wrapperFunction = buildSettings.translatedLiteralWrapper;
+            } else {
+                wrapperFunction = wrapper;
+            }
+
+            if (
+                wrapperFunction == undefined ||
+                wrapperFunction.trim().length == 0
+            ) {
+                wrapperFunction = "_";
+            } else {
+                wrapperFunction = wrapperFunction.trim();
+            }
+
+            return `${wrapperFunction}(${this.stringLiteral(value)})`;
         }
 
         return nonEmpty ? `" "` : `""`;

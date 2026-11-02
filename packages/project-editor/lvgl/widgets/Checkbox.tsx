@@ -16,6 +16,7 @@ import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 export class LVGLCheckboxWidget extends LVGLWidget {
     text: string;
     textType: string;
+    textWrapper: string;
     useStaticText: boolean;
 
     static classInfo = makeDerivedClassInfo(LVGLWidget.classInfo, {
@@ -100,7 +101,12 @@ export class LVGLCheckboxWidget extends LVGLWidget {
     override makeEditable() {
         super.makeEditable();
 
-        makeObservable(this, { text: observable, textType: observable, useStaticText: observable });
+        makeObservable(this, {
+            text: observable,
+            textType: observable,
+            textWrapper: observable,
+            useStaticText: observable
+        });
     }
 
     override toLVGLCode(code: LVGLCode) {
@@ -109,12 +115,12 @@ export class LVGLCheckboxWidget extends LVGLWidget {
         if (this.textType == "literal" && code.lvglBuild && this.useStaticText) {
             code.callObjectFunction(
                 "lv_checkbox_set_text_static",
-                code.stringProperty(this.textType, this.text)
+                code.stringProperty(this.textType, this.text, this.textWrapper)
             );
         } else {
             code.callObjectFunction(
                 "lv_checkbox_set_text",
-                code.stringProperty(this.textType, this.text)
+                code.stringProperty(this.textType, this.text, this.textWrapper)
             );
         }
     }
