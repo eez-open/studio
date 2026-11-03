@@ -68,10 +68,10 @@ function buildBB3ModuleFieldTags(assets: Assets) {
         if (variables[i].bb3ModuleField != undefined) {
             fieldTags.push(
                 `${TAB}${getName(
-                    "BB3_CUSTOM_FIELD_TAG_",
+                    "BB3_MODULE_FIELD_TAG_",
                     variables[i],
                     NamingConvention.UnderscoreUpperCase
-                )} = BB3_CUSTOM_FIELD_TAG_START + ${fieldIndex++}`
+                )} = BB3_MODULE_FIELD_TAG_START + ${fieldIndex++}`
             );
         }
     }

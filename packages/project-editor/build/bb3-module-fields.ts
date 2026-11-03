@@ -1,6 +1,6 @@
 // Generates the BB3 module fields of a BB3 module: the global variables of the
-// project with "BB3 module field" set, exchanged with BB3+ as custom fields (tag
-// BB3_CUSTOM_FIELD_TAG_START + index). The module firmware includes the
+// project with "BB3 module field" set, exchanged with BB3+ as module fields (tag
+// BB3_MODULE_FIELD_TAG_START + index). The module firmware includes the
 // generic runtime bb3-module.c (eez-bb3plus-cm5-firmware/eez-bb3plus-module-
 // interface), which uses these definitions by their fixed names.
 //   BB3_MODULE_FIELDS_DECL - index enum, module_fields_t (one member per field) and
@@ -129,7 +129,7 @@ ${indexes.join("\n")}
 };
 
 #define MODULE_NUM_FIELDS ${fields.length}
-#define MODULE_FIELD_TAG(index) ((uint16_t)(BB3_CUSTOM_FIELD_TAG_START + (index)))
+#define MODULE_FIELD_TAG(index) ((uint16_t)(BB3_MODULE_FIELD_TAG_START + (index)))
 
 typedef struct {
 ${members.join("\n")}

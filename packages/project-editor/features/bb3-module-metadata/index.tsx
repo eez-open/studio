@@ -247,7 +247,7 @@ export function writeBB3ModuleMetadata(
         // moduleBrand
         dataBuffer.writeStringPtr(metadata.moduleBrand);
 
-        // customFields
+        // moduleFields
         let offset = 0;
         dataBuffer.writeArray(metadata.bb3ModuleFields, variable => {
             // valueType

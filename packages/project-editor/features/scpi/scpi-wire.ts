@@ -37,7 +37,7 @@ export const SCPI_COMMAND_FLAG_QUERY = 1 << 0;
 // so they apply it (e.g. output enable) at the same time
 export const SCPI_COMMAND_FLAG_APPLY_ON_SYNC = 1 << 1;
 
-// custom field (BB3 module field) flags in the metadata
+// BB3 module field flags in the metadata
 // BB3+ saves the field in the profile and restores it on recall
 export const BB3_MODULE_FIELD_FLAG_PERSISTENT = 1 << 0;
 // the module streams the field samples (YT graphs, data logging), see
