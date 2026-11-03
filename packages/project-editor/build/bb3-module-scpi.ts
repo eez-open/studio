@@ -1,9 +1,9 @@
-// Generates the SCPI helper library for a module (no libscpi needed):
-//   BB3_MODULE_SCPI_DECL - types, command ids, runtime API and handler prototypes
-//   BB3_MODULE_SCPI_DEF  - runtime (request reassembly, decoding, response encoding)
-//                   and the dispatch table
-// The module implements one handler per command, BB3+ does all the SCPI text
-// parsing and formatting. Wire format is described in
+// Generates the SCPI commands of a module (no libscpi needed):
+//   BB3_MODULE_SCPI_DECL - handler prototypes
+//   BB3_MODULE_SCPI_DEF  - command ids and the dispatch (parameter checks)
+// The runtime (request reassembly, decoding, response encoding) is in
+// bb3-module.c. The module implements one handler per command, BB3+ does all
+// the SCPI text parsing and formatting. Wire format is described in
 // eez-bb3plus-module-interface/docs/module_protocol.md.
 
 import type { Project } from "project-editor/project/project";
@@ -35,7 +35,7 @@ const WIRE_TYPES: {
     [SCPI_WIRE_TYPE_INT32]: { name: "INT32", cType: "int32_t", field: "int32" },
     [SCPI_WIRE_TYPE_NUMBER]: {
         name: "NUMBER",
-        cType: "module_scpi_number_t",
+        cType: "bb3_scpi_number_t",
         field: "number"
     },
     [SCPI_WIRE_TYPE_BOOL]: { name: "BOOL", cType: "bool", field: "boolean" },
@@ -46,22 +46,22 @@ const WIRE_TYPES: {
     },
     [SCPI_WIRE_TYPE_STRING]: {
         name: "STRING",
-        cType: "module_scpi_string_t",
+        cType: "bb3_scpi_string_t",
         field: "string"
     },
     [SCPI_WIRE_TYPE_BLOCK]: {
         name: "BLOCK",
-        cType: "module_scpi_block_t",
+        cType: "bb3_scpi_block_t",
         field: "block"
     },
     [SCPI_WIRE_TYPE_CHANNEL_LIST]: {
         name: "CHANNEL_LIST",
-        cType: "module_scpi_channel_list_t",
+        cType: "bb3_scpi_channel_list_t",
         field: "channel_list"
     },
     [SCPI_WIRE_TYPE_RAW]: {
         name: "RAW",
-        cType: "module_scpi_string_t",
+        cType: "bb3_scpi_string_t",
         field: "string"
     }
 };
@@ -206,17 +206,17 @@ function getCommandInfo(command: ScpiCommand, id: number): CommandInfo {
 
 function getParamCType(param: ParamInfo) {
     if (param.isList) {
-        return "module_scpi_list_t";
+        return "bb3_scpi_list_t";
     }
     if (param.wireTypes.length != 1) {
-        return "const module_scpi_value_t *";
+        return "const bb3_scpi_value_t *";
     }
     const cType = WIRE_TYPES[param.wireTypes[0]].cType;
     return param.isOptional ? `const ${cType} *` : cType;
 }
 
 function getHandlerPrototype(info: CommandInfo) {
-    const args = ["module_scpi_req_t *req"];
+    const args = ["bb3_scpi_req_t *req"];
     if (hasChannelArg(info.addressing)) {
         args.push("uint8_t channel");
     }
@@ -274,105 +274,15 @@ function buildDecl(project: Project, infos: CommandInfo[]) {
             project.bb3ModuleMetadata.scpiMaxMessageSize) ||
         DEFAULT_SCPI_MAX_MESSAGE_SIZE;
 
-    return `#include <stdbool.h>
-#include <stdint.h>
+    return `#define MODULE_SCPI_MAX_MESSAGE_SIZE ${maxMessageSize}
 
-#define MODULE_SCPI_MAX_MESSAGE_SIZE ${maxMessageSize}
-#define MODULE_SCPI_MAX_ERRORS 8
+// Called by bb3_scpi_poll (bb3-module.c): reads the parameters of the command
+// and calls its handler.
+int module_scpi_dispatch(bb3_scpi_req_t *req, bb3_scpi_command_t *command);
 
-// handler result
-#define MODULE_SCPI_OK 0
-#define MODULE_SCPI_ERR -1
-
-// standard SCPI error codes for module_scpi_error_push
-#define MODULE_SCPI_ERROR_DATA_TYPE_ERROR -104
-#define MODULE_SCPI_ERROR_PARAMETER_NOT_ALLOWED -108
-#define MODULE_SCPI_ERROR_MISSING_PARAMETER -109
-#define MODULE_SCPI_ERROR_UNDEFINED_HEADER -113
-#define MODULE_SCPI_ERROR_INVALID_SUFFIX -131
-#define MODULE_SCPI_ERROR_EXECUTION_ERROR -200
-#define MODULE_SCPI_ERROR_SETTINGS_CONFLICT -221
-#define MODULE_SCPI_ERROR_DATA_OUT_OF_RANGE -222
-#define MODULE_SCPI_ERROR_TOO_MUCH_DATA -223
-#define MODULE_SCPI_ERROR_ILLEGAL_PARAMETER_VALUE -224
-#define MODULE_SCPI_ERROR_HARDWARE_ERROR -240
-#define MODULE_SCPI_ERROR_HARDWARE_MISSING -241
-
-typedef struct {
-    uint8_t special; // BB3_SCPI_NUMBER_..., BB3_SCPI_NUMBER_VALUE if value is set
-    double value;    // in base unit (V, A, s, ...)
-} module_scpi_number_t;
-
-// not NUL terminated
-typedef struct {
-    const char *data;
-    uint16_t length;
-} module_scpi_string_t;
-
-typedef struct {
-    const uint8_t *data;
-    uint32_t length;
-} module_scpi_block_t;
-
-typedef struct {
-    const uint8_t *channels; // module channel indexes
-    uint8_t count;
-} module_scpi_channel_list_t;
-
-// list parameter, use module_scpi_list_get to get the values
-typedef struct {
-    const uint8_t *data;
-    uint32_t length;
-    uint16_t count;
-} module_scpi_list_t;
-
-typedef struct {
-    uint8_t type; // BB3_SCPI_WIRE_TYPE_...
-    union {
-        int32_t int32;
-        module_scpi_number_t number;
-        bool boolean;
-        int32_t choice;
-        module_scpi_string_t string; // STRING and RAW
-        module_scpi_block_t block;
-        module_scpi_channel_list_t channel_list;
-        module_scpi_list_t list;
-    } value;
-} module_scpi_value_t;
-
-typedef struct module_scpi_req module_scpi_req_t;
-
-enum ModuleScpiCommandId {
-${infos.map(info => `    ${info.idName} = ${info.id}, // ${info.pattern}`).join("\n")}
-    MODULE_SCPI_NUM_COMMANDS = ${infos.length}
-};
-
-// Runtime. module_scpi_on_field and module_scpi_put_response are called while
-// handling the frames exchanged with BB3+, module_scpi_poll from the main loop
-// (it executes the command handler).
-void module_scpi_init(void);
-// returns true if the field was BB3_FIELD_TAG_SCPI_REQUEST
-bool module_scpi_on_field(uint16_t tag, const uint8_t *value, uint32_t length);
-void module_scpi_poll(void);
-// Puts the next BB3_FIELD_TAG_SCPI_RESPONSE field (field header included) in
-// dst if there is a response to send, returns the number of bytes written.
-uint32_t module_scpi_put_response(uint8_t *dst, uint32_t max_length);
-
-// For use in the handlers
-uint16_t module_scpi_command_id(const module_scpi_req_t *req);
-bool module_scpi_list_get(const module_scpi_list_t *list, uint16_t index, module_scpi_value_t *value);
-void module_scpi_error_push(module_scpi_req_t *req, int16_t error);
-bool module_scpi_result_int32(module_scpi_req_t *req, int32_t value);
-bool module_scpi_result_number(module_scpi_req_t *req, double value);
-bool module_scpi_result_bool(module_scpi_req_t *req, bool value);
-bool module_scpi_result_choice(module_scpi_req_t *req, int32_t value);
-bool module_scpi_result_text(module_scpi_req_t *req, const char *text, uint16_t length);
-bool module_scpi_result_raw(module_scpi_req_t *req, const char *text, uint16_t length);
-bool module_scpi_result_block(module_scpi_req_t *req, const void *data, uint32_t length);
-
-// Command handlers, implemented by the module. Return MODULE_SCPI_OK or
-// MODULE_SCPI_ERR (after module_scpi_error_push). Query handlers write the response
-// with module_scpi_result_..., in the order of the response items.
+// Command handlers, implemented by the module. Return BB3_SCPI_OK or
+// BB3_SCPI_ERR (after bb3_scpi_error_push). Query handlers write the response
+// with bb3_scpi_result_..., in the order of the response items.
 ${infos
     .map(info => `${getHandlerComment(info)}\n${getHandlerPrototype(info)};`)
     .join("\n\n")}
@@ -381,433 +291,29 @@ ${infos
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const RUNTIME_DEF_HEAD = `#include <string.h>
-
-#define MODULE_SCPI_FIELD_HEADER_SIZE (sizeof(uint16_t) + sizeof(uint32_t))
-
-// space before the items in the response buffer for num_errors, errors and
-// num_items
-#define MODULE_SCPI_RESPONSE_HEAD_MAX (1 + 2 * MODULE_SCPI_MAX_ERRORS + 2)
-
-#define MODULE_SCPI_DECODE_ERROR -2
-#define MODULE_SCPI_UNKNOWN_COMMAND -3
-
-enum {
-    MODULE_SCPI_STATE_IDLE,
-    MODULE_SCPI_STATE_RECEIVING,
-    MODULE_SCPI_STATE_READY,
-    MODULE_SCPI_STATE_RESPONDING
-};
-
-struct module_scpi_req {
-    uint16_t command_id;
-    uint8_t local_channel;
-    uint8_t num_errors;
-    int16_t errors[MODULE_SCPI_MAX_ERRORS];
-    uint16_t num_items;
-    uint32_t items_length;
-    bool overflow;
-};
-
-typedef struct {
-    const uint8_t *p;
-    const uint8_t *end;
-} module_scpi_reader_t;
-
-static volatile uint8_t g_module_scpi_state;
-static uint16_t g_module_scpi_request_id;
-static uint32_t g_module_scpi_request_length;
-static uint32_t g_module_scpi_request_received;
-static uint8_t g_module_scpi_request[MODULE_SCPI_MAX_MESSAGE_SIZE];
-
-static uint8_t g_module_scpi_response[MODULE_SCPI_RESPONSE_HEAD_MAX + MODULE_SCPI_MAX_MESSAGE_SIZE];
-static uint32_t g_module_scpi_response_start;
-static uint32_t g_module_scpi_response_length;
-static uint32_t g_module_scpi_response_sent;
-
-static module_scpi_req_t g_module_scpi_req;
-
-////////////////////////////////////////////////////////////////////////////////
-
-static bool module_scpi_read(module_scpi_reader_t *reader, void *dst, uint32_t length) {
-    if ((uint32_t)(reader->end - reader->p) < length) {
-        return false;
-    }
-    memcpy(dst, reader->p, length);
-    reader->p += length;
-    return true;
-}
-
-static bool module_scpi_skip(module_scpi_reader_t *reader, uint32_t length) {
-    if ((uint32_t)(reader->end - reader->p) < length) {
-        return false;
-    }
-    reader->p += length;
-    return true;
-}
-
-static bool module_scpi_read_u8(module_scpi_reader_t *reader, uint8_t *value) {
-    return module_scpi_read(reader, value, sizeof(uint8_t));
-}
-
-static bool module_scpi_read_param(module_scpi_reader_t *reader, module_scpi_value_t *value, bool allowList) {
-    if (!module_scpi_read_u8(reader, &value->type)) {
-        return false;
-    }
-
-    switch (value->type) {
-    case BB3_SCPI_WIRE_TYPE_NONE:
-        return true;
-
-    case BB3_SCPI_WIRE_TYPE_INT32:
-        return module_scpi_read(reader, &value->value.int32, sizeof(int32_t));
-
-    case BB3_SCPI_WIRE_TYPE_CHOICE:
-        return module_scpi_read(reader, &value->value.choice, sizeof(int32_t));
-
-    case BB3_SCPI_WIRE_TYPE_NUMBER:
-        return module_scpi_read_u8(reader, &value->value.number.special) &&
-            module_scpi_read(reader, &value->value.number.value, sizeof(double));
-
-    case BB3_SCPI_WIRE_TYPE_BOOL: {
-        uint8_t b;
-        if (!module_scpi_read_u8(reader, &b)) {
-            return false;
-        }
-        value->value.boolean = b != 0;
-        return true;
-    }
-
-    case BB3_SCPI_WIRE_TYPE_STRING:
-    case BB3_SCPI_WIRE_TYPE_RAW:
-        if (!module_scpi_read(reader, &value->value.string.length, sizeof(uint16_t))) {
-            return false;
-        }
-        value->value.string.data = (const char *)reader->p;
-        return module_scpi_skip(reader, value->value.string.length);
-
-    case BB3_SCPI_WIRE_TYPE_BLOCK:
-        if (!module_scpi_read(reader, &value->value.block.length, sizeof(uint32_t))) {
-            return false;
-        }
-        value->value.block.data = reader->p;
-        return module_scpi_skip(reader, value->value.block.length);
-
-    case BB3_SCPI_WIRE_TYPE_CHANNEL_LIST:
-        if (!module_scpi_read_u8(reader, &value->value.channel_list.count)) {
-            return false;
-        }
-        value->value.channel_list.channels = reader->p;
-        return module_scpi_skip(reader, value->value.channel_list.count);
-
-    case BB3_SCPI_WIRE_TYPE_LIST: {
-        if (!allowList) {
-            return false;
-        }
-        if (!module_scpi_read(reader, &value->value.list.count, sizeof(uint16_t))) {
-            return false;
-        }
-        const uint8_t *data = reader->p;
-        for (uint16_t i = 0; i < value->value.list.count; i++) {
-            module_scpi_value_t element;
-            if (!module_scpi_read_param(reader, &element, false)) {
-                return false;
-            }
-        }
-        value->value.list.data = data;
-        value->value.list.length = (uint32_t)(reader->p - data);
-        return true;
-    }
-    }
-
-    return false;
-}
-
-bool module_scpi_list_get(const module_scpi_list_t *list, uint16_t index, module_scpi_value_t *value) {
-    if (index >= list->count) {
-        return false;
-    }
-    module_scpi_reader_t reader = { list->data, list->data + list->length };
-    for (uint16_t i = 0; i <= index; i++) {
-        if (!module_scpi_read_param(&reader, value, false)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-uint16_t module_scpi_command_id(const module_scpi_req_t *req) {
-    return req->command_id;
-}
-
-void module_scpi_error_push(module_scpi_req_t *req, int16_t error) {
-    if (req->num_errors < MODULE_SCPI_MAX_ERRORS) {
-        req->errors[req->num_errors++] = error;
-    }
-}
-
-static bool module_scpi_result(module_scpi_req_t *req, uint8_t type, const void *value1, uint32_t length1, const void *value2, uint32_t length2) {
-    uint32_t length = 1 + length1 + length2;
-    if (req->overflow || req->items_length + length > MODULE_SCPI_MAX_MESSAGE_SIZE - MODULE_SCPI_RESPONSE_HEAD_MAX) {
-        req->overflow = true;
-        return false;
-    }
-    uint8_t *p = g_module_scpi_response + MODULE_SCPI_RESPONSE_HEAD_MAX + req->items_length;
-    *p++ = type;
-    if (length1) {
-        memcpy(p, value1, length1);
-        p += length1;
-    }
-    if (length2) {
-        memcpy(p, value2, length2);
-    }
-    req->items_length += length;
-    req->num_items++;
-    return true;
-}
-
-bool module_scpi_result_int32(module_scpi_req_t *req, int32_t value) {
-    return module_scpi_result(req, BB3_SCPI_WIRE_TYPE_INT32, &value, sizeof(value), 0, 0);
-}
-
-bool module_scpi_result_number(module_scpi_req_t *req, double value) {
-    uint8_t special = BB3_SCPI_NUMBER_VALUE;
-    return module_scpi_result(req, BB3_SCPI_WIRE_TYPE_NUMBER, &special, sizeof(special), &value, sizeof(value));
-}
-
-bool module_scpi_result_bool(module_scpi_req_t *req, bool value) {
-    uint8_t b = value ? 1 : 0;
-    return module_scpi_result(req, BB3_SCPI_WIRE_TYPE_BOOL, &b, sizeof(b), 0, 0);
-}
-
-bool module_scpi_result_choice(module_scpi_req_t *req, int32_t value) {
-    return module_scpi_result(req, BB3_SCPI_WIRE_TYPE_CHOICE, &value, sizeof(value), 0, 0);
-}
-
-bool module_scpi_result_text(module_scpi_req_t *req, const char *text, uint16_t length) {
-    return module_scpi_result(req, BB3_SCPI_WIRE_TYPE_STRING, &length, sizeof(length), text, length);
-}
-
-bool module_scpi_result_raw(module_scpi_req_t *req, const char *text, uint16_t length) {
-    return module_scpi_result(req, BB3_SCPI_WIRE_TYPE_RAW, &length, sizeof(length), text, length);
-}
-
-bool module_scpi_result_block(module_scpi_req_t *req, const void *data, uint32_t length) {
-    return module_scpi_result(req, BB3_SCPI_WIRE_TYPE_BLOCK, &length, sizeof(length), data, length);
-}
-`;
-
-const RUNTIME_DEF_TAIL = `
-////////////////////////////////////////////////////////////////////////////////
-
-void module_scpi_init(void) {
-    g_module_scpi_state = MODULE_SCPI_STATE_IDLE;
-}
-
-bool module_scpi_on_field(uint16_t tag, const uint8_t *value, uint32_t length) {
-    if (tag != BB3_FIELD_TAG_SCPI_REQUEST) {
-        return false;
-    }
-
-    if (length < BB3_SCPI_CHUNK_HEADER_SIZE) {
-        return true;
-    }
-
-    uint16_t request_id;
-    uint8_t chunk_flags;
-    uint32_t total_length;
-    uint32_t offset;
-    memcpy(&request_id, value, sizeof(request_id));
-    chunk_flags = value[2];
-    memcpy(&total_length, value + 4, sizeof(total_length));
-    memcpy(&offset, value + 8, sizeof(offset));
-
-    const uint8_t *data = value + BB3_SCPI_CHUNK_HEADER_SIZE;
-    uint32_t data_length = length - BB3_SCPI_CHUNK_HEADER_SIZE;
-
-    if (chunk_flags & BB3_SCPI_CHUNK_FIRST) {
-        if (g_module_scpi_state == MODULE_SCPI_STATE_READY || g_module_scpi_state == MODULE_SCPI_STATE_RESPONDING) {
-            // BB3+ sends a new request only after the response, this one
-            // is dropped and BB3+ will report a timeout
-            return true;
-        }
-        if (total_length > MODULE_SCPI_MAX_MESSAGE_SIZE) {
-            g_module_scpi_state = MODULE_SCPI_STATE_IDLE;
-            return true;
-        }
-        g_module_scpi_request_id = request_id;
-        g_module_scpi_request_length = total_length;
-        g_module_scpi_request_received = 0;
-        g_module_scpi_state = MODULE_SCPI_STATE_RECEIVING;
-    } else if (g_module_scpi_state != MODULE_SCPI_STATE_RECEIVING || request_id != g_module_scpi_request_id) {
-        return true;
-    }
-
-    if (offset != g_module_scpi_request_received || offset + data_length > g_module_scpi_request_length) {
-        g_module_scpi_state = MODULE_SCPI_STATE_IDLE;
-        return true;
-    }
-
-    memcpy(g_module_scpi_request + offset, data, data_length);
-    g_module_scpi_request_received += data_length;
-
-    if (chunk_flags & BB3_SCPI_CHUNK_LAST) {
-        g_module_scpi_state = g_module_scpi_request_received == g_module_scpi_request_length
-            ? MODULE_SCPI_STATE_READY
-            : MODULE_SCPI_STATE_IDLE;
-    }
-
-    return true;
-}
-
-static int module_scpi_execute(module_scpi_req_t *req) {
-    module_scpi_reader_t reader = { g_module_scpi_request, g_module_scpi_request + g_module_scpi_request_length };
-
-    uint8_t num_suffixes;
-    if (!module_scpi_read(&reader, &req->command_id, sizeof(uint16_t)) ||
-        !module_scpi_read_u8(&reader, &req->local_channel) ||
-        !module_scpi_read_u8(&reader, &num_suffixes)) {
-        return MODULE_SCPI_DECODE_ERROR;
-    }
-
-    int32_t suffixes[8];
-    if (num_suffixes > sizeof(suffixes) / sizeof(suffixes[0])) {
-        return MODULE_SCPI_DECODE_ERROR;
-    }
-    for (uint8_t i = 0; i < num_suffixes; i++) {
-        if (!module_scpi_read(&reader, &suffixes[i], sizeof(int32_t))) {
-            return MODULE_SCPI_DECODE_ERROR;
-        }
-    }
-
-    uint8_t num_params;
-    if (!module_scpi_read_u8(&reader, &num_params)) {
-        return MODULE_SCPI_DECODE_ERROR;
-    }
-
-    return module_scpi_dispatch(req, suffixes, num_suffixes, num_params, &reader);
-}
-
-void module_scpi_poll(void) {
-    if (g_module_scpi_state != MODULE_SCPI_STATE_READY) {
-        return;
-    }
-
-    module_scpi_req_t *req = &g_module_scpi_req;
-    memset(req, 0, sizeof(*req));
-
-    int result = module_scpi_execute(req);
-
-    if (req->overflow) {
-        req->num_items = 0;
-        req->items_length = 0;
-        module_scpi_error_push(req, MODULE_SCPI_ERROR_TOO_MUCH_DATA);
-    } else if (result == MODULE_SCPI_UNKNOWN_COMMAND) {
-        module_scpi_error_push(req, MODULE_SCPI_ERROR_UNDEFINED_HEADER);
-    } else if (result == MODULE_SCPI_DECODE_ERROR) {
-        module_scpi_error_push(req, MODULE_SCPI_ERROR_DATA_TYPE_ERROR);
-    } else if (result != MODULE_SCPI_OK && req->num_errors == 0) {
-        module_scpi_error_push(req, MODULE_SCPI_ERROR_EXECUTION_ERROR);
-    }
-
-    // num_errors, errors and num_items are put just before the items
-    uint32_t head_length = 1 + 2 * req->num_errors + 2;
-    uint8_t *p = g_module_scpi_response + MODULE_SCPI_RESPONSE_HEAD_MAX - head_length;
-    g_module_scpi_response_start = (uint32_t)(p - g_module_scpi_response);
-    *p++ = req->num_errors;
-    memcpy(p, req->errors, 2 * req->num_errors);
-    p += 2 * req->num_errors;
-    memcpy(p, &req->num_items, sizeof(uint16_t));
-
-    g_module_scpi_response_length = head_length + req->items_length;
-    g_module_scpi_response_sent = 0;
-    g_module_scpi_state = MODULE_SCPI_STATE_RESPONDING;
-}
-
-uint32_t module_scpi_put_response(uint8_t *dst, uint32_t max_length) {
-    if (g_module_scpi_state != MODULE_SCPI_STATE_RESPONDING) {
-        return 0;
-    }
-
-    uint32_t header_length = MODULE_SCPI_FIELD_HEADER_SIZE + BB3_SCPI_CHUNK_HEADER_SIZE;
-    if (max_length <= header_length) {
-        return 0;
-    }
-
-    uint32_t offset = g_module_scpi_response_sent;
-    uint32_t chunk_length = g_module_scpi_response_length - offset;
-    if (chunk_length > max_length - header_length) {
-        chunk_length = max_length - header_length;
-    }
-
-    uint8_t chunk_flags = 0;
-    if (offset == 0) {
-        chunk_flags |= BB3_SCPI_CHUNK_FIRST;
-    }
-    if (offset + chunk_length == g_module_scpi_response_length) {
-        chunk_flags |= BB3_SCPI_CHUNK_LAST;
-    }
-
-    uint16_t tag = BB3_FIELD_TAG_SCPI_RESPONSE;
-    uint32_t field_length = BB3_SCPI_CHUNK_HEADER_SIZE + chunk_length;
-
-    uint8_t *p = dst;
-    memcpy(p, &tag, sizeof(tag));
-    p += sizeof(tag);
-    memcpy(p, &field_length, sizeof(field_length));
-    p += sizeof(field_length);
-
-    memcpy(p, &g_module_scpi_request_id, sizeof(uint16_t));
-    p[2] = chunk_flags;
-    p[3] = 0;
-    memcpy(p + 4, &g_module_scpi_response_length, sizeof(uint32_t));
-    memcpy(p + 8, &offset, sizeof(uint32_t));
-    p += BB3_SCPI_CHUNK_HEADER_SIZE;
-
-    memcpy(p, g_module_scpi_response + g_module_scpi_response_start + offset, chunk_length);
-
-    g_module_scpi_response_sent += chunk_length;
-    if (chunk_flags & BB3_SCPI_CHUNK_LAST) {
-        g_module_scpi_state = MODULE_SCPI_STATE_IDLE;
-    }
-
-    return header_length + chunk_length;
-}
-`;
-
-function buildDispatchFunction(info: CommandInfo) {
+function buildDispatchCase(info: CommandInfo) {
     const lines: string[] = [];
-    lines.push(
-        `static int module_scpi_dispatch_${info.id}(module_scpi_req_t *req, const int32_t *suffixes, uint8_t num_suffixes, uint8_t num_params, module_scpi_reader_t *reader) {`
-    );
-    lines.push(`    // ${info.pattern}`);
-    lines.push(`    if (num_suffixes != ${info.numWireSuffixes}) {`);
-    lines.push(`        return MODULE_SCPI_DECODE_ERROR;`);
-    lines.push(`    }`);
-
-    if (info.params.length == 0) {
-        lines.push(`    (void)reader;`);
-        lines.push(`    (void)num_params;`);
-    }
-    if (info.numWireSuffixes == 0) {
-        lines.push(`    (void)suffixes;`);
-    }
+    lines.push(`    case ${info.idName}: {`);
+    lines.push(`        // ${info.pattern}`);
+    lines.push(`        if (command->num_suffixes != ${info.numWireSuffixes}) {`);
+    lines.push(`            return BB3_SCPI_DECODE_ERROR;`);
+    lines.push(`        }`);
 
     const args = ["req"];
     if (hasChannelArg(info.addressing)) {
-        args.push("req->local_channel");
+        args.push("command->channel");
     }
-    info.suffixes.forEach((suffix, i) => args.push(`suffixes[${i}]`));
+    info.suffixes.forEach((suffix, i) => args.push(`command->suffixes[${i}]`));
 
     for (const param of info.params) {
         const v = `v${param.index}`;
         lines.push(``);
-        lines.push(`    module_scpi_value_t ${v} = { BB3_SCPI_WIRE_TYPE_NONE };`);
+        lines.push(`        bb3_scpi_value_t ${v} = { BB3_SCPI_WIRE_TYPE_NONE };`);
         lines.push(
-            `    if (num_params > ${param.index} && !module_scpi_read_param(reader, &${v}, ${param.isList ? "true" : "false"})) {`
+            `        if (command->num_params > ${param.index} && !bb3_scpi_read_param(&command->params, &${v}, ${param.isList ? "true" : "false"})) {`
         );
-        lines.push(`        return MODULE_SCPI_DECODE_ERROR;`);
-        lines.push(`    }`);
+        lines.push(`            return BB3_SCPI_DECODE_ERROR;`);
+        lines.push(`        }`);
 
         if (!param.cName) {
             // addressing parameter or calibration password, BB3+ sends it
@@ -819,16 +325,16 @@ function buildDispatchFunction(info: CommandInfo) {
 
         if (param.isList) {
             if (param.isOptional) {
-                lines.push(`    if (${isNone}) {`);
-                lines.push(`        ${v}.value.list.data = 0;`);
-                lines.push(`        ${v}.value.list.length = 0;`);
-                lines.push(`        ${v}.value.list.count = 0;`);
-                lines.push(`    } else if (${v}.type != BB3_SCPI_WIRE_TYPE_LIST) {`);
+                lines.push(`        if (${isNone}) {`);
+                lines.push(`            ${v}.value.list.data = 0;`);
+                lines.push(`            ${v}.value.list.length = 0;`);
+                lines.push(`            ${v}.value.list.count = 0;`);
+                lines.push(`        } else if (${v}.type != BB3_SCPI_WIRE_TYPE_LIST) {`);
             } else {
-                lines.push(`    if (${v}.type != BB3_SCPI_WIRE_TYPE_LIST) {`);
+                lines.push(`        if (${v}.type != BB3_SCPI_WIRE_TYPE_LIST) {`);
             }
-            lines.push(`        return MODULE_SCPI_DECODE_ERROR;`);
-            lines.push(`    }`);
+            lines.push(`            return BB3_SCPI_DECODE_ERROR;`);
+            lines.push(`        }`);
             args.push(`${v}.value.list`);
             continue;
         }
@@ -838,12 +344,12 @@ function buildDispatchFunction(info: CommandInfo) {
             .join(" && ");
 
         if (param.isOptional) {
-            lines.push(`    if (!(${isNone}) && ${typeCheck}) {`);
+            lines.push(`        if (!(${isNone}) && ${typeCheck}) {`);
         } else {
-            lines.push(`    if (${typeCheck}) {`);
+            lines.push(`        if (${typeCheck}) {`);
         }
-        lines.push(`        return MODULE_SCPI_DECODE_ERROR;`);
-        lines.push(`    }`);
+        lines.push(`            return BB3_SCPI_DECODE_ERROR;`);
+        lines.push(`        }`);
 
         if (param.wireTypes.length != 1) {
             args.push(param.isOptional ? `${isNone} ? 0 : &${v}` : `&${v}`);
@@ -854,41 +360,27 @@ function buildDispatchFunction(info: CommandInfo) {
     }
 
     lines.push(``);
-    lines.push(`    return ${info.funcName}(${args.join(", ")});`);
-    lines.push(`}`);
+    lines.push(`        return ${info.funcName}(${args.join(", ")});`);
+    lines.push(`    }`);
 
     return lines.join("\n");
 }
 
 function buildDef(infos: CommandInfo[]) {
-    const dispatchers = infos.map(buildDispatchFunction).join("\n\n");
+    const cases = infos.map(buildDispatchCase).join("\n\n");
 
-    const dispatch = `static int module_scpi_dispatch(module_scpi_req_t *req, const int32_t *suffixes, uint8_t num_suffixes, uint8_t num_params, module_scpi_reader_t *reader) {
-    switch (req->command_id) {
-${infos
-    .map(
-        info =>
-            `    case ${info.idName}:\n        return module_scpi_dispatch_${info.id}(req, suffixes, num_suffixes, num_params, reader);`
-    )
-    .join("\n")}
-    }
-    (void)suffixes;
-    (void)num_suffixes;
-    (void)num_params;
-    (void)reader;
-    return MODULE_SCPI_UNKNOWN_COMMAND;
-}`;
+    return `enum ModuleScpiCommandId {
+${infos.map(info => `    ${info.idName} = ${info.id}, // ${info.pattern}`).join("\n")}
+    MODULE_SCPI_NUM_COMMANDS = ${infos.length}
+};
 
-    return (
-        RUNTIME_DEF_HEAD +
-        `
-////////////////////////////////////////////////////////////////////////////////
-// Dispatch table
-
-${dispatchers ? dispatchers + "\n\n" : ""}${dispatch}
-` +
-        RUNTIME_DEF_TAIL
-    );
+int module_scpi_dispatch(bb3_scpi_req_t *req, bb3_scpi_command_t *command) {
+    switch (command->id) {
+${cases ? cases + "\n" : ""}    }
+    (void)req;
+    return BB3_SCPI_UNKNOWN_COMMAND;
+}
+`;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
