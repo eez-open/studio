@@ -176,10 +176,10 @@ class ExportedItemsModel {
     activeGroup: ExportedItemsGroup | undefined;
 
     searchText = "";
-    showOnlyExported = false;
+    showOnlyExported = true;
 
     // "none" is the order of the items in the project
-    idSortOrder: "none" | "asc" | "desc" = "none";
+    idSortOrder: "none" | "asc" | "desc" = "asc";
 
     constructor(public projectStore: ProjectStore) {
         this.createGroups();
