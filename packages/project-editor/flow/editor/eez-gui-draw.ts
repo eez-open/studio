@@ -167,7 +167,7 @@ const fontTagFonts: Font[] = [];
 // flow/expression/build.ts), so that measureStr and drawStr can handle them.
 // Tags with unknown font are left as is.
 export function convertFontTags(text: string) {
-    if (text.indexOf("<") == -1) {
+    if (typeof text != "string" || text.indexOf("<") == -1) {
         return text;
     }
 
