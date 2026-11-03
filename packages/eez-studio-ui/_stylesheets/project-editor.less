@@ -3887,6 +3887,122 @@
     }
 }
 
+.EezStudio_ExportedItemsDialog {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    & > .nav-tabs {
+        flex-shrink: 0;
+        padding: 6px 10px 0;
+        background-color: @panelHeaderColor;
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            white-space: nowrap;
+        }
+
+        .badge {
+            font-size: 75%;
+        }
+    }
+
+    .EezStudio_ExportedItemsDialog_Toolbar {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 8px 10px;
+
+        .EezStudio_SearchInput_Container {
+            flex: 0 1 300px;
+            border: 1px solid @borderColor;
+            border-radius: 4px;
+            padding: 2px;
+        }
+
+        .form-check {
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+
+        .EezStudio_ExportedItemsDialog_GroupInfo {
+            margin-left: auto;
+            opacity: 0.7;
+            white-space: nowrap;
+        }
+    }
+
+    .EezStudio_ExportedItemsDialog_Body {
+        flex-grow: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: 0 10px 10px;
+
+        & > table {
+            width: 100%;
+
+            th {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                padding: 6px 8px;
+                background-color: @backgroundColor;
+                border-bottom: 1px solid @borderColor;
+            }
+
+            .EezStudio_ExportedItemsDialog_Sortable {
+                cursor: pointer;
+                user-select: none;
+                white-space: nowrap;
+
+                .EezStudio_Icon {
+                    margin-left: 2px;
+                    vertical-align: middle;
+                }
+            }
+
+            tbody tr:hover {
+                background-color: @hoverBackgroundColor;
+                color: @hoverColor;
+            }
+
+            tr.modified .EezStudio_ExportedItemsDialog_NameColumn {
+                font-weight: bold;
+            }
+
+            td {
+                padding: 2px 8px;
+                vertical-align: middle;
+            }
+
+            .EezStudio_ExportedItemsDialog_NameColumn {
+                word-break: break-all;
+            }
+
+            .EezStudio_ExportedItemsDialog_IdColumn {
+                width: 110px;
+            }
+
+            .EezStudio_ExportedItemsDialog_StatusColumn {
+                width: 45%;
+            }
+        }
+    }
+
+    .EezStudio_ExportedItemsDialog_NoItems {
+        padding: 10px;
+    }
+}
+
+.EezStudio_ExportedItemsDialog_Changes {
+    align-self: center;
+}
+
 .EezStudio_ProjectEditorScrapbook {
     width: 100%;
     height: 100%;

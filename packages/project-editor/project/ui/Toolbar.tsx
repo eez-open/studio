@@ -38,6 +38,8 @@ import { isDark } from "eez-studio-shared/color";
 import { Icon } from "eez-studio-ui/icon";
 import { dockerBuildState } from "project-editor/lvgl/docker-build/docker-build-state";
 import { ThemedColorInput } from "project-editor/ui-components/PropertyGrid/ThemedColorInput";
+import { ProjectType } from "project-editor/core/object";
+import { showExportedItemsDialog } from "./ExportedItemsDialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -379,6 +381,21 @@ const EditorButtons = observer(
                             )}
                         </div>
                     )}
+
+                    {!this.context.runtime &&
+                        this.context.project.settings.general.projectType ==
+                            ProjectType.FIRMWARE && (
+                            <div className="btn-group" role="group">
+                                <IconAction
+                                    title="Exported Items"
+                                    icon="material:publish"
+                                    onClick={() =>
+                                        showExportedItemsDialog(this.context)
+                                    }
+                                    enabled={this.context.project._fullyLoaded}
+                                />
+                            </div>
+                        )}
 
                     {this.context.projectTypeTraits.isResource &&
                         this.context.project.micropython && (
