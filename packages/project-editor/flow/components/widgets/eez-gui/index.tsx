@@ -3005,12 +3005,27 @@ function getSampledBB3ModuleFields(object: IEezObject) {
 // 8..15, so only bits 0..7
 const YT_CHART_MAX_BIT = 7;
 
+// YTChartTrace.type, the values are the YT_CHART_TRACE_TYPE_... of the
+// framework (yt_chart_widget.h)
+const YT_CHART_TRACE_TYPES = [
+    // the YT history of the field
+    { id: "field", label: "Sampled field", value: 0 },
+    // the product of the YT histories of field and field2 (e.g. P = U * I)
+    { id: "product", label: "Product of two sampled fields", value: 1 }
+];
+
+function isProductTrace(trace: YTChartTrace) {
+    return trace.type == "product";
+}
+
 function isBitTrace(trace: YTChartTrace) {
-    return trace.bit != undefined;
+    return !isProductTrace(trace) && trace.bit != undefined;
 }
 
 class YTChartTrace extends EezObject {
+    type: string;
     field: string;
+    field2: string;
     bit: number | undefined;
     color: string;
     min: string;
@@ -3018,10 +3033,26 @@ class YTChartTrace extends EezObject {
     visible: string;
 
     static classInfo: ClassInfo = {
+        beforeLoadHook: (trace: YTChartTrace, jsObject: any) => {
+            // the traces from before the trace types
+            if (jsObject.type == undefined) {
+                jsObject.type = "field";
+            }
+        },
         listLabel: (trace: YTChartTrace) =>
-            (trace.field || "") +
-            (isBitTrace(trace) ? ` bit ${trace.bit}` : ""),
+            isProductTrace(trace)
+                ? `${trace.field || ""} \u00d7 ${trace.field2 || ""}`
+                : (trace.field || "") +
+                  (isBitTrace(trace) ? ` bit ${trace.bit}` : ""),
         properties: [
+            {
+                name: "type",
+                type: PropertyType.Enum,
+                enumItems: YT_CHART_TRACE_TYPES.map(type => ({
+                    id: type.id,
+                    label: type.label
+                }))
+            },
             {
                 name: "field",
                 displayName: "BB3 module field",
@@ -3032,10 +3063,21 @@ class YTChartTrace extends EezObject {
                     }))
             },
             {
+                name: "field2",
+                displayName: "Second BB3 module field",
+                type: PropertyType.Enum,
+                enumItems: (trace: YTChartTrace) =>
+                    getSampledBB3ModuleFields(trace).map(variable => ({
+                        id: variable.name
+                    })),
+                disabled: (trace: YTChartTrace) => !isProductTrace(trace)
+            },
+            {
                 name: "bit",
                 displayName: `Bit (0 - ${YT_CHART_MAX_BIT}, a digital trace in its own lane)`,
                 type: PropertyType.Number,
-                isOptional: true
+                isOptional: true,
+                disabled: isProductTrace
             },
             {
                 name: "color",
@@ -3067,20 +3109,37 @@ class YTChartTrace extends EezObject {
             )
         ],
         check: (trace: YTChartTrace, messages: IMessage[]) => {
-            if (!trace.field) {
-                messages.push(propertyNotSetMessage(trace, "field"));
-            } else if (
-                !getSampledBB3ModuleFields(trace).find(
-                    variable => variable.name == trace.field
-                )
+            if (
+                !YT_CHART_TRACE_TYPES.find(type => type.id == trace.type)
             ) {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
-                        `"${trace.field}" is not a sampled BB3 module field (set "Module field max sample rate" of the variable)`,
-                        getChildOfObject(trace, "field")
+                        `Unknown trace type "${trace.type}"`,
+                        getChildOfObject(trace, "type")
                     )
                 );
+            }
+
+            for (const propertyName of isProductTrace(trace)
+                ? ["field", "field2"]
+                : ["field"]) {
+                const field = (trace as any)[propertyName] as string;
+                if (!field) {
+                    messages.push(propertyNotSetMessage(trace, propertyName));
+                } else if (
+                    !getSampledBB3ModuleFields(trace).find(
+                        variable => variable.name == field
+                    )
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `"${field}" is not a sampled BB3 module field (set "Module field max sample rate" of the variable)`,
+                            getChildOfObject(trace, propertyName)
+                        )
+                    );
+                }
             }
 
             if (isBitTrace(trace)) {
@@ -3128,6 +3187,7 @@ class YTChartTrace extends EezObject {
             }
         },
         defaultValue: {
+            type: "field",
             color: "#ffff00",
             min: "0",
             max: "1",
@@ -3139,7 +3199,9 @@ class YTChartTrace extends EezObject {
         super.makeEditable();
 
         makeObservable(this, {
+            type: observable,
             field: observable,
+            field2: observable,
             bit: observable,
             color: observable,
             min: observable,
@@ -3333,13 +3395,17 @@ export class YTChartWidget extends Widget {
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
         const bb3ModuleMetadata = assets.projectStore.project.bb3ModuleMetadata;
 
+        const getFieldIndex = (field: string) => {
+            const fieldIndex = bb3ModuleMetadata
+                ? bb3ModuleMetadata.getBB3ModuleFieldIndex(field)
+                : -1;
+            return fieldIndex != -1 ? fieldIndex : 0;
+        };
+
         // traces
         dataBuffer.writeArray(this.traces, trace => {
             // fieldIndex
-            const fieldIndex = bb3ModuleMetadata
-                ? bb3ModuleMetadata.getBB3ModuleFieldIndex(trace.field)
-                : -1;
-            dataBuffer.writeUint16(fieldIndex != -1 ? fieldIndex : 0);
+            dataBuffer.writeUint16(getFieldIndex(trace.field));
 
             // color
             let color = assets.getColorIndexFromColorValue(trace.color);
@@ -3349,10 +3415,18 @@ export class YTChartWidget extends Widget {
             dataBuffer.writeUint16(color);
 
             // bit, -1 for a value trace
-            dataBuffer.writeInt16(isBitTrace(trace) ? trace.bit! : -1);
+            dataBuffer.writeInt8(isBitTrace(trace) ? trace.bit! : -1);
 
-            // reserved
-            dataBuffer.writeUint16(0);
+            // type
+            const type = YT_CHART_TRACE_TYPES.find(
+                type => type.id == (trace.type ?? "field")
+            );
+            dataBuffer.writeUint8(type ? type.value : 0);
+
+            // field2Index
+            dataBuffer.writeUint16(
+                isProductTrace(trace) ? getFieldIndex(trace.field2) : 0
+            );
 
             // min
             dataBuffer.writeObjectOffset(() =>
