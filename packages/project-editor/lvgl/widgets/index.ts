@@ -106,6 +106,7 @@ export {
     LVGLArcWidget,
     LVGLBarWidget,
     LVGLButtonMatrixWidget,
+    LVGLCalendarWidget,
     LVGLContainerWidget,
     LVGLDropdownWidget,
     LVGLImageWidget,
