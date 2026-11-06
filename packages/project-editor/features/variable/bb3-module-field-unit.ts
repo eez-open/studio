@@ -28,9 +28,8 @@ export const BB3_MODULE_FIELD_MEASUREMENTS = [
     { id: "none", label: "None", value: 0 },
     { id: "voltage", label: "Voltage (MEASure:VOLTage)", value: 1 },
     { id: "current", label: "Current (MEASure:CURRent)", value: 2 },
-    { id: "power", label: "Power (MEASure:POWer)", value: 3 },
-    { id: "analog", label: "Analog input (voltage or current)", value: 4 },
-    { id: "digital", label: "Digital input pins", value: 5 }
+    { id: "analog", label: "Analog input (voltage or current)", value: 3 },
+    { id: "digital", label: "Digital input pins", value: 4 }
 ];
 
 export function getBB3ModuleFieldMeasurementValue(measurement: string | undefined) {
