@@ -49,9 +49,11 @@ export function createObject<T extends EezObject>(
 export function loadProject(
     projectStore: ProjectStore,
     projectObjectOrString: any | string,
-    makeEditable: boolean
+    makeEditable: boolean,
+    filePath?: string
 ): Project {
     currentProjectStore = projectStore;
+    currentProjectFilePath = filePath;
     isLoadProject = true;
     loadProjectMakeEditable = makeEditable;
     createNewObjectobjIDs = false;
@@ -74,6 +76,7 @@ export function loadProject(
     }
 
     currentProjectStore = undefined;
+    currentProjectFilePath = undefined;
 
     project._store = projectStore;
 
@@ -124,6 +127,7 @@ export function objectToJson(
 
 let currentProjectStore: ProjectStore | undefined;
 let currentProject: Project | undefined;
+let currentProjectFilePath: string | undefined;
 let isLoadProject: boolean;
 let loadProjectMakeEditable: boolean;
 let createNewObjectobjIDs: boolean;
@@ -314,7 +318,10 @@ function loadObjectInternal(
         }
 
         if (object == currentProject && propertyInfo.name == "settings") {
-            currentProjectStore!.buildImportedExtensions(currentProject!);
+            currentProjectStore!.buildImportedExtensions(
+                currentProject!,
+                currentProjectFilePath
+            );
         }
     }
 

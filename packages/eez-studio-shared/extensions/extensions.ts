@@ -261,6 +261,48 @@ export function registerExtension(extension: IExtension) {
     return extensions.get(extension.id);
 }
 
+export function loadLocalExtension(
+    extensionFolderPath: string
+): IExtension | undefined {
+    try {
+        const packageJsonFilePath = extensionFolderPath + "/" + "package.json";
+        if (!fs.existsSync(packageJsonFilePath)) {
+            return undefined;
+        }
+
+        const packageJson = JSON.parse(
+            fs.readFileSync(packageJsonFilePath, "utf8")
+        );
+        const packageJsonEezStudio = packageJson[CONF_EEZ_STUDIO_PROPERTY_NAME];
+        if (
+            !packageJsonEezStudio ||
+            !packageJsonEezStudio[CONF_NODE_MODULE_PROPERTY_NAME]
+        ) {
+            return undefined;
+        }
+
+        const extension: IExtension | undefined =
+            require(extensionFolderPath).default;
+        if (!extension) {
+            return undefined;
+        }
+
+        extension.id = packageJson.id || packageJson.name;
+        extension.extensionType = "pext";
+        extension.name = packageJson.name;
+        extension.displayName = packageJson.displayName;
+        extension.version = packageJson.version;
+        extension.author = packageJson.author;
+        extension.description = packageJson.description;
+        extension.installationFolderPath = extensionFolderPath;
+
+        return extension;
+    } catch (err) {
+        console.error(err);
+        return undefined;
+    }
+}
+
 class LoadExtensionTask extends EventEmitter {
     isFinished: boolean = false;
     extension: IExtension | undefined;
