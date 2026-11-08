@@ -449,7 +449,21 @@ export class ProjectEditorTab implements IHomeTab {
 
     category: HomeTabCategory = "none";
 
-    async loadProject() {
+    // Concurrent callers share the load in progress, so that only one
+    // ProjectStore is created. Otherwise each call would create and mount its
+    // own store, and all but the last one would leak.
+    private loadProjectPromise: Promise<void> | undefined;
+
+    loadProject() {
+        if (!this.loadProjectPromise) {
+            this.loadProjectPromise = this.doLoadProject().finally(() => {
+                this.loadProjectPromise = undefined;
+            });
+        }
+        return this.loadProjectPromise;
+    }
+
+    private async doLoadProject() {
         try {
             this.ProjectContext = ProjectContext;
 
@@ -942,7 +956,7 @@ export class ProjectEditorTab implements IHomeTab {
             this.projectStore = undefined;
         });
 
-        this.loadProject();
+        await this.loadProject();
 
         if (this.active) {
             this.addListeners();
