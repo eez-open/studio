@@ -1,4 +1,6 @@
 import fs from "fs";
+import path from "path";
+import { pathToFileURL } from "url";
 
 import { BrowserWindow, ipcMain, app, dialog, shell } from "electron";
 import { action, observable, runInAction } from "mobx";
@@ -58,6 +60,57 @@ let forceQuit = false;
 export function setForceQuit() {
     forceQuit = true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Windows run with Node integration, so they must never navigate away from the
+// app's own pages: a link in user content (Markdown, README, PDF) would
+// otherwise load a remote page with full Node access. Web links are opened in
+// the default browser instead.
+
+const APP_ROOT_URL = pathToFileURL(path.resolve(sourceRootDir(), "..")).href;
+
+function normalizeUrlForCompare(url: string) {
+    return process.platform == "win32" ? url.toLowerCase() : url;
+}
+
+function isAppUrl(url: string) {
+    try {
+        const href = new URL(url).href;
+        return normalizeUrlForCompare(href).startsWith(
+            normalizeUrlForCompare(APP_ROOT_URL + "/")
+        );
+    } catch (err) {
+        return false;
+    }
+}
+
+function openExternalIfWebUrl(url: string) {
+    try {
+        const { protocol } = new URL(url);
+        if (
+            protocol == "http:" ||
+            protocol == "https:" ||
+            protocol == "mailto:"
+        ) {
+            shell.openExternal(url);
+        }
+    } catch (err) {}
+}
+
+app.on("web-contents-created", (_event, contents) => {
+    contents.on("will-navigate", details => {
+        if (!isAppUrl(details.url)) {
+            details.preventDefault();
+            openExternalIfWebUrl(details.url);
+        }
+    });
+
+    contents.setWindowOpenHandler(({ url }) => {
+        openExternalIfWebUrl(url);
+        return { action: "deny" };
+    });
+});
 
 export function createWindow(params: IWindowParams) {
     let windowUrl = params.url;
