@@ -1,5 +1,3 @@
-import { uniqBy } from "lodash-es";
-
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import type { Style } from "project-editor/features/style/style";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
@@ -15,15 +13,14 @@ export const STYLE_FLAGS_VERT_ALIGN_CENTER = 2 << 3;
 export const STYLE_FLAGS_BLINK = 1 << 6;
 
 export function buildGuiStylesEnum(assets: Assets) {
-    let styles = assets.styles.filter(style => style.id != undefined);
-    styles = uniqBy(styles, style => style.id);
+    let styles = assets.styles.filter(style => style.id != undefined || style.alwaysBuild);
 
     const styleEnumItems = styles.map((style, i) => {
         return `${TAB}${getName(
             "STYLE_ID_",
             style.name ? style : "inline" + i,
             NamingConvention.UnderscoreUpperCase
-        )} = ${style.id}`;
+        )}${style.id != undefined ? `= ${style.id}` : ""}`;
     });
 
     styleEnumItems.unshift(`${TAB}STYLE_ID_NONE = 0`);

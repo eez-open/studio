@@ -617,27 +617,6 @@ export class Assets {
             project => project.allStyles,
             style => this.getAssetId(style) == undefined && style.alwaysBuild
         ).forEach(style => this.styles.push(style));
-        const missingIDs: number[] = [];
-        for (let i = 0; i < this.styles.length; i++) {
-            if (!this.styles[i]) {
-                missingIDs.push(i + 1);
-                for (let j = 0; j < this.styles.length; j++) {
-                    if (this.styles[j]) {
-                        this.styles[i] = this.styles[j];
-                        break;
-                    }
-                }
-            }
-        }
-
-        // if (missingIDs.length > 0) {
-        //     this.projectStore.outputSectionsStore.write(
-        //         Section.OUTPUT,
-        //         MessageType.WARNING,
-        //         `Missing styles with following ID's: ${missingIDs.join(", ")}`,
-        //         this.rootProject.styles
-        //     );
-        // }
 
         //
         // fonts

@@ -193,6 +193,7 @@ class ExportedItemsModel {
             idSortOrder: observable,
             setActiveGroup: action,
             toggleIdSortOrder: action,
+            removeGaps: action,
             itemsById: computed,
             modifiedItems: computed,
             canApply: computed
@@ -350,6 +351,48 @@ class ExportedItemsModel {
         this.updateSortIds();
     }
 
+    getIdSpaceGroups(idSpace: IdSpace) {
+        return this.groups.filter(group => group.idSpace == idSpace);
+    }
+
+    // New IDs for all the items with valid ID in the given ID space, such
+    // that IDs are consecutive starting from minId. The order of the items by
+    // ID is preserved, items with the same ID are ordered as in the project.
+    getGaplessIds(idSpace: IdSpace) {
+        const items: ExportedItem[] = [];
+        for (const group of this.getIdSpaceGroups(idSpace)) {
+            for (const item of group.items) {
+                const id = item.newId;
+                if (id != undefined && !isNaN(id)) {
+                    items.push(item);
+                }
+            }
+        }
+
+        // Array.prototype.sort is stable
+        items.sort((a, b) => a.newId! - b.newId!);
+
+        return items.map((item, i) => ({
+            item,
+            id: idSpace.minId + i
+        }));
+    }
+
+    canRemoveGaps(idSpace: IdSpace) {
+        return this.getGaplessIds(idSpace).some(
+            ({ item, id }) => item.newId != id
+        );
+    }
+
+    removeGaps(idSpace: IdSpace) {
+        for (const { item, id } of this.getGaplessIds(idSpace)) {
+            if (item.newId != id) {
+                item.idText = id.toString();
+            }
+        }
+        this.updateSortIds();
+    }
+
     updateSortIds() {
         for (const group of this.groups) {
             for (const item of group.items) {
@@ -495,6 +538,7 @@ const ExportedItemsDialog = observer(
                                         {activeGroup.items.length} exported,
                                         next free ID: {activeGroup.nextFreeId}
                                     </span>
+                                    <RemoveGapsButton group={activeGroup} />
                                 </div>
                                 <div className="EezStudio_ExportedItemsDialog_Body">
                                     <ExportedItemsGroupView
@@ -509,6 +553,38 @@ const ExportedItemsDialog = observer(
                         )}
                     </div>
                 </Dialog>
+            );
+        }
+    }
+);
+
+const RemoveGapsButton = observer(
+    class RemoveGapsButton extends React.Component<{
+        group: ExportedItemsGroup;
+    }> {
+        render() {
+            const { group } = this.props;
+            const { model, idSpace } = group;
+
+            // groups sharing the same ID space (e.g. pages and user widgets)
+            // are renumbered together, so IDs stay unique
+            const groupNames = model
+                .getIdSpaceGroups(idSpace)
+                .map(group => group.name);
+
+            return (
+                <button
+                    className="btn btn-sm btn-secondary"
+                    title={`Renumber exported ${groupNames.join(
+                        " and "
+                    )} so IDs are consecutive, starting from ${
+                        idSpace.minId
+                    }. Order by ID is preserved.`}
+                    disabled={!model.canRemoveGaps(idSpace)}
+                    onClick={() => model.removeGaps(idSpace)}
+                >
+                    Remove Gaps
+                </button>
             );
         }
     }
