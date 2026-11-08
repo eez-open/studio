@@ -940,7 +940,7 @@ registerClass("NumberInputDashboardWidget", NumberInputDashboardWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class CheckboxWidget extends Widget {
+export class CheckboxDashboardWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.DASHBOARD,
@@ -1119,11 +1119,11 @@ export class CheckboxWidget extends Widget {
     }
 }
 
-registerClass("CheckboxWidget", CheckboxWidget);
+registerClass("CheckboxDashboardWidget", CheckboxDashboardWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class RadioWidget extends Widget {
+export class RadioDashboardWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType === ProjectType.DASHBOARD,
@@ -1295,7 +1295,7 @@ export class RadioWidget extends Widget {
     }
 }
 
-registerClass("RadioWidget", RadioWidget);
+registerClass("RadioDashboardWidget", RadioDashboardWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 

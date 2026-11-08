@@ -361,6 +361,16 @@ function getClassFromType(projectStore: ProjectStore, type: string) {
             type == "RectangleWidget"
         ) {
             type = "RectangleDashboardWidget";
+        } else if (
+            type + "Widget" == "CheckboxWidget" ||
+            type == "CheckboxWidget"
+        ) {
+            type = "CheckboxDashboardWidget";
+        } else if (
+            type + "Widget" == "RadioWidget" ||
+            type == "RadioWidget"
+        ) {
+            type = "RadioDashboardWidget";
         }
     }
 

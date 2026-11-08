@@ -88,7 +88,9 @@ import {
     ButtonWidget,
     BarGraphWidget,
     BitmapWidget,
-    RectangleWidget
+    RectangleWidget,
+    CheckboxWidget,
+    RadioWidget
 } from "project-editor/flow/components/widgets/eez-gui";
 import {
     LVGLWidget,
@@ -209,6 +211,8 @@ export function createProjectEditor(
         BarGraphWidgetClass: BarGraphWidget,
         BitmapWidgetClass: BitmapWidget,
         RectangleWidgetClass: RectangleWidget,
+        CheckboxWidgetClass: CheckboxWidget,
+        RadioWidgetClass: RadioWidget,
         OutputActionComponentClass: OutputActionComponent,
         CallActionActionComponentClass: CallActionActionComponent,
         VariableClass: Variable,

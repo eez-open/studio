@@ -130,11 +130,14 @@ export function supportsFontTags(component: Component) {
     return (
         component instanceof ProjectEditor.TextWidgetClass ||
         component instanceof ProjectEditor.MultilineTextWidgetClass ||
-        component instanceof ProjectEditor.ButtonWidgetClass
+        component instanceof ProjectEditor.ButtonWidgetClass ||
+        component instanceof ProjectEditor.CheckboxWidgetClass ||
+        component instanceof ProjectEditor.RadioWidgetClass
     );
 }
 
-// Text of Text, MultilineText and Button widgets can contain font tags:
+// Text of Text, MultilineText, Button, Checkbox and Radio widgets can contain
+// font tags:
 //
 //   Default font. <font name="font2">This is font2.</font> Default font.
 //

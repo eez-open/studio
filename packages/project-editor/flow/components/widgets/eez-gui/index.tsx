@@ -115,6 +115,8 @@ import {
     WIDGET_TYPE_BUTTON_GROUP,
     WIDGET_TYPE_QR_CODE,
     WIDGET_TYPE_YT_CHART,
+    WIDGET_TYPE_CHECKBOX,
+    WIDGET_TYPE_RADIO,
     WIDGET_TYPE_DROP_DOWN_LIST,
     WIDGET_TYPE_PROGRESS,
     WIDGET_TYPE_BUTTON,
@@ -6492,6 +6494,218 @@ export class SwitchWidget extends Widget {
 }
 
 registerClass("SwitchWidget", SwitchWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// label of a checkbox or radio button, "" if the text property is not set
+function getCheckboxOrRadioLabel(flowContext: IFlowContext, widget: Widget) {
+    if (!(widget as any).text) {
+        return "";
+    }
+    const result = getTextValue(flowContext, widget, "text", undefined, undefined);
+    return eezGuiDraw.convertFontTags(
+        typeof result == "object" ? result.text : result
+    );
+}
+
+// strings are compared as strings, everything else as numbers, the same as
+// isRadioChecked in eez-framework gui/widgets/radio.cpp
+function isRadioChecked(data: any, value: any) {
+    if (data == undefined || value == undefined) {
+        return false;
+    }
+    if (typeof data == "string" || typeof value == "string") {
+        return data === value;
+    }
+    return Number(data) == Number(value);
+}
+
+export class CheckboxWidget extends Widget {
+    text: string;
+
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
+
+        componentPaletteGroupName: "!1Input",
+
+        flowComponentId: WIDGET_TYPE_CHECKBOX,
+
+        properties: [
+            makeDataPropertyInfo("data", {}, "boolean"),
+            makeDataPropertyInfo("text", {}, "string"),
+            makeStylePropertyInfo("style", "Default style")
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 160,
+            height: 40
+        },
+
+        icon: (
+            <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                <path d="M9 12l2 2l4 -4"></path>
+            </svg>
+        )
+    });
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            text: observable
+        });
+    }
+
+    override render(flowContext: IFlowContext, width: number, height: number) {
+        const checked = getBooleanValue(flowContext, this, "data", false);
+        const label = getCheckboxOrRadioLabel(flowContext, this);
+
+        return (
+            <>
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+                        eezGuiDraw.drawCheckboxOrRadio(
+                            ctx,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.layoutStyle,
+                            false,
+                            checked,
+                            label
+                        );
+                    }}
+                />
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "text"));
+    }
+}
+
+registerClass("CheckboxWidget", CheckboxWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+export class RadioWidget extends Widget {
+    value: string;
+    text: string;
+
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
+
+        componentPaletteGroupName: "!1Input",
+
+        flowComponentId: WIDGET_TYPE_RADIO,
+
+        properties: [
+            makeDataPropertyInfo("data"),
+            makeDataPropertyInfo("value"),
+            makeDataPropertyInfo("text", {}, "string"),
+            makeStylePropertyInfo("style", "Default style")
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 160,
+            height: 40
+        },
+
+        icon: (
+            <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <circle cx="12" cy="12" r="8"></circle>
+                <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+            </svg>
+        )
+    });
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            value: observable,
+            text: observable
+        });
+    }
+
+    override render(flowContext: IFlowContext, width: number, height: number) {
+        const checked = isRadioChecked(
+            getAnyValue(flowContext, this, "data", undefined),
+            getAnyValue(flowContext, this, "value", undefined)
+        );
+        const label = getCheckboxOrRadioLabel(flowContext, this);
+
+        return (
+            <>
+                <ComponentCanvas
+                    component={this}
+                    width={width}
+                    height={height}
+                    draw={(ctx: CanvasRenderingContext2D) => {
+                        eezGuiDraw.setProject(flowContext.projectStore.project);
+                        eezGuiDraw.drawCheckboxOrRadio(
+                            ctx,
+                            0,
+                            0,
+                            width,
+                            height,
+                            this.layoutStyle,
+                            true,
+                            checked,
+                            label
+                        );
+                    }}
+                />
+                {super.render(flowContext, width, height)}
+            </>
+        );
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "value"));
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "text"));
+    }
+}
+
+registerClass("RadioWidget", RadioWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 

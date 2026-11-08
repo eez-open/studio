@@ -811,6 +811,164 @@ export function drawText(
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// Checkbox (rounded square, check mark if checked) or radio button (circle,
+// filled circle if checked) with the label right of it after a space, the same
+// as drawCheckboxOrRadio in eez-framework gui/draw.cpp. The box is 3/4 of the
+// style font height, as big as an icon glyph of the font. The box and the label
+// are aligned as a text in drawText and drawn with the style color on the style
+// background.
+
+function getCheckBoxSize(font: Font) {
+    return Math.floor((font.height * 3) / 4);
+}
+
+// width of the box and the label, without the padding
+export function measureCheckboxOrRadio(style: Style, label: string) {
+    const font = styleGetFont(style);
+    if (!font) {
+        return 0;
+    }
+
+    let width = getCheckBoxSize(font);
+    if (label) {
+        width += measureGlyph(32, font) + measureStr(label, font, 0);
+    }
+    return width;
+}
+
+export function drawCheckboxOrRadio(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    style: Style,
+    radio: boolean,
+    checked: boolean,
+    label: string
+) {
+    let { x1, y1, x2, y2 } = drawBackground(ctx, x, y, w, h, style, true);
+
+    const font = styleGetFont(style);
+    if (!font) {
+        return;
+    }
+
+    const width = measureCheckboxOrRadio(style, label);
+    const height = font.height;
+
+    let xOffset: number;
+    if (styleIsHorzAlignLeft(style)) {
+        xOffset = x1 + style.paddingRect.left;
+    } else if (styleIsHorzAlignRight(style)) {
+        xOffset = x2 - style.paddingRect.right - width;
+    } else {
+        xOffset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
+        if (xOffset < x1) {
+            xOffset = x1;
+        }
+    }
+
+    let yOffset: number;
+    if (styleIsVertAlignTop(style)) {
+        yOffset = y1 + style.paddingRect.top;
+    } else if (styleIsVertAlignBottom(style)) {
+        yOffset = y2 - style.paddingRect.bottom - height;
+    } else {
+        yOffset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
+    }
+
+    const boxSize = getCheckBoxSize(font);
+    const bx1 = xOffset;
+    const by1 = yOffset + Math.floor((height - boxSize) / 2);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
+    ctx.clip();
+
+    setColor(style.colorProperty);
+    ctx.strokeStyle = fgColor;
+    ctx.fillStyle = fgColor;
+
+    if (radio) {
+        // circle, a filled circle inside if checked
+        const lineWidth = Math.max(1, Math.round(boxSize / 14));
+        ctx.lineWidth = lineWidth;
+        ctx.beginPath();
+        ctx.arc(
+            bx1 + boxSize / 2,
+            by1 + boxSize / 2,
+            boxSize / 2 - lineWidth / 2,
+            0,
+            Math.PI * 2
+        );
+        ctx.stroke();
+
+        if (checked) {
+            // the free space around the dot is even, so the dot is centered
+            // on whole pixels
+            let dotSize = Math.floor(boxSize / 2);
+            if ((boxSize - dotSize) % 2) {
+                dotSize++;
+            }
+            const dx1 = bx1 + Math.floor((boxSize - dotSize) / 2);
+            const dy1 = by1 + Math.floor((boxSize - dotSize) / 2);
+            ctx.beginPath();
+            ctx.arc(
+                dx1 + dotSize / 2,
+                dy1 + dotSize / 2,
+                dotSize / 2,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+        }
+    } else {
+        // rounded square, a check mark inside if checked
+        const lineWidth = Math.max(1, Math.round(boxSize / 9));
+        ctx.lineWidth = lineWidth;
+        ctx.beginPath();
+        ctx.roundRect(
+            bx1 + lineWidth / 2,
+            by1 + lineWidth / 2,
+            boxSize - lineWidth,
+            boxSize - lineWidth,
+            Math.floor(boxSize / 6)
+        );
+        ctx.stroke();
+
+        if (checked) {
+            ctx.lineWidth = boxSize / 8;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.beginPath();
+            ctx.moveTo(bx1 + 0.24 * boxSize, by1 + 0.52 * boxSize);
+            ctx.lineTo(bx1 + 0.43 * boxSize, by1 + 0.71 * boxSize);
+            ctx.lineTo(bx1 + 0.77 * boxSize, by1 + 0.32 * boxSize);
+            ctx.stroke();
+        }
+    }
+
+    ctx.restore();
+
+    if (label) {
+        const xText = xOffset + boxSize + measureGlyph(32, font);
+        setColor(style.colorProperty);
+        drawStr(
+            ctx,
+            label,
+            xText,
+            yOffset,
+            x2 - xText + 1,
+            height,
+            font
+        );
+    }
+}
+
 export function unescapeText(text: string) {
     try {
         return JSON.parse('"' + text + '"');
