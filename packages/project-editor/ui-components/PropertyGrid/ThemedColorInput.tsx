@@ -1244,27 +1244,41 @@ export const ThemedColorInput = observer(
             }
         };
 
-        setDropDownOpen(open: boolean) {
-            if (this.dropDownOpen === false) {
-                document.removeEventListener(
-                    "pointerdown",
-                    this.onDocumentPointerDown,
-                    true
-                );
-                document.removeEventListener("keydown", this.onKeyDown, true);
-                document.removeEventListener("scroll", this.onScroll, true);
+        componentWillUnmount() {
+            if (this.dropDownOpen) {
+                this.closeDropdown();
+            } else {
+                this.removeDocumentListeners();
             }
+        }
+
+        addDocumentListeners() {
+            document.addEventListener(
+                "pointerdown",
+                this.onDocumentPointerDown,
+                true
+            );
+            document.addEventListener("keydown", this.onKeyDown, true);
+            document.addEventListener("scroll", this.onScroll, true);
+        }
+
+        removeDocumentListeners() {
+            document.removeEventListener(
+                "pointerdown",
+                this.onDocumentPointerDown,
+                true
+            );
+            document.removeEventListener("keydown", this.onKeyDown, true);
+            document.removeEventListener("scroll", this.onScroll, true);
+        }
+
+        setDropDownOpen(open: boolean) {
+            this.removeDocumentListeners();
 
             this.dropDownOpen = open;
 
-            if (this.dropDownOpen) {
-                document.addEventListener(
-                    "pointerdown",
-                    this.onDocumentPointerDown,
-                    true
-                );
-                document.addEventListener("keydown", this.onKeyDown, true);
-                document.addEventListener("scroll", this.onScroll, true);
+            if (open) {
+                this.addDocumentListeners();
             }
         }
 
@@ -1278,23 +1292,35 @@ export const ThemedColorInput = observer(
                 return;
             }
 
-            this.setDropDownOpen(!this.dropDownOpen);
-
             if (this.dropDownOpen) {
-                this.context.undoManager.setCombineCommands(true);
-
-                // Parse the current value to establish the format
-                this.currentColorFormat = ColorFormat.parse(
-                    this.props.value,
-                    this.context.project
-                );
-            } else {
-                this.context.undoManager.setCombineCommands(false);
+                this.closeDropdown();
+                return;
             }
 
-            if (this.dropDownOpen) {
-                this.updateDropDownPosition();
+            this.setDropDownOpen(true);
+
+            // all changes made in the color picker are combined into one undo step
+            this.context.undoManager.setCombineCommands(true);
+
+            // Parse the current value to establish the format
+            this.currentColorFormat = ColorFormat.parse(
+                this.props.value,
+                this.context.project
+            );
+
+            this.updateDropDownPosition();
+        });
+
+        // Every way of closing the color picker must go through here, so that
+        // the document listeners are removed and undo combine mode is ended.
+        closeDropdown = action(() => {
+            if (!this.dropDownOpen) {
+                return;
             }
+
+            this.setDropDownOpen(false);
+
+            this.context.undoManager.setCombineCommands(false);
         });
 
         onDocumentPointerDown = action((event: MouseEvent) => {
@@ -1309,19 +1335,24 @@ export const ThemedColorInput = observer(
                 ) {
                     event.preventDefault();
                     event.stopPropagation();
-                    this.setDropDownOpen(false);
+                    this.closeDropdown();
                 }
             }
         });
 
         onKeyDown = action((event: KeyboardEvent) => {
+            if (!this.dropDownOpen) {
+                return;
+            }
+
             if (event.key === "Escape") {
+                // cancel: revert the changes made in the color picker
                 if (this.context.undoManager.commands.length > 0) {
                     this.context.undoManager.undo();
                 }
-                this.setDropDownOpen(false);
+                this.closeDropdown();
             } else if (event.key == "Enter") {
-                this.setDropDownOpen(false);
+                this.closeDropdown();
             }
         });
 
