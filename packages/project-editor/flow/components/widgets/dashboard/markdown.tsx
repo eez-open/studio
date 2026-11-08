@@ -1,5 +1,6 @@
 import React from "react";
-import { marked } from "marked";
+
+import { markdownToSafeHtml } from "eez-studio-shared/safe-markdown";
 
 import {
     registerClass,
@@ -75,7 +76,7 @@ export class MarkdownWidget extends Widget {
         height: number
     ): React.ReactNode {
         const html = {
-            __html: marked.parse(this.text || "", { mangle: false, headerIds: false }) as string
+            __html: markdownToSafeHtml(this.text || "")
         };
         return (
             <>

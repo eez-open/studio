@@ -8,12 +8,15 @@ import {
     IReactionDisposer
 } from "mobx";
 import { observer } from "mobx-react";
-import { marked } from "marked";
 
 import { ProjectContext } from "project-editor/project/context";
 import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 import { IPanel } from "project-editor/store";
 import { readTextFile } from "eez-studio-shared/util-electron";
+import {
+    isSafeExternalUrl,
+    markdownToSafeHtml
+} from "eez-studio-shared/safe-markdown";
 
 export const ReadmeEditor = observer(
     class ReadmeEditor extends EditorComponent implements IPanel {
@@ -90,7 +93,7 @@ export const ReadmeEditor = observer(
         onClick = (event: JQuery.ClickEvent<HTMLAnchorElement>) => {
             event.preventDefault();
             event.stopPropagation();
-            openLink(event.target.href);
+            openLink(event.currentTarget.href);
         };
 
         async loadText() {
@@ -130,7 +133,7 @@ export const ReadmeEditor = observer(
 
             if (this.context.project.readme.readmeFile && this.text) {
                 html = {
-                    __html: marked.parse(this.text || "", { mangle: false, headerIds: false }) as string
+                    __html: markdownToSafeHtml(this.text || "")
                 };
             } else {
                 html = { __html: "" };
@@ -152,6 +155,9 @@ export const ReadmeEditor = observer(
 );
 
 function openLink(url: string) {
+    if (!isSafeExternalUrl(url)) {
+        return;
+    }
     const { shell } = require("electron");
     shell.openExternal(url);
 }

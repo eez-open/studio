@@ -1,6 +1,5 @@
 import { dialog, getCurrentWindow } from "@electron/remote";
 import fs from "fs";
-import { marked } from "marked";
 import { rmdir } from "fs/promises";
 import path from "path";
 import React from "react";
@@ -27,6 +26,7 @@ import {
 } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 import { stringCompare } from "eez-studio-shared/string";
+import { markdownToSafeHtml } from "eez-studio-shared/safe-markdown";
 
 import { showDialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
@@ -2702,10 +2702,9 @@ function PlatformDescription({ wizardModel }: { wizardModel: WizardModel }) {
     }
 
     const html = {
-        __html: marked.parse(
-            wizardModel.selectedProjectType.targetPlatform || "",
-            { mangle: false, headerIds: false }
-        ) as string
+        __html: markdownToSafeHtml(
+            wizardModel.selectedProjectType.targetPlatform || ""
+        )
     };
 
     const targetPlatformLink =
