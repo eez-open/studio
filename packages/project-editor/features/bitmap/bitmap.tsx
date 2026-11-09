@@ -10,6 +10,7 @@ import {
     autorun
     //,autorun
 } from "mobx";
+import { keepAliveComputed } from "project-editor/core/keep-alive";
 import { observer } from "mobx-react";
 import { dialog, getCurrentWindow } from "@electron/remote";
 
@@ -127,8 +128,8 @@ export class Bitmap extends EezObject {
         makeObservable<Bitmap, "_imageElement">(this, {
             backgroundColor: computed,
             _imageElement: observable,
-            imageElement: computed({ keepAlive: true }),
-            bitmapData: computed({ keepAlive: true })
+            imageElement: keepAliveComputed(),
+            bitmapData: keepAliveComputed()
         });
     }
 

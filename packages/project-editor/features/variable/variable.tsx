@@ -8,6 +8,7 @@ import {
     toJS,
     makeObservable
 } from "mobx";
+import { keepAliveComputed } from "project-editor/core/keep-alive";
 
 import { validators } from "eez-studio-shared/validation";
 import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
@@ -1599,7 +1600,7 @@ export class Structure extends EezObject implements IStructure {
         super();
 
         makeObservable(this, {
-            fieldsMap: computed({ keepAlive: true })
+            fieldsMap: keepAliveComputed()
         });
     }
 
@@ -1918,8 +1919,8 @@ export class ProjectVariables extends EezObject {
         super();
 
         makeObservable(this, {
-            enumsMap: computed({ keepAlive: true }),
-            structsMap: computed({ keepAlive: true })
+            enumsMap: keepAliveComputed(),
+            structsMap: keepAliveComputed()
         });
     }
 

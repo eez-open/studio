@@ -27,6 +27,7 @@ import {
 } from "project-editor/store";
 
 import { isArray } from "eez-studio-shared/util";
+import { setLoadingExternalProject } from "project-editor/core/keep-alive";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,12 +63,20 @@ export function loadProject(
 
     rewireBegin();
 
-    const project = loadObjectInternal(
-        undefined,
-        projectObjectOrString,
-        ProjectEditor.ProjectClass,
-        undefined
-    ) as Project;
+    // objects of an external project don't use keepAlive computed values,
+    // see keep-alive.ts
+    setLoadingExternalProject(isExternalProject);
+    let project: Project;
+    try {
+        project = loadObjectInternal(
+            undefined,
+            projectObjectOrString,
+            ProjectEditor.ProjectClass,
+            undefined
+        ) as Project;
+    } finally {
+        setLoadingExternalProject(false);
+    }
 
     let projectFeatures = ProjectEditor.extensions;
     for (let projectFeature of projectFeatures) {

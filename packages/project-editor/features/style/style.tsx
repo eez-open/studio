@@ -1,6 +1,7 @@
 import React from "react";
 import path from "path";
 import { observable, computed, makeObservable } from "mobx";
+import { keepAliveComputed } from "project-editor/core/keep-alive";
 
 import { isValid, strToColor16 } from "eez-studio-shared/color";
 
@@ -914,125 +915,65 @@ export class Style extends EezObject {
             fontWeightProperty: computed,
             fontStyleProperty: computed,
 
-            borderSizeProperty: computed({
-                keepAlive: true
-            }),
+            borderSizeProperty: keepAliveComputed(),
 
-            borderSizeRect: computed({
-                keepAlive: true
-            }),
+            borderSizeRect: keepAliveComputed(),
 
-            borderRadiusProperty: computed({
-                keepAlive: true
-            }),
+            borderRadiusProperty: keepAliveComputed(),
 
-            borderRadiusSpec: computed({
-                keepAlive: true
-            }),
+            borderRadiusSpec: keepAliveComputed(),
 
-            alignHorizontalProperty: computed({
-                keepAlive: true
-            }),
+            alignHorizontalProperty: keepAliveComputed(),
 
-            alignVerticalProperty: computed({
-                keepAlive: true
-            }),
+            alignVerticalProperty: keepAliveComputed(),
 
-            directionProperty: computed({
-                keepAlive: true
-            }),
+            directionProperty: keepAliveComputed(),
 
-            colorProperty: computed({
-                keepAlive: true
-            }),
+            colorProperty: keepAliveComputed(),
 
-            color16: computed({
-                keepAlive: true
-            }),
+            color16: keepAliveComputed(),
 
-            backgroundColorProperty: computed({
-                keepAlive: true
-            }),
+            backgroundColorProperty: keepAliveComputed(),
 
-            backgroundColor16: computed({
-                keepAlive: true
-            }),
+            backgroundColor16: keepAliveComputed(),
 
-            backgroundImageProperty: computed({
-                keepAlive: true
-            }),
+            backgroundImageProperty: keepAliveComputed(),
 
-            activeColorProperty: computed({
-                keepAlive: true
-            }),
+            activeColorProperty: keepAliveComputed(),
 
-            activeColor16: computed({
-                keepAlive: true
-            }),
+            activeColor16: keepAliveComputed(),
 
-            activeBackgroundColorProperty: computed({
-                keepAlive: true
-            }),
+            activeBackgroundColorProperty: keepAliveComputed(),
 
-            activeBackgroundColor16: computed({
-                keepAlive: true
-            }),
+            activeBackgroundColor16: keepAliveComputed(),
 
-            focusColorProperty: computed({
-                keepAlive: true
-            }),
+            focusColorProperty: keepAliveComputed(),
 
-            focusColor16: computed({
-                keepAlive: true
-            }),
+            focusColor16: keepAliveComputed(),
 
-            focusBackgroundColorProperty: computed({
-                keepAlive: true
-            }),
+            focusBackgroundColorProperty: keepAliveComputed(),
 
-            focusBackgroundColor16: computed({
-                keepAlive: true
-            }),
+            focusBackgroundColor16: keepAliveComputed(),
 
-            borderColorProperty: computed({
-                keepAlive: true
-            }),
+            borderColorProperty: keepAliveComputed(),
 
-            borderColor16: computed({
-                keepAlive: true
-            }),
+            borderColor16: keepAliveComputed(),
 
-            borderStyleProperty: computed({
-                keepAlive: true
-            }),
+            borderStyleProperty: keepAliveComputed(),
 
-            paddingProperty: computed({
-                keepAlive: true
-            }),
+            paddingProperty: keepAliveComputed(),
 
-            paddingRect: computed({
-                keepAlive: true
-            }),
+            paddingRect: keepAliveComputed(),
 
-            marginProperty: computed({
-                keepAlive: true
-            }),
+            marginProperty: keepAliveComputed(),
 
-            marginRect: computed({
-                keepAlive: true
-            }),
+            marginRect: keepAliveComputed(),
 
-            opacityProperty: computed({
-                keepAlive: true
-            }),
+            opacityProperty: keepAliveComputed(),
 
-            boxShadowProperty: computed({
-                keepAlive: true
-            }),
+            boxShadowProperty: keepAliveComputed(),
 
-            blinkProperty: computed({
-                keepAlive: true
-            }),
+            blinkProperty: keepAliveComputed(),
 
             cssDeclarations: computed,
             cssPreview: computed,

@@ -1,5 +1,6 @@
 import React from "react";
 import { observable, computed, action, makeObservable } from "mobx";
+import { keepAliveComputed } from "project-editor/core/keep-alive";
 import css from "css";
 import * as FlexLayout from "flexlayout-react";
 
@@ -1802,12 +1803,12 @@ export class Project extends EezObject {
             pages: computed,
             projectName: computed,
             importDirective: computed,
-            masterProject: computed({ keepAlive: true }),
-            allGlobalVariables: computed({ keepAlive: true }),
-            allVisibleGlobalVariables: computed({ keepAlive: true }),
-            importAsList: computed({ keepAlive: true }),
+            masterProject: keepAliveComputed(),
+            allGlobalVariables: keepAliveComputed(),
+            allVisibleGlobalVariables: keepAliveComputed(),
+            importAsList: keepAliveComputed(),
             colorToIndexMap: computed,
-            buildColors: computed({ keepAlive: true }),
+            buildColors: keepAliveComputed(),
             projectTypeTraits: computed,
             _objectsMap: computed,
             missingExtensions: computed,

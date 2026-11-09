@@ -1,5 +1,6 @@
 import React from "react";
 import { observable, computed, makeObservable } from "mobx";
+import { keepAliveComputed } from "project-editor/core/keep-alive";
 import classNames from "classnames";
 import { observer } from "mobx-react";
 
@@ -399,10 +400,8 @@ export class Page extends Flow {
         makeObservable(this, {
             dataContextOverridesObject: computed,
             rect: computed,
-            _lvglWidgetsIncludingUserWidgets: computed({
-                keepAlive: true
-            }),
-            _lvglWidgets: computed({ keepAlive: true })
+            _lvglWidgetsIncludingUserWidgets: keepAliveComputed(),
+            _lvglWidgets: keepAliveComputed()
         });
     }
 

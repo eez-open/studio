@@ -9,6 +9,7 @@ import {
     makeObservable,
     runInAction
 } from "mobx";
+import { keepAliveComputed } from "project-editor/core/keep-alive";
 import { dialog, getCurrentWindow } from "@electron/remote";
 
 import { Rect } from "eez-studio-shared/geometry";
@@ -1491,7 +1492,7 @@ export class Font extends EezObject {
         super();
 
         makeObservable(this, {
-            glyphsMap: computed({ keepAlive: true }),
+            glyphsMap: keepAliveComputed(),
             maxDx: computed
         });
     }
@@ -1522,9 +1523,7 @@ export class Font extends EezObject {
             lvglFreeTypeStyle: observable,
             lvglFreeTypeFilePath: observable,
             _lvglFontDefinition: observable,
-            _lvglExtractFontParams: computed({
-                keepAlive: true
-            }),
+            _lvglExtractFontParams: keepAliveComputed(),
             _lvglGlyphsDirty: observable
         });
     }

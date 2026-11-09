@@ -1,6 +1,7 @@
 import { MenuItem } from "@electron/remote";
 import React from "react";
 import { observable, computed, makeObservable, runInAction } from "mobx";
+import { keepAliveComputed } from "project-editor/core/keep-alive";
 import classNames from "classnames";
 import { each } from "lodash-es";
 
@@ -1839,8 +1840,8 @@ export class Component extends EezObject {
             absolutePosition: computed,
             inputs: computed,
             outputs: computed,
-            buildInputs: computed({ keepAlive: true }),
-            buildOutputs: computed({ keepAlive: true }),
+            buildInputs: keepAliveComputed(),
+            buildOutputs: keepAliveComputed(),
             isMoveable: computed,
             rect: computed
         });
