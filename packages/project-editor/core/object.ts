@@ -756,7 +756,7 @@ export function setId(
     id: string
 ) {
     (object as any)._eez_id = id;
-    projectStore.objects.set(id, object);
+    projectStore.registerObject(id, object);
 }
 
 export function getParentNotObservable(

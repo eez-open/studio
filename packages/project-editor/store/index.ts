@@ -184,7 +184,12 @@ export class ProjectStore {
 
     currentSearch: CurrentSearch;
 
-    objects = new Map<string, IEezObject>();
+    // weak, so temporary objects (search and check value objects,
+    // parsed clipboard data, ...) can be garbage collected
+    objects = new Map<string, WeakRef<IEezObject>>();
+    objectsFinalizationRegistry = new FinalizationRegistry<string>(id =>
+        this.objects.delete(id)
+    );
     lastChildId = 0;
 
     dispose1: mobx.IReactionDisposer;
@@ -976,8 +981,13 @@ export class ProjectStore {
         return getObjectFromStringPath(this.project, objectID);
     }
 
+    registerObject(objectID: string, object: IEezObject) {
+        this.objects.set(objectID, new WeakRef(object));
+        this.objectsFinalizationRegistry.register(object, objectID);
+    }
+
     getObjectFromObjectId(objectID: string) {
-        return this.objects.get(objectID);
+        return this.objects.get(objectID)?.deref();
     }
 
     get isModified() {
