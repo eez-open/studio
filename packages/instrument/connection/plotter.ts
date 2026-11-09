@@ -185,8 +185,13 @@ export class Plotter implements LongOperation {
 
                 // keep data length up to this.maxNumPoints
                 if (this.numPoints == this.maxNumPoints) {
-                    this.dataBuffer = this.dataBuffer.subarray(
-                        8 * (1 + this.variableNames.length)
+                    // drop the oldest point by shifting the rest to the start
+                    const pointSize = 8 * (1 + this.variableNames.length);
+                    this.dataBuffer.copy(
+                        this.dataBuffer,
+                        0,
+                        pointSize,
+                        this.maxNumPoints * pointSize
                     );
                     this.numPoints = this.maxNumPoints - 1;
                 }
