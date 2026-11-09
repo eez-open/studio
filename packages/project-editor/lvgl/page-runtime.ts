@@ -709,6 +709,8 @@ export abstract class LVGLPageRuntime {
 
             this.wasm._free(buffers.btnsBuffer);
         }
+
+        this.msgboxBuffers = [];
     }
 
     freeAllButtonMatrixBuffers() {
