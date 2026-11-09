@@ -120,6 +120,8 @@ export class WasmRuntime extends RemoteRuntime {
     debuggerConnection = new WasmDebuggerConnection(this);
 
     worker: ReturnType<typeof createWasmWorker>;
+    // set when the WASM module reports that it is initialized (init message)
+    wasmInitialized = false;
 
     assetsData: any;
     assetsDataMapJs: AssetsMap;
@@ -316,7 +318,9 @@ export class WasmRuntime extends RemoteRuntime {
     async doStopRuntime(notifyUser: boolean) {
         // await new Promise(resolve => setTimeout(resolve, 100));
         
-        if (this.worker?.wasm?._flowCleanup) {
+        // calling into the WASM module before it is initialized aborts it
+        // (Stop pressed or tab closed while the runtime is still starting)
+        if (this.wasmInitialized && this.worker?.wasm?._flowCleanup) {
             this.worker.wasm._flowCleanup();
         }
 
@@ -531,6 +535,8 @@ export class WasmRuntime extends RemoteRuntime {
         workerToRenderMessage: WorkerToRenderMessage
     ) => {
         if (workerToRenderMessage.init) {
+            this.wasmInitialized = true;
+
             // WASM finished loading after Stop
             if (this.isStopped) {
                 return;
@@ -928,6 +934,10 @@ export class WasmRuntime extends RemoteRuntime {
     }
 
     async destroyGlobalVariables() {
+        // if stopped before the WASM module was initialized, the engine never
+        // got the global variables, so there is nothing to read back from it
+        const readFromEngine = this.wasmInitialized;
+
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];
             if (globalVariable.kind == "object") {
@@ -935,7 +945,7 @@ export class WasmRuntime extends RemoteRuntime {
                     globalVariable.variable.name,
                     globalVariable.objectVariableValue
                 );
-            } else {
+            } else if (readFromEngine) {
                 const engineValuePtr = this.worker.wasm._getGlobalVariable(
                     globalVariable.globalVariableIndex
                 );
@@ -956,7 +966,13 @@ export class WasmRuntime extends RemoteRuntime {
 
         for (let i = 0; i < this.globalVariables.length; i++) {
             const globalVariable = this.globalVariables[i];
-            if (globalVariable.kind == "object") {
+            if (globalVariable.kind == "object" && !readFromEngine) {
+                if (globalVariable.objectVariableValue) {
+                    globalVariable.objectVariableType.destroyValue(
+                        globalVariable.objectVariableValue
+                    );
+                }
+            } else if (globalVariable.kind == "object") {
                 const engineValuePtr = this.worker.wasm._getGlobalVariable(
                     globalVariable.globalVariableIndex
                 );

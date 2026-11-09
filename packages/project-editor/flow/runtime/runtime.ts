@@ -255,7 +255,12 @@ export abstract class RuntimeBase implements IRuntime {
 
         this.state = state;
 
-        if (this.state == State.PAUSED) {
+        // Only the project editor has the debugger UI. Run tabs, standalone
+        // and instrument dashboards don't, there a flow error is reported by
+        // the notification from doStopRuntime.
+        const hasDebuggerUI = this.projectStore.context.type == "project-editor";
+
+        if (this.state == State.PAUSED && hasDebuggerUI) {
             if (!this.isDebuggerActive) {
                 this.projectStore.onSetDebuggerMode();
             }
@@ -264,7 +269,7 @@ export abstract class RuntimeBase implements IRuntime {
 
         if (this.state == State.STOPPED) {
             if (this.error) {
-                if (!this.isDebuggerActive) {
+                if (!this.isDebuggerActive && hasDebuggerUI) {
                     this.projectStore.onSetDebuggerMode();
                     this.projectStore.layoutModels.selectTab(
                         this.projectStore.layoutModels.root,

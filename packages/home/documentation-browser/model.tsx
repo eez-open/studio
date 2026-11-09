@@ -468,8 +468,6 @@ class Model {
                 return componentInfo;
             }
 
-            const componentInfo = await getOrCreateComponentInfo();
-
             const enabledInComponentPalette =
                 componentClass.objectClass.classInfo.enabledInComponentPalette;
 
@@ -496,7 +494,7 @@ class Model {
                 }
             } else {
                 if (
-                    componentInfo.type != "widget" ||
+                    componentInfoType != "widget" ||
                     (componentClass.objectClass.classInfo.flowComponentId ==
                         undefined &&
                         !isProperSubclassOf(
@@ -514,7 +512,7 @@ class Model {
                     isEEZGUIComponent = true;
 
                     if (
-                        componentInfo.type != "widget" ||
+                        componentInfoType != "widget" ||
                         isProperSubclassOf(
                             componentClass.objectClass.classInfo,
                             ProjectEditor.LVGLWidgetClass.classInfo
@@ -524,6 +522,27 @@ class Model {
                     }
                 }
             }
+
+            // Some components are enabled only for some projects of a type
+            // (e.g. YTChartWidget only for DIB module projects), which can't be
+            // decided without a project. Such EEZ-GUI widgets are documented
+            // as EEZ-GUI components and anything else is left out, because a
+            // component must belong to at least one project type here.
+            if (
+                !isDashboardComponent &&
+                !isEEZGUIComponent &&
+                !isLVGLComponent
+            ) {
+                if (
+                    componentClass.objectClass.classInfo.flowComponentId ==
+                    undefined
+                ) {
+                    continue;
+                }
+                isEEZGUIComponent = true;
+            }
+
+            const componentInfo = await getOrCreateComponentInfo();
 
             function register(componentObject: Component) {
                 componentInfo.properties.push(

@@ -314,7 +314,8 @@ export class PageTabState extends FlowTabState {
     }
 
     get transform() {
-        if (!this.isRuntime && this.projectStore.uiStateStore.globalFlowZoom) {
+        // no uiStateStore in a Run tab
+        if (!this.isRuntime && this.projectStore.uiStateStore?.globalFlowZoom) {
             this._transform.scale = this.projectStore.uiStateStore.flowZoom;
         }
         return this._transform;
@@ -325,7 +326,7 @@ export class PageTabState extends FlowTabState {
             this._transform = transform;
             if (
                 !this.isRuntime &&
-                this.projectStore.uiStateStore.globalFlowZoom
+                this.projectStore.uiStateStore?.globalFlowZoom
             ) {
                 this.projectStore.uiStateStore.flowZoom = transform.scale;
             }
@@ -334,7 +335,7 @@ export class PageTabState extends FlowTabState {
 
     resetTransform(transform?: Transform) {
         if (!transform) {
-            if (this.projectStore.uiStateStore.globalFlowZoom) {
+            if (this.projectStore.uiStateStore?.globalFlowZoom) {
                 this.projectStore.uiStateStore.flowZoom = 1;
             }
 
@@ -376,7 +377,7 @@ export class PageTabState extends FlowTabState {
                     x: state.transform.translate.x ?? 0,
                     y: state.transform.translate.y ?? 0
                 },
-                scale: this.projectStore.uiStateStore.globalFlowZoom
+                scale: this.projectStore.uiStateStore?.globalFlowZoom
                     ? this.projectStore.uiStateStore.flowZoom
                     : (state.transform.scale ?? 1)
             });

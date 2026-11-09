@@ -463,6 +463,9 @@ export class ProjectEditorTab implements IHomeTab {
     }
 
     private async doLoadProject() {
+        // mounted, but not yet assigned to this.projectStore
+        let mountedProjectStore: ProjectStore | undefined;
+
         try {
             await loadProjectEditor();
 
@@ -472,6 +475,11 @@ export class ProjectEditorTab implements IHomeTab {
                     import("project-editor/project/context"),
                     import("project-editor/project/ui/ProjectEditor")
                 ]);
+
+            // the tab was closed while loading
+            if (this.closed) {
+                return;
+            }
 
             this.ProjectContext = ProjectContext;
 
@@ -488,11 +496,20 @@ export class ProjectEditorTab implements IHomeTab {
             );
 
             projectStore.mount();
+            mountedProjectStore = projectStore;
 
             if (this._filePath) {
                 await projectStore.openFile(this._filePath);
             } else {
                 await projectStore.newProject();
+            }
+
+            // the tab was closed while loading: close() didn't see this store,
+            // so don't start a runtime or a background check for it
+            if (this.closed) {
+                mountedProjectStore = undefined;
+                projectStore.unmount();
+                return;
             }
 
             runInAction(() => {
@@ -505,13 +522,21 @@ export class ProjectEditorTab implements IHomeTab {
                 projectStore.setRuntimeMode(false);
             }
 
-            if (!this.closed) {
-                runInAction(() => {
-                    this.projectStore = projectStore;
-                });
-            }
+            mountedProjectStore = undefined;
+            runInAction(() => {
+                this.projectStore = projectStore;
+            });
         } catch (err) {
             console.log(err);
+
+            if (mountedProjectStore) {
+                try {
+                    mountedProjectStore.unmount();
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+
             runInAction(() => {
                 this.error = "Failed to load file!";
             });
@@ -872,8 +897,15 @@ export class ProjectEditorTab implements IHomeTab {
                     );
                 }
 
-                const json = JSON.parse(jsonStr);
-                const projectType = json.settings.general.projectType;
+                let projectType;
+                try {
+                    const json = JSON.parse(jsonStr);
+                    projectType = json.settings.general.projectType;
+                } catch (err) {
+                    // not a valid project file, the tab shows the load error
+                    console.error(err);
+                    return;
+                }
                 const icon = getProjectIcon(
                     this.filePath,
                     projectType,

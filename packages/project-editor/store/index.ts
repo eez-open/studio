@@ -461,7 +461,8 @@ export class ProjectStore {
         }
 
         // Stop Docker simulator and reset state when project is closed
-        if (this.projectTypeTraits.isLVGL) {
+        // (no project if loading it failed)
+        if (this.project?.projectTypeTraits.isLVGL) {
             const projectPath = this.filePath;
             import("project-editor/lvgl/docker-build/build-manager").then(
                 async ({ dockerBuildManager }) => {
