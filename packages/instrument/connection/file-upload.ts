@@ -104,7 +104,11 @@ export class FileUpload extends FileTransfer {
 
         if (this.onErrorCallback) {
             this.onErrorCallback(
-                this.state == "abort" ? "Aborted" : this.error
+                this.state == "abort"
+                    ? "Aborted"
+                    : this.state == "timeout"
+                    ? "Timeout"
+                    : this.error || "Upload failed"
             );
         }
     }

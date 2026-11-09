@@ -1048,7 +1048,8 @@ export function setupIpcServer() {
                                 "instrument/connection/long-operation-result",
                                 {
                                     instrumentId: arg.instrumentId,
-                                    error
+                                    // renderer treats a missing error as success
+                                    error: error || "Unknown error"
                                 }
                             );
                         }
