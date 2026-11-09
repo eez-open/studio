@@ -341,7 +341,7 @@ export class Connection
         }
     }
 
-    sendTimeout(query: string) {
+    sendError(error: string) {
         if (this.callbackWindowId) {
             let browserWindow = require("electron").BrowserWindow.fromId(
                 this.callbackWindowId
@@ -351,10 +351,14 @@ export class Connection
                     instrumentId: this.instrumentId,
                     acquireId: this.acquireId,
                     value: null,
-                    error: `Timeout while executing query: ${query}`
+                    error
                 });
             }
         }
+    }
+
+    sendTimeout(query: string) {
+        this.sendError(`Timeout while executing query: ${query}`);
     }
 
     longOperationDone() {
@@ -577,15 +581,10 @@ export class Connection
         if (this.instrument.commandsProtocol == "SCPI") {
             if (!options || !options.longOperation) {
                 if (this.longOperation) {
-                    if (
-                        this.longOperation instanceof FileDownload ||
-                        this.longOperation instanceof FileUpload
-                    ) {
-                        this.logAnswer("**ERROR: file transfer in progress\n");
-                    } else {
-                        this.logAnswer(
-                            "**ERROR: another operation in progress\n"
-                        );
+                    const error = this.longOperationBusyError;
+                    this.logAnswer(`**ERROR: ${error}\n`);
+                    if (options?.isQuery) {
+                        this.sendError(error);
                     }
                     return;
                 }
@@ -602,6 +601,9 @@ export class Connection
             !this.communicationInterface
         ) {
             this.logAnswer("**ERROR: not connected\n");
+            if (options?.isQuery) {
+                this.sendError("not connected");
+            }
             return;
         }
 
@@ -679,6 +681,14 @@ export class Connection
         this.flushData();
     }
 
+    get longOperationBusyError() {
+        return this.longOperation instanceof FileDownload ||
+            this.longOperation instanceof FileUpload
+            ? "file transfer in progress"
+            : "another operation in progress";
+    }
+
+    // throws the reason (a string) if the operation can't be started
     startLongOperation(
         createLongOperation: () => LongOperation,
         checkState: boolean = true
@@ -688,20 +698,11 @@ export class Connection
             (this.state !== ConnectionState.CONNECTED ||
                 !this.communicationInterface)
         ) {
-            this.logAnswer("not connected");
-            return;
+            throw "not connected";
         }
 
         if (this.longOperation) {
-            if (
-                this.longOperation instanceof FileDownload ||
-                this.longOperation instanceof FileUpload
-            ) {
-                this.logAnswer("file transfer in progress");
-            } else {
-                throw this.logAnswer("another operation in progress");
-            }
-            return;
+            throw this.longOperationBusyError;
         }
 
         runInAction(() => {
@@ -720,6 +721,7 @@ export class Connection
             );
         } catch (err) {
             this.logAnswer(`**ERROR: ${err}\n`);
+            onError?.(err);
         }
     }
 
