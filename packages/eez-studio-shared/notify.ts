@@ -41,6 +41,17 @@ function getBrowserWindow(): typeof ElectronModule.BrowserWindow {
     }
 }
 
+// -1 for the main process
+function getCurrentWindowId() {
+    if (isRenderer()) {
+        const { getCurrentWindow } =
+            require("@electron/remote") as typeof ElectronRemoteModule;
+        return getCurrentWindow().id;
+    } else {
+        return -1;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function registerSource(source: INotifySource) {
@@ -115,14 +126,7 @@ export function watch(
     }
 
     // add target to other windows
-    let targetWindowId: number;
-    if (isRenderer()) {
-        const { getCurrentWindow } =
-            require("@electron/remote") as typeof ElectronRemoteModule;
-        targetWindowId = getCurrentWindow().id;
-    } else {
-        targetWindowId = -1;
-    }
+    const targetWindowId = getCurrentWindowId();
 
     getBrowserWindow()
         .getAllWindows()
@@ -150,7 +154,31 @@ export function watch(
 }
 
 export function unwatch(targetId: string) {
+    const target = targets.get(targetId);
+    if (!target) {
+        return;
+    }
+
     targets.delete(targetId);
+
+    if (!target.callback) {
+        return;
+    }
+
+    // remove target from other windows
+    const currentWindowId = getCurrentWindowId();
+
+    getBrowserWindow()
+        .getAllWindows()
+        .forEach((window: ElectronModule.BrowserWindow) => {
+            if (window.id !== currentWindowId) {
+                sendNotifyUnwatch(window.webContents, targetId);
+            }
+        });
+
+    if (isRenderer()) {
+        sendNotifyUnwatch(ipcRenderer, targetId);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,6 +195,13 @@ function sendNotifyWatch(
     args: INotifyWatchArgs
 ) {
     webContents.send("notify/watch", args);
+}
+
+function sendNotifyUnwatch(
+    webContents: Electron.WebContents | Electron.IpcRenderer,
+    targetId: string
+) {
+    webContents.send("notify/unwatch", targetId);
 }
 
 interface ISendMessageArgs {
@@ -201,6 +236,10 @@ ipc.on("notify/watch", function (event: any, args: INotifyWatchArgs) {
     }
 });
 
+ipc.on("notify/unwatch", function (event: any, targetId: string) {
+    targets.delete(targetId);
+});
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ipc.on("notify/send-message", function (event: any, args: ISendMessageArgs) {
@@ -214,14 +253,7 @@ ipc.on("notify/send-message", function (event: any, args: ISendMessageArgs) {
 ////////////////////////////////////////////////////////////////////////////////
 
 ipc.on("notify/get-targets", function (event: any, windowId: number) {
-    let targetWindowId: number;
-    if (isRenderer()) {
-        const { getCurrentWindow } =
-            require("@electron/remote") as typeof ElectronRemoteModule;
-        targetWindowId = getCurrentWindow().id;
-    } else {
-        targetWindowId = -1;
-    }
+    const targetWindowId = getCurrentWindowId();
     targets.forEach((target, targetId) => {
         if (target.callback) {
             sendNotifyWatch(getBrowserWindow().fromId(windowId)!.webContents, {
