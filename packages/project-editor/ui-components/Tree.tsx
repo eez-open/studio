@@ -411,19 +411,13 @@ export const Tree = observer(
                 const $allRows = $treeDiv.find("[data-object-id]");
 
                 if ($allRows.length > 0) {
-                    const firstRowRect = $allRows
-                        .get(0)!
-                        .getBoundingClientRect();
                     const treeDivRect = this.treeDiv.getBoundingClientRect();
-                    let rowIndexAtCursor = Math.floor(
-                        (event.nativeEvent.clientY - treeDivRect.top) /
-                            firstRowRect.height
+                    const rowIndexAtCursor = findRowIndexAt(
+                        $allRows,
+                        event.nativeEvent.clientY
                     );
 
-                    if (
-                        rowIndexAtCursor >= 0 &&
-                        rowIndexAtCursor < $allRows.length
-                    ) {
+                    if (rowIndexAtCursor >= 0) {
                         const $row = $allRows.eq(rowIndexAtCursor);
                         const rowRect = $row.get(0)!.getBoundingClientRect();
 
@@ -952,6 +946,28 @@ export const Tree = observer(
         }
     }
 );
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Rows don't all have the same height (a row with the collapse triangle is
+// taller than a leaf row), so the row under the cursor can't be computed from
+// the height of one row: binary search the actual row rects instead.
+function findRowIndexAt(rows: JQuery<HTMLElement>, clientY: number) {
+    let low = 0;
+    let high = rows.length - 1;
+    while (low <= high) {
+        const mid = (low + high) >> 1;
+        const rect = rows.get(mid)!.getBoundingClientRect();
+        if (clientY < rect.top) {
+            high = mid - 1;
+        } else if (clientY >= rect.bottom) {
+            low = mid + 1;
+        } else {
+            return mid;
+        }
+    }
+    return -1;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
