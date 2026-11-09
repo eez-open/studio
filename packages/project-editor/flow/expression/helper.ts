@@ -143,6 +143,10 @@ export function supportsFontTags(component: Component) {
 //
 // <font name="..."> is replaced with FONT_START_CHAR followed by a character
 // whose code point is the font index, and </font> is replaced with
-// FONT_END_CHAR (back to the default font).
+// FONT_END_CHAR (back to the default font). In a project with a master project
+// the fonts of the project have a negative font index: their tag is
+// FONT_START_EXTERNAL_CHAR followed by a character whose code point is minus
+// the font index (the master project fonts use FONT_START_CHAR).
 export const FONT_START_CHAR = "\uE000";
 export const FONT_END_CHAR = "\uE001";
+export const FONT_START_EXTERNAL_CHAR = "\uE002";

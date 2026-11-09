@@ -1,6 +1,8 @@
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import type { Style } from "project-editor/features/style/style";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
+import { Section } from "project-editor/store";
+import { MessageType } from "project-editor/core/object";
 
 export const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0;
 export const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1;
@@ -129,11 +131,21 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint8(style.borderRadiusSpec.bottomLeftX || 0);
         dataBuffer.writeUint8(style.borderRadiusSpec.bottomLeftY || 0);
 
-        // font
+        // font, int8: in a project with a master project the fonts of the
+        // project are negative
         let fontIndex = style.fontName
             ? assets.getFontIndex(style, "fontName")
             : 0;
-        dataBuffer.writeUint8(fontIndex);
+        if (fontIndex < -128 || fontIndex > 127) {
+            assets.projectStore.outputSectionsStore.write(
+                Section.OUTPUT,
+                MessageType.ERROR,
+                `font index ${fontIndex} doesn't fit into the style font (-128 to 127)`,
+                style
+            );
+            fontIndex = 0;
+        }
+        dataBuffer.writeInt8(fontIndex);
 
         // opacity
         dataBuffer.writeUint8(style.opacityProperty);

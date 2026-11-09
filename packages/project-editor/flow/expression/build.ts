@@ -17,6 +17,7 @@ import { expressionParser } from "project-editor/flow/expression/parser";
 import {
     FONT_END_CHAR,
     FONT_START_CHAR,
+    FONT_START_EXTERNAL_CHAR,
     FONT_TAG_REGEX,
     supportsFontTags
 } from "project-editor/flow/expression/helper";
@@ -52,18 +53,19 @@ function convertFontTags(assets: Assets, component: Component, text: string) {
                 return FONT_END_CHAR;
             }
 
-            // in a project with master project font index is negative
-            const fontIndex = Math.abs(
-                assets.getFontIndexByName(
-                    ProjectEditor.getProject(component),
-                    fontName
-                )
+            // in a project with a master project the fonts of the project
+            // have a negative font index
+            const fontIndex = assets.getFontIndexByName(
+                ProjectEditor.getProject(component),
+                fontName
             );
             if (!fontIndex) {
                 throw `Font '${fontName}' not found`;
             }
 
-            return FONT_START_CHAR + String.fromCodePoint(fontIndex);
+            return fontIndex > 0
+                ? FONT_START_CHAR + String.fromCodePoint(fontIndex)
+                : FONT_START_EXTERNAL_CHAR + String.fromCodePoint(-fontIndex);
         }
     );
 }
