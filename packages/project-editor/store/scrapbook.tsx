@@ -21,12 +21,7 @@ import { getUserDataPath } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
 
 import { showDialog } from "eez-studio-ui/dialog";
-import {
-    copyObjects,
-    getAllObjects,
-    pasteWithDependenciesIntoNewStorebookItem,
-    pasteWithDependenciesIntoExistingStorebookItem
-} from "./paste-with-dependencies";
+import type * as PasteWithDependenciesModule from "./paste-with-dependencies";
 import {
     getJSON,
     loadProject,
@@ -38,6 +33,11 @@ import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import type { Project } from "project-editor/project/project";
 import { Icon } from "eez-studio-ui/icon";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import {
+    loadProjectEditor,
+    projectEditorLoaded
+} from "project-editor/project-editor-loader";
+import { Loader } from "eez-studio-ui/loader";
 import { SCRAPBOOK_ITEM_FILE_PREFIX } from "project-editor/core/util";
 import {
     HOME_TAB_OPEN_ICON,
@@ -57,6 +57,13 @@ const DEFAULT_SCRAPBOOK_FILE_PATH = getUserDataPath(
 
 const DB_VERSION = 1;
 
+// loaded on use, the scrapbook is part of the home window that is shown at startup
+function loadPasteWithDependencies(): Promise<
+    typeof PasteWithDependenciesModule
+> {
+    return import("./paste-with-dependencies");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class ScrapbookItem {
@@ -74,7 +81,10 @@ export class ScrapbookItem {
         });
     }
 
+    // only rendered by ScrapbookManagerDialog, i.e. after the project editor is loaded
     get allObjects() {
+        const { getAllObjects } =
+            require("./paste-with-dependencies") as typeof PasteWithDependenciesModule;
         return getAllObjects(JSON.parse(this.eezProject) as Project);
     }
 }
@@ -640,7 +650,10 @@ class ScrapbookManagerModel {
         });
     }
 
-    pasteIntoNewItem(pasteModelSourceProjectStore: ProjectStore) {
+    async pasteIntoNewItem(pasteModelSourceProjectStore: ProjectStore) {
+        const { pasteWithDependenciesIntoNewStorebookItem } =
+            await loadPasteWithDependencies();
+
         pasteWithDependenciesIntoNewStorebookItem(
             pasteModelSourceProjectStore,
             (destinationProjectStore: ProjectStore) => {
@@ -673,10 +686,13 @@ class ScrapbookManagerModel {
         );
     }
 
-    pasteIntoExistingItem(
+    async pasteIntoExistingItem(
         item: ScrapbookItem,
         pasteModelSourceProjectStore: ProjectStore
     ) {
+        const { pasteWithDependenciesIntoExistingStorebookItem } =
+            await loadPasteWithDependencies();
+
         const projectStore = ProjectStore.create({
             type: "project-editor"
         });
@@ -694,10 +710,13 @@ class ScrapbookManagerModel {
         );
     }
 
-    insertItemIntoProject(
+    async insertItemIntoProject(
         item: ScrapbookItem,
         destinationProjectStore: ProjectStore
     ) {
+        const { copyObjects, getAllObjects } =
+            await loadPasteWithDependencies();
+
         const projectStore = ProjectStore.create({
             type: "project-editor"
         });
@@ -1107,7 +1126,16 @@ export const ScrapbookManagerDialog = observer(
             return null;
         };
 
+        componentDidMount() {
+            loadProjectEditor();
+        }
+
         render() {
+            // items and their contents use the project editor classes
+            if (!projectEditorLoaded.get()) {
+                return <Loader />;
+            }
+
             return (
                 <div
                     className="EezStudio_ProjectEditorScrapbook"

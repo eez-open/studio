@@ -308,9 +308,14 @@ export class DashboardComponentContext implements IDashboardComponentContext {
 
         let iteratorsPtr = 0;
         if (iterators) {
-            iteratorsPtr = this.WasmFlowRuntime._malloc(iterators.length * 4);
-            for (let i = 0; i < iterators.length; i++) {
-                this.WasmFlowRuntime.HEAP32[iteratorsPtr >> 2] = iterators[i];
+            // zero padded to MAX_ITERATORS, same as evalProperties in wasm-worker.ts
+            const MAX_ITERATORS = 4;
+            const numIterators = Math.max(iterators.length, MAX_ITERATORS);
+            iteratorsPtr = this.WasmFlowRuntime._malloc(numIterators * 4);
+            const iteratorsOffset = iteratorsPtr >> 2;
+            for (let i = 0; i < numIterators; i++) {
+                this.WasmFlowRuntime.HEAP32[iteratorsOffset + i] =
+                    i < iterators.length ? iterators[i] : 0;
             }
         }
 
@@ -323,6 +328,10 @@ export class DashboardComponentContext implements IDashboardComponentContext {
         );
 
         this.WasmFlowRuntime._valueFree(valuePtr);
+
+        if (iteratorsPtr) {
+            this.WasmFlowRuntime._free(iteratorsPtr);
+        }
     }
 
     getOutputType(outputName: string): IType | undefined {

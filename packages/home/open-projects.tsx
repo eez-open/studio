@@ -23,8 +23,7 @@ import type { IMruItem } from "main/settings";
 import { SearchInput } from "eez-studio-ui/search-input";
 import { getProjectIcon } from "home/helper";
 import { ProjectStore, loadProject } from "project-editor/store";
-import { ProjectEditorTab, tabs } from "home/tabs-store";
-import { initProjectEditor } from "project-editor/project-editor-bootstrap";
+import { loadProjectEditor } from "project-editor/project-editor-loader";
 import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +122,7 @@ class OpenProjectsStore {
                         "utf8"
                     );
 
-                    initProjectEditor(tabs, ProjectEditorTab);
+                    await loadProjectEditor();
                     const projectStore = ProjectStore.create({
                         type: "read-only"
                     });

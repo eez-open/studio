@@ -17,6 +17,7 @@ import {
 } from "eez-studio-shared/geometry";
 
 import { Draggable } from "eez-studio-ui/draggable";
+import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 
 import { IPanel, isLVGLCreateInProgress } from "project-editor/store";
 
@@ -100,7 +101,6 @@ export const Canvas = observer(
         pageRect?: Rect;
     }> {
         div: HTMLDivElement;
-        updateClientRectRequestAnimationFrameId: any;
         setOverflowTimeout: any;
         deltaY = 0;
 
@@ -130,8 +130,10 @@ export const Canvas = observer(
             });
         }
 
-        updateClientRect = () => {
-            if ($(this.div).is(":visible")) {
+        // the position can change without the size changing, so this is polled
+        updateClientRectLoop = new VisibleAnimationFrameLoop(
+            () => this.div,
+            () => {
                 const transform = this.props.flowContext.viewState.transform;
 
                 let clientRect = this.div.getBoundingClientRect();
@@ -167,10 +169,7 @@ export const Canvas = observer(
                     });
                 }
             }
-
-            this.updateClientRectRequestAnimationFrameId =
-                requestAnimationFrame(this.updateClientRect);
-        };
+        );
 
         componentDidMount() {
             if (
@@ -184,7 +183,7 @@ export const Canvas = observer(
                 passive: false
             });
 
-            this.updateClientRect();
+            this.updateClientRectLoop.start();
         }
 
         componentWillUnmount() {
@@ -192,7 +191,7 @@ export const Canvas = observer(
 
             this.div.removeEventListener("wheel", this.onWheel);
 
-            cancelAnimationFrame(this.updateClientRectRequestAnimationFrameId);
+            this.updateClientRectLoop.stop();
 
             if (this.setOverflowTimeout) {
                 clearTimeout(this.setOverflowTimeout);

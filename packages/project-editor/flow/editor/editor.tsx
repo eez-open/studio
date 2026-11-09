@@ -17,7 +17,11 @@ import {
     Rect,
     rectContains
 } from "eez-studio-shared/geometry";
-import { closestByClass, closestBySelector } from "eez-studio-shared/dom";
+import {
+    closestByClass,
+    closestBySelector,
+    VisibleAnimationFrameLoop
+} from "eez-studio-shared/dom";
 
 import { Draggable } from "eez-studio-ui/draggable";
 
@@ -209,7 +213,6 @@ export const Canvas = observer(
         dragSnapLines: DragSnapLines;
     }> {
         div: HTMLDivElement;
-        updateClientRectRequestAnimationFrameId: any;
         deltaY = 0;
 
         dragScrollDispose: (() => void) | undefined;
@@ -287,8 +290,10 @@ export const Canvas = observer(
             }
         }
 
-        updateClientRect = () => {
-            if ($(this.div).is(":visible")) {
+        // the position can change without the size changing, so this is polled
+        updateClientRectLoop = new VisibleAnimationFrameLoop(
+            () => this.div,
+            () => {
                 const transform = this.props.flowContext.viewState.transform;
 
                 let clientRect = this.div.getBoundingClientRect();
@@ -305,10 +310,7 @@ export const Canvas = observer(
                     });
                 }
             }
-
-            this.updateClientRectRequestAnimationFrameId =
-                requestAnimationFrame(this.updateClientRect);
-        };
+        );
 
         componentDidMount() {
             this.draggable.attach(this.div);
@@ -317,7 +319,7 @@ export const Canvas = observer(
                 passive: false
             });
 
-            this.updateClientRect();
+            this.updateClientRectLoop.start();
         }
 
         componentWillUnmount() {
@@ -325,7 +327,7 @@ export const Canvas = observer(
 
             this.div.removeEventListener("wheel", this.onWheel);
 
-            cancelAnimationFrame(this.updateClientRectRequestAnimationFrameId);
+            this.updateClientRectLoop.stop();
         }
 
         onWheel = (event: WheelEvent) => {

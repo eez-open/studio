@@ -76,7 +76,10 @@ import {
     updateObject
 } from "project-editor/store/commands";
 
-import { objectsToClipboardData } from "project-editor/store/clipboard";
+import {
+    canPasteWithDependencies,
+    objectsToClipboardData
+} from "project-editor/store/clipboard";
 import { RuntimeType } from "project-editor/project/project-type-traits";
 import { IExtension } from "eez-studio-shared/extensions/extension";
 import {
@@ -100,10 +103,6 @@ import {
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { isValidUrl } from "project-editor/core/util";
-import {
-    canPasteWithDependencies,
-    pasteWithDependencies
-} from "project-editor/store/paste-with-dependencies";
 import {
     getScrapbookItemTabTitle,
     isScrapbookItemFilePath,
@@ -1662,7 +1661,12 @@ export class ProjectStore {
             confirm(
                 "Do you want to paste with all the dependencies?",
                 "Clipboard content is from the different project.",
-                () => pasteWithDependencies(this),
+                async () => {
+                    const { pasteWithDependencies } = await import(
+                        "project-editor/store/paste-with-dependencies"
+                    );
+                    pasteWithDependencies(this);
+                },
                 () => pasteToSelectedPanel()
             );
         } else {

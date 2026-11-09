@@ -268,7 +268,10 @@ class LoadExtensionTask extends EventEmitter {
 
 const loadExtensionTasks = new Map<string, LoadExtensionTask>();
 
-async function loadAndRegisterExtension(folder: string) {
+async function loadAndRegisterExtension(
+    folder: string,
+    loadingExtension?: Promise<IExtension | undefined>
+) {
     const loadExtensionTask = loadExtensionTasks.get(folder);
     if (loadExtensionTask) {
         if (loadExtensionTask.isFinished) {
@@ -285,7 +288,7 @@ async function loadAndRegisterExtension(folder: string) {
     loadExtensionTasks.set(folder, newLoadExtensionTask);
 
     try {
-        let extension = await loadExtension(folder);
+        let extension = await (loadingExtension ?? loadExtension(folder));
         if (extension) {
             extension = registerExtension(extension);
         }
@@ -341,13 +344,31 @@ export async function loadExtensions(nodeModuleFolders: string[]) {
         installedExtensionFolders = [];
     }
 
-    for (let folder of [
-        ...preinstalledExtensionFolders,
+    await loadAndRegisterExtensions(preinstalledExtensionFolders);
+
+    // after the preinstalled ones, because installed instrument extensions are
+    // loaded by a preinstalled extension (IExtension.loadExtension)
+    await loadAndRegisterExtensions([
         ...installedExtensionFolders,
         ...nodeModuleFolders
-    ]) {
+    ]);
+}
+
+// Extensions are read in parallel, but registered in the given order.
+async function loadAndRegisterExtensions(folders: string[]) {
+    const loadingExtensions = folders.map(folder => {
+        if (loadExtensionTasks.has(folder)) {
+            return undefined;
+        }
+        const loadingExtension = loadExtension(folder);
+        // rejection is handled when it's awaited below
+        loadingExtension.catch(() => {});
+        return loadingExtension;
+    });
+
+    for (let i = 0; i < folders.length; i++) {
         try {
-            await loadAndRegisterExtension(folder);
+            await loadAndRegisterExtension(folders[i], loadingExtensions[i]);
         } catch (err) {
             console.error(err);
         }

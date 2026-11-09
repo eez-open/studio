@@ -15,6 +15,7 @@ import { getObjectBoundingRect } from "project-editor/flow/editor/bounding-rects
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { DragAndDropManager } from "project-editor/core/dd";
 import { ProjectContext } from "project-editor/project/context";
+import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,8 +73,13 @@ export const Selection = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         selectionNodeRef = React.createRef<HTMLDivElement>();
+        containerRef = React.createRef<HTMLDivElement>();
 
-        requestAnimationFrameId: any;
+        // the container itself has no size, so watch the canvas it is in
+        getRectsLoop = new VisibleAnimationFrameLoop(
+            () => this.containerRef.current?.parentElement,
+            () => this.getRects()
+        );
 
         _selectedObjectRects: Rect[] = [];
         _selectedObjectsParentRect: Rect | undefined = undefined;
@@ -212,16 +218,14 @@ export const Selection = observer(
 
                 this.showSelection();
             }
-
-            this.requestAnimationFrameId = requestAnimationFrame(this.getRects);
         };
 
         componentDidMount() {
-            this.getRects();
+            this.getRectsLoop.start();
         }
 
         componentWillUnmount() {
-            cancelAnimationFrame(this.requestAnimationFrameId);
+            this.getRectsLoop.stop();
         }
 
         showSelectionTimeoutId: any;
@@ -407,7 +411,11 @@ export const Selection = observer(
             }
 
             return (
-                <div className="EezStudio_FlowEditorSelection" style={style}>
+                <div
+                    ref={this.containerRef}
+                    className="EezStudio_FlowEditorSelection"
+                    style={style}
+                >
                     {isSelectionVisible && (
                         <React.Fragment>
                             {selectedObjectsParentElement}

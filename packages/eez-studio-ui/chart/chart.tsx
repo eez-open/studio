@@ -25,7 +25,10 @@ import { Point, pointDistance } from "eez-studio-shared/geometry";
 import { guid } from "eez-studio-shared/guid";
 import { capitalize, stringCompare } from "eez-studio-shared/string";
 import { writeBinaryData } from "eez-studio-shared/util-electron";
-import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
+import {
+    scrollIntoViewIfNeeded,
+    VisibleAnimationFrameLoop
+} from "eez-studio-shared/dom";
 
 import { SvgLabel } from "eez-studio-ui/svg-label";
 import * as notification from "eez-studio-ui/notification";
@@ -3489,7 +3492,6 @@ export const ChartsView = observer(
         tabIndex?: number;
         sideDockAvailable?: boolean;
     }> {
-        animationFrameRequestId: any = undefined;
         div: HTMLDivElement | null = null;
         sideDock: SideDockComponent2 | null = null;
 
@@ -3531,24 +3533,23 @@ export const ChartsView = observer(
             }
         }
 
-        frameAnimation = () => {
-            this.adjustSize();
+        frameAnimationLoop = new VisibleAnimationFrameLoop(
+            () => this.div,
+            () => {
+                this.adjustSize();
 
-            const chartsController = this.props.chartsController;
+                const chartsController = this.props.chartsController;
 
-            chartsController.xAxisController.animationController.frameAnimation();
+                chartsController.xAxisController.animationController.frameAnimation();
 
-            chartsController.chartControllers.forEach(chartController => {
-                chartController.yAxisController.animationController.frameAnimation();
-                if (chartController.yAxisControllerOnRightSide) {
-                    chartController.yAxisControllerOnRightSide.animationController.frameAnimation();
-                }
-            });
-
-            this.animationFrameRequestId = window.requestAnimationFrame(
-                this.frameAnimation
-            );
-        };
+                chartsController.chartControllers.forEach(chartController => {
+                    chartController.yAxisController.animationController.frameAnimation();
+                    if (chartController.yAxisControllerOnRightSide) {
+                        chartController.yAxisControllerOnRightSide.animationController.frameAnimation();
+                    }
+                });
+            }
+        );
 
         setFocus() {
             if (this.div && this.props.tabIndex !== undefined) {
@@ -3557,7 +3558,7 @@ export const ChartsView = observer(
         }
 
         componentDidMount() {
-            this.frameAnimation();
+            this.frameAnimationLoop.start();
             this.setFocus();
         }
 
@@ -3566,7 +3567,7 @@ export const ChartsView = observer(
         }
 
         componentWillUnmount() {
-            window.cancelAnimationFrame(this.animationFrameRequestId);
+            this.frameAnimationLoop.stop();
         }
 
         onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {

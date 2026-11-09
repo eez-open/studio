@@ -1,7 +1,7 @@
 import { IMeasureTask } from "eez-studio-shared/extensions/extension";
 
 export default function(task: IMeasureTask) {
-    let result = Number.MIN_VALUE;
+    let result = -Number.MAX_VALUE;
 
     const xEndIndex = task.xStartIndex + task.xNumSamples;
     for (let i = task.xStartIndex; i < xEndIndex; ++i) {

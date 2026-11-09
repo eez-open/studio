@@ -25,6 +25,7 @@ import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { layoutModels } from "eez-studio-ui/side-dock";
 import { Icon } from "eez-studio-ui/icon";
 import { homeTabStore } from "home/home-tab";
+import { loadProjectEditor } from "project-editor/project-editor-loader";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,6 +69,9 @@ export const App = observer(
     class App extends React.Component {
         componentDidMount(): void {
             scrapbookModel.mount();
+
+            // after the first paint
+            requestAnimationFrame(() => setTimeout(loadProjectEditor));
         }
 
         factory = (node: FlexLayout.TabNode) => {

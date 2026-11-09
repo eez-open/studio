@@ -65,9 +65,31 @@ export const Property = observer(
 
         _value: any = undefined;
 
-        static propertyComponents: Property[] = [];
-        static resizeTextAreaInterval: any;
-        static resizePropertyComponentIndex = 0;
+        observedTextArea: HTMLTextAreaElement | undefined;
+
+        // textarea height follows its content, which also wraps differently
+        // when the width changes (or when it becomes visible)
+        static textAreaWidths = new WeakMap<Element, number>();
+        static textAreaResizeObserver = new ResizeObserver(entries => {
+            const resized = entries.filter(entry => {
+                const width = entry.contentRect.width;
+                if (Property.textAreaWidths.get(entry.target) == width) {
+                    return false;
+                }
+                Property.textAreaWidths.set(entry.target, width);
+                return true;
+            });
+            if (resized.length > 0) {
+                // resizing inside the callback would cause ResizeObserver loop errors
+                requestAnimationFrame(() =>
+                    resized.forEach(entry =>
+                        Property.resizeTextArea(
+                            entry.target as HTMLTextAreaElement
+                        )
+                    )
+                );
+            }
+        });
 
         changeDocumentDisposer: any;
 
@@ -83,52 +105,34 @@ export const Property = observer(
             });
         }
 
-        static resizeTextAreas() {
-            if (
-                Property.resizePropertyComponentIndex >=
-                Property.propertyComponents.length
-            ) {
-                Property.resizePropertyComponentIndex = 0;
-            }
-
-            const textarea =
-                Property.propertyComponents[
-                    Property.resizePropertyComponentIndex
-                ].textarea;
-
-            if (textarea) {
-                if (textarea.style.height != textarea.scrollHeight + "px") {
-                    textarea.style.height = "0";
-                    textarea.style.height = textarea.scrollHeight + "px";
-                }
-            }
-
-            Property.resizePropertyComponentIndex++;
-        }
-
-        static registerProperty(property: Property) {
-            if (property.textarea) {
-                if (Property.propertyComponents.indexOf(property) == -1) {
-                    if (Property.propertyComponents.length == 0) {
-                        Property.resizeTextAreaInterval = setInterval(
-                            Property.resizeTextAreas
-                        );
-                    }
-                    Property.propertyComponents.push(property);
-                }
-            } else {
-                Property.unregisterProperty(property);
+        static resizeTextArea(textarea: HTMLTextAreaElement) {
+            if (textarea.style.height != textarea.scrollHeight + "px") {
+                textarea.style.height = "0";
+                textarea.style.height = textarea.scrollHeight + "px";
             }
         }
 
-        static unregisterProperty(property: Property) {
-            const i = Property.propertyComponents.indexOf(property);
-            if (i != -1) {
-                Property.propertyComponents.splice(i, 1);
-
-                if (Property.propertyComponents.length == 0) {
-                    clearInterval(Property.resizeTextAreaInterval);
+        updateTextArea() {
+            if (this.textarea != this.observedTextArea) {
+                this.unobserveTextArea();
+                if (this.textarea) {
+                    Property.textAreaResizeObserver.observe(this.textarea);
+                    this.observedTextArea = this.textarea;
                 }
+            }
+
+            // content could have changed
+            if (this.textarea) {
+                Property.resizeTextArea(this.textarea);
+            }
+        }
+
+        unobserveTextArea() {
+            if (this.observedTextArea) {
+                Property.textAreaResizeObserver.unobserve(
+                    this.observedTextArea
+                );
+                this.observedTextArea = undefined;
             }
         }
 
@@ -221,7 +225,7 @@ export const Property = observer(
 
             this.addEventHandlers();
 
-            Property.registerProperty(this);
+            this.updateTextArea();
         }
 
         componentDidUpdate(prevProps: PropertyProps) {
@@ -234,7 +238,7 @@ export const Property = observer(
 
             this.addEventHandlers();
 
-            Property.registerProperty(this);
+            this.updateTextArea();
         }
 
         componentWillUnmount() {
@@ -244,7 +248,7 @@ export const Property = observer(
                 this.disposeEventHandlers();
             }
 
-            Property.unregisterProperty(this);
+            this.unobserveTextArea();
         }
 
         onSelect = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {

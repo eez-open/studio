@@ -13,6 +13,7 @@ import type {
 } from "instrument/window/history/history";
 import type { IHistoryItem } from "instrument/window/history/item";
 import { historySessions, SESSION_FREE_ID } from "./session/store";
+import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -328,7 +329,10 @@ export class HistoryListComponentClass extends React.Component<{
     history: History;
     jumpToPresentCondition: IObservableValue<boolean>;
 }> {
-    animationFrameRequestId: any;
+    autoScrollLoop = new VisibleAnimationFrameLoop(
+        () => this.div,
+        () => this.autoScroll()
+    );
 
     fromBottom: number | undefined;
     fromTop: number | undefined = 0;
@@ -357,7 +361,7 @@ export class HistoryListComponentClass extends React.Component<{
     }
 
     componentDidMount() {
-        this.autoScroll();
+        this.autoScrollLoop.start();
         this.div.addEventListener("scroll", this.onScroll);
 
         this.lastItemInTheCenterId = undefined;
@@ -379,7 +383,7 @@ export class HistoryListComponentClass extends React.Component<{
     }
 
     componentWillUnmount() {
-        window.cancelAnimationFrame(this.animationFrameRequestId);
+        this.autoScrollLoop.stop();
         this.div.removeEventListener("scroll", this.onScroll);
     }
 
@@ -415,20 +419,17 @@ export class HistoryListComponentClass extends React.Component<{
         scrollIntoView();
     }
 
+    // runs only while visible, see autoScrollLoop
     autoScroll = () => {
-        if ($(this.div).is(":visible")) {
-            if (this.fromBottom !== undefined) {
-                if (this.fromBottom != this.div.scrollTop) {
-                    this.div.scrollTop = this.fromBottom;
-                }
-            } else if (this.fromTop !== undefined) {
-                let scrollTop =
-                    this.div.scrollHeight -
-                    this.div.clientHeight -
-                    this.fromTop;
-                if (scrollTop != this.div.scrollTop) {
-                    this.div.scrollTop = scrollTop;
-                }
+        if (this.fromBottom !== undefined) {
+            if (this.fromBottom != this.div.scrollTop) {
+                this.div.scrollTop = this.fromBottom;
+            }
+        } else if (this.fromTop !== undefined) {
+            let scrollTop =
+                this.div.scrollHeight - this.div.clientHeight - this.fromTop;
+            if (scrollTop != this.div.scrollTop) {
+                this.div.scrollTop = scrollTop;
             }
         }
 
@@ -468,10 +469,6 @@ export class HistoryListComponentClass extends React.Component<{
                 this.loadNewer();
             }
         }
-
-        this.animationFrameRequestId = window.requestAnimationFrame(
-            this.autoScroll
-        );
     };
 
     onScroll = (event: any) => {

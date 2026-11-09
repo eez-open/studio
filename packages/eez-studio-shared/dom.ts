@@ -60,3 +60,92 @@ export function scrollIntoViewIfNeeded(el: HTMLElement) {
         el.scrollIntoView();
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Calls onFrame on every animation frame, but only while the element returned
+ * by getElement is rendered. Inactive tabs stay mounted with display:none, so
+ * a plain requestAnimationFrame loop would keep running there forever.
+ *
+ * While the element is hidden the loop sleeps and a ResizeObserver wakes it
+ * when the element gets a size again, so the element must have a non-zero size
+ * when visible. While getElement returns nothing the loop sleeps until wake().
+ */
+export class VisibleAnimationFrameLoop {
+    private running = false;
+    private waiting = false;
+    private requestAnimationFrameId: number | undefined;
+    private resizeObserver: ResizeObserver | undefined;
+
+    constructor(
+        private getElement: () => Element | null | undefined,
+        private onFrame: () => void
+    ) {}
+
+    // first onFrame is called on the next animation frame
+    start() {
+        if (!this.running) {
+            this.running = true;
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.tick
+            );
+        }
+    }
+
+    stop() {
+        this.running = false;
+        if (this.requestAnimationFrameId != undefined) {
+            window.cancelAnimationFrame(this.requestAnimationFrameId);
+            this.requestAnimationFrameId = undefined;
+        }
+        this.stopWaiting();
+    }
+
+    // call when getElement would return a different element
+    wake() {
+        if (this.running && this.waiting) {
+            this.stopWaiting();
+            this.tick();
+        }
+    }
+
+    private tick = () => {
+        this.requestAnimationFrameId = undefined;
+
+        const el = this.getElement();
+        if (!el || el.getClientRects().length == 0) {
+            this.waitUntilVisible(el);
+            return;
+        }
+
+        this.onFrame();
+
+        if (this.running) {
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.tick
+            );
+        }
+    };
+
+    private waitUntilVisible(el: Element | null | undefined) {
+        this.stopWaiting();
+        this.waiting = true;
+        if (el) {
+            this.resizeObserver = new ResizeObserver(() => {
+                if (el.getClientRects().length > 0) {
+                    this.wake();
+                }
+            });
+            this.resizeObserver.observe(el);
+        }
+    }
+
+    private stopWaiting() {
+        this.waiting = false;
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = undefined;
+        }
+    }
+}

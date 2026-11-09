@@ -197,11 +197,7 @@ export const ComponentEnclosure = observer(
 
                 if (this.elRef.current.offsetParent == null) {
                     // do not calculate geometry if element is not visible
-                    this.updateComponentTimeout = setTimeout(() => {
-                        this.updateComponentTimeout = undefined;
-                        this.updateComponentGeometry();
-                    });
-
+                    this.waitUntilVisible(this.elRef.current);
                     return;
                 }
 
@@ -218,6 +214,28 @@ export const ComponentEnclosure = observer(
                 return;
             }
         };
+
+        visibilityObserver: ResizeObserver | undefined;
+
+        // element gets a size when display:none up the tree is removed
+        waitUntilVisible(el: HTMLElement) {
+            this.stopWaitingUntilVisible();
+
+            this.visibilityObserver = new ResizeObserver(() => {
+                if (el.offsetParent != null) {
+                    this.stopWaitingUntilVisible();
+                    this.updateComponentGeometry();
+                }
+            });
+            this.visibilityObserver.observe(el);
+        }
+
+        stopWaitingUntilVisible() {
+            if (this.visibilityObserver) {
+                this.visibilityObserver.disconnect();
+                this.visibilityObserver = undefined;
+            }
+        }
 
         debounceUpdateComponentGeometry = () => {
             if (this.updateComponentTimeout) {
@@ -244,6 +262,7 @@ export const ComponentEnclosure = observer(
                 clearTimeout(this.updateComponentTimeout);
                 this.updateComponentTimeout = undefined;
             }
+            this.stopWaitingUntilVisible();
         }
 
         render() {

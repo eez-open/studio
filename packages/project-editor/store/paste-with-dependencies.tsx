@@ -1867,54 +1867,8 @@ export function showFindAllPasteDependenciesProgressDialog(
     return true;
 }
 
-export function canPasteWithDependencies(
-    destinationProjectStore: ProjectStore
-) {
-    let serializedData = getProjectEditorDataFromClipboard(
-        destinationProjectStore
-    );
-    if (!serializedData) {
-        return false;
-    }
-
-    if (serializedData.object) {
-        if (serializedData.object instanceof ProjectEditor.BuildFileClass) {
-            return false;
-        }
-        if (serializedData.object instanceof ProjectEditor.ThemeColorsClipboardDataClass) {
-            return false;
-        }
-    } else if (serializedData.objects) {
-        if (
-            !serializedData.objects.find(
-                object => !(object instanceof ProjectEditor.BuildFileClass)
-            )
-        ) {
-            return false;
-        }
-    }
-
-    if (
-        serializedData.originProjectFilePath == destinationProjectStore.filePath
-    ) {
-        return false;
-    }
-
-    const sourceProjectEditorTab = ProjectEditor.homeTabs?.findProjectEditorTab(
-        serializedData.originProjectFilePath,
-        false
-    );
-    if (!sourceProjectEditorTab) {
-        return false;
-    }
-
-    const sourceProjectStore = sourceProjectEditorTab.projectStore;
-    if (!sourceProjectStore) {
-        return false;
-    }
-
-    return true;
-}
+// canPasteWithDependencies is in clipboard.ts, so that checking it doesn't
+// load this module
 
 export function pasteWithDependencies(destinationProjectStore: ProjectStore) {
     let serializedData = getProjectEditorDataFromClipboard(

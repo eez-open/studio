@@ -8,6 +8,7 @@ import {
 
 import type { IWasmFlowRuntime } from "eez-studio-types";
 import { getColorRGB } from "eez-studio-shared/color";
+import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
@@ -51,7 +52,13 @@ export class EezGuiLiteRuntime {
     autorRunDispose: IReactionDisposer | undefined;
     isMounted: boolean = false;
     mountCanceled: boolean = false;
+    // simulator: the loop also runs the flow, so it runs even when not visible
     requestAnimationFrameId: number | undefined;
+    // editor preview: runs only while the canvas is visible
+    previewLoop = new VisibleAnimationFrameLoop(
+        () => this.ctx?.canvas,
+        () => this.tick()
+    );
 
     // Cached WASM pointers (freed on unmount / rebuild)
     fontsPtr: number = 0;
@@ -148,9 +155,13 @@ export class EezGuiLiteRuntime {
                 });
             }
 
-            this.requestAnimationFrameId = window.requestAnimationFrame(
-                this.tick
-            );
+            if (this.runtime) {
+                this.requestAnimationFrameId = window.requestAnimationFrame(
+                    this.runtimeTick
+                );
+            } else {
+                this.previewLoop.start();
+            }
 
             this.isMounted = true;
         });
@@ -207,8 +218,15 @@ export class EezGuiLiteRuntime {
                 this.drawPage(this.ctx, pageImageData);
             }
         }
+    };
 
-        this.requestAnimationFrameId = window.requestAnimationFrame(this.tick);
+    runtimeTick = () => {
+        this.tick();
+        if (this.isMounted) {
+            this.requestAnimationFrameId = window.requestAnimationFrame(
+                this.runtimeTick
+            );
+        }
     };
 
     drawPage(ctx: CanvasRenderingContext2D, imgData: ImageData) {
@@ -234,6 +252,7 @@ export class EezGuiLiteRuntime {
             window.cancelAnimationFrame(this.requestAnimationFrameId);
             this.requestAnimationFrameId = undefined;
         }
+        this.previewLoop.stop();
 
         if (this.autorRunDispose) {
             this.autorRunDispose();

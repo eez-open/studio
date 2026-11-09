@@ -5,6 +5,7 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { ButtonAction } from "eez-studio-ui/action";
 import {
     action,
+    IReactionDisposer,
     makeObservable,
     observable,
     reaction,
@@ -49,6 +50,9 @@ const MediaDialog = observer(
 
         animationFrameRequest: number | undefined;
 
+        stream: MediaStream | undefined;
+        selectedDeviceReactionDisposer: IReactionDisposer | undefined;
+
         constructor(props: any) {
             super(props);
 
@@ -65,7 +69,7 @@ const MediaDialog = observer(
         }
 
         componentDidMount(): void {
-            reaction(
+            this.selectedDeviceReactionDisposer = reaction(
                 () => this.selectedDeviceId,
                 selectedDeviceId => {
                     if (selectedDeviceId) {
@@ -113,6 +117,26 @@ const MediaDialog = observer(
             });
         }
 
+        componentWillUnmount() {
+            this.selectedDeviceReactionDisposer?.();
+
+            if (this.animationFrameRequest !== undefined) {
+                cancelAnimationFrame(this.animationFrameRequest);
+                this.animationFrameRequest = undefined;
+            }
+
+            // release the microphone/camera
+            this.stopStream();
+            this.audioCtx?.close();
+        }
+
+        stopStream() {
+            if (this.stream) {
+                this.stream.getTracks().forEach(track => track.stop());
+                this.stream = undefined;
+            }
+        }
+
         onDeviceChange() {
             if (this.refVideo.current) {
                 this.refVideo.current.srcObject = null;
@@ -122,6 +146,8 @@ const MediaDialog = observer(
                 cancelAnimationFrame(this.animationFrameRequest);
                 this.animationFrameRequest = undefined;
             }
+
+            this.stopStream();
 
             if (this.mediaRecorder) {
                 this.mediaRecorder.onstart = null;
@@ -150,6 +176,8 @@ const MediaDialog = observer(
                   };
 
             let onSuccess = (stream: MediaStream) => {
+                this.stream = stream;
+
                 if (this.refVideo.current) {
                     this.refVideo.current.srcObject = stream;
                 }

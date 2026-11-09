@@ -114,6 +114,7 @@ import {
 import { visitObjects } from "project-editor/core/search";
 
 import { isArray } from "eez-studio-shared/util";
+import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { showDialog } from "eez-studio-ui/dialog";
 import { EditorFlowContext } from "project-editor/flow/editor/context";
@@ -252,7 +253,18 @@ const DockingLayoutTabComponentEnclosure = observer(
         height: number = 0;
 
         el: HTMLElement | null = null;
-        requestAnimationFrameId: any;
+
+        // getBoundingClientRect includes the zoom transform, which a
+        // ResizeObserver doesn't report, so the size is polled while visible
+        updateSizeLoop = new VisibleAnimationFrameLoop(
+            () =>
+                this.el ??
+                document.getElementById(
+                    this.props.flowContext.viewState.containerId
+                ) ??
+                document.body,
+            () => this.updateSize()
+        );
 
         constructor(props: any) {
             super(props);
@@ -286,18 +298,15 @@ const DockingLayoutTabComponentEnclosure = observer(
                     });
                 }
             }
-
-            this.requestAnimationFrameId = requestAnimationFrame(
-                this.updateSize
-            );
         };
 
         componentDidMount() {
             this.updateSize();
+            this.updateSizeLoop.start();
         }
 
         componentWillUnmount() {
-            cancelAnimationFrame(this.requestAnimationFrameId);
+            this.updateSizeLoop.stop();
         }
 
         render() {

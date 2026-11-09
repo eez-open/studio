@@ -39,11 +39,10 @@ import type * as ShortcutsModule from "home/shortcuts";
 
 import { Loader } from "eez-studio-ui/loader";
 
-import { ProjectStore } from "project-editor/store";
+import type { ProjectStore } from "project-editor/store";
 
-import { ProjectContext } from "project-editor/project/context";
-import { ProjectEditorView } from "project-editor/project/ui/ProjectEditor";
-import { initProjectEditor } from "project-editor/project-editor-bootstrap";
+import type { ProjectEditorView } from "project-editor/project/ui/ProjectEditor";
+import { loadProjectEditor } from "project-editor/project-editor-loader";
 import {
     PROJECT_TAB_ID_PREFIX,
     RUN_PROJECT_TAB_ID_PREFIX
@@ -465,11 +464,19 @@ export class ProjectEditorTab implements IHomeTab {
 
     private async doLoadProject() {
         try {
+            await loadProjectEditor();
+
+            const [{ ProjectStore }, { ProjectContext }, { ProjectEditorView }] =
+                await Promise.all([
+                    import("project-editor/store"),
+                    import("project-editor/project/context"),
+                    import("project-editor/project/ui/ProjectEditor")
+                ]);
+
             this.ProjectContext = ProjectContext;
 
             this.ProjectEditor = ProjectEditorView;
 
-            initProjectEditor(tabs, ProjectEditorTab);
             const projectStore = ProjectStore.create(
                 this.runMode
                     ? {
@@ -1054,8 +1061,6 @@ export class Tabs {
     }
 
     constructor() {
-        initProjectEditor(tabs, ProjectEditorTab);
-
         makeObservable(this, {
             tabs: observable,
             activeTab: observable,
@@ -1423,6 +1428,6 @@ ipcRenderer.on("show-documentation-browser", async () => {
     const { showDocumentationBrowser } = await import(
         "home/documentation-browser"
     );
-    initProjectEditor(tabs, ProjectEditorTab);
+    await loadProjectEditor();
     showDocumentationBrowser();
 });

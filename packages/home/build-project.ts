@@ -3,13 +3,13 @@ import { autorun } from "mobx";
 
 import { Message, ProjectStore, Section } from "project-editor/store";
 
-import { initProjectEditor } from "project-editor/project-editor-bootstrap";
+import { loadProjectEditor } from "project-editor/project-editor-loader";
 
 export async function buildProject(filePath: string) {
     ipcRenderer.send("on-build-project-message", "Build project: " + filePath);
 
     try {
-        initProjectEditor(undefined, undefined as any);
+        await loadProjectEditor();
 
         const projectStore = ProjectStore.create({
             type: "read-only"

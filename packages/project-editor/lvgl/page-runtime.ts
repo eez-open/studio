@@ -12,6 +12,7 @@ import {
 import type { Page } from "project-editor/features/page/page";
 import type { IWasmFlowRuntime } from "eez-studio-types";
 import { getColorRGB } from "eez-studio-shared/color";
+import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Bitmap } from "project-editor/features/bitmap/bitmap";
 import type { Font } from "project-editor/features/font/font";
@@ -735,7 +736,10 @@ export abstract class LVGLPageRuntime {
 export class LVGLPageEditorRuntime extends LVGLPageRuntime {
     autorRunDispose: IReactionDisposer | undefined;
     dispose2: IReactionDisposer | undefined;
-    requestAnimationFrameId: number | undefined;
+    tickLoop = new VisibleAnimationFrameLoop(
+        () => this.ctx.canvas,
+        () => this.tick()
+    );
     wasError: boolean = false;
     ctxPage: Page | undefined;
 
@@ -802,9 +806,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                     false
                 );
 
-                this.requestAnimationFrameId = window.requestAnimationFrame(
-                    this.tick
-                );
+                this.tickLoop.start();
 
                 this.autorRunDispose = autorun(() => {
                     if (!this.isMounted) {
@@ -991,8 +993,6 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
                 this.ctx.clearRect(0, 0, this.displayWidth, this.displayHeight);
             }
         }
-
-        this.requestAnimationFrameId = window.requestAnimationFrame(this.tick);
     };
 
     unmount() {
@@ -1000,10 +1000,7 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
             return;
         }
 
-        if (this.requestAnimationFrameId != undefined) {
-            window.cancelAnimationFrame(this.requestAnimationFrameId);
-            this.requestAnimationFrameId = undefined;
-        }
+        this.tickLoop.stop();
 
         if (this.autorRunDispose) {
             this.autorRunDispose();
@@ -1024,7 +1021,10 @@ export class LVGLPageEditorRuntime extends LVGLPageRuntime {
 ////////////////////////////////////////////////////////////////////////////////
 
 export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
-    requestAnimationFrameId: number | undefined;
+    tickLoop = new VisibleAnimationFrameLoop(
+        () => this.ctx.canvas,
+        () => this.tick()
+    );
 
     mountToLvglPageRuntimeInterval: any;
 
@@ -1061,9 +1061,7 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                     false
                 );
 
-                this.requestAnimationFrameId = window.requestAnimationFrame(
-                    this.tick
-                );
+                this.tickLoop.start();
 
                 this.createStyles();
 
@@ -1123,14 +1121,10 @@ export class LVGLNonActivePageViewerRuntime extends LVGLPageRuntime {
                 this.displayHeight
             );
         }
-
-        this.requestAnimationFrameId = window.requestAnimationFrame(this.tick);
     };
 
     unmount() {
-        if (this.requestAnimationFrameId != undefined) {
-            window.cancelAnimationFrame(this.requestAnimationFrameId);
-        }
+        this.tickLoop.stop();
 
         if (this.mountToLvglPageRuntimeInterval) {
             clearInterval(this.mountToLvglPageRuntimeInterval);
@@ -1671,7 +1665,10 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
     lvglWidgetsMap = new Map<string, LVGLWidget>();
     selectedStyle: LVGLStyle | undefined;
     autorRunDispose: IReactionDisposer | undefined;
-    requestAnimationFrameId: number | undefined;
+    tickLoop = new VisibleAnimationFrameLoop(
+        () => this.canvas,
+        () => this.tick()
+    );
     canvas: HTMLCanvasElement | null = null;
 
     constructor(project: Project) {
@@ -1801,9 +1798,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                     false
                 );
 
-                this.requestAnimationFrameId = window.requestAnimationFrame(
-                    this.tick
-                );
+                this.tickLoop.start();
 
                 this.autorRunDispose = autorun(() => {
                     if (!this.isMounted) {
@@ -1923,8 +1918,6 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
                 }
             }
         }
-
-        this.requestAnimationFrameId = window.requestAnimationFrame(this.tick);
     };
 
     unmount() {
@@ -1932,10 +1925,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
             return;
         }
 
-        if (this.requestAnimationFrameId) {
-            window.cancelAnimationFrame(this.requestAnimationFrameId);
-            this.requestAnimationFrameId = undefined;
-        }
+        this.tickLoop.stop();
 
         if (this.autorRunDispose) {
             this.autorRunDispose();
@@ -1958,6 +1948,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
     ) {
         this.selectedStyle = selectedStyle;
         this.canvas = canvas;
+        this.tickLoop.wake();
     }
 }
 

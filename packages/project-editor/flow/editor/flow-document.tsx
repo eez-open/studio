@@ -24,7 +24,7 @@ import { ConnectionLine } from "project-editor/flow/connection-line";
 import { Component, ActionComponent } from "project-editor/flow/component";
 import { ComponentGroup } from "project-editor/flow/component-group";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { canPasteWithDependencies } from "project-editor/store/paste-with-dependencies";
+import { canPasteWithDependencies } from "project-editor/store/clipboard";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { selectComponentDialog } from "project-editor/flow/editor/ComponentsPalette";
 import {

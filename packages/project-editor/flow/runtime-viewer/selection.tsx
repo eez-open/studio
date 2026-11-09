@@ -4,6 +4,7 @@ import { computed, makeObservable, observable, runInAction } from "mobx";
 import classNames from "classnames";
 
 import { Rect, rectExpand } from "eez-studio-shared/geometry";
+import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { IMouseHandler } from "project-editor/flow/editor/mouse-handler";
@@ -69,7 +70,13 @@ export const Selection = observer(
             });
         }
 
-        requestAnimationFrameId: any;
+        containerRef = React.createRef<HTMLDivElement>();
+
+        // the container itself has no size, so watch the canvas it is in
+        getRectsLoop = new VisibleAnimationFrameLoop(
+            () => this.containerRef.current?.parentElement,
+            () => this.getRects()
+        );
 
         _selectedObjectRects: Rect[] = [];
 
@@ -134,16 +141,14 @@ export const Selection = observer(
                     this._selectedObjectRects = selectedObjectRects;
                 });
             }
-
-            this.requestAnimationFrameId = requestAnimationFrame(this.getRects);
         };
 
         componentDidMount() {
-            this.getRects();
+            this.getRectsLoop.start();
         }
 
         componentWillUnmount() {
-            cancelAnimationFrame(this.requestAnimationFrameId);
+            this.getRectsLoop.stop();
         }
 
         get selectedObjects() {
@@ -202,7 +207,10 @@ export const Selection = observer(
             }
 
             return (
-                <div className="EezStudio_FlowRuntimeSelection">
+                <div
+                    ref={this.containerRef}
+                    className="EezStudio_FlowRuntimeSelection"
+                >
                     {isSelectionVisible && selectedObjectRectsElement}
                 </div>
             );
