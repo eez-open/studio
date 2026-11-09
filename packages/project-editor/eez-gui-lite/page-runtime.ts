@@ -50,6 +50,7 @@ export class EezGuiLiteRuntime {
     wasm: IWasmFlowRuntime;
     autorRunDispose: IReactionDisposer | undefined;
     isMounted: boolean = false;
+    mountCanceled: boolean = false;
     requestAnimationFrameId: number | undefined;
 
     // Cached WASM pointers (freed on unmount / rebuild)
@@ -123,9 +124,11 @@ export class EezGuiLiteRuntime {
             return;
         }
 
+        this.mountCanceled = false;
+
         const eezGuiLiteRuntimeConstructor = require("project-editor/flow/runtime/wasm/eez_gui_lite_runtime.js");
         const wasm = eezGuiLiteRuntimeConstructor(async () => {
-            if (this.wasm != wasm) {
+            if (this.wasm != wasm || this.mountCanceled) {
                 return;
             }
 
@@ -222,6 +225,8 @@ export class EezGuiLiteRuntime {
 
     unmount() {
         if (!this.isMounted) {
+            // WASM is still loading, don't let it start the render loop
+            this.mountCanceled = true;
             return;
         }
 

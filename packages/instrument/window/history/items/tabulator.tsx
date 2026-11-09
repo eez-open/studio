@@ -124,6 +124,7 @@ export const TabulatorHistoryItemComponent = observer(
 
                 if (this.tabulator) {
                     this.updatePersistance();
+                    this.tabulator.destroy();
                 } else {
                     this.persistance = JSON.parse(
                         JSON.stringify(
@@ -150,6 +151,7 @@ export const TabulatorHistoryItemComponent = observer(
 
         componentWillUnmount() {
             this.updatePersistance();
+            this.tabulator?.destroy();
         }
 
         onExportCSV = async () => {

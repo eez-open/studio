@@ -391,6 +391,7 @@ const TabulatorElement = observer(
         async createTabulator(el: HTMLDivElement) {
             const Tabulator = getTabulator();
 
+            this.tabulator?.destroy();
             this.tabulator = new Tabulator(el, this.options);
 
             const { flowContext, widget } = this.props;
@@ -470,6 +471,10 @@ const TabulatorElement = observer(
             if (this.ref.current) {
                 this.createTabulator(this.ref.current);
             }
+        }
+
+        componentWillUnmount() {
+            this.tabulator?.destroy();
         }
 
         render() {

@@ -43,6 +43,11 @@ export class EezGuiLiteWasmRuntime extends EezFlowLiteWasmRuntime {
         this.pageRuntime.mount();
     }
 
+    override async doStopRuntime(notifyUser: boolean) {
+        this.pageRuntime.unmount();
+        await super.doStopRuntime(notifyUser);
+    }
+
     get displayWidth() {
         return this.pageRuntime.page.width;
     }

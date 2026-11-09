@@ -2317,9 +2317,10 @@ export class BitmapDashboardWidget extends Widget {
                     require("instrument/connection/file-type") as typeof FileTypeModule;
 
                 const fileType = detectFileType(data);
-                return URL.createObjectURL(
-                    new Blob([Buffer.from(data)], { type: fileType.mime } /* (1) */)
-                );
+                // data URL, a blob URL created on every render would never be revoked
+                return `data:${fileType.mime};base64,${Buffer.from(
+                    data
+                ).toString("base64")}`;
             }
 
             if (typeof data == "number") {

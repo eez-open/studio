@@ -1021,8 +1021,8 @@ registerObjectVariableType("MQTTConnection", {
         }
         const mqttConnection = mqttConnections.get(objectVariable.id);
         if (mqttConnection) {
-            mqttConnection.disconnect();
-            mqttConnections.set(mqttConnection.id, mqttConnection);
+            mqttConnection.destroy();
+            mqttConnections.delete(mqttConnection.id);
         }
     },
     getValue: (variableValue: any): IObjectVariableValue | null => {
@@ -1214,6 +1214,9 @@ class MQTTConnection {
     isConnected: boolean = false;
     error: string | undefined = undefined;
 
+    // incremented to cancel a connect() that is still loading the mqtt module
+    connectGeneration = 0;
+
     get protocol() {
         return this.constructorParams.protocol;
     }
@@ -1243,7 +1246,16 @@ class MQTTConnection {
     async connect() {
         //console.log("connect called", this.id);
 
+        const generation = ++this.connectGeneration;
+
         const mqtt = await import("mqtt");
+
+        if (generation != this.connectGeneration) {
+            return;
+        }
+
+        // a replaced client would keep reconnecting forever
+        this.endClient();
 
         this.client = mqtt.default.connect(undefined as any, {
             protocol: this.constructorParams.protocol as any,
@@ -1356,7 +1368,7 @@ class MQTTConnection {
                     //console.log("onError", this.id);
 
                     this.client!.off("error", onError);
-                    this.client = undefined;
+                    this.endClient();
 
                     runInAction(() => {
                         this.isConnected = false;
@@ -1394,8 +1406,28 @@ class MQTTConnection {
     }
 
     disconnect() {
+        this.connectGeneration++;
         if (this.client) {
             this.client.end();
+        }
+    }
+
+    destroy() {
+        this.connectGeneration++;
+        this.endClient();
+    }
+
+    // stop the client for good, without reporting its events
+    private endClient() {
+        const client = this.client;
+        if (client) {
+            this.client = undefined;
+            client.removeAllListeners();
+            client.on("error", () => {});
+            client.end(true);
+            runInAction(() => {
+                this.isConnected = false;
+            });
         }
     }
 }
@@ -1452,9 +1484,7 @@ function eez_mqtt_deinit(wasmModuleId: number, handle: number) {
         return MQTT_ERROR_OTHER;
     }
 
-    if (mqttConnection.isConnected) {
-        mqttConnection.disconnect();
-    }
+    mqttConnection.destroy();
 
     mqttConnections.delete(handle);
 

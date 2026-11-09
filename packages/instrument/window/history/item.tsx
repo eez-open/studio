@@ -21,7 +21,10 @@ import {
     showEditNoteDialog
 } from "instrument/window/note-dialog";
 import { Balloon } from "eez-studio-ui/balloon";
-import { PreventDraggable } from "instrument/window/history/helper";
+import {
+    MediaPlayer,
+    PreventDraggable
+} from "instrument/window/history/helper";
 import { PropertyList, StaticRichTextProperty } from "eez-studio-ui/properties";
 import { Toolbar } from "eez-studio-ui/toolbar";
 import { IconAction } from "eez-studio-ui/action";
@@ -78,7 +81,7 @@ export class HistoryItem implements IHistoryItem {
             _dataUpdated: observable,
             temporary: observable,
 
-            mediaSource: computed
+            mediaNoteData: computed
         });
 
         this.id = activityLogEntry.id;
@@ -354,56 +357,28 @@ export class HistoryItem implements IHistoryItem {
         );
     }
 
-    get mediaSource() {
+    get mediaNoteData() {
         if (this.mediaNote == undefined) {
-            return null;
+            return undefined;
         }
 
-        const data = Buffer.from(this.mediaNote.data, "base64");
-
-        const blob = new Blob([data], {
-            type: this.mediaNote.mimeType
-        });
-
-        return window.URL.createObjectURL(blob);
+        return Buffer.from(this.mediaNote.data, "base64");
     }
 
     renderMediaNote(appStore: IAppStore) {
-        if (!this.mediaNote) {
+        if (!this.mediaNote || !this.mediaNoteData) {
             return null;
         }
-        if (!this.mediaSource) {
-            return null;
-        }
-
-        const isVideo = this.mediaNote.mimeType.startsWith("video");
 
         return (
             <PreventDraggable
                 tag="div"
                 className="d-inline-flex align-items-center"
             >
-                {isVideo ? (
-                    <video
-                        controls
-                        src={this.mediaSource}
-                        draggable="true"
-                        onDragStart={event => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        }}
-                    ></video>
-                ) : (
-                    <audio
-                        controls
-                        src={this.mediaSource}
-                        draggable="true"
-                        onDragStart={event => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        }}
-                    ></audio>
-                )}
+                <MediaPlayer
+                    data={this.mediaNoteData}
+                    mimeType={this.mediaNote.mimeType}
+                />
 
                 <IconAction
                     icon="material:delete"

@@ -177,9 +177,15 @@ export class WasmRuntime extends RemoteRuntime {
     async doStartRuntime(isDebuggerActive: boolean) {
         // await new Promise(resolve => setTimeout(resolve, 100));
 
+        // After every await: if Stop was pressed (or the tab closed) in the
+        // meantime, doStopRuntime has already run, so don't create anything.
+
         if (this.projectStore.projectTypeTraits.isLVGL) {
             for (const font of this.projectStore.project.fonts) {
                 await font.getLvglBinFileAsync();
+            }
+            if (this.isStopped) {
+                return;
             }
         }
 
@@ -204,6 +210,10 @@ export class WasmRuntime extends RemoteRuntime {
 
         if (!result) {
             result = await this.projectStore.buildAssets();
+        }
+
+        if (this.isStopped) {
+            return;
         }
 
         const outputSection = this.projectStore.outputSectionsStore.getSection(
@@ -238,6 +248,16 @@ export class WasmRuntime extends RemoteRuntime {
 
         if (this.projectStore.projectTypeTraits.isDashboard) {
             await this.loadGlobalVariables();
+            if (this.isStopped) {
+                return;
+            }
+        }
+
+        if (this.projectStore.projectTypeTraits.isLVGL) {
+            await preloadAllBitmaps(this.projectStore);
+            if (this.isStopped) {
+                return;
+            }
         }
 
         if (!isDebuggerActive) {
@@ -249,10 +269,6 @@ export class WasmRuntime extends RemoteRuntime {
 
         if (this.projectStore.projectTypeTraits.isDashboard) {
             initJSObjectsMap(this.assetsMap, this.wasmModuleId);
-        }
-
-        if (this.projectStore.projectTypeTraits.isLVGL) {
-            await preloadAllBitmaps(this.projectStore);
         }
 
         this.worker = createWasmWorker(
@@ -515,6 +531,11 @@ export class WasmRuntime extends RemoteRuntime {
         workerToRenderMessage: WorkerToRenderMessage
     ) => {
         if (workerToRenderMessage.init) {
+            // WASM finished loading after Stop
+            if (this.isStopped) {
+                return;
+            }
+
             const message: RendererToWorkerMessage = {};
 
             let globalVariableValues: IGlobalVariable[];
@@ -550,6 +571,10 @@ export class WasmRuntime extends RemoteRuntime {
             };
 
             await this.worker.postMessage(message);
+
+            if (this.isStopped) {
+                return;
+            }
 
             if (this.onInitialized) {
                 this.onInitialized();

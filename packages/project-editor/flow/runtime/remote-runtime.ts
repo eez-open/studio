@@ -130,9 +130,18 @@ export class RemoteRuntime extends RuntimeBase {
             return;
         }
 
+        // After every await: if Stop was pressed (or the tab closed) in the
+        // meantime, doStopRuntime has already run, so don't connect, upload or run.
+        if (this.isStopped) {
+            return;
+        }
+
         this.instrument = instrument;
 
         const parts = await partsPromise;
+        if (this.isStopped) {
+            return;
+        }
         if (!parts) {
             notification.error("Build error...", {
                 autoClose: false
@@ -151,6 +160,14 @@ export class RemoteRuntime extends RuntimeBase {
             autoClose: false
         });
 
+        const isStoppedWhileStarting = () => {
+            if (this.isStopped) {
+                notification.dismiss(toastId);
+                return true;
+            }
+            return false;
+        };
+
         const connection = instrument.connection;
         connection.connect();
 
@@ -159,6 +176,10 @@ export class RemoteRuntime extends RuntimeBase {
                 break;
             }
             await new Promise<void>(resolve => setTimeout(resolve, 100));
+        }
+
+        if (isStoppedWhileStarting()) {
+            return;
         }
 
         if (!instrument.isConnected) {
@@ -184,6 +205,13 @@ export class RemoteRuntime extends RuntimeBase {
                 acquireError = err;
                 await new Promise<void>(resolve => setTimeout(resolve, 100));
             }
+        }
+
+        if (isStoppedWhileStarting()) {
+            if (acquired) {
+                connection.release();
+            }
+            return;
         }
 
         if (!acquired) {
@@ -225,9 +253,20 @@ export class RemoteRuntime extends RuntimeBase {
                 connection.upload(uploadInstructions, resolve, reject);
             });
 
+            if (isStoppedWhileStarting()) {
+                this.stopDebugger();
+                return;
+            }
+
             connection.command(`SYST:DEL 100`);
 
             const runningScript = await connection.query(`SCR:RUN?`);
+
+            if (isStoppedWhileStarting()) {
+                this.stopDebugger();
+                return;
+            }
+
             if (runningScript != "" && runningScript != `""`) {
                 connection.command(`SCR:STOP`);
                 connection.command(`SYST:DEL 100`);

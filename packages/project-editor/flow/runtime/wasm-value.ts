@@ -277,7 +277,13 @@ export function createWasmValue(
     if (value instanceof Buffer || value instanceof Uint8Array) {
         const bufferPtr = WasmFlowRuntime._malloc(value.length);
         WasmFlowRuntime.HEAPU8.set(value, bufferPtr);
-        return WasmFlowRuntime._createBlobValue(bufferPtr, value.length);
+        // the blob value gets its own copy of the data
+        const valuePtr = WasmFlowRuntime._createBlobValue(
+            bufferPtr,
+            value.length
+        );
+        WasmFlowRuntime._free(bufferPtr);
+        return valuePtr;
     }
 
     if (valueTypeIndex != undefined) {

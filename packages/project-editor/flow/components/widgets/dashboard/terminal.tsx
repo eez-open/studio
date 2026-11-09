@@ -211,25 +211,30 @@ const TerminalElement = observer(
         terminal: any;
         fitAddon: any;
 
-        dispose: any;
+        unmounted = false;
+
+        writeData = (data: string) => {
+            this.terminal.write(data);
+        };
+
+        clearTerminal = () => {
+            this.terminal.clear();
+        };
+
+        get executionState() {
+            return this.props.flowContext.flowState?.getComponentExecutionState<ExecutionState>(
+                this.props.widget
+            );
+        }
 
         updateComponentExecutionState() {
-            if (this.props.flowContext.flowState) {
-                let executionState =
-                    this.props.flowContext.flowState.getComponentExecutionState<ExecutionState>(
-                        this.props.widget
-                    );
-                if (executionState) {
-                    executionState.onData = data => {
-                        this.terminal.write(data);
-                    };
-                    executionState.clear = () => {
-                        this.terminal.clear();
-                    };
-                    if (executionState.data) {
-                        this.terminal.write(executionState.data);
-                        executionState.data = "";
-                    }
+            const executionState = this.executionState;
+            if (executionState) {
+                executionState.onData = this.writeData;
+                executionState.clear = this.clearTerminal;
+                if (executionState.data) {
+                    this.terminal.write(executionState.data);
+                    executionState.data = "";
                 }
             }
         }
@@ -246,6 +251,11 @@ const TerminalElement = observer(
 
             const { Terminal } = await import("xterm");
             const { FitAddon } = await import("xterm-addon-fit");
+
+            if (this.unmounted || !this.ref.current) {
+                return;
+            }
+
             this.terminal = new Terminal({
                 rendererType: "dom"
             });
@@ -281,13 +291,22 @@ const TerminalElement = observer(
                 this.fitAddon.fit();
             }
 
-            this.updateComponentExecutionState();
+            if (this.terminal) {
+                this.updateComponentExecutionState();
+            }
         }
 
         componentWillUnmount() {
-            if (this.dispose) {
-                this.dispose();
+            this.unmounted = true;
+
+            // buffer incoming data again until a terminal is mounted
+            const executionState = this.executionState;
+            if (executionState && executionState.onData == this.writeData) {
+                executionState.onData = undefined;
+                executionState.clear = undefined;
             }
+
+            this.terminal?.dispose();
         }
 
         render() {

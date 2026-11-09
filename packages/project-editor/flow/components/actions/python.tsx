@@ -370,7 +370,8 @@ onWasmFlowRuntimeTerminate((wasmFlowRuntime: IWasmFlowRuntime) => {
     for (const item of handleToPythonShell) {
         if (item[1].wasmFlowRuntime == wasmFlowRuntime) {
             item[1].wasmFlowRuntimeTerminated = true;
-            item[1].pythonShell.end(() => {});
+            // end() only closes stdin, which doesn't stop a running script
+            item[1].pythonShell.kill();
         }
     }
 });
