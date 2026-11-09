@@ -937,6 +937,10 @@ export class ProjectStore {
     }
 
     async closeWindow() {
+        if (this.project && !(await this.saveModified())) {
+            return false;
+        }
+
         if (this.runtime) {
             await this.runtime.stopRuntime(false);
             this.dataContext.clear();
@@ -945,10 +949,6 @@ export class ProjectStore {
 
         if (this.uiStateStore) {
             await this.uiStateStore.save();
-        }
-
-        if (this.project) {
-            return await this.saveModified();
         }
 
         return true;
