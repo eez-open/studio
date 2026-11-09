@@ -1,6 +1,6 @@
 import { MenuItem } from "@electron/remote";
 import React from "react";
-import { computed, makeObservable, observable, toJS } from "mobx";
+import { computed, makeObservable, observable, toJS, untracked } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
@@ -702,11 +702,13 @@ export class LVGLStyles extends EezObject {
         [widgetType: string]: string;
     };
 
+    private _lvglRuntime: LVGLStylesEditorRuntime | undefined;
+    private _lvglRuntimeDisposed = false;
+
     constructor() {
         super();
 
         makeObservable(this, {
-            lvglRuntime: computed({ keepAlive: true }),
             allStyles: computed
         });
     }
@@ -746,7 +748,40 @@ export class LVGLStyles extends EezObject {
     };
 
     get lvglRuntime() {
-        return new LVGLStylesEditorRuntime(ProjectEditor.getProject(this));
+        if (this._lvglRuntimeDisposed) {
+            return undefined;
+        }
+
+        const project = ProjectEditor.getProject(this);
+
+        if (
+            this._lvglRuntime &&
+            this._lvglRuntime.lvglVersion !=
+                project.settings.general.lvglVersion
+        ) {
+            this.unmountLvglRuntime();
+        }
+
+        if (!this._lvglRuntime) {
+            this._lvglRuntime = untracked(
+                () => new LVGLStylesEditorRuntime(project)
+            );
+        }
+
+        return this._lvglRuntime;
+    }
+
+    private unmountLvglRuntime() {
+        if (this._lvglRuntime) {
+            this._lvglRuntime.unmount();
+            this._lvglRuntime = undefined;
+        }
+    }
+
+    // called when the project is closed
+    disposeLvglRuntime() {
+        this._lvglRuntimeDisposed = true;
+        this.unmountLvglRuntime();
     }
 
     get allStyles() {
@@ -844,21 +879,21 @@ export const LVGLSelectedStyleEditor = observer(
         }
 
         componentDidMount() {
-            this.runtime.setSelectedStyle(
+            this.runtime?.setSelectedStyle(
                 this.selectedStyle,
                 this.canvasRef.current
             );
         }
 
         componentDidUpdate() {
-            this.runtime.setSelectedStyle(
+            this.runtime?.setSelectedStyle(
                 this.selectedStyle,
                 this.canvasRef.current
             );
         }
 
         componentWillUnmount() {
-            this.runtime.setSelectedStyle(undefined, null);
+            this.runtime?.setSelectedStyle(undefined, null);
         }
 
         render() {
@@ -878,8 +913,8 @@ export const LVGLSelectedStyleEditor = observer(
                 >
                     <canvas
                         ref={this.canvasRef}
-                        width={this.runtime.displayWidth}
-                        height={this.runtime.displayHeight}
+                        width={LVGLStylesEditorRuntime.PREVIEW_WIDTH}
+                        height={LVGLStylesEditorRuntime.PREVIEW_HEIGHT}
                         style={{
                             maxWidth: "100%",
                             maxHeight: "100%"

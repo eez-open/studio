@@ -432,6 +432,8 @@ export class ProjectStore {
         this.navigationStore?.unmount();
         this.layoutModels?.unmount();
 
+        this.project?.lvglStyles?.disposeLvglRuntime();
+
         if (this.dispose1) {
             this.dispose1();
         }

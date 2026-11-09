@@ -200,7 +200,9 @@ export const LVGLStylesDefinitionProperty = observer(
                                             part={part}
                                             state={state}
                                             runtime={
-                                                runtime as LVGLStylesEditorRuntime
+                                                runtime as
+                                                    | LVGLStylesEditorRuntime
+                                                    | undefined
                                             }
                                             readOnly={this.props.readOnly}
                                         />
@@ -440,7 +442,7 @@ export const LVGLStylesDefinitionGroupProperties = observer(
         stylesDefinitions: LVGLStylesDefinition[];
         part: LVGLParts;
         state: string;
-        runtime: LVGLStylesEditorRuntime;
+        runtime: LVGLStylesEditorRuntime | undefined;
         readOnly: boolean;
     }> {
         static contextType = ProjectContext;
@@ -509,7 +511,7 @@ export const LVGLStylesDefinitionGroupProperties = observer(
                                         object instanceof
                                         ProjectEditor.LVGLStyleClass
                                     ) {
-                                        lvglObj = runtime.getLvglObj(object);
+                                        lvglObj = runtime?.getLvglObj(object);
                                     }
 
                                     if (

@@ -1778,7 +1778,7 @@ export class LVGLStylesEditorRuntime extends LVGLPageRuntime {
 
         const wasm = getLvglWasmFlowRuntimeConstructor(this.lvglVersion)(
             async () => {
-                if (this.wasm != wasm) {
+                if (this.wasm != wasm || !this.isMounted) {
                     return;
                 }
 
