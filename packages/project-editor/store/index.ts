@@ -1449,7 +1449,9 @@ export class ProjectStore {
         this.editorsStore.refresh(true);
     }
 
-    buildImportedExtensions(project: Project) {
+    // merge: project is an imported or master project, so add its extensions
+    // without replacing what the main project registered
+    buildImportedExtensions(project: Project, merge: boolean) {
         // build importedExtensionToExtensionContent
         const importedExtensionToExtensionContent = new Map<
             ExtensionDirective,
@@ -1532,22 +1534,34 @@ export class ProjectStore {
             }
         }
 
+        function add<T>(map: Map<string, T>, name: string, value: T) {
+            if (!merge || !map.has(name)) {
+                map.set(name, value);
+            }
+        }
+
         //
         // build objectVariableTypes
         //
-        this.objectVariableTypes = new Map<string, IObjectVariableType>();
+        if (!merge) {
+            this.objectVariableTypes = new Map<string, IObjectVariableType>();
 
-        const globalObjectVariableTypes = objectVariableTypes;
+            const globalObjectVariableTypes = objectVariableTypes;
 
-        // insert global object variable types
-        for (const [name, objectVariableType] of globalObjectVariableTypes) {
-            this.objectVariableTypes.set(name, objectVariableType);
+            // insert global object variable types
+            for (const [
+                name,
+                objectVariableType
+            ] of globalObjectVariableTypes) {
+                this.objectVariableTypes.set(name, objectVariableType);
+            }
         }
 
         // insert object variable types from imported extensions
         for (const extensionContent of importedExtensionToExtensionContent.values()) {
             for (const objectVariableType of extensionContent.objectVariableTypes) {
-                this.objectVariableTypes.set(
+                add(
+                    this.objectVariableTypes,
                     objectVariableType.name,
                     objectVariableType.type
                 );
@@ -1557,15 +1571,18 @@ export class ProjectStore {
         //
         // build importedActionComponentClasses
         //
-        this.importedActionComponentClasses = new Map<
-            string,
-            typeof ActionComponent
-        >();
+        if (!merge) {
+            this.importedActionComponentClasses = new Map<
+                string,
+                typeof ActionComponent
+            >();
+        }
 
         // insert action component classes from imported extensions
         for (const extensionContent of importedExtensionToExtensionContent.values()) {
             for (const actionComponentClass of extensionContent.actionComponentClasses) {
-                this.importedActionComponentClasses.set(
+                add(
+                    this.importedActionComponentClasses,
                     actionComponentClass.className,
                     actionComponentClass.actionComponentClass
                 );

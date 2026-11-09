@@ -255,7 +255,10 @@ export class OpenProjectsManager {
             watcher = openProject.watcher;
             openProject.watcher = undefined;
         } else {
-            project = await this._loadProject(absoluteFilePath);
+            project = await this._loadProject(
+                absoluteFilePath,
+                params.type != "main"
+            );
             project._isReadOnly = params.type != "main";
             project._store = this.projectStore;
         }
@@ -281,7 +284,7 @@ export class OpenProjectsManager {
         return project;
     }
 
-    async _loadProject(filePath: string) {
+    async _loadProject(filePath: string, isExternalProject: boolean) {
         console.log("loadProject", filePath);
 
         let fileData: Buffer;
@@ -323,7 +326,8 @@ export class OpenProjectsManager {
         const project = loadProject(
             this.projectStore,
             projectJs,
-            this.projectStore.context.type == "project-editor"
+            this.projectStore.context.type == "project-editor",
+            isExternalProject
         ) as Project;
 
         project._isDashboardBuild = isDashboardBuild;

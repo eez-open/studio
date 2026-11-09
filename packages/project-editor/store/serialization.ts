@@ -46,13 +46,16 @@ export function createObject<T extends EezObject>(
     return result as T;
 }
 
+// isExternalProject: imported or master project loaded into the main project's store
 export function loadProject(
     projectStore: ProjectStore,
     projectObjectOrString: any | string,
-    makeEditable: boolean
+    makeEditable: boolean,
+    isExternalProject: boolean = false
 ): Project {
     currentProjectStore = projectStore;
     isLoadProject = true;
+    isLoadExternalProject = isExternalProject;
     loadProjectMakeEditable = makeEditable;
     createNewObjectobjIDs = false;
     wireSourceChangedList = [];
@@ -80,6 +83,7 @@ export function loadProject(
     rewireEnd(project);
 
     currentProject = undefined;
+    isLoadExternalProject = false;
 
     return project;
 }
@@ -125,6 +129,7 @@ export function objectToJson(
 let currentProjectStore: ProjectStore | undefined;
 let currentProject: Project | undefined;
 let isLoadProject: boolean;
+let isLoadExternalProject = false;
 let loadProjectMakeEditable: boolean;
 let createNewObjectobjIDs: boolean;
 let flowsWireIDToObjID: Map<Flow, Map<string, string>> = new Map<
@@ -314,7 +319,10 @@ function loadObjectInternal(
         }
 
         if (object == currentProject && propertyInfo.name == "settings") {
-            currentProjectStore!.buildImportedExtensions(currentProject!);
+            currentProjectStore!.buildImportedExtensions(
+                currentProject!,
+                isLoadExternalProject
+            );
         }
     }
 
