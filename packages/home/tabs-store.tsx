@@ -912,13 +912,15 @@ export class ProjectEditorTab implements IHomeTab {
 
     async close() {
         if (this.projectStore) {
-            if (await this.projectStore.closeWindow()) {
-                this.tabs.removeTab(this);
-                this.projectStore.unmount();
-                runInAction(() => {
-                    this.projectStore = undefined;
-                });
+            if (!(await this.projectStore.closeWindow())) {
+                return;
             }
+
+            this.tabs.removeTab(this);
+            this.projectStore.unmount();
+            runInAction(() => {
+                this.projectStore = undefined;
+            });
         } else {
             this.tabs.removeTab(this);
         }
@@ -944,7 +946,10 @@ export class ProjectEditorTab implements IHomeTab {
             return;
         }
 
-        await this.projectStore.closeWindow();
+        if (!(await this.projectStore.closeWindow())) {
+            return;
+        }
+
         this.projectStore.unmount();
 
         if (this.removeListeners) {
