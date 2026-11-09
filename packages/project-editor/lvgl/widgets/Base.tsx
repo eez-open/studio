@@ -2035,6 +2035,13 @@ export class LVGLWidget extends Widget {
             }
         }
 
+        if (this._useStyleForStylePreview && !code.lvglBuild) {
+            const lvglStyle = findLvglStyle(ProjectEditor.getProject(this), this._useStyleForStylePreview);
+            if (lvglStyle) {
+                lvglStyle.lvglCreateLocalStyles(code.pageRuntime!, this, code.objectAccessor);
+            }
+        }
+
         if (code.lvglBuild) {
             this.localStyles.lvglBuild(code.lvglBuild);
         } else {
