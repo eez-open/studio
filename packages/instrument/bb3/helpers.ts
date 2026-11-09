@@ -27,6 +27,14 @@ export function fetchFileUrl(fileUrl: string) {
         req.open("GET", fileUrl);
 
         req.addEventListener("load", () => {
+            // status is 0 for file:// URLs
+            if (req.status != 0 && (req.status < 200 || req.status > 299)) {
+                reject(
+                    `Failed to download ${fileUrl}: HTTP ${req.status} ${req.statusText}`
+                );
+                return;
+            }
+
             const decodedFileUri = decodeURIComponent(fileUrl);
             const lastPathSeparatorIndex = decodedFileUri.lastIndexOf("/");
             const fileName = decodedFileUri.substr(lastPathSeparatorIndex + 1);
@@ -42,38 +50,6 @@ export function fetchFileUrl(fileUrl: string) {
             });
 
             reader.readAsArrayBuffer(req.response);
-        });
-
-        req.addEventListener("error", error => {
-            reject(error);
-        });
-
-        req.send();
-    });
-}
-
-export function fetchFileAsDataUrl(fileUrl: string) {
-    return new Promise<IFetchedFile>((resolve, reject) => {
-        let req = new XMLHttpRequest();
-        req.responseType = "blob";
-        req.open("GET", fileUrl);
-
-        req.addEventListener("load", () => {
-            const decodedFileUri = decodeURIComponent(fileUrl);
-            const lastPathSeparatorIndex = decodedFileUri.lastIndexOf("/");
-            const fileName = decodedFileUri.substr(lastPathSeparatorIndex + 1);
-
-            const reader = new FileReader();
-
-            reader.addEventListener("loadend", function () {
-                if (!reader.result) {
-                    reject("no file data");
-                } else {
-                    resolve({ fileName, fileData: reader.result });
-                }
-            });
-
-            reader.readAsDataURL(req.response);
         });
 
         req.addEventListener("error", error => {
