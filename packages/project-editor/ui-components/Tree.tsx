@@ -14,6 +14,11 @@ import {
     TreeObjectAdapter
 } from "project-editor/core/objectAdapter";
 import { ProjectContext } from "project-editor/project/context";
+import {
+    getExportedId,
+    getProject,
+    isMasterProjectObject
+} from "project-editor/project/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -103,11 +108,19 @@ const TreeRow = observer(
                 onEditItem
             } = this.props;
 
+            // the item of the master project (in a module project) or the
+            // item exported to the module projects (in the master project)
+            const isMasterItem = isMasterProjectObject(item.object);
+            const exportedId = isMasterItem
+                ? undefined
+                : getExportedId(item.object);
+
             let className = classNames("tree-row", {
                 selected: treeAdapter.isSelected(item),
                 "drag-source":
                     treeAdapter.draggableAdapter &&
-                    treeAdapter.draggableAdapter.isDragSource(item)
+                    treeAdapter.draggableAdapter.isDragSource(item),
+                "tree-row-master-project-item": isMasterItem
             });
 
             let triangle: JSX.Element | undefined;
@@ -155,7 +168,28 @@ const TreeRow = observer(
                         </span>
                     )}
 
-                    {onEditItem && (
+                    {isMasterItem && (
+                        <span
+                            className="tree-row-marker"
+                            title={`From the master project ${
+                                getProject(item.object).projectName
+                            } (read-only)`}
+                        >
+                            <Icon icon="material:call_received" size={14} />
+                        </span>
+                    )}
+
+                    {exportedId != undefined && (
+                        <span
+                            className="tree-row-marker"
+                            title={`Exported to the module projects, ID ${exportedId}`}
+                        >
+                            <Icon icon="material:call_made" size={14} />
+                            {exportedId}
+                        </span>
+                    )}
+
+                    {onEditItem && !isMasterItem && (
                         <Icon
                             icon="material:edit"
                             size={18}

@@ -798,6 +798,10 @@ export enum DropPosition {
 }
 
 export class TreeAdapter {
+    // Items of the master project listed after the items of rootItem
+    // (read-only: they can be selected, but not edited, dragged or deleted).
+    masterItems: TreeObjectAdapter[];
+
     constructor(
         public rootItem: TreeObjectAdapter,
         protected selectedObject?: IObservableValue<IEezObject | undefined>,
@@ -809,10 +813,15 @@ export class TreeAdapter {
         onDoubleClick?: (object: IEezObject) => void,
         protected searchText?: string,
         protected editable?: boolean,
-        protected hideRootItem?: boolean
+        protected hideRootItem?: boolean,
+        masterObjects?: IEezObject[]
     ) {
         this.onClickCallback = onClick;
         this.onDoubleClickCallback = onDoubleClick;
+
+        this.masterItems = (masterObjects ?? []).map(
+            object => new TreeObjectAdapter(object)
+        );
 
         if (this.selectedObject) {
             const object = this.selectedObject.get();
@@ -820,9 +829,33 @@ export class TreeAdapter {
                 const childItem = this.rootItem.getObjectAdapter(object);
                 if (childItem) {
                     this.rootItem.selectItem(childItem);
+                } else {
+                    const masterItem = this.getMasterItem(getId(object));
+                    if (masterItem) {
+                        runInAction(() => (masterItem.selected = true));
+                    }
                 }
             }
         }
+    }
+
+    getMasterItem(id: string) {
+        return this.masterItems.find(item => getId(item.object) == id);
+    }
+
+    isMasterItem(item: TreeObjectAdapter) {
+        return this.masterItems.indexOf(item) != -1;
+    }
+
+    get selectedMasterItems() {
+        return this.masterItems.filter(item => item.selected);
+    }
+
+    get selectedObjects() {
+        return [
+            ...this.rootItem.selectedObjects,
+            ...this.selectedMasterItems.map(item => item.object)
+        ];
     }
 
     onClickCallback: ((object: IEezObject) => void) | undefined;
@@ -930,6 +963,44 @@ export class TreeAdapter {
 
         enumChildren(getChildren(this.rootItem, this.hideRootItem ?? false), 0);
 
+        let masterItems = this.masterItems;
+
+        if (filter) {
+            masterItems = masterItems.filter(item => filter(item.object));
+        }
+
+        if (searchText) {
+            masterItems = masterItems.filter(
+                item =>
+                    objectToString(item.object)
+                        .toLowerCase()
+                        .indexOf(searchText.toLowerCase()) != -1
+            );
+        }
+
+        if (sortDirection === "asc") {
+            masterItems = masterItems
+                .slice()
+                .sort((a, b) =>
+                    stringCompare(getLabel(a.object), getLabel(b.object))
+                );
+        } else if (sortDirection === "desc") {
+            masterItems = masterItems
+                .slice()
+                .sort((a, b) =>
+                    stringCompare(getLabel(b.object), getLabel(a.object))
+                );
+        }
+
+        for (const item of masterItems) {
+            children.push({
+                item,
+                level: 0,
+                draggable: false,
+                collapsable: false
+            });
+        }
+
         return children;
     }
 
@@ -959,10 +1030,13 @@ export class TreeAdapter {
     }
 
     getItemFromId(id: string): TreeObjectAdapter | undefined {
-        return this.rootItem.getObjectAdapter(id);
+        return this.rootItem.getObjectAdapter(id) ?? this.getMasterItem(id);
     }
 
     getItemParent(item: TreeObjectAdapter): TreeObjectAdapter | undefined {
+        if (this.isMasterItem(item)) {
+            return undefined;
+        }
         return this.rootItem.getParent(item);
     }
 
@@ -980,7 +1054,10 @@ export class TreeAdapter {
     }
 
     anySelected() {
-        return this.rootItem.selectedItems.length > 0;
+        return (
+            this.rootItem.selectedItems.length > 0 ||
+            this.selectedMasterItems.length > 0
+        );
     }
 
     isSelected(item: TreeObjectAdapter) {
@@ -996,11 +1073,19 @@ export class TreeAdapter {
             ProjectEditor.selectObject(item.object);
         });
 
-        this.rootItem.selectItems([item]);
+        this.selectItems([item]);
     }
 
     selectItems(items: TreeObjectAdapter[]) {
-        this.rootItem.selectItems(items);
+        runInAction(() => {
+            for (const masterItem of this.masterItems) {
+                masterItem.selected = items.indexOf(masterItem) != -1;
+            }
+        });
+
+        this.rootItem.selectItems(
+            items.filter(item => !this.isMasterItem(item))
+        );
     }
 
     expandItem(item: TreeObjectAdapter) {
@@ -1028,27 +1113,38 @@ export class TreeAdapter {
     }
 
     toggleSelected(item: TreeObjectAdapter): void {
-        this.rootItem.toggleSelected(item);
+        if (this.isMasterItem(item)) {
+            runInAction(() => (item.selected = !item.selected));
+        } else {
+            this.rootItem.toggleSelected(item);
+        }
     }
 
     showSelectionContextMenu() {
+        if (this.selectedMasterItems.length > 0) {
+            return;
+        }
         this.rootItem.showSelectionContextMenu(this.editable ?? true);
     }
 
     canCut() {
-        return this.rootItem.canCut();
+        return this.selectedMasterItems.length == 0 && this.rootItem.canCut();
     }
 
     cutSelection() {
-        this.rootItem.cutSelection();
+        if (this.canCut()) {
+            this.rootItem.cutSelection();
+        }
     }
 
     canCopy() {
-        return this.rootItem.canCopy();
+        return this.selectedMasterItems.length == 0 && this.rootItem.canCopy();
     }
 
     copySelection() {
-        this.rootItem.copySelection();
+        if (this.canCopy()) {
+            this.rootItem.copySelection();
+        }
     }
 
     canPaste() {
@@ -1060,11 +1156,15 @@ export class TreeAdapter {
     }
 
     canDelete() {
-        return this.rootItem.canDelete();
+        return (
+            this.selectedMasterItems.length == 0 && this.rootItem.canDelete()
+        );
     }
 
     deleteSelection() {
-        this.rootItem.deleteSelection();
+        if (this.canDelete()) {
+            this.rootItem.deleteSelection();
+        }
     }
 
     get collapsableAdapter(): TreeAdapter | undefined {
@@ -1079,14 +1179,15 @@ export class TreeAdapter {
         item.toggleExpanded();
     }
 
+    // master project items are not opened in an editor
     onClick(item: TreeObjectAdapter): void {
-        if (this.onClickCallback) {
+        if (this.onClickCallback && !this.isMasterItem(item)) {
             this.onClickCallback(item.object);
         }
     }
 
     onDoubleClick(item: TreeObjectAdapter): void {
-        if (this.onDoubleClickCallback) {
+        if (this.onDoubleClickCallback && !this.isMasterItem(item)) {
             this.onDoubleClickCallback(item.object);
         }
     }
@@ -1239,6 +1340,10 @@ export class TreeAdapter {
             return false;
         }
 
+        if (this.isMasterItem(dropItem)) {
+            return false;
+        }
+
         if (!canContain(dropItem.object, dragObject)) {
             return false;
         }
@@ -1284,6 +1389,10 @@ export class TreeAdapter {
     }
 
     canDropInside(dropItem: TreeObjectAdapter) {
+        if (this.isMasterItem(dropItem)) {
+            return false;
+        }
+
         if (!canContain(dropItem.object, DragAndDropManager.dragObject!)) {
             return false;
         }

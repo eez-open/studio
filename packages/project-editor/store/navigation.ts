@@ -8,7 +8,11 @@ import {
 import { observable, action } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
-import { IEezObject, getParent } from "project-editor/core/object";
+import {
+    IEezObject,
+    getParent,
+    getRootObject
+} from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { LayoutModels, type ProjectStore } from "project-editor/store";
 import {
@@ -322,75 +326,82 @@ export class NavigationStore {
     }
 
     saveState() {
+        // an object of another project (the master project items listed in
+        // a module project) can't be found by its path in this project
+        const path = (object: IEezObject | undefined) =>
+            object && getRootObject(object) === this.projectStore.project
+                ? getObjectPathAsString(object)
+                : undefined;
+
         return {
             selectedUserPageObject: this.selectedUserPageObject.get()
-                ? getObjectPathAsString(this.selectedUserPageObject.get())
+                ? path(this.selectedUserPageObject.get())
                 : undefined,
             selectedUserWidgetObject: this.selectedUserWidgetObject.get()
-                ? getObjectPathAsString(this.selectedUserWidgetObject.get())
+                ? path(this.selectedUserWidgetObject.get())
                 : undefined,
             selectedActionObject: this.selectedActionObject.get()
-                ? getObjectPathAsString(this.selectedActionObject.get())
+                ? path(this.selectedActionObject.get())
                 : undefined,
             selectedGlobalVariableObject:
                 this.selectedGlobalVariableObject.get()
-                    ? getObjectPathAsString(
+                    ? path(
                           this.selectedGlobalVariableObject.get()
                       )
                     : undefined,
             selectedStructureObject: this.selectedStructureObject.get()
-                ? getObjectPathAsString(this.selectedStructureObject.get())
+                ? path(this.selectedStructureObject.get())
                 : undefined,
             selectedEnumObject: this.selectedEnumObject.get()
-                ? getObjectPathAsString(this.selectedEnumObject.get())
+                ? path(this.selectedEnumObject.get())
                 : undefined,
             selectedStyleObject: this.selectedStyleObject.get()
-                ? getObjectPathAsString(this.selectedStyleObject.get())
+                ? path(this.selectedStyleObject.get())
                 : undefined,
             selectedThemeObject: this.selectedThemeObject.get()
-                ? getObjectPathAsString(this.selectedThemeObject.get())
+                ? path(this.selectedThemeObject.get())
                 : undefined,
             selectedThemeColorObject: this.selectedThemeColorObject.get()
-                ? getObjectPathAsString(this.selectedThemeColorObject.get())
+                ? path(this.selectedThemeColorObject.get())
                 : undefined,
             selectedFontObject: this.selectedFontObject.get()
-                ? getObjectPathAsString(this.selectedFontObject.get())
+                ? path(this.selectedFontObject.get())
                 : undefined,
             selectedGlyphObject: this.selectedGlyphObject.get()
-                ? getObjectPathAsString(this.selectedGlyphObject.get())
+                ? path(this.selectedGlyphObject.get())
                 : undefined,
             selectedBitmapObject: this.selectedBitmapObject.get()
-                ? getObjectPathAsString(this.selectedBitmapObject.get())
+                ? path(this.selectedBitmapObject.get())
                 : undefined,
             selectedExtensionDefinitionObject:
                 this.selectedExtensionDefinitionObject.get()
-                    ? getObjectPathAsString(
+                    ? path(
                           this.selectedExtensionDefinitionObject.get()
                       )
                     : undefined,
             selectedScpiSubsystemObject: this.selectedScpiSubsystemObject.get()
-                ? getObjectPathAsString(this.selectedScpiSubsystemObject.get())
+                ? path(this.selectedScpiSubsystemObject.get())
                 : undefined,
             selectedScpiCommandObject: this.selectedScpiCommandObject.get()
-                ? getObjectPathAsString(this.selectedScpiCommandObject.get())
+                ? path(this.selectedScpiCommandObject.get())
                 : undefined,
             selectedScpiEnumObject: this.selectedScpiEnumObject.get()
-                ? getObjectPathAsString(this.selectedScpiEnumObject.get())
+                ? path(this.selectedScpiEnumObject.get())
                 : undefined,
             selectedInstrumentCommandsObject:
                 this.selectedInstrumentCommandsObject.get()
-                    ? getObjectPathAsString(
+                    ? path(
                           this.selectedInstrumentCommandsObject.get()
                       )
                     : undefined,
             selectedTextResourceObject: this.selectedTextResourceObject.get()
-                ? getObjectPathAsString(this.selectedTextResourceObject.get())
+                ? path(this.selectedTextResourceObject.get())
                 : undefined,
             selectedLanguageObject: this.selectedLanguageObject.get()
-                ? getObjectPathAsString(this.selectedLanguageObject.get())
+                ? path(this.selectedLanguageObject.get())
                 : undefined,
             selectedLvglGroupObject: this.selectedLvglGroupObject.get()
-                ? getObjectPathAsString(this.selectedLvglGroupObject.get())
+                ? path(this.selectedLvglGroupObject.get())
                 : undefined,
 
             subnavigationSelectedItems: this.subnavigationSelectedItems

@@ -32,6 +32,7 @@ import { List } from "project-editor/ui-components/List";
 import { ProjectContext } from "project-editor/project/context";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getExportedItems } from "project-editor/project/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,7 +140,10 @@ const DeleteButton = observer(
                     icon="material:delete"
                     iconSize={16}
                     onClick={this.onDelete}
-                    enabled={this.props.listAdapter.anySelected()}
+                    enabled={
+                        this.props.listAdapter.anySelected() &&
+                        this.props.listAdapter.selectedMasterItems.length == 0
+                    }
                 />
             );
         }
@@ -164,6 +168,12 @@ interface ListNavigationProps {
     onFilesDrop?: (files: File[], filePaths: string[]) => void;
     doNotUsePropertyGrid?: boolean;
     className?: string;
+    // the same collection in the master project: its exported items are
+    // listed (read-only) after the items of navigationObject
+    masterNavigationObject?: IEezObject[];
+    // or the master project items to list, when it is not only the
+    // exported ones (all master colors can be used in a module project)
+    masterObjects?: IEezObject[];
 }
 
 export const ListNavigation = observer(
@@ -252,7 +262,10 @@ export const ListNavigation = observer(
                 this.onClickItem,
                 this.onDoubleClickItem,
                 this.searchText,
-                this.props.editable ?? true
+                this.props.editable ?? true,
+                undefined,
+                this.props.masterObjects ??
+                    getExportedItems(this.props.masterNavigationObject)
             );
         }
 
@@ -296,7 +309,7 @@ export const ListNavigation = observer(
             return this.props.selectedObject.get();
         }
         get selectedObjects() {
-            return this.listAdapter.rootItem.selectedObjects;
+            return this.listAdapter.selectedObjects;
         }
         canCut() {
             return this.listAdapter.canCut();
@@ -330,7 +343,9 @@ export const ListNavigation = observer(
         }
         selectAll() {
             this.listAdapter.selectItems(
-                this.listAdapter.allRows.map(row => row.item)
+                this.listAdapter.allRows
+                    .map(row => row.item)
+                    .filter(item => !this.listAdapter.isMasterItem(item))
             );
         }
         onFocus = () => {

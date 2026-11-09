@@ -1139,6 +1139,28 @@ button.EezStudio_Action {
                 }
             }
         }
+
+        // item of the master project listed in a module project (read-only)
+        &.tree-row-master-project-item {
+            font-style: italic;
+
+            & > * {
+                opacity: 0.6;
+            }
+        }
+
+        // exported item (master project) or master project item (module)
+        & > .tree-row-marker {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            gap: 1px;
+            margin-left: 4px;
+            padding-right: 2px;
+            font-size: 85%;
+            font-style: normal;
+            opacity: 0.6;
+        }
     }
 
     .DropMark {

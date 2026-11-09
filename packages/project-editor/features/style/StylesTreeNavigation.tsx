@@ -32,6 +32,7 @@ import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Tree } from "project-editor/ui-components/Tree";
 import { SortControl } from "project-editor/ui-components/ListNavigation";
+import { getExportedItems } from "project-editor/project/helper";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -102,7 +103,10 @@ const DeleteButton = observer(
                     icon="material:delete"
                     iconSize={16}
                     onClick={this.onDelete}
-                    enabled={this.props.treeAdapter.anySelected()}
+                    enabled={
+                        this.props.treeAdapter.anySelected() &&
+                        this.props.treeAdapter.selectedMasterItems.length == 0
+                    }
                 />
             );
         }
@@ -125,6 +129,9 @@ interface StylesTreeNavigationProps {
     searchInput?: boolean;
     editable?: boolean;
     onFilesDrop?: (files: File[], filePaths: string[]) => void;
+    // the styles of the master project: the exported ones are listed
+    // (read-only) after the styles of navigationObject
+    masterNavigationObject?: IEezObject[];
 }
 
 export const StylesTreeNavigation = observer(
@@ -247,7 +254,9 @@ export const StylesTreeNavigation = observer(
                 this.onClickItem,
                 this.onDoubleClickItem,
                 this.searchText,
-                this.props.editable ?? true
+                this.props.editable ?? true,
+                undefined,
+                getExportedItems(this.props.masterNavigationObject)
             );
         }
 
@@ -284,10 +293,11 @@ export const StylesTreeNavigation = observer(
 
         // interface IPanel implementation
         get selectedObject() {
-            return this.treeAdapter.rootItem.selectedObject;
+            const selectedObjects = this.treeAdapter.selectedObjects;
+            return selectedObjects.length == 1 ? selectedObjects[0] : undefined;
         }
         get selectedObjects() {
-            return this.treeAdapter.rootItem.selectedObjects;
+            return this.treeAdapter.selectedObjects;
         }
         canCut() {
             return this.treeAdapter.canCut();

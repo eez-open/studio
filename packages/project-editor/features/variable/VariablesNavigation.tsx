@@ -52,6 +52,10 @@ export const VariablesTab = observer(
                                 this.context.navigationStore
                                     .selectedGlobalVariableObject
                             }
+                            masterNavigationObject={
+                                this.context.project.masterProject?.variables
+                                    ?.globalVariables
+                            }
                         />
                     ),
                     numItems:

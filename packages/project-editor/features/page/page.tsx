@@ -28,7 +28,6 @@ import {
     getProjectStore,
     getLabel,
     Message,
-    propertyInvalidValueMessage,
     propertyNotFoundMessage,
     propertyNotSetMessage
 } from "project-editor/store";
@@ -372,8 +371,6 @@ export class Page extends Flow {
 
     isUsedAsUserWidget: boolean;
 
-    dataContextOverrides: string;
-
     _lvglRuntime: LVGLPageRuntime | undefined;
     _lvglObj: number | undefined;
 
@@ -398,7 +395,6 @@ export class Page extends Flow {
         super();
 
         makeObservable(this, {
-            dataContextOverridesObject: computed,
             rect: computed,
             _lvglWidgetsIncludingUserWidgets: keepAliveComputed(),
             _lvglWidgets: keepAliveComputed()
@@ -423,7 +419,6 @@ export class Page extends Flow {
             scaleToFit: observable,
             allowOverlappingChildren: observable,
             isUsedAsUserWidget: observable,
-            dataContextOverrides: observable,
             _lvglRuntime: observable,
             _lvglObj: observable,
             createAtStart: observable,
@@ -490,13 +485,6 @@ export class Page extends Flow {
                 name: "description",
                 type: PropertyType.MultilineText,
                 propertyGridGroup: generalGroup
-            },
-            {
-                name: "dataContextOverrides",
-                displayName: "Data context",
-                type: PropertyType.JSON,
-                propertyGridGroup: generalGroup,
-                disabled: (object: Page) => isLVGLProject(object) || isEezGuiLiteProject(object)
             },
             {
                 name: "left",
@@ -821,19 +809,6 @@ export class Page extends Flow {
 
             ProjectEditor.checkAssetId(projectStore, "pages", page, messages);
 
-            if (page.dataContextOverrides) {
-                try {
-                    JSON.parse(page.dataContextOverrides);
-                } catch {
-                    messages.push(
-                        propertyInvalidValueMessage(
-                            page,
-                            "dataContextOverrides"
-                        )
-                    );
-                }
-            }
-
             if (page.style && !findStyle(projectStore.project, page.style)) {
                 messages.push(propertyNotFoundMessage(page, "style"));
             }
@@ -957,14 +932,6 @@ export class Page extends Flow {
                 type: "se-resize"
             }
         ];
-    }
-
-    get dataContextOverridesObject() {
-        try {
-            return JSON.parse(this.dataContextOverrides);
-        } catch {
-            return undefined;
-        }
     }
 
     // in the editor, page has the size of the selected page layout
@@ -1094,13 +1061,7 @@ export class Page extends Flow {
                             components={this.components.filter(
                                 component => !(component instanceof Widget)
                             )}
-                            flowContext={
-                                flowContext.flowState
-                                    ? flowContext
-                                    : flowContext.overrideDataContext(
-                                          this.dataContextOverridesObject
-                                      )
-                            }
+                            flowContext={flowContext}
                         />
                     </>
                 )}
@@ -1177,13 +1138,7 @@ export class Page extends Flow {
                     components={this.components.filter(
                         component => component instanceof Widget
                     )}
-                    flowContext={
-                        flowContext.flowState
-                            ? flowContext
-                            : flowContext.overrideDataContext(
-                                this.dataContextOverridesObject
-                            )
-                    }
+                    flowContext={flowContext}
                     width={width}
                     height={height}
                     isRTL={

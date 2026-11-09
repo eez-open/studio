@@ -2,6 +2,7 @@ import { strToColor16, strToColor32 } from "eez-studio-shared/color";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import {
     Theme,
+    getModuleColorValue,
     getProjectWithThemes
 } from "project-editor/features/style/theme";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
@@ -53,17 +54,30 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
         }
     }
 
-    function buildTheme(theme: Theme) {
-        dataBuffer.writeStringPtr(theme.name);
-        dataBuffer.writeNumberArray(theme.colors, buildColor);
+    // the values of the colors defined in the module project for the theme
+    const moduleColors = assets.moduleColors;
+    function getModuleColorValues(theme: Theme) {
+        return moduleColors.map(color =>
+            getModuleColorValue(color, theme.name)
+        );
     }
+
+    function buildTheme(theme: Theme, colors: string[]) {
+        dataBuffer.writeStringPtr(theme.name);
+        dataBuffer.writeNumberArray(colors, buildColor);
+    }
+
+    const themes = getProjectWithThemes(assets.projectStore).themes;
 
     if (!assets.masterProject) {
         dataBuffer.writeObjectOffset(() => {
-            // themes
-            dataBuffer.writeArray(
-                getProjectWithThemes(assets.projectStore).themes,
-                buildTheme
+            // themes (module project with the master project included:
+            // the module colors after the master colors)
+            dataBuffer.writeArray(themes, theme =>
+                buildTheme(theme, [
+                    ...theme.colors,
+                    ...getModuleColorValues(theme)
+                ])
             );
 
             // colors
@@ -71,10 +85,11 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
         });
     } else {
         dataBuffer.writeObjectOffset(() => {
-            // themes
+            // themes: for each master theme (in the same order) the values of
+            // the module colors, none if the module has no colors
             dataBuffer.writeArray(
-                [],
-                buildTheme
+                moduleColors.length > 0 ? themes : [],
+                theme => buildTheme(theme, getModuleColorValues(theme))
             );
 
             // colors

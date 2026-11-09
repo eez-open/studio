@@ -3,6 +3,7 @@ import {
     IEezObject,
     IMessage,
     MessageType,
+    getParent,
     getProperty,
     getRootObject
 } from "project-editor/core/object";
@@ -92,6 +93,71 @@ export function isObjectReadOnly(object: IEezObject) {
 
 export function isAnyObjectReadOnly(objects: IEezObject[]) {
     return !!objects.find(isObjectReadOnly);
+}
+
+// A module project can use these items of its master project when they have
+// an "id": global variables, actions, pages, user widgets, styles, fonts,
+// bitmaps and colors.
+function isExportableAsset(object: IEezObject) {
+    if (object instanceof ProjectEditor.VariableClass) {
+        const variables = getProject(object)?.variables;
+        return !!variables && getParent(object) === variables.globalVariables;
+    }
+    return (
+        object instanceof ProjectEditor.ActionClass ||
+        object instanceof ProjectEditor.PageClass ||
+        object instanceof ProjectEditor.StyleClass ||
+        object instanceof ProjectEditor.FontClass ||
+        object instanceof ProjectEditor.BitmapClass ||
+        object instanceof ProjectEditor.ColorClass
+    );
+}
+
+// The id of an item exported to the module projects, undefined if the item is
+// not exported. Only a firmware project without a master project exports.
+export function getExportedId(object: IEezObject): number | undefined {
+    const id = (object as any).id;
+    if (typeof id != "number" || !isExportableAsset(object)) {
+        return undefined;
+    }
+    const project = getProject(object);
+    if (
+        !(project instanceof ProjectEditor.ProjectClass) ||
+        !project.projectTypeTraits.isFirmware ||
+        project.settings.general.masterProject
+    ) {
+        return undefined;
+    }
+    return id;
+}
+
+// True for an object of the master project of the opened (module) project.
+export function isMasterProjectObject(object: IEezObject) {
+    const project = getProject(object);
+    if (!(project instanceof ProjectEditor.ProjectClass)) {
+        return false;
+    }
+    const masterProject = project._store?.project?.masterProject;
+    return !!masterProject && project === masterProject;
+}
+
+// The exported items of a master project collection, the child styles of a
+// style are listed after it.
+export function getExportedItems(collection: IEezObject[] | undefined) {
+    const items: IEezObject[] = [];
+
+    function add(object: IEezObject) {
+        if (getExportedId(object) != undefined) {
+            items.push(object);
+        }
+        if (object instanceof ProjectEditor.StyleClass) {
+            object.childStyles.forEach(add);
+        }
+    }
+
+    collection?.forEach(add);
+
+    return items;
 }
 
 export function checkAssetId(

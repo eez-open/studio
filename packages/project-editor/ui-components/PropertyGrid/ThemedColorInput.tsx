@@ -27,7 +27,10 @@ import { settingsController } from "home/settings";
 import { getProperty } from "project-editor/core/object";
 import { getEezStudioDataFromDragEvent } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
-import { getThemedColor } from "project-editor/features/style/theme";
+import {
+    getProjectWithThemes,
+    getThemedColor
+} from "project-editor/features/style/theme";
 import { ColorFormat, ColorFormatType } from "project-editor/features/style/color-format";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1392,7 +1395,15 @@ export const ThemedColorInput = observer(
                             <ColorPicker
                                 colorFormat={colorFormat}
                                 onChange={this.onPickerChange}
-                                themeColors={this.context.project.colors.map(
+                                themeColors={[
+                                    // in a module project: the master colors,
+                                    // then the colors defined in the module
+                                    ...getProjectWithThemes(this.context)
+                                        .colors,
+                                    ...(this.context.masterProject
+                                        ? this.context.project.colors
+                                        : [])
+                                ].map(
                                     (c: any) => ({
                                         name: c.name as string,
                                         colorValue: getThemedColor(this.context, c.name).colorValue

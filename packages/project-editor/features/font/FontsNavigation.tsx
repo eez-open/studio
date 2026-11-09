@@ -61,6 +61,9 @@ export const FontsTab = observer(
                     selectedObject={
                         this.context.navigationStore.selectedFontObject
                     }
+                    masterNavigationObject={
+                        this.context.project.masterProject?.fonts
+                    }
                 />
             );
         }

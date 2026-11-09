@@ -7,7 +7,11 @@ import {
 } from "eez-studio-shared/color";
 
 import type {Project} from "project-editor/project/project";
-import { getThemedColor } from "project-editor/features/style/theme";
+import {
+    findModuleColor,
+    getProjectWithThemes,
+    getThemedColor
+} from "project-editor/features/style/theme";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -223,8 +227,14 @@ export class ColorFormat {
             );
         }
 
-        // 5) Theme color name
-        if (project.colors.find(color => color.name == input)) {
+        // 5) Theme color name (in a module project: the colors of the master
+        // project and the colors defined in the module)
+        if (
+            getProjectWithThemes(project._store).colors.find(
+                color => color.name == input
+            ) ||
+            findModuleColor(project._store, input)
+        ) {
             cf.formatType = ColorFormatType.THEME_NAME;
             cf.name = input;
             

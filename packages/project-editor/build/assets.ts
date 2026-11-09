@@ -104,6 +104,7 @@ import { isDashboardProject } from "project-editor/project/project-type-traits";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import { BuildEezGuiLite } from "project-editor/eez-gui-lite/build";
 import { ColorFormat } from "project-editor/features/style/color-format";
+import type { Color } from "project-editor/features/style/theme";
 
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
@@ -1060,27 +1061,40 @@ export class Assets {
             }
         }
 
-        if (this.masterProject) {
-            for (let i = 0; i < this.colors.length; i++) {
-                if (this.colors[i] == color) {
-                    return 65534 - i;
-                }
-            }
+        // the colors defined in the module project come before the custom
+        // colors, they have a value for each master theme
+        const moduleColors = this.moduleColors;
+        const moduleColorIndex = moduleColors.findIndex(
+            moduleColor => moduleColor.name === color
+        );
 
+        let customColorIndex = this.colors.indexOf(color);
+        if (moduleColorIndex == -1 && customColorIndex == -1) {
             this.colors.push(color);
-
-            return 65534 - this.colors.length;
-        } else {
-            for (let i = 0; i < this.colors.length; i++) {
-                if (this.colors[i] == color) {
-                    return colors.length + i;
-                }
-            }
-
-            this.colors.push(color);
-
-            return colors.length + this.colors.length - 1;
+            customColorIndex = this.colors.length - 1;
         }
+
+        const index =
+            moduleColorIndex != -1
+                ? moduleColorIndex
+                : moduleColors.length + customColorIndex;
+
+        if (this.masterProject) {
+            // the colors of external assets, see getColorFromIndex in
+            // eez-framework: 65534 (-2 as int16_t) is the first one
+            return 65534 - index;
+        }
+
+        // master project included: after the master project colors
+        return colors.length + index;
+    }
+
+    // The colors defined in the module project (the themes are defined in
+    // the master project).
+    get moduleColors(): Color[] {
+        return this.projectStore.masterProject
+            ? this.projectStore.project.colors
+            : [];
     }
 
     getColorIndex(

@@ -16,6 +16,7 @@ import {
     PropertyType,
     getParent,
     IMessage,
+    MessageType,
     setParent,
     SerializedData
 } from "project-editor/core/object";
@@ -24,7 +25,8 @@ import {
     IContextMenuContext,
     getProjectStore,
     createObject,
-    objectToClipboardData
+    objectToClipboardData,
+    Message
 } from "project-editor/store";
 import { replaceObjectReference } from "project-editor/core/search";
 
@@ -48,7 +50,6 @@ import { isFirmwareProject } from "project-editor/project/project-type-traits";
 const ColorItem = observer(
     class ColorItem extends React.Component<{
         itemId: string;
-        readOnly: boolean;
     }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
@@ -61,6 +62,7 @@ const ColorItem = observer(
                 colorIndex: computed,
                 selectedTheme: computed,
                 themeColor: computed,
+                readOnly: computed,
                 changedThemeColor: observable
             });
         }
@@ -91,7 +93,19 @@ const ColorItem = observer(
         }
 
         get themeColor() {
+            if (isModuleColor(this.colorObject)) {
+                return getModuleColorValue(
+                    this.colorObject,
+                    this.selectedTheme?.name
+                );
+            }
             return this.selectedTheme?.colors[this.colorIndex]??"#000000";
+        }
+
+        // the colors of the master project (in a module project) and of an
+        // imported project are read-only
+        get readOnly() {
+            return ProjectEditor.getProject(this.colorObject)._isReadOnly;
         }
 
         changedThemeColor: string | undefined;
@@ -105,12 +119,22 @@ const ColorItem = observer(
             }
             this.onChangeTimeout = setTimeout(
                 action(() => {
-                    const colors = this.selectedTheme.colors.slice();
-                    colors[this.colorIndex] = this.changedThemeColor!;
+                    if (isModuleColor(this.colorObject)) {
+                        this.context.updateObject(this.colorObject, {
+                            themeValues: {
+                                ...this.colorObject.themeValues,
+                                [this.selectedTheme.name]:
+                                    this.changedThemeColor!
+                            }
+                        });
+                    } else {
+                        const colors = this.selectedTheme.colors.slice();
+                        colors[this.colorIndex] = this.changedThemeColor!;
+                        this.context.updateObject(this.selectedTheme, {
+                            colors
+                        });
+                    }
                     this.changedThemeColor = undefined;
-                    this.context.updateObject(this.selectedTheme, {
-                        colors
-                    });
                 }),
                 100
             );
@@ -128,7 +152,7 @@ const ColorItem = observer(
                         }
                         onChange={this.onChange}
                         tabIndex={0}
-                        disabled={this.props.readOnly}
+                        disabled={this.readOnly}
                     />
                     <span title={this.colorObject.name}>
                         {this.colorObject.name}
@@ -185,7 +209,10 @@ export const ThemesSideView = observer(
 
             const fields: IFieldProperties[] = [];
 
-            if (isFirmwareProject(color)) {
+            // the colors of a module project are not exported, no id
+            const hasId = isFirmwareProject(color) && !isModuleColor(color);
+
+            if (hasId) {
                 fields.push({
                     name: "id",
                     type: "optional-integer",
@@ -201,7 +228,8 @@ export const ThemesSideView = observer(
                 type: "string",
                 validators: [
                     validators.required,
-                    validators.unique(color, getParent(color))
+                    validators.unique(color, getParent(color)),
+                    notMasterColorName(this.context)
                 ]
             });
 
@@ -214,9 +242,11 @@ export const ThemesSideView = observer(
                 .then(result => {
                     this.context.undoManager.setCombineCommands(true);
 
-                    this.context.updateObject(color, {
-                        id: result.values.id
-                    });
+                    if (hasId) {
+                        this.context.updateObject(color, {
+                            id: result.values.id
+                        });
+                    }
 
                     let newName = result.values.name.trim();
                     if (newName != color.name) {
@@ -277,22 +307,35 @@ export const ThemesSideView = observer(
             }
 
             if (component === "colors") {
-                return this.project ? (
+                if (!this.project) {
+                    return null;
+                }
+
+                // module project: its own colors (editable), then the colors
+                // of the master project (read-only)
+                const isModule = !!this.context.masterProject;
+
+                return (
                     <ListNavigation
                         id="theme-colors"
-                        navigationObject={this.project.colors}
+                        navigationObject={
+                            isModule
+                                ? this.context.project.colors
+                                : this.project.colors
+                        }
+                        masterObjects={
+                            isModule ? this.project.colors : undefined
+                        }
                         selectedObject={
                             this.context.navigationStore
                                 .selectedThemeColorObject
                         }
                         onEditItem={this.onEditColorName}
-                        renderItem={itemId => (
-                            <ColorItem itemId={itemId} readOnly={readOnly} />
-                        )}
-                        editable={!readOnly}
+                        renderItem={itemId => <ColorItem itemId={itemId} />}
+                        editable={isModule || !readOnly}
                         doNotUsePropertyGrid={true}
                     />
-                ) : null;
+                );
             }
 
             return null;
@@ -315,6 +358,11 @@ export class Color extends EezObject {
     id: number | undefined;
     name: string;
 
+    // Color defined in a module project: its value for each theme of the
+    // master project, by theme name (the values of the master project colors
+    // are in the themes).
+    themeValues: { [themeName: string]: string } | undefined;
+
     constructor() {
         super();
 
@@ -328,7 +376,8 @@ export class Color extends EezObject {
 
         makeObservable(this, {
             id: observable,
-            name: observable
+            name: observable,
+            themeValues: observable.ref
         });
     }
 
@@ -361,6 +410,13 @@ export class Color extends EezObject {
                 displayName: "Color name",
                 type: PropertyType.String,
                 unique: true
+            },
+            {
+                name: "themeValues",
+                type: PropertyType.Any,
+                isOptional: true,
+                hideInPropertyGrid: true,
+                skipSearch: true
             }
         ],
         icon: (
@@ -398,6 +454,38 @@ export class Color extends EezObject {
         check: (color: Color, messages: IMessage[]) => {
             const projectStore = getProjectStore(color);
 
+            if (isModuleColor(color)) {
+                const masterProject = getProjectWithThemes(projectStore);
+
+                if (
+                    masterProject.colors.find(
+                        masterColor => masterColor.name == color.name
+                    )
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Color "${color.name}" is also defined in the master project`,
+                            color
+                        )
+                    );
+                }
+
+                for (const theme of masterProject.themes) {
+                    if (!color.themeValues?.[theme.name]) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                `Color "${color.name}" has no value for the theme "${theme.name}"`,
+                                color
+                            )
+                        );
+                    }
+                }
+
+                return;
+            }
+
             ProjectEditor.checkAssetId(
                 projectStore,
                 "colors",
@@ -408,6 +496,8 @@ export class Color extends EezObject {
             );
         },
         newItem: async (parent: IEezObject) => {
+            const projectStore = getProjectStore(parent);
+
             const result = await showGenericDialog({
                 dialogDefinition: {
                     title: "New Color",
@@ -419,6 +509,7 @@ export class Color extends EezObject {
                                 validators.required,
                                 validators.invalidCharacters("."),
                                 validators.unique({}, parent),
+                                notMasterColorName(projectStore),
                                 function (object: any, ruleName: string) {
                                     const name = getName(
                                         "COLOR_ID_",
@@ -455,6 +546,16 @@ export class Color extends EezObject {
                 name: result.values.name
             };
 
+            if (projectStore.masterProject) {
+                // color of a module project: a value for each master theme
+                const themeValues: { [themeName: string]: string } = {};
+                for (const theme of getProjectWithThemes(projectStore)
+                    .themes) {
+                    themeValues[theme.name] = "#000000";
+                }
+                colorProperties.themeValues = themeValues;
+            }
+
             const project = ProjectEditor.getProject(parent);
 
             const color = createObject<Color>(
@@ -490,14 +591,33 @@ export class Color extends EezObject {
                         click: () => {
                             const projectStore = getProjectStore(thisObject);
 
-                            projectStore.undoManager.setCombineCommands(true);
-
                             const project = getProjectWithThemes(
                                 getProjectStore(thisObject)
                             );
 
-                            const selectedTheme =
-                                projectStore.navigationStore.selectedThemeObject.get() as Theme;
+                            const selectedTheme = getSelectedTheme(project);
+                            if (!selectedTheme) {
+                                return;
+                            }
+
+                            if (isModuleColor(thisObject)) {
+                                const value = getModuleColorValue(
+                                    thisObject,
+                                    selectedTheme.name
+                                );
+                                const themeValues: {
+                                    [themeName: string]: string;
+                                } = {};
+                                for (const theme of project.themes) {
+                                    themeValues[theme.name] = value;
+                                }
+                                projectStore.updateObject(thisObject, {
+                                    themeValues
+                                });
+                                return;
+                            }
+
+                            projectStore.undoManager.setCombineCommands(true);
 
                             const colorIndex =
                                 project.colors.indexOf(thisObject);
@@ -697,7 +817,39 @@ export class ThemeColorsClipboardData extends EezObject {
 
             const newObjects: EezObject[] = [];
 
-            if (themeColorsClipboardData.data.kind == "themes") {
+            if (projectStore.masterProject) {
+                // module project: no themes, the pasted colors get their
+                // values for the master themes
+                if (themeColorsClipboardData.data.kind == "colors") {
+                    const colorNames = themeColorsClipboardData.data.colorNames;
+                    for (
+                        let colorIndex = 0;
+                        colorIndex < colorNames.length;
+                        colorIndex++
+                    ) {
+                        const themeValues: { [themeName: string]: string } =
+                            {};
+                        for (const theme of themeColorsClipboardData.data
+                            .themes) {
+                            themeValues[theme.name] = theme.colors[colorIndex];
+                        }
+
+                        newObjects.push(
+                            projectStore.addObject(
+                                projectStore.project.colors,
+                                createObject<Color>(
+                                    projectStore,
+                                    {
+                                        name: colorNames[colorIndex],
+                                        themeValues
+                                    },
+                                    Color
+                                )
+                            )
+                        );
+                    }
+                }
+            } else if (themeColorsClipboardData.data.kind == "themes") {
                 for (const colorName of themeColorsClipboardData.data.colorNames) {
                     const color = projectStore.project.colors.find(
                         color => color.name == colorName
@@ -817,10 +969,15 @@ export class ThemeColorsClipboardData extends EezObject {
     addColors(projectStore: ProjectStore, colors: Color[]) {
         this.data = {
             kind: "colors",
-            themes: projectStore.project.themes.map(theme => ({
+            themes: getProjectWithThemes(projectStore).themes.map(theme => ({
                 name: theme.name,
                 colors: colors.map(color =>
-                    projectStore.project.getThemeColor(theme.objID, color.objID)
+                    isModuleColor(color)
+                        ? getModuleColorValue(color, theme.name)
+                        : ProjectEditor.getProject(color).getThemeColor(
+                              theme.objID,
+                              color.objID
+                          )
                 )
             })),
             colorNames: colors.map(color => color.name)
@@ -832,10 +989,9 @@ registerClass("ThemeColorsClipboardData", ThemeColorsClipboardData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function getThemedColorInProject(
-    project: Project,
-    colorValue: string
-): string | undefined {
+// The theme selected in the editor (or in the runtime) of the project with
+// themes.
+function getSelectedTheme(project: Project): Theme | undefined {
     let selectedTheme: Theme | undefined;
 
     const runtime = project._store.runtime;
@@ -850,9 +1006,67 @@ function getThemedColorInProject(
             project._store.navigationStore?.selectedThemeObject.get() as Theme;
     }
 
-    if (!selectedTheme) {
-        selectedTheme = project.themes[0];
+    return selectedTheme ?? project.themes[0];
+}
+
+// True for a color defined in a module project (the opened project has a
+// master project with the themes).
+export function isModuleColor(color: Color) {
+    const projectStore = getProjectStore(color);
+    return (
+        !!projectStore.masterProject &&
+        ProjectEditor.getProject(color) === projectStore.project
+    );
+}
+
+// The color with this name defined in the module project.
+export function findModuleColor(projectStore: ProjectStore, name: string) {
+    if (!projectStore.masterProject) {
+        return undefined;
     }
+    return projectStore.project.colors.find(color => color.name == name);
+}
+
+// The value of a module color for a master theme, the first value if the
+// theme has none.
+export function getModuleColorValue(
+    color: Color,
+    themeName: string | undefined
+) {
+    const themeValues = color.themeValues;
+    if (themeValues) {
+        if (themeName && themeValues[themeName]) {
+            return themeValues[themeName];
+        }
+        for (const value of Object.values(themeValues)) {
+            if (value) {
+                return value;
+            }
+        }
+    }
+    return "#000000";
+}
+
+// In a module project a color name can't be a name of a master color.
+function notMasterColorName(projectStore: ProjectStore) {
+    return function (object: any, ruleName: string) {
+        if (
+            projectStore.masterProject &&
+            getProjectWithThemes(projectStore).colors.find(
+                color => color.name == object[ruleName]
+            )
+        ) {
+            return "Color with this name is defined in the master project";
+        }
+        return null;
+    };
+}
+
+function getThemedColorInProject(
+    project: Project,
+    colorValue: string
+): string | undefined {
+    const selectedTheme = getSelectedTheme(project);
     if (!selectedTheme) {
         return colorValue;
     }
@@ -883,6 +1097,17 @@ export function getThemedColor(projectStore: ProjectStore, colorValue: string) {
     let color = getThemedColorInProject(project, colorValue);
     if (color) {
         return { colorValue: color, isFromTheme: true };
+    }
+
+    const moduleColor = findModuleColor(projectStore, colorValue);
+    if (moduleColor) {
+        return {
+            colorValue: getModuleColorValue(
+                moduleColor,
+                getSelectedTheme(project)?.name
+            ),
+            isFromTheme: true
+        };
     }
 
     return { colorValue, isFromTheme: false };
