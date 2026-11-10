@@ -169,8 +169,13 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeInt16(backgroundImage);
     }
 
-    const styles = assets.projectStore.projectTypeTraits.isDashboard
-        ? []
-        : assets.styles.filter(style => !!style);
+    // The index of a style is its position in assets.styles (id - 1 for a
+    // style with an id), so a missing id leaves a hole. Keep the positions:
+    // write the first style in place of a missing one.
+    let styles: Style[] = [];
+    if (!assets.projectStore.projectTypeTraits.isDashboard) {
+        const firstStyle = assets.styles.find(style => !!style);
+        styles = Array.from(assets.styles, style => style ?? firstStyle!);
+    }
     dataBuffer.writeArray(styles, buildStyle);
 }
