@@ -4,8 +4,11 @@ const { spawn } = require("child_process");
 
 const FOLDERS = ["packages", "libs", "resources"];
 for (const folder of FOLDERS) {
+    // remove first, so files deleted from the source don't linger in the module
+    console.log(`Remove npm-module/${folder} ...`);
+    fse.removeSync(`npm-module/${folder}`);
     console.log(`Copy ${folder} to npm-module/${folder} ...`);
-    fse.copySync(folder, `npm-module/${folder}`, { overwrite: true });
+    fse.copySync(folder, `npm-module/${folder}`);
 }
 
 /*
