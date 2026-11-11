@@ -12,6 +12,21 @@ const EXPR_EVAL_INSTRUCTION_TYPE_END = 7 << 13;
 const EXPR_EVAL_INSTRUCTION_TYPE_END_WITH_DST_VALUE_TYPE =
     (7 << 13) | (1 << 12);
 
+// Jumps for the short-circuit evaluation of ?:, && and ||. Each is followed by
+// one word: a forward offset in words, counted from the word after it.
+const EXPR_EVAL_INSTRUCTION_TYPE_JUMP = (7 << 13) | (1 << 11);
+// always
+const EXPR_EVAL_JUMP_KIND_ALWAYS = 0;
+// pops the test of ?: and jumps over the consequent if it is false (an error
+// jumps to the end, it is the result)
+const EXPR_EVAL_JUMP_KIND_IF_FALSE = 1;
+// a && b: a false or an error is the result, b is not evaluated
+const EXPR_EVAL_JUMP_KIND_AND = 2;
+// a || b: a true or an error is the result, b is not evaluated
+const EXPR_EVAL_JUMP_KIND_OR = 3;
+
+const MAX_JUMP_OFFSET = 0xffff;
+
 export function makePushConstantInstruction(
     assets: Assets,
     value: any,
@@ -45,6 +60,29 @@ export function makeArrayElementInstruction() {
 
 export function makeOperationInstruction(operationIndex: number) {
     return EXPR_EVAL_INSTRUCTION_TYPE_OPERATION | operationIndex;
+}
+
+function makeJump(kind: number, offset: number) {
+    if (offset > MAX_JUMP_OFFSET) {
+        throw "Expression is too long";
+    }
+    return [EXPR_EVAL_INSTRUCTION_TYPE_JUMP | kind, offset];
+}
+
+export function makeJumpInstruction(offset: number) {
+    return makeJump(EXPR_EVAL_JUMP_KIND_ALWAYS, offset);
+}
+
+export function makeJumpIfFalseInstruction(offset: number) {
+    return makeJump(EXPR_EVAL_JUMP_KIND_IF_FALSE, offset);
+}
+
+export function makeLogicalAndJumpInstruction(offset: number) {
+    return makeJump(EXPR_EVAL_JUMP_KIND_AND, offset);
+}
+
+export function makeLogicalOrJumpInstruction(offset: number) {
+    return makeJump(EXPR_EVAL_JUMP_KIND_OR, offset);
 }
 
 export function makeEndInstruction() {

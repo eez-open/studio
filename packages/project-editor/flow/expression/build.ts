@@ -8,7 +8,6 @@ import {
     binaryOperators,
     builtInConstants,
     builtInFunctions,
-    CONDITIONAL_OPERATOR,
     logicalOperators,
     operationIndexes,
     unaryOperators
@@ -30,7 +29,11 @@ import {
     makeArrayElementInstruction,
     makeOperationInstruction,
     makeEndInstruction,
-    makeEndInstructionWithType
+    makeEndInstructionWithType,
+    makeJumpInstruction,
+    makeJumpIfFalseInstruction,
+    makeLogicalAndJumpInstruction,
+    makeLogicalOrJumpInstruction
 } from "./instructions";
 import { FLOW_ITERATOR_INDEX_VARIABLE } from "project-editor/features/variable/defs";
 import {
@@ -342,11 +345,29 @@ function buildExpressionNode(
             throw `Unknown logical operator '${node.operator}'`;
         }
 
-        return [
-            ...buildExpressionNode(assets, component, node.left, assignable),
-            ...buildExpressionNode(assets, component, node.right, assignable),
-            makeOperationInstruction(operationIndexes[operator.name])
-        ];
+        // [left] [AND/OR jump] [right] [operation]: when the left operand
+        // decides the result, the right one is not evaluated
+        const left = buildExpressionNode(
+            assets,
+            component,
+            node.left,
+            assignable
+        );
+        const right = buildExpressionNode(
+            assets,
+            component,
+            node.right,
+            assignable
+        );
+        const operation = makeOperationInstruction(
+            operationIndexes[operator.name]
+        );
+        const jump =
+            node.operator == "&&"
+                ? makeLogicalAndJumpInstruction(right.length + 1)
+                : makeLogicalOrJumpInstruction(right.length + 1);
+
+        return [...left, ...jump, ...right, operation];
     }
 
     if (node.type == "UnaryExpression") {
@@ -367,21 +388,35 @@ function buildExpressionNode(
     }
 
     if (node.type == "ConditionalExpression") {
+        // [test] [JUMP_IF_FALSE] [consequent] [JUMP] [alternate]: only the
+        // branch that is taken is evaluated. JUMP_IF_FALSE points at the JUMP
+        // after the consequent (an error in the test is the result and jumps
+        // to the end through it), a false test continues after that JUMP.
+        const test = buildExpressionNode(
+            assets,
+            component,
+            node.test,
+            assignable
+        );
+        const consequent = buildExpressionNode(
+            assets,
+            component,
+            node.consequent,
+            assignable
+        );
+        const alternate = buildExpressionNode(
+            assets,
+            component,
+            node.alternate,
+            assignable
+        );
+
         return [
-            ...buildExpressionNode(assets, component, node.test, assignable),
-            ...buildExpressionNode(
-                assets,
-                component,
-                node.consequent,
-                assignable
-            ),
-            ...buildExpressionNode(
-                assets,
-                component,
-                node.alternate,
-                assignable
-            ),
-            makeOperationInstruction(operationIndexes[CONDITIONAL_OPERATOR])
+            ...test,
+            ...makeJumpIfFalseInstruction(consequent.length),
+            ...consequent,
+            ...makeJumpInstruction(alternate.length),
+            ...alternate
         ];
     }
 
