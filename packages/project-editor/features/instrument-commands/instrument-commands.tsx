@@ -11,6 +11,7 @@ import {
     EezObject,
     PropertyType
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import { createObject } from "project-editor/store";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -20,6 +21,7 @@ import type { ProjectEditorFeature } from "project-editor/store/features";
 
 export class InstrumentCommand extends EezObject {
     command: string;
+    tags?: string;
     description?: string;
     helpLink?: string;
 
@@ -29,6 +31,7 @@ export class InstrumentCommand extends EezObject {
                 name: "command",
                 type: PropertyType.String
             },
+            makeTagsProperty(),
             {
                 name: "description",
                 type: PropertyType.MultilineText
@@ -81,7 +84,8 @@ export class InstrumentCommand extends EezObject {
         makeObservable(this, {
             description: observable,
             helpLink: observable,
-            command: observable
+            command: observable,
+            tags: observable
         });
     }
 }

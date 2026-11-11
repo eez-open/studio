@@ -13,6 +13,7 @@ import {
     PropertyType,
     registerClass
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -39,6 +40,7 @@ import type { ProjectEditorFeature } from "project-editor/store/features";
 
 export class Language extends EezObject {
     languageID: string;
+    tags?: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -47,7 +49,8 @@ export class Language extends EezObject {
                 displayName: "Language ID",
                 type: PropertyType.String,
                 unique: true
-            }
+            },
+            makeTagsProperty()
         ],
         label: (language: Language) => language.languageID,
         listLabel: (language: Language) => {
@@ -135,7 +138,8 @@ export class Language extends EezObject {
         super.makeEditable();
 
         makeObservable(this, {
-            languageID: observable
+            languageID: observable,
+            tags: observable
         });
     }
 
@@ -275,6 +279,7 @@ const TranslationsEditorPropertyUI = observer(
 
 export class TextResource extends EezObject {
     resourceID: string;
+    tags?: string;
     translations: Translation[];
 
     static classInfo: ClassInfo = {
@@ -284,6 +289,7 @@ export class TextResource extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "translations",
                 type: PropertyType.Array,
@@ -358,6 +364,7 @@ export class TextResource extends EezObject {
 
         makeObservable(this, {
             resourceID: observable,
+            tags: observable,
             translations: observable
         });
     }

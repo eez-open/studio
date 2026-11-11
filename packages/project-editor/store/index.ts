@@ -233,10 +233,7 @@ export class ProjectStore {
             this.layoutModels = new LayoutModels(this);
             this.editorModeEditorsStore = new EditorsStore(
                 this,
-                () =>
-                    this.projectTypeTraits.isIEXT
-                        ? this.layoutModels.rootEditorForIEXT
-                        : this.layoutModels.rootEditor,
+                () => this.layoutModels.rootEditorModel,
                 LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
             );
             this.runtimeModeEditorsStore = new EditorsStore(
@@ -303,6 +300,8 @@ export class ProjectStore {
     }
 
     onActivate() {
+        ProjectEditor.setPropertiesDialogProjectActive?.(this, true);
+
         const Mousetrap = require("mousetrap") as typeof MousetrapModule;
 
         Mousetrap.reset();
@@ -416,6 +415,8 @@ export class ProjectStore {
     }
 
     onDeactivate() {
+        ProjectEditor.setPropertiesDialogProjectActive?.(this, false);
+
         const Mousetrap = require("mousetrap") as typeof MousetrapModule;
 
         Mousetrap.reset();
@@ -430,6 +431,8 @@ export class ProjectStore {
                 importDirective.project._store.unmount();
             }
         });
+
+        ProjectEditor.closePropertiesDialog?.(this);
 
         this.editorsStore?.unmount();
         this.uiStateStore?.unmount();

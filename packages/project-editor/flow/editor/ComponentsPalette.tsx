@@ -46,6 +46,10 @@ import {
     getComponentGroupDisplayName
 } from "project-editor/flow/components/components-registry";
 import { Point } from "eez-studio-shared/geometry";
+import {
+    IProjectExplorerFilter,
+    withProjectExplorerFilter
+} from "project-editor/ui-components/ProjectExplorerFilter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -263,11 +267,15 @@ export const ComponentsPalette = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ComponentsPalette1 = observer(
-    class ComponentsPalette1 extends React.Component<{
-        type: "widgets" | "actions";
-        onSelectComponent?: (value: Component) => void;
-    }> {
+interface ComponentsPalette1Props {
+    type: "widgets" | "actions";
+    onSelectComponent?: (value: Component) => void;
+    // set when rendered inside the Project Explorer
+    explorerFilter?: IProjectExplorerFilter;
+}
+
+export const ComponentsPalette1 = withProjectExplorerFilter<ComponentsPalette1Props>(observer(
+    class ComponentsPalette1 extends React.Component<ComponentsPalette1Props> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -343,7 +351,9 @@ export const ComponentsPalette1 = observer(
             return getGroups(
                 this.allComponentClasses,
                 this.context,
-                this.searchText
+                this.props.explorerFilter
+                    ? this.props.explorerFilter.searchText
+                    : this.searchText
             );
         }
 
@@ -357,17 +367,19 @@ export const ComponentsPalette1 = observer(
                     className="EezStudio_ComponentsPalette_Enclosure"
                     onContextMenu={e => e.preventDefault()}
                 >
-                    <div className="EezStudio_Title">
-                        <SearchInput
-                            key="search-input"
-                            searchText={this.searchText}
-                            onClear={action(() => {
-                                this.searchText = "";
-                            })}
-                            onChange={this.onSearchChange}
-                            onKeyDown={this.onSearchChange}
-                        />
-                    </div>
+                    {!this.props.explorerFilter && (
+                        <div className="EezStudio_Title">
+                            <SearchInput
+                                key="search-input"
+                                searchText={this.searchText}
+                                onClear={action(() => {
+                                    this.searchText = "";
+                                })}
+                                onChange={this.onSearchChange}
+                                onKeyDown={this.onSearchChange}
+                            />
+                        </div>
+                    )}
 
                     <div className="EezStudio_ComponentsPalette" tabIndex={0}>
                         {[...this.groups.entries()].sort().map(entry => (
@@ -387,7 +399,7 @@ export const ComponentsPalette1 = observer(
             );
         }
     }
-);
+));
 
 ////////////////////////////////////////////////////////////////////////////////
 

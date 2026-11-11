@@ -33,6 +33,12 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Tree } from "project-editor/ui-components/Tree";
 import { SortControl } from "project-editor/ui-components/ListNavigation";
 import { getExportedItems } from "project-editor/project/helper";
+import {
+    IProjectExplorerFilter,
+    isHiddenByProjectExplorerSearch,
+    ProjectExplorerListHeader,
+    withProjectExplorerFilter
+} from "project-editor/ui-components/ProjectExplorerFilter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,9 +138,11 @@ interface StylesTreeNavigationProps {
     // the styles of the master project: the exported ones are listed
     // (read-only) after the styles of navigationObject
     masterNavigationObject?: IEezObject[];
+    // set when rendered inside the Project Explorer
+    explorerFilter?: IProjectExplorerFilter;
 }
 
-export const StylesTreeNavigation = observer(
+export const StylesTreeNavigation = withProjectExplorerFilter(observer(
     class StylesTreeNavigation
         extends React.Component<StylesTreeNavigationProps>
         implements IPanel
@@ -147,6 +155,7 @@ export const StylesTreeNavigation = observer(
 
         dispose1: IReactionDisposer;
         dispose2: IReactionDisposer;
+        disposeDeselectHidden: IReactionDisposer | undefined;
 
         divRef = React.createRef<HTMLDivElement>();
 
@@ -212,6 +221,16 @@ export const StylesTreeNavigation = observer(
             );
 
             this.context.navigationStore.mountPanel(this);
+
+            // selected items not matching the search are deselected
+            this.disposeDeselectHidden = reaction(
+                () =>
+                    this.props.explorerFilter
+                        ? this.props.explorerFilter.searchText
+                        : this.searchText,
+                () => this.treeAdapter.deselectItemsHiddenBySearch(),
+                { fireImmediately: true }
+            );
         }
 
         componentDidUpdate() {
@@ -221,6 +240,7 @@ export const StylesTreeNavigation = observer(
         componentWillUnmount() {
             this.dispose1();
             this.dispose2();
+            this.disposeDeselectHidden?.();
             this.context.navigationStore.unmountPanel(this);
         }
 
@@ -244,16 +264,19 @@ export const StylesTreeNavigation = observer(
         }
 
         get treeAdapter() {
+            const explorerFilter = this.props.explorerFilter;
             return new TreeAdapter(
                 this.treeObjectAdapter,
                 undefined,
                 undefined,
                 true,
-                this.sortDirection,
+                explorerFilter
+                    ? explorerFilter.sortDirection
+                    : this.sortDirection,
                 undefined,
                 this.onClickItem,
                 this.onDoubleClickItem,
-                this.searchText,
+                explorerFilter ? explorerFilter.searchText : this.searchText,
                 this.props.editable ?? true,
                 undefined,
                 getExportedItems(this.props.masterNavigationObject)
@@ -343,6 +366,15 @@ export const StylesTreeNavigation = observer(
         render() {
             const { onEditItem, renderItem } = this.props;
 
+            if (
+                isHiddenByProjectExplorerSearch(
+                    this.props.explorerFilter,
+                    this.treeAdapter.allRows.length
+                )
+            ) {
+                return null;
+            }
+
             const buttons: JSX.Element[] = [];
 
             if (this.props.additionalButtons) {
@@ -380,27 +412,34 @@ export const StylesTreeNavigation = observer(
                     className="EezStudio_ProjectEditor_StylesTreeNavigation"
                     ref={this.divRef}
                 >
-                    <div className="EezStudio_Title">
-                        <SortControl
-                            direction={this.sortDirection}
-                            onDirectionChanged={action(
-                                (direction: SortDirectionType) =>
-                                    (this.sortDirection = direction)
-                            )}
+                    {this.props.explorerFilter ? (
+                        <ProjectExplorerListHeader
+                            explorerFilter={this.props.explorerFilter}
+                            buttons={buttons}
                         />
-                        {(this.props.searchInput == undefined ||
-                            this.props.searchInput) && (
-                            <SearchInput
-                                searchText={this.searchText}
-                                onClear={action(() => {
-                                    this.searchText = "";
-                                })}
-                                onChange={this.onSearchChange}
-                                onKeyDown={this.onSearchChange}
+                    ) : (
+                        <div className="EezStudio_Title">
+                            <SortControl
+                                direction={this.sortDirection}
+                                onDirectionChanged={action(
+                                    (direction: SortDirectionType) =>
+                                        (this.sortDirection = direction)
+                                )}
                             />
-                        )}
-                        <div className="btn-toolbar">{buttons}</div>
-                    </div>
+                            {(this.props.searchInput == undefined ||
+                                this.props.searchInput) && (
+                                <SearchInput
+                                    searchText={this.searchText}
+                                    onClear={action(() => {
+                                        this.searchText = "";
+                                    })}
+                                    onChange={this.onSearchChange}
+                                    onKeyDown={this.onSearchChange}
+                                />
+                            )}
+                            <div className="btn-toolbar">{buttons}</div>
+                        </div>
+                    )}
                     <Tree
                         treeAdapter={this.treeAdapter}
                         tabIndex={0}
@@ -413,4 +452,4 @@ export const StylesTreeNavigation = observer(
             );
         }
     }
-);
+));

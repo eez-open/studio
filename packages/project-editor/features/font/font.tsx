@@ -39,6 +39,7 @@ import {
     ProjectType,
     setParent
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import {
     getLabel,
     getProjectStore,
@@ -1456,6 +1457,7 @@ const ChangeBitsPerPixel = observer(
 export class Font extends EezObject {
     id: number | undefined;
     name: string;
+    tags?: string;
     description?: string;
     renderingEngine: FontRenderingEngine;
     source?: FontSource;
@@ -1502,6 +1504,7 @@ export class Font extends EezObject {
         makeObservable(this, {
             id: observable,
             name: observable,
+            tags: observable,
             description: observable,
             renderingEngine: observable,
             source: observable,
@@ -1544,6 +1547,7 @@ export class Font extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "description",
                 type: PropertyType.MultilineText

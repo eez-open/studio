@@ -11,7 +11,10 @@ import { Bitmap, createBitmapFromFile } from "./bitmap";
 ////////////////////////////////////////////////////////////////////////////////
 
 export const BitmapsTab = observer(
-    class BitmapsTab extends React.Component {
+    class BitmapsTab extends React.Component<{
+        // render only this part (e.g. "bitmaps", without the preview)
+        component?: string;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -38,8 +41,10 @@ export const BitmapsTab = observer(
         }
 
         factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
+            return this.renderComponent(node.getComponent());
+        };
 
+        renderComponent(component: string | undefined) {
             if (component === "bitmaps") {
                 return (
                     <ListNavigation
@@ -82,9 +87,13 @@ export const BitmapsTab = observer(
             }
 
             return null;
-        };
+        }
 
         render() {
+            if (this.props.component) {
+                return this.renderComponent(this.props.component);
+            }
+
             return (
                 <FlexLayoutContainer
                     model={this.context.layoutModels.bitmaps}

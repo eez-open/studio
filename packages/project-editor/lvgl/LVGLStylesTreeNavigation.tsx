@@ -32,6 +32,12 @@ import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Tree } from "project-editor/ui-components/Tree";
 import { SortControl } from "project-editor/ui-components/ListNavigation";
+import {
+    IProjectExplorerFilter,
+    isHiddenByProjectExplorerSearch,
+    ProjectExplorerListHeader,
+    withProjectExplorerFilter
+} from "project-editor/ui-components/ProjectExplorerFilter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -122,9 +128,11 @@ interface LVGLStylesTreeNavigationProps {
     searchInput?: boolean;
     editable?: boolean;
     onFilesDrop?: (files: File[], filePaths: string[]) => void;
+    // set when rendered inside the Project Explorer
+    explorerFilter?: IProjectExplorerFilter;
 }
 
-export const LVGLStylesTreeNavigation = observer(
+export const LVGLStylesTreeNavigation = withProjectExplorerFilter(observer(
     class LVGLStylesTreeNavigation
         extends React.Component<LVGLStylesTreeNavigationProps>
         implements IPanel
@@ -137,6 +145,7 @@ export const LVGLStylesTreeNavigation = observer(
 
         dispose1: IReactionDisposer;
         dispose2: IReactionDisposer;
+        disposeDeselectHidden: IReactionDisposer | undefined;
 
         constructor(props: LVGLStylesTreeNavigationProps) {
             super(props);
@@ -200,6 +209,16 @@ export const LVGLStylesTreeNavigation = observer(
             );
 
             this.context.navigationStore.mountPanel(this);
+
+            // selected items not matching the search are deselected
+            this.disposeDeselectHidden = reaction(
+                () =>
+                    this.props.explorerFilter
+                        ? this.props.explorerFilter.searchText
+                        : this.searchText,
+                () => this.treeAdapter.deselectItemsHiddenBySearch(),
+                { fireImmediately: true }
+            );
         }
 
         componentDidUpdate() {
@@ -209,6 +228,7 @@ export const LVGLStylesTreeNavigation = observer(
         componentWillUnmount() {
             this.dispose1();
             this.dispose2();
+            this.disposeDeselectHidden?.();
             this.context.navigationStore.unmountPanel(this);
         }
 
@@ -230,16 +250,19 @@ export const LVGLStylesTreeNavigation = observer(
         }
 
         get treeAdapter() {
+            const explorerFilter = this.props.explorerFilter;
             return new TreeAdapter(
                 this.treeObjectAdapter,
                 undefined,
                 undefined,
                 true,
-                this.sortDirection,
+                explorerFilter
+                    ? explorerFilter.sortDirection
+                    : this.sortDirection,
                 undefined,
                 this.onClickItem,
                 this.onDoubleClickItem,
-                this.searchText,
+                explorerFilter ? explorerFilter.searchText : this.searchText,
                 this.props.editable ?? true
             );
         }
@@ -326,6 +349,15 @@ export const LVGLStylesTreeNavigation = observer(
         render() {
             const { onEditItem, renderItem } = this.props;
 
+            if (
+                isHiddenByProjectExplorerSearch(
+                    this.props.explorerFilter,
+                    this.treeAdapter.allRows.length
+                )
+            ) {
+                return null;
+            }
+
             const buttons: JSX.Element[] = [];
 
             if (this.props.additionalButtons) {
@@ -348,27 +380,34 @@ export const LVGLStylesTreeNavigation = observer(
 
             return (
                 <div className="EezStudio_ProjectEditor_LVGLStylesTreeNavigation">
-                    <div className="EezStudio_Title">
-                        <SortControl
-                            direction={this.sortDirection}
-                            onDirectionChanged={action(
-                                (direction: SortDirectionType) =>
-                                    (this.sortDirection = direction)
-                            )}
+                    {this.props.explorerFilter ? (
+                        <ProjectExplorerListHeader
+                            explorerFilter={this.props.explorerFilter}
+                            buttons={buttons}
                         />
-                        {(this.props.searchInput == undefined ||
-                            this.props.searchInput) && (
-                            <SearchInput
-                                searchText={this.searchText}
-                                onClear={action(() => {
-                                    this.searchText = "";
-                                })}
-                                onChange={this.onSearchChange}
-                                onKeyDown={this.onSearchChange}
+                    ) : (
+                        <div className="EezStudio_Title">
+                            <SortControl
+                                direction={this.sortDirection}
+                                onDirectionChanged={action(
+                                    (direction: SortDirectionType) =>
+                                        (this.sortDirection = direction)
+                                )}
                             />
-                        )}
-                        <div className="btn-toolbar">{buttons}</div>
-                    </div>
+                            {(this.props.searchInput == undefined ||
+                                this.props.searchInput) && (
+                                <SearchInput
+                                    searchText={this.searchText}
+                                    onClear={action(() => {
+                                        this.searchText = "";
+                                    })}
+                                    onChange={this.onSearchChange}
+                                    onKeyDown={this.onSearchChange}
+                                />
+                            )}
+                            <div className="btn-toolbar">{buttons}</div>
+                        </div>
+                    )}
                     <Tree
                         treeAdapter={this.treeAdapter}
                         tabIndex={0}
@@ -381,4 +420,4 @@ export const LVGLStylesTreeNavigation = observer(
             );
         }
     }
-);
+));

@@ -16,13 +16,18 @@ import { EditorComponent } from "project-editor/project/ui/EditorComponent";
 ////////////////////////////////////////////////////////////////////////////////
 
 export const ScpiTab = observer(
-    class ScpiTab extends React.Component {
+    class ScpiTab extends React.Component<{
+        // render only this part ("subsystems", "commands" or "enums")
+        component?: string;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
         factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
+            return this.renderComponent(node.getComponent());
+        };
 
+        renderComponent(component: string | undefined) {
             if (component === "subsystems") {
                 return <SubsystemsList />;
             }
@@ -44,9 +49,13 @@ export const ScpiTab = observer(
             }
 
             return null;
-        };
+        }
 
         render() {
+            if (this.props.component) {
+                return this.renderComponent(this.props.component);
+            }
+
             return (
                 <FlexLayoutContainer
                     model={this.context.layoutModels.scpi}

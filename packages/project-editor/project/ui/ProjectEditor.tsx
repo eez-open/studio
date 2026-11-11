@@ -48,6 +48,8 @@ import {
 import { LVGLGroupsTab } from "project-editor/lvgl/groups";
 import { settingsController } from "home/settings";
 import { PageStructure } from "project-editor/features/page/PagesNavigation";
+import { ProjectExplorer } from "project-editor/project/ui/ProjectExplorer";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,6 +103,7 @@ const Content = observer(
         componentDidMount(): void {
             this.context.editorsStore?.openInitialEditors();
             this.context.editorsStore?.refresh(true);
+            ProjectEditor.restorePropertiesDialog?.(this.context);
         }
 
         factory = (node: FlexLayout.TabNode) => {
@@ -157,6 +160,10 @@ const Content = observer(
 
             if (component === "flow-structure") {
                 return <PageStructure />;
+            }
+
+            if (component === "projectExplorer") {
+                return <ProjectExplorer />;
             }
 
             if (component === "variables") {

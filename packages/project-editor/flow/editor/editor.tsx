@@ -34,7 +34,8 @@ import { DragAndDropManager } from "project-editor/core/dd";
 import {
     IPanel,
     isObjectInstanceOf,
-    isLVGLCreateInProgress
+    isLVGLCreateInProgress,
+    getClassInfo
 } from "project-editor/store";
 
 import type { IEditorOptions } from "project-editor/flow/flow-interfaces";
@@ -733,7 +734,30 @@ export const Canvas = observer(
                                 const object =
                                     this.props.flowContext.viewState
                                         .selectedObjects[0];
-                                object.open();
+
+                                // In the "Project Explorer" layout, open the
+                                // Properties dialog, unless the object has its
+                                // own double click action (e.g. User Widget,
+                                // Call Action, Comment).
+                                const projectStore =
+                                    this.props.flowContext.projectStore;
+                                const propertiesObjects = !getClassInfo(
+                                    object.object
+                                ).open
+                                    ? ProjectEditor.getPropertiesDialogObjectsOnDoubleClick(
+                                          projectStore,
+                                          object.object
+                                      )
+                                    : undefined;
+
+                                if (propertiesObjects) {
+                                    ProjectEditor.showPropertiesDialog(
+                                        projectStore,
+                                        propertiesObjects
+                                    );
+                                } else {
+                                    object.open();
+                                }
                             } else if (
                                 this.props.flowContext.viewState.selectedObjects
                                     .length === 0

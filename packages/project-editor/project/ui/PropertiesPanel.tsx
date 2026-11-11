@@ -10,12 +10,24 @@ import {
     getClassInfo,
     getLabel,
     getObjectIcon,
-    isObjectExists
+    isObjectExists,
+    type ProjectStore
 } from "project-editor/store";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Settings } from "../project";
 import { Icon } from "eez-studio-ui/icon";
+
+// objects of the current selection shown in the Properties panel
+export function getPropertiesPanelObjects(projectStore: ProjectStore) {
+    return projectStore.navigationStore.propertyGridObjects
+        .filter(
+            object =>
+                object != undefined &&
+                !getAncestorOfType(object, Settings.classInfo)
+        )
+        .filter(object => isObjectExists(object));
+}
 
 export const PropertiesPanel = observer(
     class PropertiesPanel extends React.Component {
@@ -34,13 +46,7 @@ export const PropertiesPanel = observer(
         }
 
         get objects() {
-            return this.context.navigationStore.propertyGridObjects
-                .filter(
-                    object =>
-                        object != undefined &&
-                        !getAncestorOfType(object, Settings.classInfo)
-                )
-                .filter(object => isObjectExists(object));
+            return getPropertiesPanelObjects(this.context);
         }
 
         getObjectsKey(objects: IEezObject[]): string | undefined {
@@ -160,7 +166,7 @@ export const PropertiesPanel = observer(
     }
 );
 
-function getPropertiesPanelLabel(object: IEezObject) {
+export function getPropertiesPanelLabel(object: IEezObject) {
     const classInfo = getClassInfo(object);
     if (classInfo.propertiesPanelLabel) {
         return classInfo.propertiesPanelLabel(object);

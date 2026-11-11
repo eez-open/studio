@@ -2036,6 +2036,8 @@ export class Project extends EezObject {
     }
 
     enableTabs(projectType?: ProjectType, flowSupport?: boolean) {
+        const layoutModels = this._store.layoutModels;
+
         function enableTab(
             layoutModel: FlexLayout.Model,
             tabId: string,
@@ -2059,6 +2061,21 @@ export class Project extends EezObject {
                                 false
                             )
                         );
+                    } else if (tabId == LayoutModels.COMPONENTS_PALETTE_TAB_ID) {
+                        // there is no Properties tab when the Properties
+                        // dialog is used, put it on the right side of the editors
+                        const editorsTabSet = layoutModel.getNodeById(
+                            LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
+                        );
+                        if (editorsTabSet instanceof FlexLayout.TabSetNode) {
+                            layoutModels.addTabNextToTabSet(
+                                layoutModel,
+                                tabJson,
+                                editorsTabSet,
+                                FlexLayout.DockLocation.RIGHT,
+                                1 / 4
+                            );
+                        }
                     }
                 }
             } else {

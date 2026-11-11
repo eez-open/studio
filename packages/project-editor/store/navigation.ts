@@ -21,6 +21,7 @@ import {
     findPropertyByChildObject
 } from "project-editor/store/helper";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
+import type { SortDirectionType } from "project-editor/core/objectAdapter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -109,6 +110,16 @@ export class NavigationStore {
 
     selectedLocalVariable = observable.box<IEezObject>();
 
+    // Project Explorer state (used when "Project Explorer" project editor
+    // layout is selected). The selected group is identified by the id of the
+    // tab which shows the same items in the "Classic" layout.
+    projectExplorerSelectedGroup: string = LayoutModels.PAGES_TAB_ID;
+    projectExplorerSearchText: string = "";
+    projectExplorerSortDirection: SortDirectionType = "none";
+
+    // pinned Properties dialog was opened when the project was closed
+    propertiesDialogRestorePending: boolean = false;
+
     dispose1: IReactionDisposer;
 
     constructor(public projectStore: ProjectStore) {
@@ -116,6 +127,9 @@ export class NavigationStore {
             selectedPanelForEdit: observable,
             selectedPanelForRuntime: observable,
             subnavigationSelectedItems: observable,
+            projectExplorerSelectedGroup: observable,
+            projectExplorerSearchText: observable,
+            projectExplorerSortDirection: observable,
             propertyGridObjects: computed,
             setSelectedPanel: action,
             showObjects: action
@@ -322,6 +336,23 @@ export class NavigationStore {
                 this.subnavigationSelectedItems =
                     state.subnavigationSelectedItems;
             }
+
+            if (typeof state.projectExplorerSelectedGroup == "string") {
+                this.projectExplorerSelectedGroup =
+                    state.projectExplorerSelectedGroup;
+            }
+
+            if (
+                state.projectExplorerSortDirection == "asc" ||
+                state.projectExplorerSortDirection == "desc" ||
+                state.projectExplorerSortDirection == "none"
+            ) {
+                this.projectExplorerSortDirection =
+                    state.projectExplorerSortDirection;
+            }
+
+            this.propertiesDialogRestorePending =
+                state.propertiesDialogOpened === true;
         }
     }
 
@@ -404,7 +435,17 @@ export class NavigationStore {
                 ? path(this.selectedLvglGroupObject.get())
                 : undefined,
 
-            subnavigationSelectedItems: this.subnavigationSelectedItems
+            subnavigationSelectedItems: this.subnavigationSelectedItems,
+
+            projectExplorerSelectedGroup: this.projectExplorerSelectedGroup,
+            projectExplorerSortDirection: this.projectExplorerSortDirection,
+
+            propertiesDialogOpened:
+                (ProjectEditor.isPinnedPropertiesDialogOpened?.(
+                    this.projectStore
+                ) ??
+                    false) ||
+                this.propertiesDialogRestorePending
         };
     }
 

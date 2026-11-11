@@ -126,6 +126,16 @@ import {
     getAncestorWithEditorComponent
 } from "project-editor/project/ui/EditorComponentFactory";
 import { browseGlyph } from "project-editor/features/font/FontEditor";
+import {
+    isPropertiesDialogUsed,
+    getPropertiesDialogObjects,
+    getPropertiesDialogObjectsOnDoubleClick,
+    showPropertiesDialog,
+    closePropertiesDialog,
+    setPropertiesDialogProjectActive,
+    isPinnedPropertiesDialogOpened,
+    restorePropertiesDialog
+} from "project-editor/project/ui/PropertiesDialog";
 import { Variable } from "project-editor/features/variable/variable";
 import { ArrayProperty } from "project-editor/ui-components/PropertyGrid/ArrayElementProperty";
 import { EmbeddedPropertyGrid } from "project-editor/ui-components/PropertyGrid/EmbeddedPropertyGrid";
@@ -259,6 +269,14 @@ export function createProjectEditor(
         getAncestorWithEditorComponent,
         createEditorState,
         browseGlyph,
+        isPropertiesDialogUsed,
+        getPropertiesDialogObjects,
+        getPropertiesDialogObjectsOnDoubleClick,
+        showPropertiesDialog,
+        closePropertiesDialog,
+        setPropertiesDialogProjectActive,
+        isPinnedPropertiesDialogOpened,
+        restorePropertiesDialog,
         checkAssetId,
         Property,
         ArrayProperty,

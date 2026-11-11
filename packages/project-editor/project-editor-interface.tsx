@@ -70,6 +70,16 @@ import type {
     getAncestorWithEditorComponent
 } from "project-editor/project/ui/EditorComponentFactory";
 import type { browseGlyph } from "project-editor/features/font/FontEditor";
+import type {
+    isPropertiesDialogUsed,
+    getPropertiesDialogObjects,
+    getPropertiesDialogObjectsOnDoubleClick,
+    showPropertiesDialog,
+    closePropertiesDialog,
+    setPropertiesDialogProjectActive,
+    isPinnedPropertiesDialogOpened,
+    restorePropertiesDialog
+} from "project-editor/project/ui/PropertiesDialog";
 import type { Variable } from "project-editor/features/variable/variable";
 import type {
     OutputActionComponent,
@@ -219,6 +229,14 @@ export interface IProjectEditor {
     getAncestorWithEditorComponent: typeof getAncestorWithEditorComponent;
     createEditorState: typeof createEditorState;
     browseGlyph: typeof browseGlyph;
+    isPropertiesDialogUsed: typeof isPropertiesDialogUsed;
+    getPropertiesDialogObjects: typeof getPropertiesDialogObjects;
+    getPropertiesDialogObjectsOnDoubleClick: typeof getPropertiesDialogObjectsOnDoubleClick;
+    showPropertiesDialog: typeof showPropertiesDialog;
+    closePropertiesDialog: typeof closePropertiesDialog;
+    setPropertiesDialogProjectActive: typeof setPropertiesDialogProjectActive;
+    isPinnedPropertiesDialogOpened: typeof isPinnedPropertiesDialogOpened;
+    restorePropertiesDialog: typeof restorePropertiesDialog;
     checkAssetId: typeof checkAssetId;
     Property: typeof Property;
     ArrayProperty: typeof ArrayProperty;

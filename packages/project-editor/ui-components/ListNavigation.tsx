@@ -33,6 +33,12 @@ import { ProjectContext } from "project-editor/project/context";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getExportedItems } from "project-editor/project/helper";
+import {
+    IProjectExplorerFilter,
+    isHiddenByProjectExplorerSearch,
+    ProjectExplorerListHeader,
+    withProjectExplorerFilter
+} from "project-editor/ui-components/ProjectExplorerFilter";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -174,9 +180,12 @@ interface ListNavigationProps {
     // or the master project items to list, when it is not only the
     // exported ones (all master colors can be used in a module project)
     masterObjects?: IEezObject[];
+    // set when rendered inside the Project Explorer, which then provides
+    // the search text and the sort direction
+    explorerFilter?: IProjectExplorerFilter;
 }
 
-export const ListNavigation = observer(
+export const ListNavigation = withProjectExplorerFilter(observer(
     class ListNavigation
         extends React.Component<ListNavigationProps>
         implements IPanel
@@ -188,6 +197,7 @@ export const ListNavigation = observer(
         searchText: string = "";
 
         dispose: IReactionDisposer;
+        disposeDeselectHidden: IReactionDisposer | undefined;
 
         divRef = React.createRef<HTMLDivElement>();
 
@@ -240,6 +250,16 @@ export const ListNavigation = observer(
 
         componentDidMount() {
             this.context.navigationStore.mountPanel(this);
+
+            // selected items not matching the search are deselected
+            this.disposeDeselectHidden = reaction(
+                () =>
+                    this.props.explorerFilter
+                        ? this.props.explorerFilter.searchText
+                        : this.searchText,
+                () => this.listAdapter.deselectItemsHiddenBySearch(),
+                { fireImmediately: true }
+            );
         }
 
         componentDidUpdate() {
@@ -248,20 +268,24 @@ export const ListNavigation = observer(
 
         componentWillUnmount() {
             this.dispose();
+            this.disposeDeselectHidden?.();
             this.context.navigationStore.unmountPanel(this);
         }
 
         get listAdapter() {
+            const explorerFilter = this.props.explorerFilter;
             return new TreeAdapter(
                 new TreeObjectAdapter(this.props.navigationObject),
                 this.props.selectedObject,
                 undefined,
                 undefined,
-                this.sortDirection,
+                explorerFilter
+                    ? explorerFilter.sortDirection
+                    : this.sortDirection,
                 0,
                 this.onClickItem,
                 this.onDoubleClickItem,
-                this.searchText,
+                explorerFilter ? explorerFilter.searchText : this.searchText,
                 this.props.editable ?? true,
                 undefined,
                 this.props.masterObjects ??
@@ -368,6 +392,15 @@ export const ListNavigation = observer(
         render() {
             const { onEditItem, renderItem } = this.props;
 
+            if (
+                isHiddenByProjectExplorerSearch(
+                    this.props.explorerFilter,
+                    this.listAdapter.allRows.length
+                )
+            ) {
+                return null;
+            }
+
             const buttons: JSX.Element[] = [];
 
             if (this.props.additionalButtons) {
@@ -405,27 +438,34 @@ export const ListNavigation = observer(
                     ref={this.divRef}
                     className={classNames("EezStudio_ProjectEditor_ListNavigation", this.props.className)}
                 >
-                    <div className="EezStudio_Title">
-                        <SortControl
-                            direction={this.sortDirection}
-                            onDirectionChanged={action(
-                                (direction: SortDirectionType) =>
-                                    (this.sortDirection = direction)
-                            )}
+                    {this.props.explorerFilter ? (
+                        <ProjectExplorerListHeader
+                            explorerFilter={this.props.explorerFilter}
+                            buttons={buttons}
                         />
-                        {(this.props.searchInput == undefined ||
-                            this.props.searchInput) && (
-                            <SearchInput
-                                searchText={this.searchText}
-                                onClear={action(() => {
-                                    this.searchText = "";
-                                })}
-                                onChange={this.onSearchChange}
-                                onKeyDown={this.onSearchChange}
+                    ) : (
+                        <div className="EezStudio_Title">
+                            <SortControl
+                                direction={this.sortDirection}
+                                onDirectionChanged={action(
+                                    (direction: SortDirectionType) =>
+                                        (this.sortDirection = direction)
+                                )}
                             />
-                        )}
-                        <div className="btn-toolbar">{buttons}</div>
-                    </div>
+                            {(this.props.searchInput == undefined ||
+                                this.props.searchInput) && (
+                                <SearchInput
+                                    searchText={this.searchText}
+                                    onClear={action(() => {
+                                        this.searchText = "";
+                                    })}
+                                    onChange={this.onSearchChange}
+                                    onKeyDown={this.onSearchChange}
+                                />
+                            )}
+                            <div className="btn-toolbar">{buttons}</div>
+                        </div>
+                    )}
                     <List
                         listAdapter={this.listAdapter}
                         tabIndex={0}
@@ -438,4 +478,4 @@ export const ListNavigation = observer(
             );
         }
     }
-);
+));

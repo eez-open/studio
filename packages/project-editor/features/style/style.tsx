@@ -21,6 +21,7 @@ import {
     getKey,
     setParent
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import {
     getChildOfObject,
     isAnyPropertyModified,
@@ -818,9 +819,16 @@ const alwaysBuildProperty: PropertyInfo = {
         isWidgetParentOfStyle(style) || isDashboardProject(style)
 };
 
+const tagsProperty: PropertyInfo = {
+    ...makeTagsProperty(),
+    // widget style is not listed in the Project Explorer
+    hideInPropertyGrid: isWidgetParentOfStyle
+};
+
 const properties = [
     idProperty,
     nameProperty,
+    tagsProperty,
     descriptionProperty,
     useStyleProperty,
     conditionalStylesProperty,
@@ -866,6 +874,7 @@ let nextTransientId = 0;
 export class Style extends EezObject {
     id: number | undefined;
     name: string;
+    tags?: string;
     description?: string;
     useStyle?: string;
     conditionalStyles?: ConditionalStyle[];
@@ -988,6 +997,7 @@ export class Style extends EezObject {
         makeObservable(this, {
             id: observable,
             name: observable,
+            tags: observable,
             description: observable,
             useStyle: observable,
             conditionalStyles: observable,

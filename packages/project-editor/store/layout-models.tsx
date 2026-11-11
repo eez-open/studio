@@ -1,6 +1,13 @@
 import React from "react";
 
-import { action, computed, makeObservable } from "mobx";
+import {
+    action,
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    reaction,
+    runInAction
+} from "mobx";
 import { observable } from "mobx";
 import * as FlexLayout from "flexlayout-react";
 
@@ -12,6 +19,7 @@ import {
 
 import type { ProjectStore } from "project-editor/store";
 import { settingsController } from "home/settings";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,6 +71,41 @@ export class LayoutModels extends AbstractLayoutModels {
     static DOCKER_SIMULATOR_LOGS_TAB_ID = "DOCKER_SIMULATOR_LOGS";
     static DOCKER_SIMULATOR_PREVIEW_LOGS_TAB_ID =
         "DOCKER_SIMULATOR_PREVIEW_LOGS";
+
+    static PROJECT_EXPLORER_TAB_ID = "PROJECT_EXPLORER";
+    // "Widgets Structure" tab in the "Project Explorer" layout
+    static FLOW_STRUCTURE_TAB_ID = "FLOW_STRUCTURE";
+
+    // Tabs of the "Classic" layout which are groups in the Project Explorer,
+    // selectTab() with one of these ids selects the Project Explorer group
+    // when the "Project Explorer" layout is used.
+    static PROJECT_EXPLORER_GROUP_TAB_IDS = [
+        LayoutModels.PAGES_TAB_ID,
+        LayoutModels.USER_WIDGETS_TAB_ID,
+        LayoutModels.ACTIONS_TAB_ID,
+        LayoutModels.VARIABLES_TAB_ID,
+        LayoutModels.STYLES_TAB_ID,
+        LayoutModels.FONTS_TAB_ID,
+        LayoutModels.BITMAPS_TAB_ID,
+        LayoutModels.THEMES_TAB_ID,
+        LayoutModels.TEXTS_TAB_ID,
+        LayoutModels.LVGL_GROUPS_TAB_ID,
+        LayoutModels.SCPI_TAB_ID,
+        LayoutModels.INSTRUMENT_COMMANDS_TAB_ID,
+        LayoutModels.EXTENSION_DEFINITIONS_TAB_ID,
+        LayoutModels.CHANGES_TAB_ID,
+        LayoutModels.BREAKPOINTS_TAB_ID,
+        LayoutModels.COMPONENTS_PALETTE_TAB_ID
+    ];
+
+    // Project Explorer group which shows the items of all the other groups,
+    // except these
+    static PROJECT_EXPLORER_ALL_GROUP_ID = "ALL";
+    static PROJECT_EXPLORER_GROUP_TAB_IDS_NOT_IN_ALL = [
+        LayoutModels.CHANGES_TAB_ID,
+        LayoutModels.BREAKPOINTS_TAB_ID,
+        LayoutModels.COMPONENTS_PALETTE_TAB_ID
+    ];
 
     static PAGES_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
@@ -188,6 +231,15 @@ export class LayoutModels extends AbstractLayoutModels {
         icon: "material:view_compact"
     };
 
+    static PROPERTIES_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Properties",
+        id: LayoutModels.PROPERTIES_TAB_ID,
+        component: "propertiesPanel",
+        icon: "svg:properties"
+    };
+
     static COMPONENTS_PALETTE_TAB: FlexLayout.IJsonTabNode = {
         type: "tab",
         enableClose: false,
@@ -196,6 +248,57 @@ export class LayoutModels extends AbstractLayoutModels {
         component: "componentsPalette",
         icon: "svg:components"
     };
+
+    static PROJECT_EXPLORER_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Project Explorer",
+        id: LayoutModels.PROJECT_EXPLORER_TAB_ID,
+        component: "projectExplorer",
+        icon: "material:folder_open"
+    };
+
+    static FLOW_STRUCTURE_TAB: FlexLayout.IJsonTabNode = {
+        type: "tab",
+        enableClose: false,
+        name: "Widgets Structure",
+        id: LayoutModels.FLOW_STRUCTURE_TAB_ID,
+        component: "flow-structure",
+        icon: "svg:hierarchy"
+    };
+
+    static get OUTPUT_TABS(): FlexLayout.IJsonTabNode[] {
+        return [
+            {
+                type: "tab",
+                enableClose: false,
+                name: "Checks",
+                id: LayoutModels.CHECKS_TAB_ID,
+                component: "checksMessages"
+            },
+            {
+                type: "tab",
+                enableClose: false,
+                name: "Output",
+                id: LayoutModels.OUTPUT_TAB_ID,
+                component: "outputMessages"
+            },
+            {
+                type: "tab",
+                enableClose: false,
+                name: "Search",
+                id: LayoutModels.SEARCH_TAB_ID,
+                component: "search"
+            },
+            {
+                type: "tab",
+                enableClose: false,
+                name: "References",
+                id: LayoutModels.REFERENCES_TAB_ID,
+                component: "references"
+            }
+        ];
+    }
 
     static iconFactory = (node: FlexLayout.TabNode) => {
         let icon = node.getIcon();
@@ -207,20 +310,48 @@ export class LayoutModels extends AbstractLayoutModels {
 
     rootEditor: FlexLayout.Model;
     rootEditorForIEXT: FlexLayout.Model;
+    rootProjectExplorer: FlexLayout.Model;
     rootRuntime: FlexLayout.Model;
     rootDockerSimulator: FlexLayout.Model;
 
     // Track if docker simulator mode is active
     isDockerSimulatorMode: boolean = false;
 
+    dispose1: IReactionDisposer | undefined;
+    dispose2: IReactionDisposer | undefined;
+
+    get isProjectExplorerLayout() {
+        return settingsController.isProjectExplorerLayout;
+    }
+
+    // Properties dialog is used instead of the Properties panel
+    get isPropertiesDialogUsed() {
+        return settingsController.isPropertiesDialog;
+    }
+
+    get rootEditorClassic() {
+        return this.projectStore.projectTypeTraits.isIEXT
+            ? this.rootEditorForIEXT
+            : this.rootEditor;
+    }
+
+    // layout model used in editor mode (i.e. not in runtime mode)
+    get rootEditorModel() {
+        return this.isProjectExplorerLayout
+            ? this.rootProjectExplorer
+            : this.rootEditorClassic;
+    }
+
     get root() {
-        if (this.projectStore.projectTypeTraits.isIEXT) {
-            return this.rootEditorForIEXT;
+        if (!this.projectStore.projectTypeTraits.isIEXT) {
+            if (this.isDockerSimulatorMode) {
+                return this.rootDockerSimulator;
+            }
+            if (this.projectStore.runtime) {
+                return this.rootRuntime;
+            }
         }
-        if (this.isDockerSimulatorMode) {
-            return this.rootDockerSimulator;
-        }
-        return this.projectStore.runtime ? this.rootRuntime : this.rootEditor;
+        return this.rootEditorModel;
     }
 
     styles: FlexLayout.Model;
@@ -238,10 +369,15 @@ export class LayoutModels extends AbstractLayoutModels {
         makeObservable(this, {
             rootEditor: observable,
             rootEditorForIEXT: observable,
+            rootProjectExplorer: observable,
             rootRuntime: observable,
             rootDockerSimulator: observable,
 
             isDockerSimulatorMode: observable,
+            isProjectExplorerLayout: computed,
+            isPropertiesDialogUsed: computed,
+            rootEditorClassic: computed,
+            rootEditorModel: computed,
             root: computed,
 
             styles: observable,
@@ -253,6 +389,111 @@ export class LayoutModels extends AbstractLayoutModels {
             texts: observable,
             lvglGroups: observable
         });
+
+        // when the project editor layout is changed in the settings, move
+        // the opened editors to the newly used layout
+        this.dispose1 = reaction(
+            () => this.isProjectExplorerLayout,
+            isProjectExplorerLayout => {
+                if (isProjectExplorerLayout) {
+                    this.moveEditorTabs(
+                        this.rootEditorClassic,
+                        this.rootProjectExplorer
+                    );
+                } else {
+                    this.moveEditorTabs(
+                        this.rootProjectExplorer,
+                        this.rootEditorClassic
+                    );
+                }
+                this.projectStore.editorModeEditorsStore?.refresh(true);
+            }
+        );
+
+        // when the properties editor is changed in the settings, add or
+        // remove the Properties panel
+        this.dispose2 = reaction(
+            () => this.isPropertiesDialogUsed,
+            isPropertiesDialogUsed => {
+                this.enablePropertiesTabs();
+                if (!isPropertiesDialogUsed) {
+                    ProjectEditor.closePropertiesDialog?.(this.projectStore);
+                }
+            }
+        );
+    }
+
+    static getEditorTabs(model: FlexLayout.Model) {
+        const tabs: FlexLayout.TabNode[] = [];
+        model.visitNodes(node => {
+            if (
+                node instanceof FlexLayout.TabNode &&
+                node.getComponent() == "editor"
+            ) {
+                tabs.push(node);
+            }
+        });
+        return tabs;
+    }
+
+    moveEditorTabs(fromModel: FlexLayout.Model, toModel: FlexLayout.Model) {
+        if (!fromModel || !toModel || fromModel == toModel) {
+            return;
+        }
+
+        const toTabSet = toModel.getNodeById(
+            LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
+        );
+        if (!(toTabSet instanceof FlexLayout.TabSetNode)) {
+            return;
+        }
+
+        const getEditorTabs = LayoutModels.getEditorTabs;
+
+        const fromTabs = getEditorTabs(fromModel);
+        if (fromTabs.length == 0) {
+            return;
+        }
+
+        let selectedTabId: string | undefined;
+        const activeTabSet = fromModel.getActiveTabset();
+        const activeTab = activeTabSet?.getSelectedNode();
+        if (activeTab && fromTabs.indexOf(activeTab as any) != -1) {
+            selectedTabId = activeTab.getId();
+        }
+
+        // remove editors left in the target layout from the last time it
+        // was used, so the same editor is not opened twice
+        for (const tab of getEditorTabs(toModel)) {
+            toModel.doAction(FlexLayout.Actions.deleteTab(tab.getId()));
+        }
+
+        for (const tab of fromTabs) {
+            const tabJson = tab.toJson() as FlexLayout.IJsonTabNode;
+            const tabParent = tab.getParent();
+            const isSelected =
+                tabParent instanceof FlexLayout.TabSetNode &&
+                tabParent.getSelectedNode() == tab;
+            if (!selectedTabId && isSelected) {
+                selectedTabId = tab.getId();
+            }
+
+            fromModel.doAction(FlexLayout.Actions.deleteTab(tab.getId()));
+
+            toModel.doAction(
+                FlexLayout.Actions.addNode(
+                    tabJson,
+                    toTabSet.getId(),
+                    FlexLayout.DockLocation.CENTER,
+                    -1,
+                    false
+                )
+            );
+        }
+
+        if (selectedTabId && toModel.getNodeById(selectedTabId)) {
+            toModel.doAction(FlexLayout.Actions.selectTab(selectedTabId));
+        }
     }
 
     get borders() {
@@ -281,36 +522,7 @@ export class LayoutModels extends AbstractLayoutModels {
         borders.push({
             type: "border",
             location: "bottom",
-            children: [
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Checks",
-                    id: LayoutModels.CHECKS_TAB_ID,
-                    component: "checksMessages"
-                },
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Output",
-                    id: LayoutModels.OUTPUT_TAB_ID,
-                    component: "outputMessages"
-                },
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Search",
-                    id: LayoutModels.SEARCH_TAB_ID,
-                    component: "search"
-                },
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "References",
-                    id: LayoutModels.REFERENCES_TAB_ID,
-                    component: "references"
-                }
-            ]
+            children: LayoutModels.OUTPUT_TABS
         });
 
         borders.push({
@@ -348,36 +560,7 @@ export class LayoutModels extends AbstractLayoutModels {
         borders.push({
             type: "border",
             location: "bottom",
-            children: [
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Checks",
-                    id: LayoutModels.CHECKS_TAB_ID,
-                    component: "checksMessages"
-                },
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Output",
-                    id: LayoutModels.OUTPUT_TAB_ID,
-                    component: "outputMessages"
-                },
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "Search",
-                    id: LayoutModels.SEARCH_TAB_ID,
-                    component: "search"
-                },
-                {
-                    type: "tab",
-                    enableClose: false,
-                    name: "References",
-                    id: LayoutModels.REFERENCES_TAB_ID,
-                    component: "references"
-                }
-            ]
+            children: LayoutModels.OUTPUT_TABS
         });
 
         borders.push({
@@ -390,8 +573,63 @@ export class LayoutModels extends AbstractLayoutModels {
         return borders;
     }
 
+    get bordersProjectExplorer() {
+        const borders: FlexLayout.IJsonBorderNode[] = [
+            {
+                type: "border",
+                location: "bottom",
+                children: LayoutModels.OUTPUT_TABS
+            }
+        ];
+
+        return borders;
+    }
+
     get models(): ILayoutModel[] {
         return [
+            {
+                name: "rootProjectExplorer",
+                version: 1,
+                json: {
+                    global: LayoutModels.GLOBAL_OPTIONS,
+                    borders: this.bordersProjectExplorer,
+                    layout: {
+                        type: "row",
+                        children: [
+                            {
+                                type: "row",
+                                weight: 20,
+                                children: [
+                                    {
+                                        type: "tabset",
+                                        weight: 2,
+                                        children: [
+                                            LayoutModels.PROJECT_EXPLORER_TAB
+                                        ]
+                                    },
+                                    {
+                                        type: "tabset",
+                                        weight: 1,
+                                        children: [
+                                            LayoutModels.FLOW_STRUCTURE_TAB
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                type: "tabset",
+                                weight: 80,
+                                enableDeleteWhenEmpty: false,
+                                enableClose: false,
+                                id: LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID,
+                                children: []
+                            }
+                        ]
+                    }
+                },
+                get: () => this.rootProjectExplorer,
+                set: action(model => (this.rootProjectExplorer = model))
+            },
             {
                 name: "rootEditor",
                 version: 116,
@@ -1136,9 +1374,161 @@ export class LayoutModels extends AbstractLayoutModels {
     load(layoutModels: any) {
         super.load(layoutModels);
         this.projectStore.project.enableTabs();
+        this.enableProjectExplorerTabs();
+        this.enablePropertiesTabs();
+
+        // The project editor layout could be changed in the settings since
+        // the project was closed: open the editors in the used layout.
+        const [fromModel, toModel] = this.isProjectExplorerLayout
+            ? [this.rootEditorClassic, this.rootProjectExplorer]
+            : [this.rootProjectExplorer, this.rootEditorClassic];
+        if (
+            fromModel &&
+            toModel &&
+            LayoutModels.getEditorTabs(toModel).length == 0
+        ) {
+            this.moveEditorTabs(fromModel, toModel);
+        }
+    }
+
+    enableProjectExplorerTabs() {
+        // IEXT projects have no pages, so no widgets structure
+        if (
+            this.projectStore.projectTypeTraits.isIEXT &&
+            this.rootProjectExplorer?.getNodeById(
+                LayoutModels.FLOW_STRUCTURE_TAB_ID
+            )
+        ) {
+            this.rootProjectExplorer.doAction(
+                FlexLayout.Actions.deleteTab(LayoutModels.FLOW_STRUCTURE_TAB_ID)
+            );
+        }
+    }
+
+    // Properties panel is in its own tab, except when the Properties dialog
+    // is used (selected in the settings)
+    enablePropertiesTabs() {
+        const enabled = !this.isPropertiesDialogUsed;
+        for (const model of [
+            this.rootEditor,
+            this.rootEditorForIEXT,
+            this.rootProjectExplorer
+        ]) {
+            if (model) {
+                this.enablePropertiesTab(model, enabled);
+            }
+        }
+    }
+
+    enablePropertiesTab(model: FlexLayout.Model, enabled: boolean) {
+        const propertiesTab = model.getNodeById(LayoutModels.PROPERTIES_TAB_ID);
+
+        if (!enabled) {
+            if (propertiesTab) {
+                model.doAction(
+                    FlexLayout.Actions.deleteTab(LayoutModels.PROPERTIES_TAB_ID)
+                );
+            }
+            return;
+        }
+
+        if (propertiesTab) {
+            return;
+        }
+
+        // above the Components Palette, as in the default "Classic" layout
+        const componentsPaletteTabSet = model
+            .getNodeById(LayoutModels.COMPONENTS_PALETTE_TAB_ID)
+            ?.getParent();
+        if (componentsPaletteTabSet instanceof FlexLayout.TabSetNode) {
+            this.addTabNextToTabSet(
+                model,
+                LayoutModels.PROPERTIES_TAB,
+                componentsPaletteTabSet,
+                FlexLayout.DockLocation.TOP,
+                2 / 3
+            );
+            return;
+        }
+
+        // otherwise, on the right side of the editors
+        const editorsTabSet = model.getNodeById(
+            LayoutModels.EDITOR_MODE_EDITORS_TABSET_ID
+        );
+        if (editorsTabSet instanceof FlexLayout.TabSetNode) {
+            this.addTabNextToTabSet(
+                model,
+                LayoutModels.PROPERTIES_TAB,
+                editorsTabSet,
+                FlexLayout.DockLocation.RIGHT,
+                1 / 4
+            );
+        }
+    }
+
+    // Adds a new tabset with the tab next to the given tabset, the new
+    // tabset gets the ratio of the space taken by both tabsets.
+    addTabNextToTabSet(
+        model: FlexLayout.Model,
+        tabJson: FlexLayout.IJsonTabNode,
+        tabSet: FlexLayout.TabSetNode,
+        location: FlexLayout.DockLocation,
+        ratio: number
+    ) {
+        const tabNode = model.doAction(
+            FlexLayout.Actions.addNode(
+                tabJson,
+                tabSet.getId(),
+                location,
+                -1,
+                false
+            )
+        ) as FlexLayout.TabNode | undefined;
+
+        const newTabSet = tabNode?.getParent();
+        if (
+            newTabSet instanceof FlexLayout.TabSetNode &&
+            newTabSet != tabSet &&
+            newTabSet.getParent() == tabSet.getParent()
+        ) {
+            const totalWeight = newTabSet.getWeight() + tabSet.getWeight();
+            model.doAction(
+                FlexLayout.Actions.updateNodeAttributes(newTabSet.getId(), {
+                    weight: totalWeight * ratio
+                })
+            );
+            model.doAction(
+                FlexLayout.Actions.updateNodeAttributes(tabSet.getId(), {
+                    weight: totalWeight * (1 - ratio)
+                })
+            );
+        }
     }
 
     selectTab(model: FlexLayout.Model, tabId: string) {
+        if (
+            model &&
+            model == this.rootProjectExplorer &&
+            LayoutModels.PROJECT_EXPLORER_GROUP_TAB_IDS.indexOf(tabId) != -1
+        ) {
+            // there are no such tabs in the Project Explorer layout,
+            // select the Project Explorer group with the same items (unless
+            // the "All" group, which also shows these items, is selected)
+            const navigationStore = this.projectStore.navigationStore;
+            if (
+                navigationStore.projectExplorerSelectedGroup !=
+                    LayoutModels.PROJECT_EXPLORER_ALL_GROUP_ID ||
+                LayoutModels.PROJECT_EXPLORER_GROUP_TAB_IDS_NOT_IN_ALL.indexOf(
+                    tabId
+                ) != -1
+            ) {
+                runInAction(() => {
+                    navigationStore.projectExplorerSelectedGroup = tabId;
+                });
+            }
+            tabId = LayoutModels.PROJECT_EXPLORER_TAB_ID;
+        }
+
         const node = model.getNodeById(tabId);
         if (node) {
             const parentNode = node.getParent();
@@ -1168,7 +1558,18 @@ export class LayoutModels extends AbstractLayoutModels {
         }
 
         this.projectStore.project.enableTabs();
+        this.enableProjectExplorerTabs();
+        this.enablePropertiesTabs();
     }
 
-    unmount() {}
+    unmount() {
+        if (this.dispose1) {
+            this.dispose1();
+            this.dispose1 = undefined;
+        }
+        if (this.dispose2) {
+            this.dispose2();
+            this.dispose2 = undefined;
+        }
+    }
 }

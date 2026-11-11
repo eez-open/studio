@@ -14,6 +14,7 @@ import {
     PropertyProps,
     getId
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import { createObject, Message } from "project-editor/store";
 import {
     hasFlowSupport,
@@ -172,6 +173,7 @@ export const NativeActionImplementationInfoPropertyUI = observer(
 export class Action extends Flow {
     id: number | undefined;
     name: string;
+    tags?: string;
     description?: string;
     implementationType: "native" | "flow";
     implementation?: string;
@@ -183,6 +185,7 @@ export class Action extends Flow {
         makeObservable(this, {
             id: observable,
             name: observable,
+            tags: observable,
             description: observable,
             implementationType: observable,
             implementation: observable,
@@ -206,6 +209,7 @@ export class Action extends Flow {
                 unique: true,
                 propertyGridGroup: generalGroup
             },
+            makeTagsProperty(generalGroup),
             {
                 name: "description",
                 type: PropertyType.MultilineText,

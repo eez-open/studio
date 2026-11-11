@@ -14,6 +14,7 @@ import {
     MessageType,
     IMessage
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import {
     createObject,
     getChildOfObject,
@@ -105,6 +106,7 @@ registerClass("UseDashboardProject", UseDashboardProject);
 
 export class ExtensionDefinition extends EezObject {
     name: string;
+    tags?: string;
     description: string;
     doNotBuild: boolean;
     buildConfiguration: string;
@@ -142,6 +144,7 @@ export class ExtensionDefinition extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "description",
                 type: PropertyType.MultilineText,
@@ -360,6 +363,7 @@ export class ExtensionDefinition extends EezObject {
         super.makeEditable();
         makeObservable(this, {
             name: observable,
+            tags: observable,
             description: observable,
             doNotBuild: observable,
             buildConfiguration: observable,

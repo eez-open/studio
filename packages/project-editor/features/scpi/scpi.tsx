@@ -23,6 +23,7 @@ import {
     MessageType,
     IMessage
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import {
     getProjectStore,
     getChildOfObject,
@@ -1045,6 +1046,7 @@ registerClass("ScpiAddressing", ScpiAddressing);
 
 export class ScpiCommand extends EezObject {
     name: string;
+    tags?: string;
     description?: string;
     helpLink?: string;
     usedIn?: string[];
@@ -1069,6 +1071,7 @@ export class ScpiCommand extends EezObject {
 
         makeObservable(this, {
             name: observable,
+            tags: observable,
             description: observable,
             helpLink: observable,
             usedIn: observable,
@@ -1092,6 +1095,7 @@ export class ScpiCommand extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "description",
                 type: PropertyType.MultilineText
@@ -1276,6 +1280,7 @@ registerClass("ScpiCommand", ScpiCommand);
 
 export class ScpiSubsystem extends EezObject {
     name: string;
+    tags?: string;
     description?: string;
     helpLink?: string;
     commands: ScpiCommand[];
@@ -1287,6 +1292,7 @@ export class ScpiSubsystem extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "description",
                 type: PropertyType.MultilineText
@@ -1344,6 +1350,7 @@ export class ScpiSubsystem extends EezObject {
 
         makeObservable(this, {
             name: observable,
+            tags: observable,
             description: observable,
             helpLink: observable,
             commands: observable

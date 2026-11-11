@@ -27,6 +27,7 @@ import {
     PropertyProps,
     IMessage
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import { validators } from "eez-studio-shared/validation";
 import { fileExistsSync } from "eez-studio-shared/util-electron";
 
@@ -114,6 +115,7 @@ const ExportBitmapFilePropertyGridUI = observer(
 export class Bitmap extends EezObject {
     id: number | undefined;
     name: string;
+    tags?: string;
     description?: string;
     image: string;
     bpp: number;
@@ -139,6 +141,7 @@ export class Bitmap extends EezObject {
         makeObservable<Bitmap>(this, {
             id: observable,
             name: observable,
+            tags: observable,
             description: observable,
             image: observable,
             bpp: observable,
@@ -165,6 +168,7 @@ export class Bitmap extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "description",
                 type: PropertyType.MultilineText

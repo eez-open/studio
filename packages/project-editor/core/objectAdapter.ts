@@ -27,6 +27,7 @@ import {
     setKey,
     getKey
 } from "project-editor/core/object";
+import { isObjectMatchingSearchText } from "project-editor/core/tags";
 
 import {
     canDuplicate,
@@ -756,6 +757,33 @@ export class TreeObjectAdapter {
             );
         }
 
+        // Properties dialog is used instead of the Properties panel
+        if (editable && ProjectEditor.isPropertiesDialogUsed()) {
+            const propertiesObjects = ProjectEditor.getPropertiesDialogObjects(
+                this.selectedObjects
+            );
+            if (propertiesObjects.length > 0) {
+                if (menuItems.length > 0 && menuItems[0].type != "separator") {
+                    menuItems.unshift(
+                        new MenuItem({
+                            type: "separator"
+                        })
+                    );
+                }
+                menuItems.unshift(
+                    new MenuItem({
+                        label: "Edit Properties...",
+                        click: () => {
+                            ProjectEditor.showPropertiesDialog(
+                                getProjectStore(propertiesObjects[0]),
+                                propertiesObjects
+                            );
+                        }
+                    })
+                );
+            }
+        }
+
         if (menuItems.length > 0) {
             // remove separator at the end
             if (menuItems[menuItems.length - 1].type == "separator") {
@@ -951,9 +979,11 @@ export class TreeAdapter {
                     if (
                         savedIndex < children.length ||
                         !searchText ||
-                        objectToString(row.item.object)
-                            .toLowerCase()
-                            .indexOf(searchText.toLowerCase()) != -1
+                        isObjectMatchingSearchText(
+                            row.item.object,
+                            objectToString(row.item.object),
+                            searchText
+                        )
                     ) {
                         children.splice(savedIndex, 0, row);
                     }
@@ -970,11 +1000,12 @@ export class TreeAdapter {
         }
 
         if (searchText) {
-            masterItems = masterItems.filter(
-                item =>
-                    objectToString(item.object)
-                        .toLowerCase()
-                        .indexOf(searchText.toLowerCase()) != -1
+            masterItems = masterItems.filter(item =>
+                isObjectMatchingSearchText(
+                    item.object,
+                    objectToString(item.object),
+                    searchText
+                )
             );
         }
 
@@ -1086,6 +1117,47 @@ export class TreeAdapter {
         this.rootItem.selectItems(
             items.filter(item => !this.isMasterItem(item))
         );
+    }
+
+    // Deselects the items which are not shown because they don't match the
+    // search text, so they can't be deleted (cut, ...) while not visible.
+    deselectItemsHiddenBySearch() {
+        if (!this.searchText) {
+            return;
+        }
+
+        const visibleItems = new Set(this.allRows.map(row => row.item));
+
+        const selectedItems = [
+            ...this.rootItem.selectedItems,
+            ...this.selectedMasterItems
+        ];
+
+        const visibleSelectedItems = selectedItems.filter(item =>
+            visibleItems.has(item)
+        );
+
+        if (visibleSelectedItems.length == selectedItems.length) {
+            return;
+        }
+
+        runInAction(() => {
+            // otherwise, it would be selected again when this adapter is
+            // created again
+            if (this.selectedObject) {
+                const selectedObject = this.selectedObject.get();
+                if (
+                    selectedObject &&
+                    !visibleSelectedItems.find(
+                        item => item.object == selectedObject
+                    )
+                ) {
+                    this.selectedObject.set(undefined);
+                }
+            }
+
+            this.selectItems(visibleSelectedItems);
+        });
     }
 
     expandItem(item: TreeObjectAdapter) {

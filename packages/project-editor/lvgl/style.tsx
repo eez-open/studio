@@ -20,6 +20,7 @@ import {
     PropertyType,
     registerClass
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
 import { ProjectContext } from "project-editor/project/context";
 import { extractAnimProperties, LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
@@ -100,6 +101,7 @@ const DefaultStylePropertyGridUI = observer(
 
 export class LVGLStyle extends EezObject {
     name: string;
+    tags?: string;
     forWidgetType: string;
     childStyles: LVGLStyle[];
     definition: LVGLStylesDefinition;
@@ -117,6 +119,7 @@ export class LVGLStyle extends EezObject {
 
         makeObservable(this, {
             name: observable,
+            tags: observable,
             forWidgetType: observable,
             childStyles: observable,
             definition: observable
@@ -130,6 +133,7 @@ export class LVGLStyle extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "forWidgetType",
                 type: PropertyType.String,
@@ -819,13 +823,18 @@ export class LVGLStyles extends EezObject {
 registerClass("LVGLStyles", LVGLStyles);
 
 export const LVGLStylesNavigation = observer(
-    class LVGLStylesNavigation extends React.Component {
+    class LVGLStylesNavigation extends React.Component<{
+        // render only this part (e.g. "styles", without the preview)
+        component?: string;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
         factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
+            return this.renderComponent(node.getComponent());
+        };
 
+        renderComponent(component: string | undefined) {
             if (component === "styles") {
                 return (
                     <LVGLStylesTreeNavigation
@@ -845,9 +854,13 @@ export const LVGLStylesNavigation = observer(
             }
 
             return null;
-        };
+        }
 
         render() {
+            if (this.props.component) {
+                return this.renderComponent(this.props.component);
+            }
+
             return (
                 <FlexLayoutContainer
                     model={this.context.layoutModels.lvglStyles}

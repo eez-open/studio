@@ -22,6 +22,7 @@ import {
     PropertyProps,
     findPropertyByNameInClassInfo
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import {
     createObject,
     getChildOfObject,
@@ -353,6 +354,7 @@ function isPageGeometryHidden(page: Page) {
 export class Page extends Flow {
     id: number | undefined;
     name: string;
+    tags?: string;
     description?: string;
     style?: string;
     usedIn?: string[];
@@ -407,6 +409,7 @@ export class Page extends Flow {
         makeObservable(this, {
             id: observable,
             name: observable,
+            tags: observable,
             description: observable,
             style: observable,
             usedIn: observable,
@@ -473,6 +476,7 @@ export class Page extends Flow {
                 },
                 propertyGridGroup: generalGroup
             },
+            makeTagsProperty(generalGroup),
             {
                 name: "codeIdentifier",
                 type: PropertyType.String,

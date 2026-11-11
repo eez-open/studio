@@ -18,7 +18,10 @@ import type { Project } from "project-editor/project/project";
 ////////////////////////////////////////////////////////////////////////////////
 
 export const StylesTab = observer(
-    class StylesTab extends React.Component {
+    class StylesTab extends React.Component<{
+        // render only this part (e.g. "styles", without the preview)
+        component?: string;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -30,9 +33,9 @@ export const StylesTab = observer(
 
         render() {
             return this.context.projectTypeTraits.isLVGL ? (
-                <LVGLStylesNavigation />
+                <LVGLStylesNavigation component={this.props.component} />
             ) : (
-                <StylesNavigation />
+                <StylesNavigation component={this.props.component} />
             );
         }
     }
@@ -41,7 +44,9 @@ export const StylesTab = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 const StylesNavigation = observer(
-    class StylesNavigation extends React.Component {
+    class StylesNavigation extends React.Component<{
+        component?: string;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -58,8 +63,10 @@ const StylesNavigation = observer(
         }
 
         factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
+            return this.renderComponent(node.getComponent());
+        };
 
+        renderComponent(component: string | undefined) {
             if (component === "styles") {
                 return (
                     <StylesTreeNavigation
@@ -80,9 +87,13 @@ const StylesNavigation = observer(
             }
 
             return null;
-        };
+        }
 
         render() {
+            if (this.props.component) {
+                return this.renderComponent(this.props.component);
+            }
+
             return (
                 <FlexLayoutContainer
                     model={this.context.layoutModels.styles}

@@ -57,7 +57,11 @@ import {
 
 import dbVacuum from "db-services/vacuum";
 import { formatDateRelative, formatDateWithLocaleAndFormat } from "eez-studio-shared/util";
-import type { IMruItem } from "main/settings";
+import type {
+    IMruItem,
+    ProjectEditorLayout,
+    PropertiesEditor
+} from "main/settings";
 import { IconAction } from "eez-studio-ui/action";
 import { HOME_TAB_OPEN_ICON } from "project-editor/ui-components/icons";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
@@ -125,6 +129,42 @@ const setShowComponentsPaletteInProjectEditor = function (value: boolean) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+const getProjectEditorLayout = function (): ProjectEditorLayout {
+    return ipcRenderer.sendSync("getProjectEditorLayout");
+};
+
+const setProjectEditorLayout = function (value: ProjectEditorLayout) {
+    ipcRenderer.send("setProjectEditorLayout", value);
+};
+
+// changed in another window
+ipcRenderer.on(
+    "projectEditorLayoutChanged",
+    (sender: any, value: ProjectEditorLayout) => {
+        runInAction(() => (settingsController._projectEditorLayout = value));
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+const getPropertiesEditor = function (): PropertiesEditor {
+    return ipcRenderer.sendSync("getPropertiesEditor");
+};
+
+const setPropertiesEditor = function (value: PropertiesEditor) {
+    ipcRenderer.send("setPropertiesEditor", value);
+};
+
+// changed in another window
+ipcRenderer.on(
+    "propertiesEditorChanged",
+    (sender: any, value: PropertiesEditor) => {
+        runInAction(() => (settingsController._propertiesEditor = value));
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
 class SettingsController {
     activetLocale = getLocale();
     activeDateFormat = getDateFormat();
@@ -146,6 +186,10 @@ class SettingsController {
 
     _showComponentsPaletteInProjectEditor: boolean =
         getShowComponentsPaletteInProjectEditor();
+
+    _projectEditorLayout: ProjectEditorLayout = getProjectEditorLayout();
+
+    _propertiesEditor: PropertiesEditor = getPropertiesEditor();
 
     constructor() {
         this.pythonUseCustomPath =
@@ -180,7 +224,15 @@ class SettingsController {
             pythonUseCustomPath: observable,
             pythonCustomPath: observable,
             useLocalTemplates: observable,
-            localTemplatesPath: observable
+            localTemplatesPath: observable,
+            _projectEditorLayout: observable,
+            projectEditorLayout: computed,
+            isProjectExplorerLayout: computed,
+            setProjectEditorLayout: action.bound,
+            _propertiesEditor: observable,
+            propertiesEditor: computed,
+            isPropertiesDialog: computed,
+            setPropertiesEditor: action.bound
         });
 
         this.onThemeSwitched();
@@ -457,6 +509,36 @@ class SettingsController {
     set showComponentsPaletteInProjectEditor(value: boolean) {
         this._showComponentsPaletteInProjectEditor = value;
         setShowComponentsPaletteInProjectEditor(value);
+    }
+
+    get projectEditorLayout() {
+        return this._projectEditorLayout;
+    }
+
+    get isProjectExplorerLayout() {
+        return this._projectEditorLayout == "project-explorer";
+    }
+
+    setProjectEditorLayout(value: string) {
+        const layout: ProjectEditorLayout =
+            value == "project-explorer" ? "project-explorer" : "classic";
+        this._projectEditorLayout = layout;
+        setProjectEditorLayout(layout);
+    }
+
+    get propertiesEditor() {
+        return this._propertiesEditor;
+    }
+
+    get isPropertiesDialog() {
+        return this._propertiesEditor == "dialog";
+    }
+
+    setPropertiesEditor(value: string) {
+        const propertiesEditor: PropertiesEditor =
+            value == "dialog" ? "dialog" : "panel";
+        this._propertiesEditor = propertiesEditor;
+        setPropertiesEditor(propertiesEditor);
     }
 }
 
@@ -1073,6 +1155,26 @@ export const Settings = observer(
                         <PythonSettings />
 
                         <SettingsSectionHeader title="Project Editor" />
+                        <SelectProperty
+                            name="Project editor layout"
+                            value={settingsController.projectEditorLayout}
+                            onChange={settingsController.setProjectEditorLayout}
+                        >
+                            <option value="classic">Classic</option>
+                            <option value="project-explorer">
+                                Project Explorer
+                            </option>
+                        </SelectProperty>
+                        <SelectProperty
+                            name="Properties editor"
+                            value={settingsController.propertiesEditor}
+                            onChange={settingsController.setPropertiesEditor}
+                        >
+                            <option value="panel">
+                                Panel (tab on the right side)
+                            </option>
+                            <option value="dialog">Popup dialog</option>
+                        </SelectProperty>
                         <TemplateSettings />
 
                         <SettingsSectionHeader title="Appearance" />

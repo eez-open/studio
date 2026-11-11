@@ -19,6 +19,7 @@ import {
     getProject,
     isMasterProjectObject
 } from "project-editor/project/helper";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -840,11 +841,32 @@ export const Tree = observer(
             let row = this.props.treeAdapter.allRows.find(
                 row => row.item == item
             )!;
-            if (row.collapsable) {
+
+            // In the "Project Explorer" layout, double click opens the
+            // Properties dialog for the items shown in the Properties panel
+            // of the "Classic" layout.
+            const propertiesObjects =
+                item && this.context?.navigationStore
+                    ? ProjectEditor.getPropertiesDialogObjectsOnDoubleClick(
+                          this.context,
+                          item.object
+                      )
+                    : undefined;
+
+            if (row.collapsable && !propertiesObjects) {
                 this.props.treeAdapter.selectItem(item);
                 this.props.treeAdapter.collapsableAdapter!.toggleExpanded(item);
             } else {
-                this.props.treeAdapter.onDoubleClick(item);
+                if (!row.collapsable) {
+                    this.props.treeAdapter.onDoubleClick(item);
+                }
+
+                if (propertiesObjects) {
+                    ProjectEditor.showPropertiesDialog(
+                        this.context,
+                        propertiesObjects
+                    );
+                }
             }
         };
 

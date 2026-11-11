@@ -20,6 +20,7 @@ import {
     setParent,
     SerializedData
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import {
     ProjectStore,
     IContextMenuContext,
@@ -164,7 +165,10 @@ const ColorItem = observer(
 );
 
 export const ThemesSideView = observer(
-    class ThemesSideView extends React.Component {
+    class ThemesSideView extends React.Component<{
+        // render only this part ("themes" or "colors")
+        component?: string;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -285,8 +289,10 @@ export const ThemesSideView = observer(
         }
 
         factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
+            return this.renderComponent(node.getComponent());
+        };
 
+        renderComponent(component: string | undefined) {
             const readOnly =
                 getProjectWithThemes(this.context) != this.context.project;
 
@@ -339,9 +345,13 @@ export const ThemesSideView = observer(
             }
 
             return null;
-        };
+        }
 
         render() {
+            if (this.props.component) {
+                return this.renderComponent(this.props.component);
+            }
+
             return (
                 <FlexLayoutContainer
                     model={this.context.layoutModels.themes}
@@ -357,6 +367,7 @@ export const ThemesSideView = observer(
 export class Color extends EezObject {
     id: number | undefined;
     name: string;
+    tags?: string;
 
     // Color defined in a module project: its value for each theme of the
     // master project, by theme name (the values of the master project colors
@@ -377,6 +388,7 @@ export class Color extends EezObject {
         makeObservable(this, {
             id: observable,
             name: observable,
+            tags: observable,
             themeValues: observable.ref
         });
     }
@@ -411,6 +423,7 @@ export class Color extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "themeValues",
                 type: PropertyType.Any,
@@ -677,6 +690,7 @@ export class ITheme {
 
 export class Theme extends EezObject implements ITheme {
     name: string;
+    tags?: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -686,6 +700,7 @@ export class Theme extends EezObject implements ITheme {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "colors",
                 type: PropertyType.StringArray,
@@ -749,7 +764,8 @@ export class Theme extends EezObject implements ITheme {
         super.makeEditable();
 
         makeObservable(this, {
-            name: observable
+            name: observable,
+            tags: observable
         });
     }
 

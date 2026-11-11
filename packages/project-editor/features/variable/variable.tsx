@@ -29,6 +29,7 @@ import {
     isPropertyDisabled,
     getParent
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import {
     getChildOfObject,
     Message,
@@ -366,6 +367,7 @@ function isNativeVariableDisabled(variable: Variable) {
 export class Variable extends EezObject {
     id: number | undefined;
     name: string;
+    tags?: string;
     description?: string;
     type: ValueType;
     size: number;
@@ -406,6 +408,7 @@ export class Variable extends EezObject {
         makeObservable(this, {
             id: observable,
             name: observable,
+            tags: observable,
             description: observable,
             type: observable,
             size: observable,
@@ -443,6 +446,7 @@ export class Variable extends EezObject {
                 type: PropertyType.String,
                 uniqueIdentifier: uniqueForVariableAndUserProperty
             },
+            makeTagsProperty(),
             {
                 name: "description",
                 type: PropertyType.MultilineText
@@ -1536,6 +1540,7 @@ export interface IStructure {
 
 export class Structure extends EezObject implements IStructure {
     name: string;
+    tags?: string;
     fields: StructureField[];
 
     static classInfo: ClassInfo = {
@@ -1545,6 +1550,7 @@ export class Structure extends EezObject implements IStructure {
                 type: PropertyType.String,
                 uniqueIdentifier: true
             },
+            makeTagsProperty(),
             {
                 name: "fields",
                 type: PropertyType.Array,
@@ -1609,6 +1615,7 @@ export class Structure extends EezObject implements IStructure {
 
         makeObservable(this, {
             name: observable,
+            tags: observable,
             fields: observable
         });
     }
@@ -1773,6 +1780,7 @@ export interface IEnum {
 
 export class Enum extends EezObject implements IEnum {
     name: string;
+    tags?: string;
     members: EnumMember[];
 
     static classInfo: ClassInfo = {
@@ -1782,6 +1790,7 @@ export class Enum extends EezObject implements IEnum {
                 type: PropertyType.String,
                 uniqueIdentifier: true
             },
+            makeTagsProperty(),
             {
                 name: "members",
                 type: PropertyType.Array,
@@ -1865,6 +1874,7 @@ export class Enum extends EezObject implements IEnum {
 
         makeObservable(this, {
             name: observable,
+            tags: observable,
             members: observable
         });
     }

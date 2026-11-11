@@ -17,6 +17,7 @@ import {
     MessageType,
     IMessage
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import {
     createObject,
     getChildOfObject,
@@ -91,6 +92,7 @@ export class ScpiEnumMember extends EezObject {
 
 export class ScpiEnum extends EezObject {
     name: string;
+    tags?: string;
     members: ScpiEnumMember[];
 
     static classInfo: ClassInfo = {
@@ -105,6 +107,7 @@ export class ScpiEnum extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "members",
                 type: PropertyType.Array,
@@ -160,6 +163,7 @@ export class ScpiEnum extends EezObject {
 
         makeObservable(this, {
             name: observable,
+            tags: observable,
             members: observable
         });
     }

@@ -12,6 +12,7 @@ import {
     IEezObject,
     PropertyProps
 } from "project-editor/core/object";
+import { makeTagsProperty } from "project-editor/core/tags";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import { ProjectContext } from "project-editor/project/context";
 import { ListNavigation } from "project-editor/ui-components/ListNavigation";
@@ -209,6 +210,7 @@ export const GroupImplementationInfoPropertyUI = observer(
 
 export class LVGLGroup extends EezObject {
     name: string;
+    tags?: string;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -217,6 +219,7 @@ export class LVGLGroup extends EezObject {
                 type: PropertyType.String,
                 unique: true
             },
+            makeTagsProperty(),
             {
                 name: "defaultGroupForEncoderInSimulator",
                 displayName: "Use this for Encoder in simulator",
@@ -279,7 +282,8 @@ export class LVGLGroup extends EezObject {
         super.makeEditable();
 
         makeObservable(this, {
-            name: observable
+            name: observable,
+            tags: observable
         });
     }
 }
@@ -445,13 +449,18 @@ const WidgetsInGroup = observer(
 );
 
 export const LVGLGroupsTab = observer(
-    class LVGLGroupsTab extends React.Component {
+    class LVGLGroupsTab extends React.Component<{
+        // render only this part ("groups" or "order")
+        component?: string;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
         factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
+            return this.renderComponent(node.getComponent());
+        };
 
+        renderComponent(component: string | undefined) {
             if (component === "groups") {
                 return <GroupsList />;
             }
@@ -461,9 +470,13 @@ export const LVGLGroupsTab = observer(
             }
 
             return null;
-        };
+        }
 
         render() {
+            if (this.props.component) {
+                return this.renderComponent(this.props.component);
+            }
+
             return (
                 <FlexLayoutContainer
                     model={this.context.layoutModels.lvglGroups}

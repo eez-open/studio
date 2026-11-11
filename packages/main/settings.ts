@@ -30,6 +30,11 @@ export interface IDbPath {
     timeOfLastDatabaseCompactOperation: number;
 }
 
+export type ProjectEditorLayout = "classic" | "project-explorer";
+
+// where the properties of the selected project objects are edited
+export type PropertiesEditor = "panel" | "dialog";
+
 export interface IMruItem {
     filePath: string;
     projectType: string;
@@ -60,6 +65,10 @@ class Settings {
     _loaded: boolean = false;
 
     showComponentsPaletteInProjectEditor: boolean = true;
+
+    projectEditorLayout: ProjectEditorLayout = "classic";
+
+    propertiesEditor: PropertiesEditor = "panel";
 
     async loadSettings() {
         if (this._loaded) {
@@ -92,7 +101,9 @@ class Settings {
             dateFormat: observable,
             timeFormat: observable,
             isDarkTheme: observable,
-            showComponentsPaletteInProjectEditor: observable
+            showComponentsPaletteInProjectEditor: observable,
+            projectEditorLayout: observable,
+            propertiesEditor: observable
         });
 
         reaction(
@@ -189,6 +200,20 @@ class Settings {
         if (settingsJs.showComponentsPaletteInProjectEditor != undefined) {
             this.showComponentsPaletteInProjectEditor =
                 settingsJs.showComponentsPaletteInProjectEditor;
+        }
+
+        if (
+            settingsJs.projectEditorLayout == "classic" ||
+            settingsJs.projectEditorLayout == "project-explorer"
+        ) {
+            this.projectEditorLayout = settingsJs.projectEditorLayout;
+        }
+
+        if (
+            settingsJs.propertiesEditor == "panel" ||
+            settingsJs.propertiesEditor == "dialog"
+        ) {
+            this.propertiesEditor = settingsJs.propertiesEditor;
         }
     }
 }
@@ -494,6 +519,48 @@ ipcMain.on(
     "setShowComponentsPaletteInProjectEditor",
     function (event: any, value: boolean) {
         setShowComponentsPaletteInProjectEditor(value);
+    }
+);
+
+////////////////////////////////////////////////////////////////////////////////
+
+ipcMain.on("getProjectEditorLayout", function (event: any) {
+    event.returnValue = settings.projectEditorLayout;
+});
+
+ipcMain.on(
+    "setProjectEditorLayout",
+    function (event: Electron.IpcMainEvent, value: ProjectEditorLayout) {
+        runInAction(() => {
+            settings.projectEditorLayout = value;
+        });
+
+        // let the other windows know
+        BrowserWindow.getAllWindows().forEach(window => {
+            if (window.webContents != event.sender) {
+                window.webContents.send("projectEditorLayoutChanged", value);
+            }
+        });
+    }
+);
+
+ipcMain.on("getPropertiesEditor", function (event: any) {
+    event.returnValue = settings.propertiesEditor;
+});
+
+ipcMain.on(
+    "setPropertiesEditor",
+    function (event: Electron.IpcMainEvent, value: PropertiesEditor) {
+        runInAction(() => {
+            settings.propertiesEditor = value;
+        });
+
+        // let the other windows know
+        BrowserWindow.getAllWindows().forEach(window => {
+            if (window.webContents != event.sender) {
+                window.webContents.send("propertiesEditorChanged", value);
+            }
+        });
     }
 );
 

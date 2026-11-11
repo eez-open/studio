@@ -20,7 +20,10 @@ import { LabelWithProgress } from "./LabelWithProgress";
 import { LabelWithInfo } from "./LabelWithInfo";
 
 export const TextsTab = observer(
-    class TextsNavigation extends React.Component {
+    class TextsNavigation extends React.Component<{
+        // render only this part ("resources", "languages" or "statistics")
+        component?: string;
+    }> {
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -271,8 +274,10 @@ export const TextsTab = observer(
         };
 
         factory = (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
+            return this.renderComponent(node.getComponent());
+        };
 
+        renderComponent(component: string | undefined) {
             if (component === "statistics") {
                 return <Statistics />;
             }
@@ -323,9 +328,13 @@ export const TextsTab = observer(
             }
 
             return null;
-        };
+        }
 
         render() {
+            if (this.props.component) {
+                return this.renderComponent(this.props.component);
+            }
+
             return (
                 <FlexLayoutContainer
                     model={this.context.layoutModels.texts}
