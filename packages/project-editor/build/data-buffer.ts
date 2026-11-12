@@ -212,6 +212,46 @@ export class DataBuffer {
         });
     }
 
+    // the objects written once and pointed to from several places
+    sharedObjects = new Map<any, { offset?: number; pointers: number[] }>();
+
+    // As writeObjectOffset, but the object is written only for the first key:
+    // later calls with the same key point to the same object.
+    writeSharedObjectOffset(
+        key: any,
+        callback: () => void,
+        padding: number = 4
+    ) {
+        if (this.currentOffset % 4) {
+            throw "invalid offset 14";
+        }
+
+        const shared = this.sharedObjects.get(key);
+        if (shared) {
+            if (shared.offset != undefined) {
+                this.writeInt32(shared.offset - this.currentOffset);
+            } else {
+                shared.pointers.push(this.currentOffset);
+                this.writeUint32(0);
+            }
+            return;
+        }
+
+        const newShared: { offset?: number; pointers: number[] } = {
+            pointers: []
+        };
+        this.sharedObjects.set(key, newShared);
+
+        this.writeObjectOffset(() => {
+            const offset = this.currentOffset;
+            newShared.offset = offset;
+            callback();
+            for (const pointer of newShared.pointers) {
+                this.buffer.writeInt32LE(offset - pointer, pointer);
+            }
+        }, padding);
+    }
+
     addPadding() {
         if (this.currentOffset % 4) {
             const n = 4 - (this.currentOffset % 4);
@@ -372,6 +412,19 @@ export class DummyDataBuffer {
 
     writeObjectOffset(callback: () => void, padding: number = 4) {
         callback();
+    }
+
+    sharedObjects = new Map<any, { offset?: number; pointers: number[] }>();
+
+    writeSharedObjectOffset(
+        key: any,
+        callback: () => void,
+        padding: number = 4
+    ) {
+        if (!this.sharedObjects.has(key)) {
+            this.sharedObjects.set(key, { pointers: [] });
+            callback();
+        }
     }
 
     addPadding() {}

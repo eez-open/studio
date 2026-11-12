@@ -43,15 +43,18 @@ import { makeTagsProperty } from "project-editor/core/tags";
 import {
     getLabel,
     getProjectStore,
+    getChildOfObject,
     Message,
     createObject,
     ProjectStore
 } from "project-editor/store";
 import {
     isEezGuiLiteProject,
+    isEezGuiProject,
     isLVGLProject,
     isNotV1Project,
-    isV1Project
+    isV1Project,
+    isV3OrNewerProject
 } from "project-editor/project/project-type-traits";
 
 import type { Project } from "project-editor/project/project";
@@ -1454,6 +1457,17 @@ const ChangeBitsPerPixel = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Vector fonts (Font.vector) are drawn by eez-framework at runtime: the EEZ-GUI
+// projects whose pages the framework WASM draws in the editor (v3 with flow
+// support), not eez-gui-lite.
+export function isVectorFontProject(object: IEezObject) {
+    return (
+        isEezGuiProject(object) &&
+        isV3OrNewerProject(object) &&
+        ProjectEditor.getProject(object).projectTypeTraits.hasFlowSupport
+    );
+}
+
 export class Font extends EezObject {
     id: number | undefined;
     name: string;
@@ -1470,6 +1484,10 @@ export class Font extends EezObject {
     glyphs: Glyph[];
     screenOrientation: string;
     alwaysBuild: boolean;
+
+    vector: boolean;
+    vectorFeatures: string;
+    vectorLetterSpacing: number;
 
     lvglRanges: string;
     lvglSymbols: string;
@@ -1517,6 +1535,9 @@ export class Font extends EezObject {
             glyphs: observable,
             screenOrientation: observable,
             alwaysBuild: observable,
+            vector: observable,
+            vectorFeatures: observable,
+            vectorLetterSpacing: observable,
             lvglRanges: observable,
             lvglSymbols: observable,
             lvglAdditionalSources: observable,
@@ -1659,6 +1680,31 @@ export class Font extends EezObject {
                 displayName: "Always add to the generated code",
                 type: PropertyType.Boolean,
                 disabled: isLVGLProject
+            },
+            {
+                name: "vector",
+                displayName: "Vector font",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: (font: Font) => !isVectorFontProject(font),
+                formText:
+                    "Drawn from the font file at runtime, with kerning and OpenType features; the glyphs are not used"
+            },
+            {
+                name: "vectorFeatures",
+                displayName: "OpenType features",
+                type: PropertyType.String,
+                disabled: (font: Font) =>
+                    !font.vector || !isVectorFontProject(font),
+                formText:
+                    'Comma separated, e.g. "tnum" (digits of equal width) or "-liga" (no ligatures)'
+            },
+            {
+                name: "vectorLetterSpacing",
+                displayName: "Letter spacing (px)",
+                type: PropertyType.Number,
+                disabled: (font: Font) =>
+                    !font.vector || !isVectorFontProject(font)
             },
             {
                 name: "lvglGlyphs",
@@ -1891,6 +1937,41 @@ export class Font extends EezObject {
             const projectStore = getProjectStore(font);
 
             ProjectEditor.checkAssetId(projectStore, "fonts", font, messages);
+
+            if (font.vector) {
+                if (!isVectorFontProject(font)) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            "Vector fonts are only for EEZ-GUI projects (v3)",
+                            getChildOfObject(font, "vector")
+                        )
+                    );
+                } else if (!font.source?.filePath) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            "A vector font needs a font file",
+                            getChildOfObject(font, "source")
+                        )
+                    );
+                } else if (
+                    !fs.existsSync(
+                        projectStore.getAbsoluteFilePath(
+                            font.source.filePath,
+                            ProjectEditor.getProject(font)
+                        )
+                    )
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Font file "${font.source.filePath}" not found`,
+                            getChildOfObject(font, "source")
+                        )
+                    );
+                }
+            }
         },
         newItem: async (parent: IEezObject) => {
             function is1BitPerPixel(obj: IEezObject) {
@@ -1914,6 +1995,7 @@ export class Font extends EezObject {
                       lvglFreeTypeStyle: "NORMAL"
                   }
                 : {
+                      vector: false,
                       renderingEngine: "opentype",
                       size: 14,
                       bpp: 8,
@@ -1923,6 +2005,10 @@ export class Font extends EezObject {
                       createGlyphs: true,
                       createBlankGlyphs: false
                   };
+
+            function isNotVector(obj: IEezObject) {
+                return !getProperty(obj, "vector");
+            }
 
             try {
                 while (true) {
@@ -2122,6 +2208,16 @@ export class Font extends EezObject {
                                         }
                                     },
                                     {
+                                        name: "vector",
+                                        displayName: "Vector font",
+                                        type: "boolean",
+                                        checkboxStyleSwitch: true,
+                                        visible: () =>
+                                            isVectorFontProject(parent),
+                                        formText:
+                                            "Drawn from the font file at runtime, with kerning and OpenType features"
+                                    },
+                                    {
                                         name: "renderingEngine",
                                         displayName: "Rendering engine",
                                         type: "enum",
@@ -2134,7 +2230,8 @@ export class Font extends EezObject {
                                                 id: "opentype",
                                                 label: "OpenType"
                                             }
-                                        ]
+                                        ],
+                                        visible: isNotVector
                                     },
                                     {
                                         name: "bpp",
@@ -2153,31 +2250,40 @@ export class Font extends EezObject {
                                     {
                                         name: "threshold",
                                         type: "number",
-                                        visible: is1BitPerPixel
+                                        visible: (obj: IEezObject) =>
+                                            isNotVector(obj) &&
+                                            is1BitPerPixel(obj)
                                     },
                                     {
                                         name: "createGlyphs",
                                         displayName: "Create characters",
                                         type: "boolean",
-                                        checkboxStyleSwitch: true
+                                        checkboxStyleSwitch: true,
+                                        visible: isNotVector
                                     },
                                     {
                                         name: "fromGlyph",
                                         displayName: "From character",
                                         type: "number",
-                                        visible: isCreateGlyphs
+                                        visible: (obj: IEezObject) =>
+                                            isNotVector(obj) &&
+                                            isCreateGlyphs(obj)
                                     },
                                     {
                                         name: "toGlyph",
                                         displayName: "To character",
                                         type: "number",
-                                        visible: isCreateGlyphs
+                                        visible: (obj: IEezObject) =>
+                                            isNotVector(obj) &&
+                                            isCreateGlyphs(obj)
                                     },
                                     {
                                         name: "createBlankGlyphs",
                                         displayName: "Create blank characters",
                                         type: "boolean",
-                                        visible: isCreateGlyphs,
+                                        visible: (obj: IEezObject) =>
+                                            isNotVector(obj) &&
+                                            isCreateGlyphs(obj),
                                         checkboxStyleSwitch: true
                                     }
                                 ],
@@ -2230,6 +2336,21 @@ export class Font extends EezObject {
                                 result.values.filePath
                             );
 
+                            // a vector font gets its height, ascent and descent
+                            // as a bitmap font of the printable ASCII characters
+                            // (FreeType), then it has no glyphs
+                            const vector =
+                                result.values.vector &&
+                                isVectorFontProject(parent);
+                            if (vector) {
+                                result.values.renderingEngine = "freetype";
+                                result.values.bpp = 8;
+                                result.values.createGlyphs = true;
+                                result.values.fromGlyph = 32;
+                                result.values.toGlyph = 126;
+                                result.values.createBlankGlyphs = false;
+                            }
+
                             const fontProperties = await extractFont({
                                 name: result.values.name,
                                 absoluteFilePath,
@@ -2273,6 +2394,11 @@ export class Font extends EezObject {
                                     lvglRanges;
                                 (fontProperties as Font).lvglSymbols =
                                     lvglSymbols;
+                            }
+
+                            if (vector) {
+                                (fontProperties as Font).vector = true;
+                                (fontProperties as Font).glyphs = [];
                             }
 
                             font = createObject<Font>(

@@ -168,6 +168,22 @@
     object-fit: contain;
 }
 
+// the preview of a vector font in the font editor
+.EezStudio_VectorFontPreview {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding: 10px;
+
+    & > canvas {
+        display: block;
+    }
+}
+
+.EezStudio_VectorFontInfo {
+    padding: 10px;
+}
+
 .EezStudio_ColorItem {
     width: calc(100% - 20px);
 

@@ -683,7 +683,13 @@ export class ProjectStore {
             relativeFilePath = "";
         }
 
-        const filePath = this.getProjectFilePath(project ?? this.project);
+        // the absolute path of the project (getProjectFilePath gives the path
+        // of a master or imported project relative to this project)
+        const filePath =
+            !project || project == this.project
+                ? this.filePath
+                : this.openProjectsManager.mapProjectToOpenProject.get(project)
+                      ?.filePath;
 
         if (!filePath) {
             return relativeFilePath;

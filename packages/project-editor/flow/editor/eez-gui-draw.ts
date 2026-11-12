@@ -18,6 +18,7 @@ import {
 import { findFont } from "project-editor/project/assets";
 import { getPixelByteIndex } from "project-editor/features/font/utils";
 import type { IFontExtract } from "project-editor/features/font/font-extract";
+import { measureVectorText } from "project-editor/features/font/vector-font-measure";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -206,6 +207,33 @@ export function measureStr(
 
     for (let i = 0; i < text.length; i++) {
         let encoding = text.charCodeAt(i);
+
+        // the characters up to a font tag in a vector font are measured
+        // together (kerning, ligatures)
+        if (
+            currentFont.vector &&
+            encoding != FONT_START_CHAR.charCodeAt(0) &&
+            encoding != FONT_END_CHAR.charCodeAt(0)
+        ) {
+            let end = i;
+            while (
+                end < text.length &&
+                text[end] != FONT_START_CHAR &&
+                text[end] != FONT_END_CHAR
+            ) {
+                end++;
+            }
+            const runWidth = measureVectorText(
+                currentFont,
+                text.substring(i, end)
+            );
+            if (maxWidth > 0 && width + runWidth > maxWidth) {
+                return maxWidth;
+            }
+            width += runWidth;
+            i = end - 1;
+            continue;
+        }
 
         if (encoding == FONT_START_CHAR.charCodeAt(0)) {
             currentFont = getFontByIndex(

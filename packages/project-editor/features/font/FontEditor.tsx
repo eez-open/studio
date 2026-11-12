@@ -32,6 +32,7 @@ import {
     setPixel
 } from "project-editor/features/font/utils";
 import { Glyphs } from "./Glyphs";
+import { EezGuiFontPreview } from "project-editor/flow/editor/eez-gui-style-preview";
 
 import { RelativeFileInput } from "project-editor/ui-components/FileInput";
 import { showGenericDialog } from "project-editor/core/util";
@@ -571,6 +572,31 @@ export const FontEditor = observer(
 
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
+
+            // a vector font has no glyphs: the preview is drawn by the
+            // framework
+            if (this.font.vector) {
+                if (component === "glyphs") {
+                    return (
+                        <div className="EezStudio_VectorFontPreview">
+                            <EezGuiFontPreview
+                                project={this.context.project}
+                                font={this.font}
+                            />
+                        </div>
+                    );
+                }
+                if (component === "editor") {
+                    return (
+                        <div className="EezStudio_VectorFontInfo">
+                            A vector font is drawn from its font file at
+                            runtime: {this.font.source?.filePath}, size{" "}
+                            {this.font.source?.size}.
+                        </div>
+                    );
+                }
+                return null;
+            }
 
             if (component === "glyphs") {
                 return (
