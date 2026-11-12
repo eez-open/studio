@@ -159,9 +159,13 @@ export class OpenProjectsManager {
     }
 
     getProjectFilePath(project: Project) {
-        return this.projectStore.getFilePathRelativeToProjectPath(
-            this.mapProjectToOpenProject.get(project)?.filePath!
-        );
+        const filePath = this.mapProjectToOpenProject.get(project)?.filePath;
+        // a project that isn't loaded from a file (e.g. a revision in the
+        // history viewer)
+        if (filePath == undefined) {
+            return undefined;
+        }
+        return this.projectStore.getFilePathRelativeToProjectPath(filePath);
     }
 
     getAbsoluteFilePath(filePath: string, relativeFilePath: string) {

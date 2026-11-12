@@ -31,7 +31,7 @@ export function buildGuiStylesEnum(assets: Assets) {
 }
 
 export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
-    function buildStyle(style: Style) {
+    function buildStyle(style: Style, position: number) {
         // flags
         let flags = 0;
 
@@ -61,7 +61,12 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint16(flags);
 
         // backgroundColor
-        let backgroundColor = assets.getColorIndex(style, "backgroundColor");
+        let backgroundColor =
+            position == assets.editorPageStylePosition
+                ? assets.getColorIndexFromStyleColor(
+                      assets.editorBuild!.pageBackgroundColor!
+                  )
+                : assets.getColorIndex(style, "backgroundColor");
         if (isNaN(backgroundColor)) {
             backgroundColor = 0;
         }

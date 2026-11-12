@@ -1,5 +1,8 @@
+import { computed, IComputedValue } from "mobx";
+
 import type { Font } from "project-editor/features/font/font";
-import type { Assets, DataBuffer } from "project-editor/build/assets";
+import type { Assets } from "project-editor/build/assets";
+import { DataBuffer } from "project-editor/build/data-buffer";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 
 export function buildGuiFontsEnum(assets: Assets) {
@@ -86,7 +89,42 @@ function buildFontData(font: Font, dataBuffer: DataBuffer) {
     });
 }
 
+// The editor build (see EditorBuild in assets.ts) runs on every change, and the
+// fonts are most of its data. A font is built once into its own data buffer and
+// copied as it is (offsets in the assets are relative to the field that holds
+// them); the computed value builds it again only when the font changes.
+const editorFontData = new WeakMap<Font, IComputedValue<Buffer>>();
+
+function getEditorFontData(font: Font, utf8Support: boolean) {
+    let fontData = editorFontData.get(font);
+    if (!fontData) {
+        fontData = computed(
+            () => {
+                let size = 1024;
+                for (const glyph of font.glyphs) {
+                    size += 32 + (glyph.pixelArray?.length ?? 0);
+                }
+                const dataBuffer = new DataBuffer(utf8Support, size);
+                buildFontData(font, dataBuffer);
+                dataBuffer.finalize();
+                return dataBuffer.buffer;
+            },
+            { keepAlive: true }
+        );
+        editorFontData.set(font, fontData);
+    }
+    return fontData.get();
+}
+
 export function buildGuiFontsData(assets: Assets, dataBuffer: DataBuffer) {
     const fonts = assets.fonts.filter(font => !!font) as Font[];
-    dataBuffer.writeArray(fonts, font => buildFontData(font, dataBuffer));
+    dataBuffer.writeArray(fonts, font => {
+        if (assets.editorBuild) {
+            dataBuffer.writeUint8Array(
+                getEditorFontData(font, assets.utf8Support)
+            );
+        } else {
+            buildFontData(font, dataBuffer);
+        }
+    });
 }

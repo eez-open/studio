@@ -13,6 +13,8 @@ import * as eezGuiDraw from "project-editor/flow/editor/eez-gui-draw";
 import { LVGLStylesNavigation } from "project-editor/lvgl/style";
 
 import { StylesTreeNavigation } from "project-editor/features/style/StylesTreeNavigation";
+import { isEezGuiEditorWasmProject } from "project-editor/flow/editor/eez-gui-editor-wasm-switch";
+import { EezGuiStylePreview } from "project-editor/flow/editor/eez-gui-style-preview";
 import type { Project } from "project-editor/project/project";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,6 +257,17 @@ const StyleEditor = observer(
                             {text}
                         </div>
                     </div>
+                );
+            } else if (isEezGuiEditorWasmProject(this.context.project)) {
+                return (
+                    <EezGuiStylePreview
+                        project={this.context.project}
+                        style={style}
+                        width={width}
+                        height={height}
+                        text={text}
+                        inverse={style.blinkProperty ? this.inverse : false}
+                    />
                 );
             } else {
                 let canvas = document.createElement("canvas");

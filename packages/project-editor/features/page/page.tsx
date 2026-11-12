@@ -50,12 +50,10 @@ import type {
     IResizeHandler,
     IFlowContext
 } from "project-editor/flow/flow-interfaces";
-import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { ComponentGroupRenderer } from "project-editor/flow/editor/ComponentGroupRenderer";
 import {
     ComponentsContainerEnclosure,
-    ComponentEnclosure,
-    ComponentCanvas
+    ComponentEnclosure
 } from "project-editor/flow/editor/render";
 
 import { AutoSize, Widget } from "project-editor/flow/component";
@@ -78,7 +76,6 @@ import {
 } from "project-editor/flow/components/widgets/overlapping-widgets";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
-import * as eezGuiDraw from "project-editor/flow/editor/eez-gui-draw";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
 import { LVGLPage } from "project-editor/lvgl/Page";
 import type { LVGLPageRuntime } from "project-editor/lvgl/page-runtime";
@@ -91,6 +88,8 @@ import { PAGES_ICON } from "project-editor/ui-components/icons";
 import { ProjectContext } from "project-editor/project/context";
 import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { EezGuiLitePage } from "project-editor/eez-gui-lite/Page";
+import { EezGuiEditorPage } from "project-editor/flow/editor/eez-gui-editor-page";
+import { isEezGuiEditorWasmProject } from "project-editor/flow/editor/eez-gui-editor-wasm-switch";
 import {
     deletePageLayout,
     findPageLayoutPage,
@@ -1016,7 +1015,19 @@ export class Page extends Flow {
                 </>
             );
         }
-        
+
+        if (isEezGuiEditorWasmProject(ProjectEditor.getProject(this))) {
+            return (
+                <>
+                    <ComponentEnclosure
+                        component={this}
+                        flowContext={flowContext}
+                    />
+                    <EezGuiEditorPage page={this} flowContext={flowContext} />
+                </>
+            );
+        }
+
         let width: number | undefined;
         let height: number | undefined;
 
@@ -1074,69 +1085,8 @@ export class Page extends Flow {
     }
 
     render(flowContext: IFlowContext, width: number, height: number) {
-        const pageStyle = findStyle(
-            ProjectEditor.getProject(this),
-            this.style || "default"
-        );
-
-        const isUserWidgetWidgetPage =
-            !flowContext.document.findObjectById(getId(this)) &&
-            !flowContext.projectStore.runtime;
-
-        let previewBackgroundColor: string | undefined;
-        if (
-            this.isUsedAsUserWidget &&
-            !isUserWidgetWidgetPage &&
-            !flowContext.projectStore.runtime
-        ) {
-            const editor =
-                flowContext.projectStore.editorsStore.getEditorByObject(
-                    this
-                );
-
-            const themedColor = (editor?.state as PageTabState)?.previewBackgroundColor;
-
-            if (themedColor) {
-                previewBackgroundColor = getThemedColor(flowContext.projectStore, themedColor).colorValue;
-            }
-        }
-
-        let pageBackground;
-        if (
-            !flowContext.projectStore.projectTypeTraits.isDashboard &&
-            !flowContext.projectStore.projectTypeTraits.isLVGL &&
-            !isUserWidgetWidgetPage
-        ) {
-            pageBackground = (
-                <ComponentCanvas
-                    component={this}
-                    width={width}
-                    height={height}
-                    draw={(ctx: CanvasRenderingContext2D) => {
-                        if (previewBackgroundColor) {
-                            ctx.fillStyle = previewBackgroundColor;
-                            ctx.fillRect(0, 0, width, height);
-                        } else if (pageStyle) {
-                            eezGuiDraw.setProject(flowContext.projectStore.project);
-                            eezGuiDraw.drawBackground(
-                                ctx,
-                                0,
-                                0,
-                                width,
-                                height,
-                                pageStyle,
-                                true
-                            );
-                        }
-                    }}
-                />
-            );
-        }
-
         return (
             <>
-                {pageBackground}
-
                 <ComponentsContainerEnclosure
                     parent={this}
                     components={this.components.filter(
@@ -1237,7 +1187,12 @@ export class Page extends Flow {
             flags |= CLOSE_PAGE_IF_TOUCHED_OUTSIDE_FLAG;
         }
 
-        if (this.isUsedAsUserWidget) {
+        // a user widget page opened in the page editor is drawn as a page (a
+        // page used as a user widget has no flow state of its own)
+        if (
+            this.isUsedAsUserWidget &&
+            !(assets.editorBuild && assets.editorBuild.page == this)
+        ) {
             flags |= PAGE_IS_USED_AS_USER_WIDGET;
         } else {
             flags |= PAGE_CONTAINER;

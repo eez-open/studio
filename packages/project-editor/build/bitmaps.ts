@@ -1,6 +1,19 @@
-import { getBitmapDataAsync } from "project-editor/features/bitmap/bitmap";
+import { computed, IComputedValue } from "mobx";
+
+import {
+    Bitmap,
+    getBitmapDataAsync
+} from "project-editor/features/bitmap/bitmap";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
+
+export interface GuiBitmap {
+    name: string;
+    width: number;
+    height: number;
+    bpp: number;
+    pixels: Uint8Array;
+}
 
 export function buildGuiBitmapsEnum(assets: Assets) {
     let bitmaps = assets.bitmaps.map(
@@ -17,7 +30,8 @@ export function buildGuiBitmapsEnum(assets: Assets) {
     return `enum BitmapsEnum {\n${bitmaps.join(",\n")}\n};`;
 }
 
-async function buildGuiBitmaps(
+// the bitmaps of the assets, to be written with writeGuiBitmapsData
+export async function getGuiBitmaps(
     assets: Assets,
     option: "check" | "buildAssets" | "buildFiles"
 ) {
@@ -25,13 +39,7 @@ async function buildGuiBitmaps(
         return null;
     }
 
-    let bitmaps: {
-        name: string;
-        width: number;
-        height: number;
-        bpp: number;
-        pixels: Uint8Array;
-    }[] = [];
+    let bitmaps: GuiBitmap[] = [];
 
     const bitmapColorFormat =
         option == "buildAssets"
@@ -63,13 +71,54 @@ async function buildGuiBitmaps(
     return bitmaps;
 }
 
-export async function buildGuiBitmapsData(
-    assets: Assets,
-    dataBuffer: DataBuffer,
-    option: "check" | "buildAssets" | "buildFiles"
-) {
-    const bitmaps = await buildGuiBitmaps(assets, option);
+// The editor build (see EditorBuild in assets.ts) is synchronous: the pixels of
+// a bitmap are decoded once and kept until the bitmap changes; while its image
+// is loading the bitmap is an empty 1x1 one (the editor build runs again when
+// the image is loaded).
+const editorBitmapData = new WeakMap<Bitmap, IComputedValue<GuiBitmap>>();
 
+function getEditorBitmap(bitmap: Bitmap) {
+    let bitmapData = editorBitmapData.get(bitmap);
+    if (!bitmapData) {
+        bitmapData = computed(
+            () => {
+                // the same as getBitmapDataAsync with the "buildAssets" option
+                const data = bitmap.getBitmapData(bitmap.bpp, "RGB");
+                if (data) {
+                    return {
+                        name: bitmap.name,
+                        width: data.width,
+                        height: data.height,
+                        bpp: data.bpp,
+                        pixels: data.pixels
+                    };
+                }
+                return {
+                    name: bitmap.name,
+                    width: 1,
+                    height: 1,
+                    bpp: 32,
+                    pixels: new Uint8Array([0, 0, 0, 0])
+                };
+            },
+            { keepAlive: true }
+        );
+        editorBitmapData.set(bitmap, bitmapData);
+    }
+    return bitmapData.get();
+}
+
+export function getEditorGuiBitmaps(assets: Assets) {
+    if (assets.bitmaps.length === 0) {
+        return null;
+    }
+    return assets.bitmaps.map(bitmap => getEditorBitmap(bitmap));
+}
+
+export function writeGuiBitmapsData(
+    dataBuffer: DataBuffer,
+    bitmaps: GuiBitmap[] | null
+) {
     dataBuffer.writeArray(bitmaps || [], bitmap => {
         dataBuffer.writeInt16(bitmap.width);
         dataBuffer.writeInt16(bitmap.height);

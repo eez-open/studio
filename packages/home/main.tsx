@@ -98,8 +98,8 @@ ipcRenderer.on(
 
 ipcRenderer.on(
     "build-project",
-    async (sender: any, filePath: any, runMode: boolean) => {
-        buildProject(filePath);
+    async (sender: any, filePath: any, renderPageOptions: any) => {
+        buildProject(filePath, renderPageOptions);
     }
 );
 

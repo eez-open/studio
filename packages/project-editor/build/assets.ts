@@ -56,7 +56,11 @@ import {
     buildGuiFontsData,
     buildGuiFontsEnum
 } from "project-editor/build/fonts";
-import { buildGuiBitmapsData } from "project-editor/build/bitmaps";
+import {
+    getGuiBitmaps,
+    GuiBitmap,
+    writeGuiBitmapsData
+} from "project-editor/build/bitmaps";
 import { buildGuiColors } from "project-editor/build/themes";
 import {
     buildFlowData,
@@ -109,6 +113,50 @@ import type { Color } from "project-editor/features/style/theme";
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
 export const PATH_SEPARATOR = "//";
+
+// The editor build: the page editor draws an EEZ-GUI page with the framework
+// WASM (see build/editor-build.ts). The assets hold the edited page (page 1, in
+// the page layout of the editor) and the user widgets it uses, no actions, and
+// all the styles, fonts and bitmaps in a fixed order. Widget properties are what
+// the editor shows. Nothing is written to the Output panel.
+export interface EditorBuild {
+    page: Page;
+    pageLayout: PageLayout | undefined;
+    userWidgetPages: Page[];
+    // the preview background of a user widget page opened in its editor (a
+    // theme color name or a color value): the page is drawn with a copy of its
+    // style that has this background color
+    pageBackgroundColor?: string;
+    getWidgetPropertyExpression(
+        widget: Widget,
+        propertyName: string,
+        expressionType: string | undefined,
+        expression: string
+    ): string;
+}
+
+// the project store as the editor build sees it: the Output panel messages are
+// dropped (the build only writes them)
+const silentOutputSectionsStore = new Proxy(
+    {},
+    { get: () => () => {} }
+);
+const silentProjectStores = new WeakMap<object, any>();
+function getSilentProjectStore<T extends object>(projectStore: T): T {
+    let silentProjectStore = silentProjectStores.get(projectStore);
+    if (!silentProjectStore) {
+        silentProjectStore = new Proxy(projectStore, {
+            get(target, property) {
+                if (property == "outputSectionsStore") {
+                    return silentOutputSectionsStore;
+                }
+                return Reflect.get(target, property, target);
+            }
+        });
+        silentProjectStores.set(projectStore, silentProjectStore);
+    }
+    return silentProjectStore;
+}
 
 export class Assets {
     projects: Project[];
@@ -207,7 +255,9 @@ export class Assets {
     dataBuffer: DataBuffer | DummyDataBuffer;
 
     get projectStore() {
-        return this.rootProject._store;
+        return this.editorBuild
+            ? getSilentProjectStore(this.rootProject._store)
+            : this.rootProject._store;
     }
 
     // Layout of the page (and its flow) which is currently built. It is kept in
@@ -373,7 +423,8 @@ export class Assets {
         public rootProject: Project,
         buildConfiguration: BuildConfiguration | undefined,
         public option: "check" | "buildAssets" | "buildFiles",
-        public includedMasterProjectAssets = new Set<EezObject>()
+        public includedMasterProjectAssets = new Set<EezObject>(),
+        public editorBuild?: EditorBuild
     ) {
         this.map.displayWidth = rootProject.settings.general.displayWidth;
         this.map.displayHeight = rootProject.settings.general.displayHeight;
@@ -383,7 +434,10 @@ export class Assets {
             this.lvglBuild.firtsPassStart();
         }
 
-        this.projectStore.typesStore.reset();
+        // the editor build runs on every change, it adds the types it needs
+        if (!this.editorBuild) {
+            this.projectStore.typesStore.reset();
+        }
 
         this.getConstantIndex(undefined, "undefined"); // undefined has value index 0
         this.getConstantIndex(null, "null"); // null has value index 1
@@ -454,22 +508,35 @@ export class Assets {
             );
         }
 
+        if (this.editorBuild) {
+            this.pages = [
+                this.editorBuild.page,
+                ...this.editorBuild.userWidgetPages
+            ];
+            this.pageLayouts = [
+                this.editorBuild.pageLayout,
+                ...this.editorBuild.userWidgetPages.map(() => undefined)
+            ];
+        }
+
         //
         // flows
         //
-        this.flows = [
-            ...this.pages,
-            ...this.getAssets<Action>(
-                project =>
-                    project.actions.filter(
-                        action =>
-                            (this.option == "buildAssets" &&
-                                this.getAssetId(action) == undefined) ||
-                            action.implementationType == "flow"
-                    ),
-                assetIncludePredicate
-            )
-        ];
+        this.flows = this.editorBuild
+            ? [...this.pages]
+            : [
+                  ...this.pages,
+                  ...this.getAssets<Action>(
+                      project =>
+                          project.actions.filter(
+                              action =>
+                                  (this.option == "buildAssets" &&
+                                      this.getAssetId(action) == undefined) ||
+                                  action.implementationType == "flow"
+                          ),
+                      assetIncludePredicate
+                  )
+              ];
 
         this.dataBuffer = new DummyDataBuffer(this.utf8Support);
 
@@ -598,12 +665,14 @@ export class Assets {
             }
         }
 
-        this.actions = [
-            // first non-native
-            ...nonNativeActions,
-            // than native
-            ...nativeActions
-        ];
+        this.actions = this.editorBuild
+            ? []
+            : [
+                  // first non-native
+                  ...nonNativeActions,
+                  // than native
+                  ...nativeActions
+              ];
 
         //
         // styles
@@ -614,9 +683,13 @@ export class Assets {
             project => project.allStyles,
             style => this.getAssetId(style) != undefined
         ).forEach(style => (this.styles[style.id! - 1] = style));
+        // the editor build has all of them, so their indexes don't depend on
+        // the page (see EditorBuild)
         this.getAssets<Style>(
             project => project.allStyles,
-            style => this.getAssetId(style) == undefined && style.alwaysBuild
+            style =>
+                this.getAssetId(style) == undefined &&
+                (style.alwaysBuild || this.editorBuild != undefined)
         ).forEach(style => this.styles.push(style));
 
         //
@@ -629,7 +702,9 @@ export class Assets {
         ).forEach(font => (this.fonts[font.id! - 1] = font));
         this.getAssets<Font>(
             project => project.fonts,
-            font => this.getAssetId(font) == undefined && font.alwaysBuild
+            font =>
+                this.getAssetId(font) == undefined &&
+                (font.alwaysBuild || this.editorBuild != undefined)
         ).forEach(font => this.fonts.push(font));
         for (let i = 0; i < this.fonts.length; i++) {
             if (!this.fonts[i]) {
@@ -660,7 +735,8 @@ export class Assets {
             bitmap =>
                 this.getAssetId(bitmap) == undefined &&
                 (bitmap.alwaysBuild ||
-                    isDashboardProject(this.projectStore.project))
+                    isDashboardProject(this.projectStore.project) ||
+                    this.editorBuild != undefined)
         ).forEach(bitmap => this.bitmaps.push(bitmap));
         for (let i = 0; i < this.bitmaps.length; i++) {
             if (!this.bitmaps[i]) {
@@ -948,7 +1024,34 @@ export class Assets {
             }
         }
 
+        if (
+            this.editorBuild?.pageBackgroundColor != undefined &&
+            object == this.editorBuild.page &&
+            propertyName == "style"
+        ) {
+            return this.getEditorPageStyleIndex(project, style);
+        }
+
         return this.doGetStyleIndex(project, style);
+    }
+
+    // the copy of the page style with the preview background (see EditorBuild),
+    // the position in this.styles
+    editorPageStylePosition: number | undefined;
+
+    getEditorPageStyleIndex(project: Project, style: string | Style) {
+        if (this.editorPageStylePosition == undefined) {
+            const styleObject =
+                typeof style == "string" ? findStyle(project, style) : style;
+            if (!styleObject) {
+                return this.doGetStyleIndex(project, style);
+            }
+            this.styles.push(styleObject);
+            this.editorPageStylePosition = this.styles.length - 1;
+        }
+        return this.masterProject
+            ? -(this.editorPageStylePosition + 1)
+            : this.editorPageStylePosition + 1;
     }
 
     getFontIndex(object: any, propertyName: string) {
@@ -1108,7 +1211,13 @@ export class Assets {
             | "focusBackgroundColor"
             | "borderColor"
     ) {
-        let color = getStyleProperty(style, propertyName, false);
+        return this.getColorIndexFromStyleColor(
+            getStyleProperty(style, propertyName, false)
+        );
+    }
+
+    // a color as a style property has it: a theme color name or a color value
+    getColorIndexFromStyleColor(color: string) {
         if (color != "transparent") {
             const colorFormat = ColorFormat.parse(color, this.projectStore.masterProject ? this.projectStore.masterProject : this.projectStore.project);
             if (!colorFormat.isUsingThemeColor) {
@@ -1364,11 +1473,20 @@ export class Assets {
     }
 
     getFlowWidgetDataItemIndex(widget: Widget, propertyName: string) {
-        if (!getProperty(widget, propertyName)) {
+        // the editor build makes the widgets hidden in the editor invisible,
+        // also without a "visible" expression (see EditorBuild)
+        const hiddenInEditor =
+            this.editorBuild &&
+            propertyName == "visible" &&
+            widget.hiddenInEditor;
+
+        if (!getProperty(widget, propertyName) && !hiddenInEditor) {
             return 0;
         }
 
-        if (this.projectStore.projectTypeTraits.isFirmware) {
+        // native variables have no value in the editor, the editor build
+        // replaces the expression (see EditorBuild)
+        if (this.projectStore.projectTypeTraits.isFirmware && !this.editorBuild) {
             let expression = getProperty(widget, propertyName).trim();
             const globalVariableIndex = this.nativeGlobalVariables.findIndex(globalVariable => globalVariable.name == expression);
             if (globalVariableIndex != -1) {
@@ -1455,6 +1573,11 @@ export class Assets {
     }
 
     getFlowWidgetActionIndex(widget: Widget | Component, propertyName: string) {
+        // the editor build has no actions
+        if (this.editorBuild) {
+            return 0;
+        }
+
         if (widget instanceof ProjectEditor.WidgetClass) {
             if (propertyName == "action") {
                 propertyName = widget.getDefaultActionEventName();
@@ -1776,11 +1899,29 @@ function buildLanguages(assets: Assets, dataBuffer: DataBuffer) {
     );
 }
 
-export async function buildGuiAssetsData(
+let editorWorkBuffer: Buffer | undefined;
+function getEditorWorkBuffer() {
+    if (!editorWorkBuffer) {
+        editorWorkBuffer = Buffer.alloc(32 * 1024 * 1024);
+    }
+    return editorWorkBuffer;
+}
+
+// The assets data, written synchronously (the editor build runs inside a MobX
+// reaction): the bitmaps are got before, see getGuiBitmaps and
+// getEditorGuiBitmaps. The uncompressed data has the ~EEZ header.
+export function buildGuiAssetsDataSync(
     assets: Assets,
-    option: "check" | "buildAssets" | "buildFiles"
+    bitmaps: GuiBitmap[] | null
 ) {
-    const dataBuffer = new DataBuffer(assets.utf8Support);
+    // the editor build runs on every change: it writes into the same buffer
+    // (zeroed again after the build) instead of a new 32 MB one
+    const workBuffer = assets.editorBuild ? getEditorWorkBuffer() : undefined;
+    const dataBuffer = new DataBuffer(
+        assets.utf8Support,
+        undefined,
+        workBuffer
+    );
     assets.dataBuffer = dataBuffer;
 
     // settings
@@ -1795,9 +1936,9 @@ export async function buildGuiAssetsData(
         // styles
         buildGuiStylesData(assets, dataBuffer);
         // fonts
-        await buildGuiFontsData(assets, dataBuffer);
+        buildGuiFontsData(assets, dataBuffer);
         // bitmaps
-        await buildGuiBitmapsData(assets, dataBuffer, option);
+        writeGuiBitmapsData(dataBuffer, bitmaps);
     }
     // colorsDefinition
     buildGuiColors(assets, dataBuffer);
@@ -1823,8 +1964,12 @@ export async function buildGuiAssetsData(
 
     const uncompressedSize = dataBuffer.size;
 
+    if (workBuffer) {
+        workBuffer.fill(0, 0, uncompressedSize);
+    }
+
     //
-    const uncompressedHeaderBuffer = new DataBuffer(assets.utf8Support);
+    const uncompressedHeaderBuffer = new DataBuffer(assets.utf8Support, 64);
     buildHeaderData(assets, uncompressedSize, uncompressedHeaderBuffer, true);
 
     const uncompressedData = Buffer.alloc(
@@ -1842,6 +1987,20 @@ export async function buildGuiAssetsData(
         0,
         uncompressedSize
     );
+
+    return { dataBuffer, uncompressedSize, uncompressedData };
+}
+
+export async function buildGuiAssetsData(
+    assets: Assets,
+    option: "check" | "buildAssets" | "buildFiles"
+) {
+    const bitmaps = assets.projectStore.projectTypeTraits.isLVGL
+        ? null
+        : await getGuiBitmaps(assets, option);
+
+    const { dataBuffer, uncompressedSize, uncompressedData } =
+        buildGuiAssetsDataSync(assets, bitmaps);
 
     // Module assets are stored in the module flash and decompressed by
     // the BB3+, LZMA compresses them about two times better than LZ4

@@ -78,17 +78,25 @@ function getComponentTypes(projectStore: ProjectStore) {
         .sort((a, b) => getComponentId(a)! - getComponentId(b)!);
 }
 
-function getFlowComponents(flow: Flow) {
+// the editor build has only the widgets (see EditorBuild in assets.ts)
+function getFlowComponents(assets: Assets, flow: Flow) {
     const components: Component[] = [];
     for (const component of visitObjects(flow)) {
         if (
             component instanceof Component &&
-            !(component instanceof CommentActionComponent)
+            !(component instanceof CommentActionComponent) &&
+            (!assets.editorBuild ||
+                component instanceof ProjectEditor.WidgetClass)
         ) {
             components.push(component);
         }
     }
     return components;
+}
+
+// the editor build has no connection lines (only the widgets are built)
+function getConnectionLines(assets: Assets, flow: Flow) {
+    return assets.editorBuild ? [] : flow.connectionLines;
 }
 
 // In the firmware projects a widget needs its flow component only when the
@@ -112,7 +120,7 @@ function removeUnreferencedWidgetComponents(
         ...flowState.flowWidgetFromActionIndex.values()
     ]);
 
-    for (const connectionLine of flow.connectionLines) {
+    for (const connectionLine of getConnectionLines(assets, flow)) {
         if (!connectionLine.disabled) {
             if (connectionLine.sourceComponent) {
                 referencedComponents.add(connectionLine.sourceComponent);
@@ -254,7 +262,27 @@ function buildComponent(
                         }
                     }
 
-                    if (flowProperty == "assignable") {
+                    if (
+                        assets.editorBuild &&
+                        component instanceof ProjectEditor.WidgetClass
+                    ) {
+                        // the value the editor shows, read only
+                        if (flowProperty == "template-literal") {
+                            expression =
+                                templateLiteralToExpression(expression);
+                        }
+                        buildExpression(
+                            assets,
+                            dataBuffer,
+                            component,
+                            assets.editorBuild.getWidgetPropertyExpression(
+                                component,
+                                propertyInfo.name,
+                                propertyInfo.expressionType,
+                                expression
+                            )
+                        );
+                    } else if (flowProperty == "assignable") {
                         buildAssignableExpression(
                             assets,
                             dataBuffer,
@@ -321,7 +349,7 @@ function buildComponent(
         }
     });
     dataBuffer.writeArray(outputs, (output, outputIndex) => {
-        const connectionLines = flow.connectionLines.filter(
+        const connectionLines = getConnectionLines(assets, flow).filter(
             connectionLine =>
                 connectionLine.sourceComponent === component &&
                 connectionLine.output == output.name &&
@@ -421,7 +449,7 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
     const components = removeUnreferencedWidgetComponents(
         assets,
         flow,
-        getFlowComponents(flow)
+        getFlowComponents(assets, flow)
     );
     components.sort(
         (a, b) => assets.getComponentIndex(a) - assets.getComponentIndex(b)

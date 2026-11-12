@@ -136,10 +136,66 @@ ipcMain.once("open-command-line-project", async function () {
     } else {
         if (buildProjectArgIndex + 1 < process.argv.length) {
             const buildProjectFilePath = process.argv[buildProjectArgIndex + 1];
-            homeWindow.webContents.send("build-project", buildProjectFilePath);
+
+            // --render-page <page name> <PNG file> [--theme <index>] [--layout <name>]
+            // [--select <index>: the child every Select shows]
+            // [--background <color>: the preview background of a user widget page]
+            let renderPageOptions;
+            const renderPageArgIndex = process.argv.indexOf("--render-page");
+            if (
+                renderPageArgIndex != -1 &&
+                renderPageArgIndex + 2 < process.argv.length
+            ) {
+                const argValue = (name: string) => {
+                    const index = process.argv.indexOf(name);
+                    return index != -1 && index + 1 < process.argv.length
+                        ? process.argv[index + 1]
+                        : undefined;
+                };
+                const theme = argValue("--theme");
+                const select = argValue("--select");
+                renderPageOptions = {
+                    pageName: process.argv[renderPageArgIndex + 1],
+                    outFile: process.argv[renderPageArgIndex + 2],
+                    themeIndex: theme != undefined ? parseInt(theme) : undefined,
+                    pageLayoutName: argValue("--layout"),
+                    selectChildIndex:
+                        select != undefined ? parseInt(select) : undefined,
+                    background: argValue("--background")
+                };
+            }
+
+            homeWindow.webContents.send(
+                "build-project",
+                buildProjectFilePath,
+                renderPageOptions
+            );
         }
     }
 });
+
+// CPU profile of the renderer for --render-page measuring (temporary): "start",
+// then "stop" with the file to write the profile to
+ipcMain.handle(
+    "render-page-profile",
+    async function (event, action: string, file?: string) {
+        const debuggerApi = event.sender.debugger;
+        if (action == "start") {
+            if (!debuggerApi.isAttached()) {
+                debuggerApi.attach("1.3");
+            }
+            await debuggerApi.sendCommand("Profiler.enable");
+            await debuggerApi.sendCommand("Profiler.setSamplingInterval", {
+                interval: 100
+            });
+            await debuggerApi.sendCommand("Profiler.start");
+        } else {
+            const { profile } = await debuggerApi.sendCommand("Profiler.stop");
+            require("fs").writeFileSync(file!, JSON.stringify(profile));
+            debuggerApi.detach();
+        }
+    }
+);
 
 ipcMain.on("on-build-project-message", function (event, message) {
     if (message) {

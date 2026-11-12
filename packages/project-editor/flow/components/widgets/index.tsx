@@ -50,8 +50,7 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 import {
     ComponentsContainerEnclosure,
-    ComponentEnclosure,
-    ComponentCanvas
+    ComponentEnclosure
 } from "project-editor/flow/editor/render";
 
 import {
@@ -62,7 +61,6 @@ import {
     getEnumTypeNameFromVariable,
     isEnumVariable
 } from "project-editor/features/variable/value-type";
-import * as eezGuiDraw from "project-editor/flow/editor/eez-gui-draw";
 
 import {
     Widget,
@@ -108,9 +106,11 @@ import {
     getPageLayouts,
     getUnenclosedWidgetLayoutValues,
     isWidgetShownInLayout,
+    isWidgetVisibleInEditorLayout,
     newPageLayoutMessage,
     omitLayoutValues
 } from "project-editor/features/page/page-layouts";
+import { isEezGuiEditorWasmProject } from "project-editor/flow/editor/eez-gui-editor-wasm-switch";
 import { visitObjects } from "project-editor/core/search";
 
 import { isArray } from "eez-studio-shared/util";
@@ -753,8 +753,21 @@ export class ContainerWidget extends Widget {
         containerWidth: number,
         containerHeight: number
     ): React.ReactNode {
+        // the page editor that draws with the framework WASM shows the widgets
+        // of a horizontal or vertical container where the framework draws them
+        const stacked =
+            flowContext.flowState != undefined ||
+            isEezGuiEditorWasmProject(ProjectEditor.getProject(this));
+
+        // a widget that isn't visible takes no space
+        const isVisible = (widget: Widget) =>
+            flowContext.flowState
+                ? getBooleanValue(flowContext, widget, "visible", !widget.visible)
+                : !widget.hiddenInEditor &&
+                  isWidgetVisibleInEditorLayout(widget);
+
         let children;
-        if (flowContext.flowState && this.layout == "horizontal") {
+        if (stacked && this.layout == "horizontal") {
             let offset = 0;
 
             children = this.widgets.map((widget, i) => {
@@ -763,14 +776,7 @@ export class ContainerWidget extends Widget {
                 let width = widget.width;
                 let height = widget.height;
 
-                if (
-                    !getBooleanValue(
-                        flowContext,
-                        widget,
-                        "visible",
-                        !widget.visible
-                    )
-                ) {
+                if (!isVisible(widget)) {
                     return null;
                 }
 
@@ -795,7 +801,7 @@ export class ContainerWidget extends Widget {
                     />
                 );
             });
-        } else if (flowContext.flowState && this.layout == "vertical") {
+        } else if (stacked && this.layout == "vertical") {
             let offset = 0;
 
             children = this.widgets.map((widget, i) => {
@@ -804,14 +810,7 @@ export class ContainerWidget extends Widget {
                 let width = widget.width;
                 let height = widget.height;
 
-                if (
-                    !getBooleanValue(
-                        flowContext,
-                        widget,
-                        "visible",
-                        !widget.visible
-                    )
-                ) {
+                if (!isVisible(widget)) {
                     return null;
                 }
 
@@ -871,26 +870,6 @@ export class ContainerWidget extends Widget {
 
         const fragment = (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={containerWidth}
-                        height={containerHeight}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            eezGuiDraw.setProject(flowContext.projectStore.project);
-                            eezGuiDraw.drawBackground(
-                                ctx,
-                                0,
-                                0,
-                                containerWidth,
-                                containerHeight,
-                                this.layoutStyle,
-                                true
-                            );
-                        }}
-                    />
-                )}
 
                 {children}
 
@@ -1693,26 +1672,6 @@ export class SelectWidget extends Widget {
 
         const fragment = (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            eezGuiDraw.setProject(flowContext.projectStore.project);
-                            eezGuiDraw.drawBackground(
-                                ctx,
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.layoutStyle,
-                                true
-                            );
-                        }}
-                    />
-                )}
                 <ComponentsContainerEnclosure
                     parent={this}
                     components={this.widgets}
@@ -2154,26 +2113,6 @@ export class UserWidgetWidget extends Widget {
 
         return (
             <>
-                {flowContext.projectStore.projectTypeTraits
-                    .isDashboard ? null : (
-                    <ComponentCanvas
-                        component={this}
-                        width={width}
-                        height={height}
-                        draw={(ctx: CanvasRenderingContext2D) => {
-                            eezGuiDraw.setProject(flowContext.projectStore.project);
-                            eezGuiDraw.drawBackground(
-                                ctx,
-                                0,
-                                0,
-                                width,
-                                height,
-                                this.layoutStyle,
-                                true
-                            );
-                        }}
-                    />
-                )}
                 {element}
                 {super.render(flowContext, width, height)}
             </>

@@ -455,69 +455,6 @@ export const ComponentEnclosure = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export const ComponentCanvas = observer(
-    class ComponentCanvas extends React.Component<{
-        component: Page | Component;
-        draw: (ctx: CanvasRenderingContext2D) => void;
-        width: number;
-        height: number;
-    }> {
-        elRef = React.createRef<HTMLDivElement>();
-
-        canvas: HTMLCanvasElement;
-
-        addCanvasToDOM() {
-            if (!this.elRef.current) {
-                return;
-            }
-
-            if (this.elRef.current.children[0]) {
-                this.elRef.current.replaceChild(
-                    this.canvas,
-                    this.elRef.current.children[0]
-                );
-            } else {
-                this.elRef.current.appendChild(this.canvas);
-            }
-        }
-
-        componentDidMount() {
-            this.addCanvasToDOM();
-        }
-
-        componentDidUpdate() {
-            this.addCanvasToDOM();
-        }
-
-        render() {
-            if (ProjectEditor.getProject(this.props.component).projectTypeTraits.isEezGuiLite) {
-                return null;
-            }
-
-            const { draw } = this.props;
-
-            this.canvas = document.createElement("canvas");
-            this.canvas.width = this.props.width;
-            this.canvas.height = this.props.height;
-            this.canvas.style.imageRendering = "pixelated";
-            this.canvas.style.display = "block";
-            draw(this.canvas.getContext("2d")!);
-
-            return (
-                <div
-                    ref={this.elRef}
-                    style={{
-                        width: this.props.width,
-                        height: this.props.height
-                    }}
-                ></div>
-            );
-        }
-    }
-);
-
-////////////////////////////////////////////////////////////////////////////////
-
 interface PortsGeometry {
     [inputName: string]: {
         rect: Rect;

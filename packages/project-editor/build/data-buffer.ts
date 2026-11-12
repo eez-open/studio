@@ -5,7 +5,7 @@ import {
 } from "project-editor/build/lz4";
 
 export class DataBuffer {
-    buffer = Buffer.alloc(32 * 1024 * 1024);
+    buffer: Buffer;
 
     currentOffset: number = 0;
 
@@ -27,7 +27,15 @@ export class DataBuffer {
         context: any;
     }[] = [];
 
-    constructor(public utf8Support: boolean) {}
+    // size: the most the buffer can hold; buffer: a zeroed buffer to write
+    // into instead of a new one
+    constructor(
+        public utf8Support: boolean,
+        size: number = 32 * 1024 * 1024,
+        buffer?: Buffer
+    ) {
+        this.buffer = buffer ?? Buffer.alloc(size);
+    }
 
     writeInt8(value: number) {
         this.buffer.writeInt8(value, this.currentOffset);

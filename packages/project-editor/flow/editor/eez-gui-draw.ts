@@ -1,3 +1,9 @@
+// Drawing of glyphs and of a text in a style into a 2D canvas: the glyphs in
+// the font editor and the expression builder, the style preview of the projects
+// that the framework WASM doesn't draw (eez-gui-lite, EEZ-GUI v1/v2), and the
+// text width of a Text widget that fits its content. The pages of EEZ-GUI v3
+// flow projects are drawn by the framework WASM (eez-gui-editor-page.tsx).
+
 import { getColorRGB } from "eez-studio-shared/color";
 
 import { findBitmap, Project } from "project-editor/project/project";
@@ -36,23 +42,15 @@ export function setProject(project_: Project) {
     project = project_;
 }
 
-export function getColor() {
-    return fgColor;
-}
-
 export function setColor(color: string) {
     fgColor = project.toColorBpp(color);
-}
-
-export function getBackColor() {
-    return bgColor;
 }
 
 export function setBackColor(color: string) {
     bgColor = project.toColorBpp(color);
 }
 
-export function fillRect(
+function fillRect(
     ctx: CanvasRenderingContext2D,
     x1: number,
     y1: number,
@@ -63,7 +61,7 @@ export function fillRect(
     ctx.fillRect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
 }
 
-export function fillRoundedRect(
+function fillRoundedRect(
     ctx: CanvasRenderingContext2D,
     x1: number,
     y1: number,
@@ -117,32 +115,6 @@ export function fillRoundedRect(
         ctx.lineWidth = lineWidth;
         ctx.stroke();
     }
-}
-
-export function drawHLine(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    l: number
-) {
-    ctx.beginPath();
-    ctx.moveTo(x + 0.5, y + 0.5);
-    ctx.lineTo(x + 0.5 + l, y + 0.5);
-    ctx.strokeStyle = fgColor;
-    ctx.stroke();
-}
-
-export function drawVLine(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    l: number
-) {
-    ctx.beginPath();
-    ctx.moveTo(x + 0.5, y + 0.5);
-    ctx.lineTo(x + 0.5, y + l + 0.5);
-    ctx.strokeStyle = fgColor;
-    ctx.stroke();
 }
 
 function getGlyph(font: Font, encoding: number) {
@@ -220,20 +192,6 @@ function getFontByIndex(fontIndex: number, defaultFont: Font) {
     return (
         (fontIndex > 0 && fontTagFonts[fontIndex - 1]?.deref()) || defaultFont
     );
-}
-
-// Returns font index that is active at the end of the text, 0 is the default
-// font.
-export function getFontIndexAtEnd(text: string, fontIndex: number = 0) {
-    for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        if (c == FONT_START_CHAR) {
-            fontIndex = i + 1 < text.length ? text.charCodeAt(++i) : 0;
-        } else if (c == FONT_END_CHAR) {
-            fontIndex = 0;
-        }
-    }
-    return fontIndex;
 }
 
 export function measureStr(
@@ -556,7 +514,7 @@ export function drawGlyph2(encoding: number, fontExtract: IFontExtract) {
     return canvas;
 }
 
-export function drawStr(
+function drawStr(
     ctx: CanvasRenderingContext2D,
     text: string,
     x: number,
@@ -587,7 +545,7 @@ export function drawStr(
     }
 }
 
-export function drawBitmap(
+function drawBitmap(
     ctx: CanvasRenderingContext2D,
     bitmap: HTMLImageElement,
     x: number,
@@ -600,23 +558,19 @@ export function drawBitmap(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function styleGetBorderRadius(style: Style) {
-    return style.borderRadiusProperty;
-}
-
-export function styleIsHorzAlignLeft(style: Style) {
+function styleIsHorzAlignLeft(style: Style) {
     return style.alignHorizontalProperty == "left";
 }
 
-export function styleIsHorzAlignRight(style: Style) {
+function styleIsHorzAlignRight(style: Style) {
     return style.alignHorizontalProperty == "right";
 }
 
-export function styleIsVertAlignTop(style: Style) {
+function styleIsVertAlignTop(style: Style) {
     return style.alignVerticalProperty == "top";
 }
 
-export function styleIsVertAlignBottom(style: Style) {
+function styleIsVertAlignBottom(style: Style) {
     return style.alignVerticalProperty == "bottom";
 }
 
@@ -626,7 +580,7 @@ export function styleGetFont(style: Style) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function drawBackground(
+function drawBackground(
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
@@ -843,156 +797,7 @@ export function drawText(
 // are aligned as a text in drawText and drawn with the style color on the style
 // background.
 
-function getCheckBoxSize(font: Font) {
-    return Math.floor((font.height * 3) / 4);
-}
-
-// width of the box and the label, without the padding
-export function measureCheckboxOrRadio(style: Style, label: string) {
-    const font = styleGetFont(style);
-    if (!font) {
-        return 0;
-    }
-
-    let width = getCheckBoxSize(font);
-    if (label) {
-        width += measureGlyph(32, font) + measureStr(label, font, 0);
-    }
-    return width;
-}
-
-export function drawCheckboxOrRadio(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    style: Style,
-    radio: boolean,
-    checked: boolean,
-    label: string
-) {
-    let { x1, y1, x2, y2 } = drawBackground(ctx, x, y, w, h, style, true);
-
-    const font = styleGetFont(style);
-    if (!font) {
-        return;
-    }
-
-    const width = measureCheckboxOrRadio(style, label);
-    const height = font.height;
-
-    let xOffset: number;
-    if (styleIsHorzAlignLeft(style)) {
-        xOffset = x1 + style.paddingRect.left;
-    } else if (styleIsHorzAlignRight(style)) {
-        xOffset = x2 - style.paddingRect.right - width;
-    } else {
-        xOffset = Math.floor(x1 + (x2 - x1 + 1 - width) / 2);
-        if (xOffset < x1) {
-            xOffset = x1;
-        }
-    }
-
-    let yOffset: number;
-    if (styleIsVertAlignTop(style)) {
-        yOffset = y1 + style.paddingRect.top;
-    } else if (styleIsVertAlignBottom(style)) {
-        yOffset = y2 - style.paddingRect.bottom - height;
-    } else {
-        yOffset = Math.floor(y1 + (y2 - y1 + 1 - height) / 2);
-    }
-
-    const boxSize = getCheckBoxSize(font);
-    const bx1 = xOffset;
-    const by1 = yOffset + Math.floor((height - boxSize) / 2);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
-    ctx.clip();
-
-    setColor(style.colorProperty);
-    ctx.strokeStyle = fgColor;
-    ctx.fillStyle = fgColor;
-
-    if (radio) {
-        // circle, a filled circle inside if checked
-        const lineWidth = Math.max(1, Math.round(boxSize / 14));
-        ctx.lineWidth = lineWidth;
-        ctx.beginPath();
-        ctx.arc(
-            bx1 + boxSize / 2,
-            by1 + boxSize / 2,
-            boxSize / 2 - lineWidth / 2,
-            0,
-            Math.PI * 2
-        );
-        ctx.stroke();
-
-        if (checked) {
-            // the free space around the dot is even, so the dot is centered
-            // on whole pixels
-            let dotSize = Math.floor(boxSize / 2);
-            if ((boxSize - dotSize) % 2) {
-                dotSize++;
-            }
-            const dx1 = bx1 + Math.floor((boxSize - dotSize) / 2);
-            const dy1 = by1 + Math.floor((boxSize - dotSize) / 2);
-            ctx.beginPath();
-            ctx.arc(
-                dx1 + dotSize / 2,
-                dy1 + dotSize / 2,
-                dotSize / 2,
-                0,
-                Math.PI * 2
-            );
-            ctx.fill();
-        }
-    } else {
-        // rounded square, a check mark inside if checked
-        const lineWidth = Math.max(1, Math.round(boxSize / 9));
-        ctx.lineWidth = lineWidth;
-        ctx.beginPath();
-        ctx.roundRect(
-            bx1 + lineWidth / 2,
-            by1 + lineWidth / 2,
-            boxSize - lineWidth,
-            boxSize - lineWidth,
-            Math.floor(boxSize / 6)
-        );
-        ctx.stroke();
-
-        if (checked) {
-            ctx.lineWidth = boxSize / 8;
-            ctx.lineCap = "round";
-            ctx.lineJoin = "round";
-            ctx.beginPath();
-            ctx.moveTo(bx1 + 0.24 * boxSize, by1 + 0.52 * boxSize);
-            ctx.lineTo(bx1 + 0.43 * boxSize, by1 + 0.71 * boxSize);
-            ctx.lineTo(bx1 + 0.77 * boxSize, by1 + 0.32 * boxSize);
-            ctx.stroke();
-        }
-    }
-
-    ctx.restore();
-
-    if (label) {
-        const xText = xOffset + boxSize + measureGlyph(32, font);
-        setColor(style.colorProperty);
-        drawStr(
-            ctx,
-            label,
-            xText,
-            yOffset,
-            x2 - xText + 1,
-            height,
-            font
-        );
-    }
-}
-
-export function unescapeText(text: string) {
+function unescapeText(text: string) {
     try {
         return JSON.parse('"' + text + '"');
     } catch (e) {
@@ -1000,682 +805,5 @@ export function unescapeText(text: string) {
     }
 }
 
-// Integer part with the style font, unit (top, aligned with the first digit of
-// the fraction) and fraction (on the baseline of the integer part) with
-// unitAndFractionFont in a column right of the integer part. The integer part is aligned as text (for the right alignment the right
-// padding is the room for the column, so the decimal point doesn't move), the
-// column is moved left if it doesn't fit. For the center alignment the whole
-// value is centered.
-// Keep in sync with drawIntegerUnitAndFraction in eez-framework gui/draw.cpp.
-export function drawIntegerUnitAndFraction(
-    ctx: CanvasRenderingContext2D,
-    integer: string,
-    unit: string,
-    fraction: string,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    style: Style,
-    unitAndFractionFont: Font | undefined
-) {
-    const styleColor = style.colorProperty;
-    const styleBackgroundColor = style.backgroundColorProperty;
-
-    let { x1, y1, x2, y2 } = drawBackground(
-        ctx,
-        x,
-        y,
-        w,
-        h,
-        style,
-        false,
-        styleBackgroundColor
-    );
-
-    const integerFont = styleGetFont(style);
-    if (!integerFont) {
-        return;
-    }
-
-    const smallFont = unitAndFractionFont || integerFont;
-
-    const integerWidth = measureStr(integer, integerFont, 0);
-    const unitWidth = measureStr(unit, smallFont, 0);
-    const fractionWidth = measureStr(fraction, smallFont, 0);
-    // unit is aligned with the first digit of the fraction, not with the
-    // decimal point
-    const unitOffset = fraction.startsWith(".")
-        ? measureStr(".", smallFont, 0)
-        : 0;
-    const columnWidth = Math.max(unitOffset + unitWidth, fractionWidth);
-
-    let x_integer: number;
-    if (styleIsHorzAlignLeft(style)) {
-        x_integer = x1 + style.paddingRect.left;
-    } else if (styleIsHorzAlignRight(style)) {
-        x_integer = x2 - style.paddingRect.right - integerWidth;
-        if (x_integer + integerWidth + columnWidth > x2) {
-            x_integer = x2 - integerWidth - columnWidth;
-        }
-    } else {
-        x_integer = Math.floor(
-            x1 + (x2 - x1 + 1 - (integerWidth + columnWidth)) / 2
-        );
-        if (x_integer < x1) {
-            x_integer = x1;
-        }
-    }
-    const x_column = x_integer + integerWidth;
-
-    let y_integer: number;
-    if (styleIsVertAlignTop(style)) {
-        y_integer = y1 + style.paddingRect.top;
-    } else if (styleIsVertAlignBottom(style)) {
-        y_integer = y2 - style.paddingRect.bottom - integerFont.height;
-    } else {
-        y_integer = Math.floor(y1 + (y2 - y1 + 1 - integerFont.height) / 2);
-    }
-    const y_unit = y1 + style.paddingRect.top;
-    // fraction on the baseline of the integer part
-    const y_fraction = y_integer + integerFont.ascent - smallFont.ascent;
-
-    setBackColor(styleBackgroundColor);
-    setColor(styleColor);
-
-    drawStr(
-        ctx,
-        integer,
-        x_integer,
-        y_integer,
-        integerWidth,
-        integerFont.height,
-        integerFont
-    );
-    drawStr(
-        ctx,
-        unit,
-        x_column + unitOffset,
-        y_unit,
-        unitWidth,
-        smallFont.height,
-        smallFont
-    );
-    drawStr(
-        ctx,
-        fraction,
-        x_column,
-        y_fraction,
-        fractionWidth,
-        smallFont.height,
-        smallFont
-    );
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
-interface ImageBuffer {
-    width: number;
-    height: number;
-    pixels: Uint8ClampedArray;
-}
-
-export function pixelRGBA(
-    imageBuffer: ImageBuffer,
-    x: number,
-    y: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number
-) {
-    x = Math.floor(x);
-    y = Math.floor(y);
-
-    imageBuffer.pixels[y * imageBuffer.width * 4 + x * 4 + 0] = r;
-    imageBuffer.pixels[y * imageBuffer.width * 4 + x * 4 + 1] = g;
-    imageBuffer.pixels[y * imageBuffer.width * 4 + x * 4 + 2] = b;
-    imageBuffer.pixels[y * imageBuffer.width * 4 + x * 4 + 3] = a;
-}
-
-export function pixelRGBAWeight(
-    imageBuffer: ImageBuffer,
-    x: number,
-    y: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number,
-    weight: number
-) {
-    /*
-     * Modify Alpha by weight
-     */
-    let ax = a;
-    ax = (ax * weight) >> 8;
-    if (ax > 255) {
-        a = 255;
-    } else {
-        a = ax & 0x000000ff;
-    }
-
-    pixelRGBA(imageBuffer, x, y, r, g, b, a);
-}
-
-export function vlineRGBA(
-    imageBuffer: ImageBuffer,
-    x: number,
-    y1: number,
-    y2: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number
-) {
-    x = Math.floor(x);
-    y1 = Math.floor(y1);
-    y2 = Math.floor(y2);
-
-    if (y1 > y2) {
-        const temp = y1;
-        y1 = y2;
-        y2 = temp;
-    }
-
-    for (let y = y1; y <= y2; y++) {
-        pixelRGBA(imageBuffer, x, y, r, g, b, a);
-    }
-}
-
-export function hlineRGBA(
-    imageBuffer: ImageBuffer,
-    x1: number,
-    x2: number,
-    y: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number
-) {
-    x1 = Math.floor(x1);
-    x2 = Math.floor(x2);
-    y = Math.floor(y);
-
-    if (x1 > x2) {
-        const temp = x1;
-        x1 = x2;
-        x2 = temp;
-    }
-
-    for (let x = x1; x <= x2; x++) {
-        pixelRGBA(imageBuffer, x, y, r, g, b, a);
-    }
-}
-
-export function aalineRGBA(
-    imageBuffer: ImageBuffer,
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number,
-    draw_endpoint: number
-) {
-    let xx0: number, yy0: number, xx1: number, yy1: number;
-    let erracc: number, erradj: number;
-    let wgt: number;
-    let dx: number,
-        dy: number,
-        tmp: number,
-        xdir: number,
-        y0p1: number,
-        x0pxdir: number;
-
-    /*
-     * Keep on working with 32bit numbers
-     */
-    xx0 = x1;
-    yy0 = y1;
-    xx1 = x2;
-    yy1 = y2;
-
-    /*
-     * Reorder points to make dy positive
-     */
-    if (yy0 > yy1) {
-        tmp = yy0;
-        yy0 = yy1;
-        yy1 = tmp;
-        tmp = xx0;
-        xx0 = xx1;
-        xx1 = tmp;
-    }
-
-    /*
-     * Calculate distance
-     */
-    dx = xx1 - xx0;
-    dy = yy1 - yy0;
-
-    /*
-     * Adjust for negative dx and set xdir
-     */
-    if (dx >= 0) {
-        xdir = 1;
-    } else {
-        xdir = -1;
-        dx = -dx;
-    }
-
-    /*
-     * Check for special cases
-     */
-    if (dx == 0) {
-        /*
-         * Vertical line
-         */
-        if (draw_endpoint) {
-            vlineRGBA(imageBuffer, x1, y1, y2, r, g, b, a);
-        } else {
-            if (dy > 0) {
-                vlineRGBA(imageBuffer, x1, yy0, yy0 + dy, r, g, b, a);
-            } else {
-                pixelRGBA(imageBuffer, x1, y1, r, g, b, a);
-            }
-        }
-        return;
-    } else if (dy == 0) {
-        /*
-         * Horizontal line
-         */
-        if (draw_endpoint) {
-            hlineRGBA(imageBuffer, x1, x2, y1, r, g, b, a);
-        } else {
-            if (dx > 0) {
-                hlineRGBA(imageBuffer, xx0, xx0 + xdir * dx, y1, r, g, b, a);
-            } else {
-                pixelRGBA(imageBuffer, x1, y1, r, g, b, a);
-            }
-        }
-        return;
-    }
-    // else if (dx == dy && draw_endpoint) {
-    //     /*
-    //      * Diagonal line (with endpoint)
-    //      */
-    //     lineRGBA(imageBuffer, x1, y1, x2, y2, r, g, b, a);
-    //     return;
-    // }
-
-    /*
-     * Zero accumulator
-     */
-    erracc = 0;
-
-    /*
-     * Draw the initial pixel in the foreground color
-     */
-    pixelRGBA(imageBuffer, x1, y1, r, g, b, a);
-
-    /*
-     * x-major or y-major?
-     */
-    if (dy > dx) {
-        /*
-         * y-major.  Calculate 16-bit fixed point fractional part of a pixel that
-         * X advances every time Y advances 1 pixel, truncating the result so that
-         * we won't overrun the endpoint along the X axis
-         */
-        /*
-         * Not-so-portable version: erradj = ((Uint64)dx << 32) / (Uint64)dy;
-         */
-        erradj = dx / dy;
-
-        /*
-         * draw all pixels other than the first and last
-         */
-        x0pxdir = xx0 + xdir;
-        while (--dy) {
-            erracc += erradj;
-            if (erracc >= 1.0) {
-                erracc -= 1.0;
-                /*
-                 * rollover in error accumulator, x coord advances
-                 */
-                xx0 = x0pxdir;
-                x0pxdir += xdir;
-            }
-            yy0++; /* y-major so always advance Y */
-
-            /*
-             * the AAbits most significant bits of erracc give us the intensity
-             * weighting for this pixel, and the complement of the weighting for
-             * the paired pixel.
-             */
-            wgt = Math.floor(erracc * 255);
-            pixelRGBAWeight(
-                imageBuffer,
-                xx0,
-                yy0,
-                r,
-                g,
-                b,
-                a,
-                Number(255 - wgt)
-            );
-            pixelRGBAWeight(imageBuffer, x0pxdir, yy0, r, g, b, a, Number(wgt));
-        }
-    } else {
-        /*
-         * x-major line.  Calculate 16-bit fixed-point fractional part of a pixel
-         * that Y advances each time X advances 1 pixel, truncating the result so
-         * that we won't overrun the endpoint along the X axis.
-         */
-        /*
-         * Not-so-portable version: erradj = ((Uint64)dy << 32) / (Uint64)dx;
-         */
-        erradj = dy / dx;
-
-        /*
-         * draw all pixels other than the first and last
-         */
-        y0p1 = yy0 + 1;
-        while (--dx) {
-            erracc += erradj;
-            if (erracc >= 1.0) {
-                erracc -= 1.0;
-                /*
-                 * Accumulator turned over, advance y
-                 */
-                yy0 = y0p1;
-                y0p1++;
-            }
-            xx0 += xdir; /* x-major so always advance X */
-            /*
-             * the AAbits most significant bits of erracc give us the intensity
-             * weighting for this pixel, and the complement of the weighting for
-             * the paired pixel.
-             */
-            wgt = Math.floor(erracc * 255);
-            pixelRGBAWeight(
-                imageBuffer,
-                xx0,
-                yy0,
-                r,
-                g,
-                b,
-                a,
-                Number(255 - wgt)
-            );
-            pixelRGBAWeight(imageBuffer, xx0, y0p1, r, g, b, a, Number(wgt));
-        }
-    }
-
-    /*
-     * Do we have to draw the endpoint
-     */
-    if (draw_endpoint) {
-        /*
-         * Draw final pixel, always exactly intersected by the line and doesn't
-         * need to be weighted.
-         */
-        pixelRGBA(imageBuffer, x2, y2, r, g, b, a);
-    }
-}
-
-export function aapolygonRGBA(
-    imageBuffer: ImageBuffer,
-    vx: number[],
-    vy: number[],
-    n: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number
-) {
-    for (let i = 1; i < n; i++) {
-        aalineRGBA(
-            imageBuffer,
-            vx[i - 1],
-            vy[i - 1],
-            vx[i],
-            vy[i],
-            r,
-            g,
-            b,
-            a,
-            0
-        );
-    }
-
-    aalineRGBA(imageBuffer, vx[n - 1], vy[n - 1], vx[0], vy[0], r, g, b, a, 0);
-}
-
-export function filledPolygonRGBA(
-    imageBuffer: ImageBuffer,
-    vx: number[],
-    vy: number[],
-    n: number,
-    r: number,
-    g: number,
-    b: number,
-    a: number
-) {
-    let i: number;
-    let y: number, xa: number, xb: number;
-    let miny: number, maxy: number;
-    let x1: number, y1: number;
-    let x2: number, y2: number;
-    let ind1: number, ind2: number;
-    let ints: number;
-    let gfxPrimitivesPolyInts: number[] = [];
-
-    /*
-     * Sanity check number of edges
-     */
-    if (n < 3) {
-        return;
-    }
-
-    /*
-     * Determine Y maxima
-     */
-    miny = vy[0];
-    maxy = vy[0];
-    for (i = 1; i < n; i++) {
-        if (vy[i] < miny) {
-            miny = vy[i];
-        } else if (vy[i] > maxy) {
-            maxy = vy[i];
-        }
-    }
-
-    /*
-     * Draw, scanning y
-     */
-    for (y = miny; y <= maxy; y++) {
-        ints = 0;
-        for (i = 0; i < n; i++) {
-            if (!i) {
-                ind1 = n - 1;
-                ind2 = 0;
-            } else {
-                ind1 = i - 1;
-                ind2 = i;
-            }
-            y1 = vy[ind1];
-            y2 = vy[ind2];
-            if (y1 < y2) {
-                x1 = vx[ind1];
-                x2 = vx[ind2];
-            } else if (y1 > y2) {
-                y2 = vy[ind1];
-                y1 = vy[ind2];
-                x2 = vx[ind1];
-                x1 = vx[ind2];
-            } else {
-                continue;
-            }
-            if ((y >= y1 && y < y2) || (y == maxy && y > y1 && y <= y2)) {
-                gfxPrimitivesPolyInts[ints++] = Math.round(
-                    x1 + ((y - y1) * (x2 - x1)) / (y2 - y1)
-                );
-            }
-        }
-
-        gfxPrimitivesPolyInts.sort();
-
-        for (i = 0; i < ints; i += 2) {
-            xa = gfxPrimitivesPolyInts[i] + 1;
-            xb = gfxPrimitivesPolyInts[i + 1] - 1;
-            hlineRGBA(imageBuffer, xa, xb, y, r, g, b, a);
-        }
-
-        gfxPrimitivesPolyInts = [];
-    }
-}
-
-function arcBarAsPolygon(
-    xCenter: number,
-    yCenter: number,
-    radius: number,
-    fromAngleDeg: number,
-    toAngleDeg: number,
-    width: number,
-    vx: number[],
-    vy: number[],
-    n: number
-) {
-    const fromAngle = (fromAngleDeg * Math.PI) / 180;
-    const toAngle = (toAngleDeg * Math.PI) / 180;
-
-    let j = 0;
-
-    vx[j] = Math.round(xCenter + (radius + width / 2.0) * Math.cos(fromAngle));
-    vy[j] = Math.round(yCenter - (radius + width / 2.0) * Math.sin(fromAngle));
-    j++;
-
-    for (let i = 0; ; i++) {
-        const angle = (i * 2 * Math.PI) / n;
-        if (angle >= toAngle) {
-            break;
-        }
-        if (angle > fromAngle) {
-            vx[j] = Math.round(
-                xCenter + (radius + width / 2.0) * Math.cos(angle)
-            );
-            vy[j] = Math.round(
-                yCenter - (radius + width / 2.0) * Math.sin(angle)
-            );
-            j++;
-        }
-    }
-
-    vx[j] = Math.round(xCenter + (radius + width / 2.0) * Math.cos(toAngle));
-    vy[j] = Math.round(yCenter - (radius + width / 2.0) * Math.sin(toAngle));
-    j++;
-
-    vx[j] = Math.round(xCenter + (radius - width / 2.0) * Math.cos(toAngle));
-    vy[j] = Math.round(yCenter - (radius - width / 2.0) * Math.sin(toAngle));
-    j++;
-
-    for (let i = 0; ; i++) {
-        const angle = 2 * Math.PI - (i * 2 * Math.PI) / n;
-        if (angle <= fromAngle) {
-            break;
-        }
-
-        if (angle < toAngle) {
-            vx[j] = Math.round(
-                xCenter + (radius - width / 2.0) * Math.cos(angle)
-            );
-            vy[j] = Math.round(
-                yCenter - (radius - width / 2.0) * Math.sin(angle)
-            );
-            j++;
-        }
-    }
-
-    vx[j] = Math.round(xCenter + (radius - width / 2.0) * Math.cos(fromAngle));
-    vy[j] = Math.round(yCenter - (radius - width / 2.0) * Math.sin(fromAngle));
-    j++;
-
-    n = j;
-
-    return { n };
-}
-
-export function drawArcBar(
-    imageBuffer: ImageBuffer,
-    xCenter: number,
-    yCenter: number,
-    radius: number,
-    fromAngleDeg: number,
-    toAngleDeg: number,
-    width: number
-) {
-    const N = 50;
-    const vx: number[] = [];
-    const vy: number[] = [];
-    const { n } = arcBarAsPolygon(
-        xCenter,
-        yCenter,
-        radius,
-        fromAngleDeg,
-        toAngleDeg,
-        width,
-        vx,
-        vy,
-        N
-    );
-
-    let { r, g, b, a } = getColorRGB(fgColor);
-    a = Math.floor(a * 255);
-
-    aapolygonRGBA(imageBuffer, vx, vy, n, r, g, b, a);
-}
-
-export function fillArcBar(
-    imageBuffer: ImageBuffer,
-    xCenter: number,
-    yCenter: number,
-    radius: number,
-    fromAngleDeg: number,
-    toAngleDeg: number,
-    width: number
-) {
-    const N = 50;
-    const vx: number[] = [];
-    const vy: number[] = [];
-    const { n } = arcBarAsPolygon(
-        xCenter,
-        yCenter,
-        radius,
-        fromAngleDeg,
-        toAngleDeg,
-        width,
-        vx,
-        vy,
-        N
-    );
-
-    let { r, g, b, a } = getColorRGB(fgColor);
-    a = Math.floor(a * 255);
-
-    filledPolygonRGBA(imageBuffer, vx, vy, n, r, g, b, a);
-}
-
-export function fillCircle(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    radius: number
-) {
-    ctx.fillStyle = fgColor;
-    ctx.beginPath();
-    ctx.ellipse(x, y, radius, radius, 0, 0, Math.PI * 2, false);
-    ctx.fill();
-}
