@@ -44,7 +44,33 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { Project } from "project-editor/project/project";
 import { getName, NamingConvention } from "project-editor/build/helper";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { isFirmwareProject } from "project-editor/project/project-type-traits";
+import {
+    isEezGuiProject,
+    isFirmwareProject
+} from "project-editor/project/project-type-traits";
+import { getColorRGB, rgbToHexString } from "eez-studio-shared/color";
+
+////////////////////////////////////////////////////////////////////////////////
+
+// A theme color with alpha (EEZ-GUI projects with 32-bit colors) is stored as
+// "#rrggbbaa", without alpha as "#rrggbb".
+
+function getColorRGBPart(color: string) {
+    const rgb = getColorRGB(color);
+    return rgbToHexString(rgb.r, rgb.g, rgb.b);
+}
+
+// 0 .. 255
+function getColorAlpha(color: string) {
+    return Math.round(getColorRGB(color).a * 255);
+}
+
+function withAlpha(rgbColor: string, alpha: number) {
+    if (alpha >= 255) {
+        return rgbColor;
+    }
+    return rgbColor + alpha.toString(16).padStart(2, "0");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,6 +90,8 @@ const ColorItem = observer(
                 selectedTheme: computed,
                 themeColor: computed,
                 readOnly: computed,
+                hasAlpha: computed,
+                color: computed,
                 changedThemeColor: observable
             });
         }
@@ -109,12 +137,44 @@ const ColorItem = observer(
             return ProjectEditor.getProject(this.colorObject)._isReadOnly;
         }
 
+        // EEZ-GUI projects with 32-bit colors: the colors have alpha
+        get hasAlpha() {
+            return (
+                isEezGuiProject(this.context.project) &&
+                this.context.project.settings.general.colorBpp == "32"
+            );
+        }
+
+        get color() {
+            return this.changedThemeColor !== undefined
+                ? this.changedThemeColor
+                : this.themeColor;
+        }
+
         changedThemeColor: string | undefined;
 
         onChangeTimeout: any;
 
-        onChange = action((event: React.ChangeEvent<HTMLInputElement>) => {
-            this.changedThemeColor = event.target.value;
+        // the color input has no alpha, the alpha of the color stays
+        onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            this.setColor(
+                withAlpha(event.target.value, getColorAlpha(this.color))
+            );
+        };
+
+        onChangeAlpha = (event: React.ChangeEvent<HTMLInputElement>) => {
+            const percent = parseFloat(event.target.value);
+            if (isNaN(percent)) {
+                return;
+            }
+            const alpha = Math.round(
+                (Math.min(Math.max(percent, 0), 100) * 255) / 100
+            );
+            this.setColor(withAlpha(getColorRGBPart(this.color), alpha));
+        };
+
+        setColor = action((color: string) => {
+            this.changedThemeColor = color;
             if (this.onChangeTimeout) {
                 clearTimeout(this.onChangeTimeout);
             }
@@ -142,15 +202,12 @@ const ColorItem = observer(
         });
 
         render() {
+            const color = this.color;
             return (
                 <div className="EezStudio_ColorItem">
                     <input
                         type="color"
-                        value={
-                            this.changedThemeColor !== undefined
-                                ? this.changedThemeColor
-                                : this.themeColor
-                        }
+                        value={getColorRGBPart(color)}
                         onChange={this.onChange}
                         tabIndex={0}
                         disabled={this.readOnly}
@@ -158,6 +215,21 @@ const ColorItem = observer(
                     <span title={this.colorObject.name}>
                         {this.colorObject.name}
                     </span>
+                    {this.hasAlpha && (
+                        <input
+                            className="EezStudio_ColorItem_Alpha"
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={Math.round(
+                                (getColorAlpha(color) * 100) / 255
+                            )}
+                            onChange={this.onChangeAlpha}
+                            title="Alpha (%)"
+                            disabled={this.readOnly}
+                        />
+                    )}
                 </div>
             );
         }

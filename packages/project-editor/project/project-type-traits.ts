@@ -374,6 +374,16 @@ export function isEezGuiLiteProject(object: IEezObject) {
     return project.projectTypeTraits.isEezGuiLite;
 }
 
+// EEZ-GUI projects (eez-framework): the firmware project types without
+// eez-gui-lite, whose project type extends the firmware type
+export function isEezGuiProject(object: IEezObject) {
+    const project = ProjectEditor.getProject(object);
+    return (
+        project.projectTypeTraits.isFirmware &&
+        !project.projectTypeTraits.isEezGuiLite
+    );
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export function createProjectTypeTraits(project: Project) {
