@@ -2,6 +2,8 @@ import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import {
     STYLE_STATES,
     StateStyle,
+    getBorderColors,
+    getStyleProperty,
     type Style
 } from "project-editor/features/style/style";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
@@ -131,12 +133,21 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint8(style.borderSizeRect.bottom);
         dataBuffer.writeUint8(style.borderSizeRect.left);
 
-        // borderColor
-        let borderColor = assets.getColorIndex(style, "borderColor");
-        if (isNaN(borderColor)) {
-            borderColor = 0;
-        }
-        dataBuffer.writeUint16(borderColor);
+        // borderColor: the top border, the other sides are written at the end
+        // (one to four colors, see getBorderColors)
+        const borderColorValue = getStyleProperty(style, "borderColor", false);
+        const borderColors = (
+            getBorderColors(borderColorValue) ?? [
+                borderColorValue,
+                borderColorValue,
+                borderColorValue,
+                borderColorValue
+            ]
+        ).map(color => {
+            const colorIndex = assets.getColorIndexFromStyleColor(color);
+            return isNaN(colorIndex) ? 0 : colorIndex;
+        });
+        dataBuffer.writeUint16(borderColors[0]);
 
         // borderRadius
         dataBuffer.writeUint8(style.borderRadiusSpec.topLeftX || 0);
@@ -222,6 +233,11 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeInt8(clamp(style.shadowOffsetYProperty, -128, 127));
         dataBuffer.writeUint8(clamp(style.shadowBlurProperty, 0, 255));
         dataBuffer.writeInt8(clamp(style.shadowSpreadProperty, -128, 127));
+
+        // borderColorRight, borderColorBottom, borderColorLeft
+        dataBuffer.writeUint16(borderColors[1]);
+        dataBuffer.writeUint16(borderColors[2]);
+        dataBuffer.writeUint16(borderColors[3]);
     }
 
     // The index of a style is its position in assets.styles (id - 1 for a

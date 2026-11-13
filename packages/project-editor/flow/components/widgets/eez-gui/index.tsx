@@ -3790,12 +3790,10 @@ export class InputEmbeddedWidget extends Widget {
 
     info: string;
 
-    // a text above the value (an expression) in the label style, the value
-    // line in a box of the line style (e.g. a bottom border as the quantity
-    // line), see eez-framework drawValueParts
+    // a text above the value (an expression) in the label style, see
+    // eez-framework drawValueParts
     label?: string;
     labelStyle: Style;
-    lineStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -3869,15 +3867,11 @@ export class InputEmbeddedWidget extends Widget {
             makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("labelStyle", "Label style", {
                 styleWithoutFont: true
-            }),
-            makeStylePropertyInfo("lineStyle", "Line style", {
-                styleWithoutFont: true
             })
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateOptionalStyleProperty(jsObject, "labelStyle");
-            migrateOptionalStyleProperty(jsObject, "lineStyle");
         },
 
         defaultValue: {
@@ -3949,8 +3943,7 @@ export class InputEmbeddedWidget extends Widget {
             displayUnit: observable,
             info: observable,
             label: observable,
-            labelStyle: observable,
-            lineStyle: observable
+            labelStyle: observable
         });
     }
 
@@ -4028,12 +4021,14 @@ export class InputEmbeddedWidget extends Widget {
         );
 
         // label (a flow expression, 0 if not set), labelStyle (0 if not set:
-        // the widget style), lineStyle (0 if not set: no line)
+        // the widget style)
         dataBuffer.writeInt16(
             this.label ? assets.getWidgetDataItemIndex(this, "label") : 0
         );
         dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
-        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "lineStyle"));
+
+        // reserved1
+        dataBuffer.writeInt16(0);
     }
 }
 

@@ -1400,7 +1400,50 @@ export class Style extends EezObject {
             checkColor("activeBackgroundColor");
             checkColor("focusColor");
             checkColor("focusBackgroundColor");
-            checkColor("borderColor");
+
+            // one color, or (EEZ-GUI v3) a color for each side
+            const borderColorValue = style.borderColor;
+            if (
+                typeof borderColorValue == "string" &&
+                borderColorValue.trim().split(/\s+/).length > 1
+            ) {
+                const sides = getBorderColors(borderColorValue);
+                if (isNotEezGuiV3Style(style)) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `"Border color": more than one color only in EEZ-GUI projects.`,
+                            getChildOfObject(style, "borderColor")
+                        )
+                    );
+                } else if (!sides) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `"Border color": one to four colors (top, right, bottom, left).`,
+                            getChildOfObject(style, "borderColor")
+                        )
+                    );
+                } else {
+                    for (const color of sides) {
+                        if (
+                            color != "transparent" &&
+                            !isValid(getThemedColor(projectStore, color).colorValue)
+                        ) {
+                            messages.push(
+                                new Message(
+                                    MessageType.ERROR,
+                                    `"Border color": invalid color "${color}".`,
+                                    getChildOfObject(style, "borderColor")
+                                )
+                            );
+                            break;
+                        }
+                    }
+                }
+            } else {
+                checkColor("borderColor");
+            }
             checkColor("focusRingColor");
             checkColor("shadowColor");
 
@@ -3614,6 +3657,30 @@ function isStyleWithoutFont(style: Style) {
         propertyInfo => propertyInfo.name == key
     );
     return !!propertyInfo?.styleWithoutFont;
+}
+
+// The colors of the sides (top, right, bottom, left) of a border color value
+// with one to four colors, as CSS border-color: one color for all sides, two
+// for the top and bottom and for the left and right side, three for the top,
+// the left and right side and the bottom. undefined if it has more than four.
+export function getBorderColors(value: string | undefined) {
+    if (typeof value != "string" || !value.trim()) {
+        return undefined;
+    }
+    const parts = value.trim().split(/\s+/);
+    if (parts.length == 1) {
+        return [parts[0], parts[0], parts[0], parts[0]];
+    }
+    if (parts.length == 2) {
+        return [parts[0], parts[1], parts[0], parts[1]];
+    }
+    if (parts.length == 3) {
+        return [parts[0], parts[1], parts[2], parts[1]];
+    }
+    if (parts.length == 4) {
+        return parts;
+    }
+    return undefined;
 }
 
 // A style object that uses no style and has no values of its own: an optional
