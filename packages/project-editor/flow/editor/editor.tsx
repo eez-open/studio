@@ -67,8 +67,14 @@ import {
     isSelectionMoveable,
     ResizeMouseHandler,
     RubberBandSelectionMouseHandler,
-    LVGLPanMouseHandler
+    LVGLPanMouseHandler,
+    EezGuiScrollMouseHandler
 } from "project-editor/flow/editor/mouse-handler";
+import {
+    isScrollableInEditor,
+    scrollInEditor
+} from "project-editor/flow/editor/eez-gui-editor-boxes";
+import { isEezGuiEditorWasmProject } from "project-editor/flow/editor/eez-gui-editor-wasm-switch";
 import { Svg, ComponentEnclosure } from "project-editor/flow/editor/render";
 import { ConnectionLines } from "project-editor/flow/connection-line/ConnectionLineComponent";
 import { Selection } from "project-editor/flow/editor/selection";
@@ -82,6 +88,32 @@ import {
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
+
+// Alt + mouse wheel or Alt + drag with the right or the middle button over a
+// scrolling container of an EEZ-GUI project scrolls it in the editor, as a
+// scrollable LVGL widget: the container under the pointer or its nearest
+// ancestor that scrolls.
+function getEezGuiScrollableAt(
+    flowContext: EditorFlowContext,
+    event: PointerEvent | WheelEvent
+) {
+    if (!isEezGuiEditorWasmProject(flowContext.projectStore.project)) {
+        return undefined;
+    }
+    const point = flowContext.viewState.transform.pointerEventToPagePoint(event);
+    const object = flowContext.document.objectFromPoint(point);
+    if (!object) {
+        return undefined;
+    }
+    let current = flowContext.document.findObjectById(object.id)?.object;
+    while (current) {
+        if (isScrollableInEditor(current)) {
+            return current;
+        }
+        current = getParent(current);
+    }
+    return undefined;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -339,7 +371,8 @@ export const Canvas = observer(
 
             if (
                 this.mouseHandler instanceof PanMouseHandler ||
-                this.mouseHandler instanceof LVGLPanMouseHandler
+                this.mouseHandler instanceof LVGLPanMouseHandler ||
+                this.mouseHandler instanceof EezGuiScrollMouseHandler
             ) {
                 return;
             }
@@ -352,7 +385,16 @@ export const Canvas = observer(
             let deltaX = event.deltaX;
             let deltaY = event.deltaY;
 
-            if (
+            const eezGuiScrollable = event.altKey
+                ? getEezGuiScrollableAt(flowContext, event)
+                : undefined;
+
+            if (eezGuiScrollable) {
+                // vertical only, 20 px for a step of the wheel
+                let delta = event.shiftKey ? deltaX : deltaY;
+                if (Math.abs(delta) == 100) delta /= 5;
+                scrollInEditor(eezGuiScrollable, delta);
+            } else if (
                 event.altKey &&
                 flowContext.projectStore.projectTypeTraits.isLVGL
             ) {
@@ -634,6 +676,18 @@ export const Canvas = observer(
                     }
                 }
 
+                if (!this.mouseHandler && event.altKey) {
+                    const eezGuiScrollable = getEezGuiScrollableAt(
+                        flowContext,
+                        event
+                    );
+                    if (eezGuiScrollable) {
+                        this.mouseHandler = new EezGuiScrollMouseHandler(
+                            eezGuiScrollable
+                        );
+                    }
+                }
+
                 if (!this.mouseHandler) {
                     this.mouseHandler = new PanMouseHandler();
                 }
@@ -696,7 +750,10 @@ export const Canvas = observer(
                     if (pointDistance(this.mouseHandler.totalMovement) > 10) {
                         preventContextMenu = true;
                     }
-                } else if (this.mouseHandler instanceof LVGLPanMouseHandler) {
+                } else if (
+                    this.mouseHandler instanceof LVGLPanMouseHandler ||
+                    this.mouseHandler instanceof EezGuiScrollMouseHandler
+                ) {
                     preventContextMenu = true;
                 }
 

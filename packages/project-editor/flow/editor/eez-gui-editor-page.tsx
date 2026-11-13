@@ -3,10 +3,18 @@
 // EezGuiEditorWasm and the frame is drawn into a canvas, under the transparent
 // widget enclosures that the editor uses for selection. The boxes of the
 // widgets as the framework laid them out are kept (eez-gui-editor-boxes.ts):
-// the enclosures of the children of rows and columns are placed there.
+// the enclosures of the children of rows, columns and scrolling containers
+// are placed there. A scrolling container is drawn with the scroll position
+// set in the editor (Alt + mouse wheel or Alt + drag, eez-gui-editor-boxes.ts).
 
 import React from "react";
-import { autorun, IReactionDisposer, observable, runInAction } from "mobx";
+import {
+    autorun,
+    computed,
+    IReactionDisposer,
+    observable,
+    runInAction
+} from "mobx";
 import { observer } from "mobx-react";
 
 import type { Page } from "project-editor/features/page/page";
@@ -20,7 +28,17 @@ import type { Rect } from "eez-studio-shared/geometry";
 import { buildEditorAssets } from "project-editor/build/editor-build";
 import { getFlowGuiDisplaySize } from "project-editor/build/assets";
 import { EezGuiEditorWasm } from "project-editor/flow/editor/eez-gui-editor-wasm";
-import { setEditorWidgetBoxes } from "project-editor/flow/editor/eez-gui-editor-boxes";
+import {
+    getEditorScrollPositions,
+    setDrawnScrollPosition,
+    setEditorWidgetBoxes
+} from "project-editor/flow/editor/eez-gui-editor-boxes";
+
+type EditorBuild = {
+    assets: ReturnType<typeof buildEditorAssets>;
+    widgetOffsets: Map<number, Widget | Page>;
+    offsetOfWidget: Map<IEezObject, number>;
+};
 
 export const EezGuiEditorPage = observer(
     class EezGuiEditorPage extends React.Component<{
@@ -33,6 +51,30 @@ export const EezGuiEditorPage = observer(
         wasmGeneration = observable.box(0);
         disposeAutorun: IReactionDisposer | undefined;
         unmounted = false;
+        // the build loaded into editorWasm
+        loadedBuild: EditorBuild | undefined;
+
+        // The editor build of the page: built again only when something it
+        // read has changed (not when a container is scrolled in the editor).
+        // widgetOffsets: the widgets at the offsets in the assets data, and
+        // the other way around.
+        editorBuild = computed((): EditorBuild => {
+            const { page, flowContext } = this.props;
+            const widgetOffsets = new Map<number, Widget | Page>();
+            const assets = buildEditorAssets(page, getEditorPageLayout(page), {
+                getSelectChildIndex: (select: Widget) =>
+                    (select as any).getSelectedIndex(flowContext),
+                pageBackgroundColor: this.previewBackgroundColor,
+                widgetOffsets
+            });
+            const offsetOfWidget = new Map<IEezObject, number>();
+            for (const [offset, widget] of widgetOffsets) {
+                if (!offsetOfWidget.has(widget)) {
+                    offsetOfWidget.set(widget, offset);
+                }
+            }
+            return { assets, widgetOffsets, offsetOfWidget };
+        });
 
         async createWasm() {
             const editorWasm = await EezGuiEditorWasm.create();
@@ -40,6 +82,7 @@ export const EezGuiEditorPage = observer(
                 return;
             }
             this.editorWasm = editorWasm;
+            this.loadedBuild = undefined;
             runInAction(() =>
                 this.wasmGeneration.set(this.wasmGeneration.get() + 1)
             );
@@ -106,20 +149,25 @@ export const EezGuiEditorPage = observer(
             );
 
             try {
-                const widgetOffsets = new Map<number, Widget | Page>();
-                const assets = buildEditorAssets(
-                    page,
-                    getEditorPageLayout(page),
-                    {
-                        getSelectChildIndex: (select: Widget) =>
-                            (select as any).getSelectedIndex(flowContext),
-                        pageBackgroundColor: this.previewBackgroundColor,
-                        widgetOffsets
-                    }
-                );
+                const build = this.editorBuild.get();
+                const { widgetOffsets, offsetOfWidget } = build;
 
-                editorWasm.load(assets, displayWidth, displayHeight);
+                if (build !== this.loadedBuild) {
+                    editorWasm.load(build.assets, displayWidth, displayHeight);
+                    this.loadedBuild = build;
+                }
                 editorWasm.setTheme(themeIndex);
+
+                // the positions of the containers of this page scrolled in
+                // the editor
+                const scrollPositions: number[] = [];
+                for (const [widget, position] of getEditorScrollPositions()) {
+                    const offset = offsetOfWidget.get(widget);
+                    if (offset != undefined) {
+                        scrollPositions.push(offset, position);
+                    }
+                }
+                editorWasm.setScrollPositions(scrollPositions);
 
                 const { left, top, width, height } = this.pageRect;
                 const imageData = editorWasm.renderPage(
@@ -130,7 +178,9 @@ export const EezGuiEditorPage = observer(
                 );
                 canvas.getContext("2d")!.putImageData(imageData, 0, 0);
 
-                // where the framework laid out the widgets (rows and columns)
+                // where the framework laid out the widgets (rows, columns and
+                // the children of the scrolled containers), and the scroll
+                // positions it drew
                 const boxes = new Map<IEezObject, Rect>();
                 for (const box of editorWasm.getWidgetBoxes()) {
                     const widget = widgetOffsets.get(box.offset);
@@ -141,6 +191,13 @@ export const EezGuiEditorPage = observer(
                             width: box.width,
                             height: box.height
                         });
+                        if (box.scrollPosition >= 0) {
+                            setDrawnScrollPosition(
+                                widget,
+                                box.scrollPosition,
+                                box.maxScrollPosition
+                            );
+                        }
                     }
                 }
                 setEditorWidgetBoxes(page, boxes);

@@ -97,7 +97,10 @@ import {
     isEezGuiProject,
     isV3OrNewerProject
 } from "project-editor/project/project-type-traits";
-import { getEditorWidgetBox } from "project-editor/flow/editor/eez-gui-editor-boxes";
+import {
+    getEditorWidgetBox,
+    isScrollableInEditor
+} from "project-editor/flow/editor/eez-gui-editor-boxes";
 import {
     generalGroup,
     geometryGroup,
@@ -877,10 +880,12 @@ export class ContainerWidget extends Widget {
                 : !widget.hiddenInEditor &&
                   isWidgetVisibleInEditorLayout(widget);
 
-        // a row or column of an EEZ-GUI project in the page editor: the
-        // children where the framework laid them out (EezGuiEditorPage)
+        // a row, a column or a scrolling container of an EEZ-GUI project in
+        // the page editor: the children where the framework laid them out
+        // (EezGuiEditorPage), scrolled by the position set in the editor
         const containerBox =
-            !flowContext.flowState && isRowOrColumn(this)
+            !flowContext.flowState &&
+            (isRowOrColumn(this) || isScrollableInEditor(this))
                 ? getEditorWidgetBox(this)
                 : undefined;
 

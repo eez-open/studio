@@ -45,6 +45,18 @@ export class EezGuiEditorWasm {
         this.wasm._editorSetTheme(themeIndex);
     }
 
+    // The positions of the scrollable widgets: pairs of the offset of the
+    // widget in the loaded assets data and its position in lines (px for a
+    // Container). They replace the previous ones and are drawn by the next
+    // render. See editorSetScrollPositions in eez-runtime editor.cpp.
+    setScrollPositions(pairs: number[]) {
+        const count = pairs.length / 2;
+        const ptr = this.wasm._malloc(Math.max(pairs.length, 1) * 4);
+        this.wasm.HEAP32.set(pairs, ptr >> 2);
+        this.wasm._editorSetScrollPositions(ptr, count);
+        this.wasm._free(ptr);
+    }
+
     // the whole display, RGBA
     render() {
         const ptr = this.wasm._editorRender();
@@ -58,7 +70,9 @@ export class EezGuiEditorWasm {
     // The boxes of the widgets of the page drawn last, on the display, in the
     // order the framework enumerates them (hidden widgets are not there): the
     // offset of the widget in the loaded assets data (the widgetOffsets of
-    // buildEditorAssets) and its box. See editorGetWidgetBoxes in eez-runtime
+    // buildEditorAssets), its box, and the scroll position it was drawn with
+    // and the largest one, in lines (px for a Container; -1 and 0 if the
+    // widget doesn't keep a position). See editorGetWidgetBoxes in eez-runtime
     // editor.cpp.
     getWidgetBoxes() {
         const ptr = this.wasm._editorGetWidgetBoxes() >> 2;
@@ -70,15 +84,19 @@ export class EezGuiEditorWasm {
             top: number;
             width: number;
             height: number;
+            scrollPosition: number;
+            maxScrollPosition: number;
         }[] = [];
         for (let i = 0; i < count; i++) {
-            const k = ptr + 1 + i * 5;
+            const k = ptr + 1 + i * 7;
             boxes.push({
                 offset: heap[k],
                 left: heap[k + 1],
                 top: heap[k + 2],
                 width: heap[k + 3],
-                height: heap[k + 4]
+                height: heap[k + 4],
+                scrollPosition: heap[k + 5],
+                maxScrollPosition: heap[k + 6]
             });
         }
         return boxes;

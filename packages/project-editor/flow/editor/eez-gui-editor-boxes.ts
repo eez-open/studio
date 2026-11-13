@@ -51,3 +51,57 @@ export function getEditorWidgetBox(widget: IEezObject) {
     const page = getAncestorOfType(widget, ProjectEditor.PageClass.classInfo);
     return page ? pageBoxes.get(page)?.get(widget) : undefined;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// The scroll positions of the scrolling containers in the page editor, as for
+// the scrollable LVGL widgets: Alt + mouse wheel or Alt + drag with the right
+// or the middle button over the container (flow/editor/editor.tsx). Kept only
+// in the editor, not in the project. In px from the top of the content.
+const editorScrollPositions = observable.map<IEezObject, number>(undefined, {
+    deep: false
+});
+
+// the position the framework drew and the largest one (it clamps the position)
+const drawnScrollPositions = new WeakMap<
+    IEezObject,
+    { position: number; maxPosition: number }
+>();
+
+// a container of an EEZ-GUI project that scrolls vertically
+export function isScrollableInEditor(object: IEezObject) {
+    return (
+        object instanceof ProjectEditor.ContainerWidgetClass &&
+        (object as any).scroll == "vertical" &&
+        (object as any).widgets.length > 0
+    );
+}
+
+// the positions set in the editor (observed by the page editor drawing)
+export function getEditorScrollPositions() {
+    return editorScrollPositions;
+}
+
+// scrolls the widget by delta px (down if positive) from the position it was
+// drawn with
+export function scrollInEditor(widget: IEezObject, delta: number) {
+    const drawn = drawnScrollPositions.get(widget);
+    const from = drawn
+        ? drawn.position
+        : editorScrollPositions.get(widget) ?? 0;
+    let position = Math.max(Math.round(from + delta), 0);
+    if (drawn) {
+        position = Math.min(position, drawn.maxPosition);
+    }
+    if (position != editorScrollPositions.get(widget)) {
+        runInAction(() => editorScrollPositions.set(widget, position));
+    }
+}
+
+export function setDrawnScrollPosition(
+    widget: IEezObject,
+    position: number,
+    maxPosition: number
+) {
+    drawnScrollPositions.set(widget, { position, maxPosition });
+}

@@ -23,11 +23,12 @@ import type { Transform } from "project-editor/flow/editor/transform";
 import { generateConnectionLinePath } from "project-editor/flow/connection-line/connection-line-shape";
 import type { Flow } from "project-editor/flow/flow";
 import type { ConnectionLine } from "project-editor/flow/connection-line";
-import { getId } from "project-editor/core/object";
+import { getId, type IEezObject } from "project-editor/core/object";
 import type { Component } from "project-editor/flow/component";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { LVGLWidget } from "project-editor/lvgl/widgets/Base";
 import { ComponentGroup } from "project-editor/flow/component-group";
+import { scrollInEditor } from "project-editor/flow/editor/eez-gui-editor-boxes";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -222,6 +223,21 @@ export class LVGLPanMouseHandler extends MouseHandler {
             this.lvglWidget._yScroll = this.lvglWidget._yScroll2 =
                 this.lvglWidget._yScroll2 - this.movement.y;
         });
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Alt + drag with the right or the middle button over a scrolling container of
+// an EEZ-GUI project: the content moves with the mouse (as LVGLPanMouseHandler)
+export class EezGuiScrollMouseHandler extends MouseHandler {
+    constructor(public container: IEezObject) {
+        super();
+    }
+
+    move(context: IFlowContext, event: IPointerEvent) {
+        super.move(context, event);
+        scrollInEditor(this.container, -this.movement.y);
     }
 }
 
