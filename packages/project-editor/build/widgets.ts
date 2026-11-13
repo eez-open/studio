@@ -11,6 +11,14 @@ export function buildWidget(
     // type
     dataBuffer.writeUint16(object.getWidgetType());
 
+    // the widget starts with its type (not a dry run in a DummyDataBuffer)
+    if (assets.editorBuild?.widgetOffsets && dataBuffer == assets.dataBuffer) {
+        assets.editorBuild.widgetOffsets.set(
+            dataBuffer.currentOffset - 2,
+            object
+        );
+    }
+
     // data
     let data = 0;
     if (object instanceof ProjectEditor.WidgetClass) {
@@ -67,6 +75,7 @@ export function buildWidget(
             flags |= resizing.pinToEdge;
             flags |= resizing.fixSize << 4;
         }
+        flags |= object.getLayoutFlags();
     }
     dataBuffer.writeUint16(flags);
 

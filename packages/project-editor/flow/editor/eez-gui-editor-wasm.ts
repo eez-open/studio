@@ -55,6 +55,35 @@ export class EezGuiEditorWasm {
         ).slice();
     }
 
+    // The boxes of the widgets of the page drawn last, on the display, in the
+    // order the framework enumerates them (hidden widgets are not there): the
+    // offset of the widget in the loaded assets data (the widgetOffsets of
+    // buildEditorAssets) and its box. See editorGetWidgetBoxes in eez-runtime
+    // editor.cpp.
+    getWidgetBoxes() {
+        const ptr = this.wasm._editorGetWidgetBoxes() >> 2;
+        const heap: Int32Array = this.wasm.HEAP32;
+        const count = heap[ptr];
+        const boxes: {
+            offset: number;
+            left: number;
+            top: number;
+            width: number;
+            height: number;
+        }[] = [];
+        for (let i = 0; i < count; i++) {
+            const k = ptr + 1 + i * 5;
+            boxes.push({
+                offset: heap[k],
+                left: heap[k + 1],
+                top: heap[k + 2],
+                width: heap[k + 3],
+                height: heap[k + 4]
+            });
+        }
+        return boxes;
+    }
+
     // The part of the display where the page is: the framework draws a page
     // at its left and top (a page not at 0, 0 over a backdrop). The part of
     // the rectangle outside the display stays transparent.

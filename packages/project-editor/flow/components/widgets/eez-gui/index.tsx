@@ -71,7 +71,8 @@ import {
     makeStylePropertyInfo,
     makeTextPropertyInfo,
     migrateStyleProperty,
-    makeExpressionProperty
+    makeExpressionProperty,
+    getLayoutParent
 } from "project-editor/flow/component";
 
 import { Assets, DataBuffer } from "project-editor/build/assets";
@@ -239,6 +240,8 @@ export class DisplayDataWidget extends Widget {
     displayOption: DisplayOption;
     unitAndFractionFont: string;
     refreshRate: string;
+    // in a row or column (see Widget.getLayoutFlags)
+    fitToContent?: "none" | "width" | "height" | "both";
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -250,6 +253,20 @@ export class DisplayDataWidget extends Widget {
 
         properties: [
             makeDataPropertyInfo("data", {}, "any"),
+            {
+                name: "fitToContent",
+                displayName: "Fit to content",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "none", label: "None" },
+                    { id: "width", label: "Width" },
+                    { id: "height", label: "Height" },
+                    { id: "both", label: "Both" }
+                ],
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: (widget: DisplayDataWidget) =>
+                    !getLayoutParent(widget)
+            },
             // shown in the editor instead of the data, not built
             {
                 name: "preview",
@@ -402,7 +419,8 @@ export class DisplayDataWidget extends Widget {
             focusStyle: observable,
             displayOption: observable,
             unitAndFractionFont: observable,
-            refreshRate: observable
+            refreshRate: observable,
+            fitToContent: observable
         });
     }
 

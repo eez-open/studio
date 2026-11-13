@@ -20,6 +20,9 @@ export interface EditorBuildOptions {
     getSelectChildIndex?: (select: Widget) => number;
     // see EditorBuild.pageBackgroundColor
     pageBackgroundColor?: string;
+    // filled with the offsets of the widgets in the returned assets data (see
+    // EezGuiEditorWasm.getWidgetBoxes)
+    widgetOffsets?: Map<number, Widget | Page>;
 }
 
 // widgets whose "data" (or "text") is shown as text
@@ -154,6 +157,7 @@ export function buildEditorAssets(
         pageLayout,
         userWidgetPages: getUserWidgetPages(page),
         pageBackgroundColor: options.pageBackgroundColor,
+        widgetOffsets: options.widgetOffsets,
         getWidgetPropertyExpression: (
             widget,
             propertyName,
@@ -191,10 +195,21 @@ export function buildEditorAssets(
         );
     }
 
-    const { uncompressedData } = buildGuiAssetsDataSync(
+    const { uncompressedData, uncompressedSize } = buildGuiAssetsDataSync(
         assets,
         getEditorGuiBitmaps(assets)
     );
+
+    // the offsets of the widgets in the returned data, which has the header
+    // before the data the widgets were written into
+    if (options.widgetOffsets) {
+        const headerSize = uncompressedData.length - uncompressedSize;
+        const offsets = [...options.widgetOffsets];
+        options.widgetOffsets.clear();
+        for (const [offset, widget] of offsets) {
+            options.widgetOffsets.set(offset + headerSize, widget);
+        }
+    }
 
     return uncompressedData;
 }

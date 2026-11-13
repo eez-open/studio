@@ -67,7 +67,10 @@ import {
     makeDataPropertyInfo,
     ComponentInput,
     ComponentOutput,
-    makeStylePropertyInfo
+    makeStylePropertyInfo,
+    isRowOrColumn,
+    getLayoutParent,
+    getLayoutAlignValue
 } from "project-editor/flow/component";
 
 import {
@@ -87,8 +90,11 @@ import {
     WIDGET_TYPE_USER_WIDGET
 } from "project-editor/flow/components/component-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { isEezGuiProject } from "project-editor/project/project-type-traits";
+import { getEditorWidgetBox } from "project-editor/flow/editor/eez-gui-editor-boxes";
 import {
     generalGroup,
+    geometryGroup,
     layoutGroup,
     specificGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
@@ -333,6 +339,12 @@ export class ContainerWidget extends Widget {
     dockingLayout: any;
     allowOverlappingChildren?: boolean;
 
+    // a row or column (EEZ-GUI, see isRowOrColumn)
+    gap?: number;
+    justifyContent?: "start" | "center" | "end" | "space-between";
+    alignItems?: "start" | "center" | "end" | "stretch" | "baseline";
+    fitToContent?: "none" | "width" | "height" | "both";
+
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
@@ -403,6 +415,12 @@ export class ContainerWidget extends Widget {
                                   label: "Docking Manager"
                               }
                           ]
+                        : isEezGuiProject(object)
+                        ? [
+                              { id: "static", label: "Static" },
+                              { id: "horizontal", label: "Row" },
+                              { id: "vertical", label: "Column" }
+                          ]
                         : [
                               {
                                   id: "static"
@@ -415,6 +433,56 @@ export class ContainerWidget extends Widget {
                               }
                           ],
                 propertyGridGroup: layoutGroup
+            },
+            {
+                name: "gap",
+                type: PropertyType.Number,
+                propertyGridGroup: layoutGroup,
+                hideInPropertyGrid: (widget: ContainerWidget) =>
+                    !isRowOrColumn(widget)
+            },
+            {
+                name: "justifyContent",
+                displayName: "Justify content",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "start", label: "Start" },
+                    { id: "center", label: "Center" },
+                    { id: "end", label: "End" },
+                    { id: "space-between", label: "Space between" }
+                ],
+                propertyGridGroup: layoutGroup,
+                hideInPropertyGrid: (widget: ContainerWidget) =>
+                    !isRowOrColumn(widget)
+            },
+            {
+                name: "alignItems",
+                displayName: "Align items",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "start", label: "Start" },
+                    { id: "center", label: "Center" },
+                    { id: "end", label: "End" },
+                    { id: "stretch", label: "Stretch" },
+                    { id: "baseline", label: "Baseline" }
+                ],
+                propertyGridGroup: layoutGroup,
+                hideInPropertyGrid: (widget: ContainerWidget) =>
+                    !isRowOrColumn(widget)
+            },
+            {
+                name: "fitToContent",
+                displayName: "Fit to content",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "none", label: "None" },
+                    { id: "width", label: "Width" },
+                    { id: "height", label: "Height" },
+                    { id: "both", label: "Both" }
+                ],
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: (widget: ContainerWidget) =>
+                    !isRowOrColumn(widget) || !getLayoutParent(widget)
             },
             {
                 name: "dockingLayout",
@@ -529,6 +597,21 @@ export class ContainerWidget extends Widget {
         check: (object: ContainerWidget, messages: IMessage[]) => {
             checkObjectReference(object, "overlay", messages);
 
+            // LAYOUT_MAX_CHILDREN in eez-framework gui/layout.h
+            const LAYOUT_MAX_CHILDREN = 64;
+            if (
+                isRowOrColumn(object) &&
+                object.widgets.length > LAYOUT_MAX_CHILDREN
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.WARNING,
+                        `A row or column shows only its first ${LAYOUT_MAX_CHILDREN} children.`,
+                        object
+                    )
+                );
+            }
+
             if (object.layout == "static") {
                 checkOverlappingChildren(
                     object,
@@ -550,7 +633,11 @@ export class ContainerWidget extends Widget {
             shadow: observable,
             layout: observable,
             dockingLayout: observable,
-            allowOverlappingChildren: observable
+            allowOverlappingChildren: observable,
+            gap: observable,
+            justifyContent: observable,
+            alignItems: observable,
+            fitToContent: observable
         });
     }
 
@@ -767,8 +854,34 @@ export class ContainerWidget extends Widget {
                 : !widget.hiddenInEditor &&
                   isWidgetVisibleInEditorLayout(widget);
 
+        // a row or column of an EEZ-GUI project in the page editor: the
+        // children where the framework laid them out (EezGuiEditorPage)
+        const containerBox =
+            !flowContext.flowState && isRowOrColumn(this)
+                ? getEditorWidgetBox(this)
+                : undefined;
+
         let children;
-        if (stacked && this.layout == "horizontal") {
+        if (containerBox) {
+            children = this.widgets.map(widget => {
+                const box = getEditorWidgetBox(widget);
+                if (!box) {
+                    // hidden
+                    return null;
+                }
+                return (
+                    <ComponentEnclosure
+                        key={getId(widget)}
+                        component={widget}
+                        flowContext={flowContext}
+                        left={box.left - containerBox.left}
+                        top={box.top - containerBox.top}
+                        width={box.width}
+                        height={box.height}
+                    />
+                );
+            });
+        } else if (stacked && this.layout == "horizontal") {
             let offset = 0;
 
             children = this.widgets.map((widget, i) => {
@@ -939,10 +1052,33 @@ export class ContainerWidget extends Widget {
             layout = CONTAINER_WIDGET_LAYOUT_VERTICAL;
         }
 
-        dataBuffer.writeUint16(layout);
+        dataBuffer.writeUint8(layout);
+
+        // a row or column: justifyContent (LAYOUT_JUSTIFY_...), alignItems
+        // (LAYOUT_ALIGN_...), gap
+        const rowOrColumn = isRowOrColumn(this);
+
+        const LAYOUT_JUSTIFY: { [id: string]: number } = {
+            start: 0,
+            center: 1,
+            end: 2,
+            "space-between": 3
+        };
+        dataBuffer.writeUint8(
+            rowOrColumn ? LAYOUT_JUSTIFY[this.justifyContent ?? "start"] ?? 0 : 0
+        );
+
+        dataBuffer.writeUint8(
+            rowOrColumn ? getLayoutAlignValue(this.alignItems ?? "start") : 0
+        );
 
         // reserved1
-        dataBuffer.writeUint16(0);
+        dataBuffer.writeUint8(0);
+
+        dataBuffer.writeInt16(rowOrColumn ? this.gap ?? 0 : 0);
+
+        // reserved2
+        dataBuffer.writeInt16(0);
     }
 }
 

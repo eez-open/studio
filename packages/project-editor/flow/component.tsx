@@ -58,10 +58,12 @@ import {
 } from "project-editor/store";
 import {
     isEezFlowLiteProject,
+    isEezGuiProject,
     isLVGLProject,
     isNotDashboardProject,
     isNotLVGLProject,
-    isNotProjectWithFlowSupport
+    isNotProjectWithFlowSupport,
+    isV3OrNewerProject
 } from "project-editor/project/project-type-traits";
 import { isOverlappingChildrenSupported } from "project-editor/flow/components/widgets/overlapping-widgets";
 import { objectToJS } from "project-editor/store";
@@ -79,6 +81,7 @@ import {
     IResizing,
     ResizingProperty
 } from "project-editor/flow/editor/resizing-widget-property";
+import { getEditorWidgetBox } from "project-editor/flow/editor/eez-gui-editor-boxes";
 
 import type {
     ICustomWidgetCreateParams,
@@ -707,6 +710,79 @@ export function getWidgetParent(widget: Component | Page) {
         parent = getParent(parent);
     }
     return parent as Component | Page;
+}
+
+// A row or column: a Container of an EEZ-GUI v3 project with the layout
+// horizontal or vertical, eez-framework lays out its children (gui/layout.h).
+export function isRowOrColumn(object: IEezObject) {
+    return (
+        object instanceof ProjectEditor.ContainerWidgetClass &&
+        (object.layout == "horizontal" || object.layout == "vertical") &&
+        isEezGuiProject(object) &&
+        isV3OrNewerProject(object)
+    );
+}
+
+// the row or column that lays out the widget, if any
+export function getLayoutParent(widget: Component) {
+    const parent = getWidgetParent(widget);
+    return isRowOrColumn(parent)
+        ? (parent as InstanceType<typeof ProjectEditor.ContainerWidgetClass>)
+        : undefined;
+}
+
+// A position or size of a child of a row or column that the layout sets: the
+// position always, the size on the main axis when it grows, on the cross axis
+// when it is stretched, and when it fits its content.
+export function isSetByLayout(
+    component: IEezObject,
+    propertyName: "left" | "top" | "width" | "height"
+) {
+    if (!(component instanceof ProjectEditor.WidgetClass)) {
+        return false;
+    }
+    const widget = component as Widget;
+    const parent = getLayoutParent(widget);
+    if (!parent) {
+        return false;
+    }
+    if (propertyName == "left" || propertyName == "top") {
+        return true;
+    }
+
+    const mainAxis = (propertyName == "width") == (parent.layout == "horizontal");
+    if (mainAxis) {
+        if (widget.flexGrow) {
+            return true;
+        }
+    } else {
+        const align =
+            widget.alignSelf && widget.alignSelf != "auto"
+                ? widget.alignSelf
+                : parent.alignItems ?? "start";
+        if (align == "stretch") {
+            return true;
+        }
+    }
+
+    const fitToContent = (widget as any).fitToContent;
+    return propertyName == "width"
+        ? fitToContent == "width" || fitToContent == "both"
+        : fitToContent == "height" || fitToContent == "both";
+}
+
+// the values of LAYOUT_ALIGN_... in eez-framework gui/layout.h
+const LAYOUT_ALIGN: { [id: string]: number } = {
+    auto: 0,
+    start: 1,
+    center: 2,
+    end: 3,
+    stretch: 4,
+    baseline: 5
+};
+
+export function getLayoutAlignValue(id: string | undefined) {
+    return LAYOUT_ALIGN[id ?? "auto"] ?? 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1991,7 +2067,9 @@ export class Component extends EezObject {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
                 disabled: isActionComponent,
-                hideInPropertyGrid: isWidgetUnderDockingManager,
+                hideInPropertyGrid: (component: Component) =>
+                    isWidgetUnderDockingManager(component) ||
+                    isSetByLayout(component, "left"),
                 hideInDocumentation: "action",
                 layoutSpecific: true
             },
@@ -2000,7 +2078,9 @@ export class Component extends EezObject {
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
                 disabled: isActionComponent,
-                hideInPropertyGrid: isWidgetUnderDockingManager,
+                hideInPropertyGrid: (component: Component) =>
+                    isWidgetUnderDockingManager(component) ||
+                    isSetByLayout(component, "top"),
                 hideInDocumentation: "action",
                 layoutSpecific: true
             },
@@ -2008,7 +2088,9 @@ export class Component extends EezObject {
                 name: "width",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                disabled: isActionComponent,
+                disabled: (component: Component) =>
+                    isActionComponent(component) ||
+                    isSetByLayout(component, "width"),
                 hideInPropertyGrid: isWidgetUnderDockingManager,
                 hideInDocumentation: "action",
                 layoutSpecific: true
@@ -2017,10 +2099,24 @@ export class Component extends EezObject {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                disabled: isActionComponent,
+                disabled: (component: Component) =>
+                    isActionComponent(component) ||
+                    isSetByLayout(component, "height"),
                 hideInPropertyGrid: isWidgetUnderDockingManager,
                 hideInDocumentation: "action",
                 layoutSpecific: true
+            },
+            {
+                name: "layoutBox",
+                displayName: "Laid out at",
+                type: PropertyType.String,
+                propertyGridGroup: geometryGroup,
+                computed: true,
+                skipSearch: true,
+                hideInPropertyGrid: (component: Component) =>
+                    !(component instanceof Widget) ||
+                    !getLayoutParent(component),
+                hideInDocumentation: "all"
             },
             {
                 name: "absolutePosition",
@@ -2541,6 +2637,12 @@ export class Component extends EezObject {
 
     get rect(): Rect {
         if (this instanceof Widget) {
+            // a child of a row or column: where the framework laid it out
+            const layoutBox = this.layoutRect;
+            if (layoutBox) {
+                return layoutBox;
+            }
+
             if (isWidgetUnderDockingManager(this)) {
                 const parent = getWidgetParent(this);
                 return {
@@ -3080,9 +3182,37 @@ export class Widget extends Component {
 
     outputWidgetHandle: boolean;
 
+    // a child of a row or column
+    flexGrow?: boolean;
+    alignSelf?: "auto" | "start" | "center" | "end" | "stretch" | "baseline";
+
     static classInfo = makeDerivedClassInfo(Component.classInfo, {
         properties: [
             resizingProperty,
+            {
+                name: "flexGrow",
+                displayName: "Grow",
+                type: PropertyType.Boolean,
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: (widget: Widget) =>
+                    !getLayoutParent(widget)
+            },
+            {
+                name: "alignSelf",
+                displayName: "Align self",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "auto", label: "Auto" },
+                    { id: "start", label: "Start" },
+                    { id: "center", label: "Center" },
+                    { id: "end", label: "End" },
+                    { id: "stretch", label: "Stretch" },
+                    { id: "baseline", label: "Baseline" }
+                ],
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: (widget: Widget) =>
+                    !getLayoutParent(widget)
+            },
             {
                 name: "visibleInLayout",
                 type: PropertyType.Boolean,
@@ -3378,6 +3508,32 @@ export class Widget extends Component {
                         })
                     );
 
+                    // rows and columns: EEZ-GUI v3 projects (eez-framework
+                    // gui/layout.h)
+                    if (
+                        isEezGuiProject(objects[0]) &&
+                        isV3OrNewerProject(objects[0])
+                    ) {
+                        for (const [label, layout] of [
+                            ["Put in Row", "horizontal"],
+                            ["Put in Column", "vertical"]
+                        ] as const) {
+                            additionalMenuItems.push(
+                                new MenuItem({
+                                    label,
+                                    click: () => {
+                                        const containerWidget =
+                                            Widget.putInContainer(
+                                                objects as Widget[],
+                                                layout
+                                            );
+                                        context.selectObject(containerWidget);
+                                    }
+                                })
+                            );
+                        }
+                    }
+
                     additionalMenuItems.push(
                         new MenuItem({
                             label: "Put in List",
@@ -3577,10 +3733,12 @@ export class Widget extends Component {
                 object instanceof Widget ? getLayoutsPage(object) : undefined;
             const pageLayouts = layoutsPage ? getPageLayouts(layoutsPage) : [];
 
+            // a row or column places and sizes its children
             if (
                 object instanceof Widget &&
                 !(object instanceof ProjectEditor.LVGLWidgetClass) &&
-                !object.allowOutside
+                !object.allowOutside &&
+                !getLayoutParent(object)
             ) {
                 const parent = getWidgetParent(object);
                 if (
@@ -3661,6 +3819,12 @@ export class Widget extends Component {
                 parent instanceof ProjectEditor.ContainerWidgetClass &&
                 parent.layout == "docking-manager"
             ) {
+                return false;
+            }
+
+            // a row or column places its children (reordered in the
+            // Widgets Structure tree)
+            if (getLayoutParent(widget)) {
                 return false;
             }
 
@@ -3786,9 +3950,68 @@ export class Widget extends Component {
             timeline: observable,
             eventHandlers: observable,
             outputWidgetHandle: observable,
+            flexGrow: observable,
+            alignSelf: observable,
 
             isHiddenInEditorDeep: computed
         });
+    }
+
+    // A child of a row or column: its box relative to the row or column, as
+    // the framework laid it out in the page editor (EezGuiEditorPage).
+    get layoutRect(): Rect | undefined {
+        const parent = getLayoutParent(this);
+        if (!parent) {
+            return undefined;
+        }
+        const box = getEditorWidgetBox(this);
+        const parentBox = getEditorWidgetBox(parent);
+        if (!box || !parentBox) {
+            return undefined;
+        }
+        return {
+            left: box.left - parentBox.left,
+            top: box.top - parentBox.top,
+            width: box.width,
+            height: box.height
+        };
+    }
+
+    get layoutBox() {
+        const rect = this.layoutRect;
+        return rect
+            ? `${rect.left}, ${rect.top}, ${rect.width} x ${rect.height}`
+            : "";
+    }
+
+    // The Widget::flags bits of a child of a row or column (eez-framework
+    // core/assets.h): WIDGET_FLAG_GROW, the align self and the fit to content
+    // ("fitToContent" of Text, DisplayData and a row or column).
+    getLayoutFlags() {
+        if (!getLayoutParent(this)) {
+            return 0;
+        }
+
+        const WIDGET_FLAG_GROW = 1 << 6;
+        const WIDGET_FLAG_ALIGN_SELF_SHIFT = 7;
+        const WIDGET_FLAG_FIT_WIDTH = 1 << 10;
+        const WIDGET_FLAG_FIT_HEIGHT = 1 << 11;
+
+        let flags = 0;
+        if (this.flexGrow) {
+            flags |= WIDGET_FLAG_GROW;
+        }
+        flags |=
+            getLayoutAlignValue(this.alignSelf) << WIDGET_FLAG_ALIGN_SELF_SHIFT;
+
+        const fitToContent = (this as any).fitToContent;
+        if (fitToContent == "width" || fitToContent == "both") {
+            flags |= WIDGET_FLAG_FIT_WIDTH;
+        }
+        if (fitToContent == "height" || fitToContent == "both") {
+            flags |= WIDGET_FLAG_FIT_HEIGHT;
+        }
+        return flags;
     }
 
     get isHiddenInEditorDeep() {
@@ -4021,14 +4244,26 @@ export class Widget extends Component {
         }
     }
 
-    static putInContainer(fromWidgets: Widget[]) {
+    // layout: a row (horizontal) or a column (vertical), the widgets in the
+    // order of their position
+    static putInContainer(
+        fromWidgets: Widget[],
+        layout?: "horizontal" | "vertical"
+    ) {
         const projectStore = getProjectStore(fromWidgets[0]);
 
         var containerWidgetProperties: Partial<ContainerWidget> = Object.assign(
             {},
             getClassFromType(projectStore, "Container")?.classInfo.defaultValue,
-            { type: "Container" }
+            { type: "Container" },
+            layout ? { layout } : {}
         );
+
+        if (layout) {
+            fromWidgets = [...fromWidgets].sort((a, b) =>
+                layout == "horizontal" ? a.left - b.left : a.top - b.top
+            );
+        }
 
         var containerWidget = createObject<ContainerWidget>(
             projectStore,
@@ -4292,6 +4527,24 @@ export class Widget extends Component {
     getResizeHandlers(): IResizeHandler[] | undefined | false {
         if (isTimelineEditorActive(this)) {
             return [];
+        }
+
+        // a child of a row or column: the right and the bottom edge, for the
+        // sizes the layout doesn't set
+        if (getLayoutParent(this)) {
+            const width = !isSetByLayout(this, "width");
+            const height = !isSetByLayout(this, "height");
+            const handlers: IResizeHandler[] = [];
+            if (width) {
+                handlers.push({ x: 100, y: 50, type: "e-resize" });
+            }
+            if (height) {
+                handlers.push({ x: 50, y: 100, type: "s-resize" });
+            }
+            if (width && height) {
+                handlers.push({ x: 100, y: 100, type: "se-resize" });
+            }
+            return handlers;
         }
 
         if (this.autoSize == "both") {

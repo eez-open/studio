@@ -136,6 +136,10 @@ export interface EditorBuild {
         expressionType: string | undefined,
         expression: string
     ): string;
+    // filled by the build: the offset of every widget (and page) in the data
+    // buffer (buildEditorAssets adds the header), see
+    // EezGuiEditorWasm.getWidgetBoxes
+    widgetOffsets?: Map<number, Widget | Page>;
 }
 
 // the project store as the editor build sees it: the Output panel messages are

@@ -1211,15 +1211,19 @@ export class Page extends Flow {
         // overlay
         dataBuffer.writeInt16(0);
 
-        // layout
+        // layout: static (ContainerWidget in eez-framework)
         const CONTAINER_WIDGET_LAYOUT_STATIC = 0;
 
-        let layout = CONTAINER_WIDGET_LAYOUT_STATIC;
+        dataBuffer.writeUint8(CONTAINER_WIDGET_LAYOUT_STATIC);
 
-        dataBuffer.writeUint16(layout);
+        // justifyContent, alignItems, reserved1
+        dataBuffer.writeUint8(0);
+        dataBuffer.writeUint8(0);
+        dataBuffer.writeUint8(0);
 
-        // reserved1
-        dataBuffer.writeUint16(0);
+        // gap, reserved2
+        dataBuffer.writeInt16(0);
+        dataBuffer.writeInt16(0);
     }
 
     get lvglScreenWidget() {
