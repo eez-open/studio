@@ -1798,7 +1798,7 @@ export class Enum extends EezObject implements IEnum {
             }
         ],
         icon: (
-            <svg viewBox="0 0 32 32">
+            <svg viewBox="0 0 32 32" fill="currentcolor">
                 <defs>
                     <style>{".cls-2{stroke-width:0}"}</style>
                 </defs>

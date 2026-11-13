@@ -746,22 +746,64 @@
             background-color: @selectionBackgroundColor;
             color: @selectionColor;
         }
+    }
 
-        & > svg,
-        & > img {
-            width: 20px;
-            height: 20px;
-            object-fit: contain;
+    // group button and chevron button which opens a popup to select one of
+    // the groups, joined into one split button
+    .EezStudio_ProjectExplorer_GroupMenu {
+        display: flex;
+        flex-direction: row;
+        border-radius: 4px;
+        // keeps the chevron visually closer to its own group button than to
+        // the next button
+        margin-right: 3px;
+
+        & > .EezStudio_ProjectExplorer_Group {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        // one selection background for both buttons
+        &.selected {
+            background-color: @selectionBackgroundColor;
+            color: @selectionColor;
+
+            & > .EezStudio_ProjectExplorer_Group,
+            & > .EezStudio_ProjectExplorer_GroupChevron {
+                background-color: transparent;
+                color: inherit;
+            }
+
+            // chevron still opens the popup, so it shows hover
+            & > .EezStudio_ProjectExplorer_GroupChevron:hover,
+            & > .EezStudio_ProjectExplorer_GroupChevron.open {
+                background-color: lighten(@selectionBackgroundColor, 10%);
+            }
         }
     }
 
-    .EezStudio_ProjectExplorer_GroupBadge {
-        position: absolute;
-        right: 1px;
-        bottom: 0;
-        font-size: 9px;
-        font-weight: bold;
-        line-height: 1;
+    .EezStudio_ProjectExplorer_GroupChevron {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 12px;
+        height: 30px;
+        padding: 0;
+        border: 1px solid transparent;
+        border-radius: 0 4px 4px 0;
+        background-color: transparent;
+        color: @textColor;
+
+        &:hover,
+        &.open {
+            background-color: @hoverBackgroundColor;
+            color: @hoverColor;
+        }
+
+        & > svg {
+            flex-shrink: 0;
+            opacity: 0.8;
+        }
     }
 
     .EezStudio_ProjectExplorer_Body {
@@ -843,6 +885,67 @@
         .EezStudio_ProjectExplorer_Section:first-child
             .EezStudio_Title.EezStudio_ProjectExplorer_ListToolbar {
             border-top: none;
+        }
+    }
+}
+
+// group icon in the Project Explorer toolbar and in the groups popup
+.EezStudio_ProjectExplorer_GroupIcon {
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+
+    & > svg,
+    & > img {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+    }
+
+    .EezStudio_ProjectExplorer_GroupBadge {
+        position: absolute;
+        right: 1px;
+        bottom: 0;
+        font-size: 9px;
+        font-weight: bold;
+        line-height: 1;
+    }
+}
+
+// popup opened from a Project Explorer toolbar button with multiple groups
+.EezStudio_ProjectExplorer_GroupsPopup.dropdown-menu {
+    position: fixed;
+    min-width: 0;
+    margin: 0;
+    padding: 4px;
+    font-size: inherit;
+
+    .EezStudio_ProjectExplorer_GroupsPopupItem {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 4px;
+        width: 100%;
+        padding: 0 12px 0 0;
+        border: none;
+        border-radius: 4px;
+        background-color: transparent;
+        color: @textColor;
+        text-align: left;
+        white-space: nowrap;
+
+        &:hover {
+            background-color: @hoverBackgroundColor;
+            color: @hoverColor;
+        }
+
+        &.selected {
+            background-color: @selectionBackgroundColor;
+            color: @selectionColor;
         }
     }
 }
