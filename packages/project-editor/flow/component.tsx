@@ -108,6 +108,7 @@ import {
 } from "project-editor/features/page/page-layouts";
 import {
     getAdditionalStyleFlowProperties,
+    isStyleEmpty,
     Style
 } from "project-editor/features/style/style";
 import type {
@@ -317,6 +318,30 @@ export function migrateStyleProperty(jsObject: any, propertyName: string) {
         jsObject[propertyName].useStyle = jsObject[propertyName].inheritFrom;
         delete jsObject[propertyName].inheritFrom;
     }
+}
+
+// The style of a part of a widget (the label and the unit of the DisplayData,
+// the label and the line of the Input, the page dots of the List): not set
+// while it is empty (no style used, no values of its own), then built as 0
+// and the firmware draws the part in the widget style (no line, no dots).
+export function migrateOptionalStyleProperty(
+    jsObject: any,
+    propertyName: string
+) {
+    if (jsObject[propertyName] === undefined) {
+        jsObject[propertyName] = {};
+    }
+}
+
+export function getOptionalStyleIndex(
+    assets: Assets,
+    widget: Widget,
+    propertyName: string
+) {
+    const style = assets.getPropertyValue(widget, propertyName);
+    return style instanceof Style && !isStyleEmpty(style)
+        ? assets.getStyleIndex(widget, propertyName)
+        : 0;
 }
 
 function getClassFromType(projectStore: ProjectStore, type: string) {
@@ -3741,10 +3766,14 @@ export class Widget extends Component {
                 !getLayoutParent(object)
             ) {
                 const parent = getWidgetParent(object);
+                // a container that scrolls vertically has children below
+                // its bottom
                 if (
                     !(
                         parent instanceof ProjectEditor.ContainerWidgetClass &&
-                        parent.layout == "docking-manager"
+                        (parent.layout == "docking-manager" ||
+                            (parent.scroll == "vertical" &&
+                                isEezGuiProject(parent)))
                     )
                 ) {
                     if (pageLayouts.length == 0) {

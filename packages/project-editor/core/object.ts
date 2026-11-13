@@ -218,6 +218,11 @@ export interface PropertyInfo {
     isOptional?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
+    // a style property of a part of an EEZ-GUI widget whose style needs no
+    // font of its own (it draws no text, or its text is in the font of the
+    // widget style when the style has none): the style check doesn't ask for
+    // a font
+    styleWithoutFont?: boolean;
     defaultValue?: any;
     inheritable?: boolean;
     nonInheritable?: boolean;

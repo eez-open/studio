@@ -68,6 +68,8 @@ import {
     ComponentInput,
     ComponentOutput,
     makeStylePropertyInfo,
+    migrateOptionalStyleProperty,
+    getOptionalStyleIndex,
     isRowOrColumn,
     getLayoutParent,
     getLayoutAlignValue
@@ -82,6 +84,7 @@ import {
 
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import { buildWidget } from "project-editor/build/widgets";
+import type { Style } from "project-editor/features/style/style";
 import {
     WIDGET_TYPE_CONTAINER,
     WIDGET_TYPE_LIST,
@@ -90,7 +93,10 @@ import {
     WIDGET_TYPE_USER_WIDGET
 } from "project-editor/flow/components/component-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { isEezGuiProject } from "project-editor/project/project-type-traits";
+import {
+    isEezGuiProject,
+    isV3OrNewerProject
+} from "project-editor/project/project-type-traits";
 import { getEditorWidgetBox } from "project-editor/flow/editor/eez-gui-editor-boxes";
 import {
     generalGroup,
@@ -344,6 +350,9 @@ export class ContainerWidget extends Widget {
     justifyContent?: "start" | "center" | "end" | "space-between";
     alignItems?: "start" | "center" | "end" | "stretch" | "baseline";
     fitToContent?: "none" | "width" | "height" | "both";
+    // EEZ-GUI: the children taller than the container scroll vertically
+    // (touch drag, clipped, the scroll indicator of the List)
+    scroll?: "none" | "vertical";
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -483,6 +492,19 @@ export class ContainerWidget extends Widget {
                 propertyGridGroup: geometryGroup,
                 hideInPropertyGrid: (widget: ContainerWidget) =>
                     !isRowOrColumn(widget) || !getLayoutParent(widget)
+            },
+            {
+                name: "scroll",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "none", label: "None" },
+                    { id: "vertical", label: "Vertical" }
+                ],
+                propertyGridGroup: layoutGroup,
+                hideInPropertyGrid: (widget: ContainerWidget) =>
+                    !isEezGuiProject(widget) ||
+                    !isV3OrNewerProject(widget) ||
+                    widget.layout == "docking-manager"
             },
             {
                 name: "dockingLayout",
@@ -637,7 +659,8 @@ export class ContainerWidget extends Widget {
             gap: observable,
             justifyContent: observable,
             alignItems: observable,
-            fitToContent: observable
+            fitToContent: observable,
+            scroll: observable
         });
     }
 
@@ -1072,8 +1095,13 @@ export class ContainerWidget extends Widget {
             rowOrColumn ? getLayoutAlignValue(this.alignItems ?? "start") : 0
         );
 
-        // reserved1
-        dataBuffer.writeUint8(0);
+        // scroll (CONTAINER_WIDGET_SCROLL_...), not of an overlay
+        const CONTAINER_WIDGET_SCROLL_VERTICAL = 1;
+        dataBuffer.writeUint8(
+            this.scroll == "vertical" && !this.overlay
+                ? CONTAINER_WIDGET_SCROLL_VERTICAL
+                : 0
+        );
 
         dataBuffer.writeInt16(rowOrColumn ? this.gap ?? 0 : 0);
 
@@ -1088,6 +1116,11 @@ export class ListWidget extends Widget {
     itemWidget?: Widget;
     listType?: string;
     gap?: number;
+    // a horizontal list shows page dots in this style instead of the scroll
+    // indicator (not set: the indicator); a dot is a box of the border and
+    // the padding of the style, the current one is in its selected state (see
+    // eez-framework ScrollableWidgetState::pageDotsStyle)
+    pageDotsStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1125,8 +1158,15 @@ export class ListWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             makeStylePropertyInfo("style", "Default style"),
+            makeStylePropertyInfo("pageDotsStyle", "Page dots style", {
+                styleWithoutFont: true
+            }),
             makeDataPropertyInfo("data")
         ],
+
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            migrateOptionalStyleProperty(jsObject, "pageDotsStyle");
+        },
 
         defaultValue: {
             itemWidget: {
@@ -1183,7 +1223,8 @@ export class ListWidget extends Widget {
         makeObservable(this, {
             itemWidget: observable,
             listType: observable,
-            gap: observable
+            gap: observable,
+            pageDotsStyle: observable
         });
     }
 
@@ -1252,6 +1293,13 @@ export class ListWidget extends Widget {
 
         // gap
         dataBuffer.writeUint8(this.gap || 0);
+
+        // pageDotsStyle (0 if not set or vertical: the scroll indicator)
+        dataBuffer.writeInt16(
+            this.listType === "horizontal"
+                ? getOptionalStyleIndex(assets, this, "pageDotsStyle")
+                : 0
+        );
     }
 }
 

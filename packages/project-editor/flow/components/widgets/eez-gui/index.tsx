@@ -71,6 +71,8 @@ import {
     makeStylePropertyInfo,
     makeTextPropertyInfo,
     migrateStyleProperty,
+    migrateOptionalStyleProperty,
+    getOptionalStyleIndex,
     makeExpressionProperty,
     getLayoutParent
 } from "project-editor/flow/component";
@@ -202,7 +204,10 @@ enum DisplayOption {
     Fraction = 3,
     Unit = 4,
     IntegerAndFraction = 5,
-    IntegerUnitAndFraction = 6
+    IntegerUnitAndFraction = 6,
+    // the number in the widget style, the unit in the unit style on its
+    // baseline
+    ValueAndUnit = 7
 }
 
 function findStartOfFraction(text: string) {
@@ -247,6 +252,12 @@ export class DisplayDataWidget extends Widget {
     // step in that unit): eez-framework getValueInUnit
     displayUnit?: string;
     precision?: string;
+    // a text above the value (an expression) in the label style, the unit in
+    // the unit style with the "Value and unit" option (see eez-framework
+    // drawValueParts)
+    label?: string;
+    labelStyle: Style;
+    unitStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -283,6 +294,12 @@ export class DisplayDataWidget extends Widget {
                 makeOldStateStylePropertyInfo("focusStyle", "Focused style"),
                 { hideInPropertyGrid: isNotV1Project }
             ),
+            makeStylePropertyInfo("labelStyle", "Label style", {
+                styleWithoutFont: true
+            }),
+            makeStylePropertyInfo("unitStyle", "Unit style", {
+                styleWithoutFont: true
+            }),
             {
                 name: "displayOption",
                 type: PropertyType.Enum,
@@ -314,6 +331,10 @@ export class DisplayDataWidget extends Widget {
                     {
                         id: DisplayOption.IntegerUnitAndFraction,
                         label: "Integer, unit and fraction"
+                    },
+                    {
+                        id: DisplayOption.ValueAndUnit,
+                        label: "Value and unit"
                     }
                 ],
                 propertyGridGroup: specificGroup,
@@ -347,6 +368,18 @@ export class DisplayDataWidget extends Widget {
                     disabled: hasNotFlowSupport
                 },
                 "float"
+            ),
+            makeDataPropertyInfo(
+                "label",
+                {
+                    disabled: (widget: DisplayDataWidget) =>
+                        hasNotFlowSupport(widget) ||
+                        getEditorLayoutPropertyValue(
+                            widget,
+                            "displayOption"
+                        ) == DisplayOption.IntegerUnitAndFraction
+                },
+                "string"
             )
         ],
 
@@ -356,6 +389,8 @@ export class DisplayDataWidget extends Widget {
             project: Project
         ) => {
             migrateOldStateStyleProperty(jsObject, "focusStyle", project);
+            migrateOptionalStyleProperty(jsObject, "labelStyle");
+            migrateOptionalStyleProperty(jsObject, "unitStyle");
             if (jsObject.refreshRate == undefined) {
                 if (project.projectTypeTraits.hasFlowSupport) {
                     jsObject.refreshRate = "0";
@@ -442,7 +477,10 @@ export class DisplayDataWidget extends Widget {
             refreshRate: observable,
             fitToContent: observable,
             displayUnit: observable,
-            precision: observable
+            precision: observable,
+            label: observable,
+            labelStyle: observable,
+            unitStyle: observable
         });
     }
 
@@ -540,6 +578,16 @@ export class DisplayDataWidget extends Widget {
                 ? assets.getWidgetDataItemIndex(this, "precision")
                 : 0
         );
+
+        // label (a flow expression, 0 if not set), labelStyle, unitStyle (0 if
+        // not set: the widget style)
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.label
+                ? assets.getWidgetDataItemIndex(this, "label")
+                : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "unitStyle"));
     }
 }
 
@@ -3742,6 +3790,13 @@ export class InputEmbeddedWidget extends Widget {
 
     info: string;
 
+    // a text above the value (an expression) in the label style, the value
+    // line in a box of the line style (e.g. a bottom border as the quantity
+    // line), see eez-framework drawValueParts
+    label?: string;
+    labelStyle: Style;
+    lineStyle: Style;
+
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
@@ -3810,8 +3865,20 @@ export class InputEmbeddedWidget extends Widget {
                     widget.inputType != "text",
                 propertyGridGroup: specificGroup
             },
-            makeStylePropertyInfo("style", "Default style")
+            makeDataPropertyInfo("label", {}, "string"),
+            makeStylePropertyInfo("style", "Default style"),
+            makeStylePropertyInfo("labelStyle", "Label style", {
+                styleWithoutFont: true
+            }),
+            makeStylePropertyInfo("lineStyle", "Line style", {
+                styleWithoutFont: true
+            })
         ],
+
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            migrateOptionalStyleProperty(jsObject, "labelStyle");
+            migrateOptionalStyleProperty(jsObject, "lineStyle");
+        },
 
         defaultValue: {
             left: 0,
@@ -3880,7 +3947,10 @@ export class InputEmbeddedWidget extends Widget {
             precision: observable,
             unit: observable,
             displayUnit: observable,
-            info: observable
+            info: observable,
+            label: observable,
+            labelStyle: observable,
+            lineStyle: observable
         });
     }
 
@@ -3957,8 +4027,13 @@ export class InputEmbeddedWidget extends Widget {
                 : assets.getWidgetDataItemIndex(this, "displayUnit")
         );
 
-        // reserved1
-        dataBuffer.writeInt16(0);
+        // label (a flow expression, 0 if not set), labelStyle (0 if not set:
+        // the widget style), lineStyle (0 if not set: no line)
+        dataBuffer.writeInt16(
+            this.label ? assets.getWidgetDataItemIndex(this, "label") : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "lineStyle"));
     }
 }
 

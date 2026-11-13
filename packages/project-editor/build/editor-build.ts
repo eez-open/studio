@@ -92,6 +92,11 @@ function getWidgetPropertyExpression(
         return JSON.stringify(getEditorText(widget, expression));
     }
 
+    // the label of a DisplayData or Input widget
+    if (propertyName == "label" && TEXT_WIDGET_TYPES.has(widget.type)) {
+        return JSON.stringify(`{${expression}}`);
+    }
+
     // the value comes from the running instrument: a value of the property's
     // type (a widget can't use undefined for a number, e.g. a refresh rate)
     if (

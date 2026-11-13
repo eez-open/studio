@@ -1473,7 +1473,9 @@ export class Style extends EezObject {
                     messages.push(propertyNotFoundMessage(style, "useStyle"));
                 } else {
                     if (!style.fontName) {
-                        messages.push(propertyNotSetMessage(style, "font"));
+                        if (!isStyleWithoutFont(style)) {
+                            messages.push(propertyNotSetMessage(style, "font"));
+                        }
                     } else if (!style.fontObject) {
                         messages.push(propertyNotFoundMessage(style, "font"));
                     }
@@ -3598,6 +3600,37 @@ export function getStyleProperty(
     );
 
     return inheritedValue?.value;
+}
+
+// The style is the value of a style property of a widget part that needs no
+// font of its own (PropertyInfo.styleWithoutFont).
+function isStyleWithoutFont(style: Style) {
+    const parent = getParent(style);
+    const key = getKey(style);
+    if (!parent || !key) {
+        return false;
+    }
+    const propertyInfo = getClassInfo(parent).properties.find(
+        propertyInfo => propertyInfo.name == key
+    );
+    return !!propertyInfo?.styleWithoutFont;
+}
+
+// A style object that uses no style and has no values of its own: an optional
+// style of a widget part that is not set (e.g. the label style of a
+// DisplayData widget, the widget style is used then).
+export function isStyleEmpty(style: Style | undefined) {
+    if (!style) {
+        return true;
+    }
+    if (style.useStyle) {
+        return false;
+    }
+    return !properties.some(
+        propertyInfo =>
+            propertyInfo.inheritable &&
+            (style as any)[propertyInfo.name] !== undefined
+    );
 }
 
 export function getAdditionalStyleFlowProperties(widget: Widget) {
