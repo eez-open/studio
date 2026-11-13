@@ -49,8 +49,12 @@ async function renderPage(projectStore: ProjectStore, options: RenderPageOptions
     const width = pageLayout ? pageLayout.width : page.width;
     const height = pageLayout ? pageLayout.height : page.height;
 
-    const { displayWidth, displayHeight } =
-        projectStore.project.settings.general;
+    // the display of the page editor (getFlowGuiDisplaySize)
+    const { getFlowGuiDisplaySize } = await import(
+        "project-editor/build/assets"
+    );
+    const { width: displayWidth, height: displayHeight } =
+        getFlowGuiDisplaySize(projectStore.project);
 
     // the editor build doesn't wait for the images (it runs again when they
     // are loaded), here they are loaded before

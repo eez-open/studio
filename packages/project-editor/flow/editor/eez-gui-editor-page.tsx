@@ -18,6 +18,7 @@ import { getProjectWithThemes } from "project-editor/features/style/theme";
 import type { IEezObject } from "project-editor/core/object";
 import type { Rect } from "eez-studio-shared/geometry";
 import { buildEditorAssets } from "project-editor/build/editor-build";
+import { getFlowGuiDisplaySize } from "project-editor/build/assets";
 import { EezGuiEditorWasm } from "project-editor/flow/editor/eez-gui-editor-wasm";
 import { setEditorWidgetBoxes } from "project-editor/flow/editor/eez-gui-editor-boxes";
 
@@ -80,8 +81,21 @@ export const EezGuiEditorPage = observer(
             }
 
             const projectStore = flowContext.projectStore;
-            const { displayWidth, displayHeight } =
-                projectStore.project.settings.general;
+            // as the Studio runtime: a page larger than the display size of
+            // the settings is drawn whole
+            const { width: displayWidth, height: displayHeight } =
+                getFlowGuiDisplaySize(projectStore.project);
+
+            // the display of a WASM instance has the size of its first load
+            if (
+                editorWasm.displayWidth &&
+                (editorWasm.displayWidth != displayWidth ||
+                    editorWasm.displayHeight != displayHeight)
+            ) {
+                this.editorWasm = undefined;
+                this.createWasm();
+                return;
+            }
 
             const selectedTheme =
                 projectStore.navigationStore.selectedThemeObject.get();

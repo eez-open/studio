@@ -50,6 +50,8 @@ interface BuildManifest {
     files: string[]; // Relative paths from destinationFolder
 }
 
+// The files written by the build that writes files now (see build: one such
+// build at a time).
 let currentBuildFiles: Set<string> = new Set();
 let trackingDestinationFolder: string | null = null;
 
@@ -499,7 +501,26 @@ function anythingToBuild(projectStore: ProjectStore) {
     );
 }
 
-export async function build(
+// The builds that write files run one after the other: the tracking of the
+// written files (currentBuildFiles, trackingDestinationFolder) and the source
+// cleanup options are module state. Two such builds at the same time (Build
+// in two project tabs) mixed their lists of written files, and each one
+// deleted the files it had just written as orphaned.
+let fileBuildQueue: Promise<unknown> = Promise.resolve();
+
+export function build(
+    projectStore: ProjectStore,
+    option: "check" | "buildAssets" | "buildFiles"
+) {
+    if (option != "buildFiles") {
+        return buildOne(projectStore, option);
+    }
+    const result = fileBuildQueue.then(() => buildOne(projectStore, option));
+    fileBuildQueue = result.catch(() => {});
+    return result;
+}
+
+async function buildOne(
     projectStore: ProjectStore,
     option: "check" | "buildAssets" | "buildFiles"
 ) {
@@ -527,8 +548,7 @@ export async function build(
 
     const project = projectStore.project;
 
-    // Reset build file tracking
-    currentBuildFiles = new Set();
+    // the files written by this build are tracked from enableBuildTracking
     let previousManifest: BuildManifest | null = null;
 
     try {
@@ -805,6 +825,10 @@ export async function build(
 
         showCheckResult(projectStore);
     } finally {
+        if (option == "buildFiles") {
+            // also after an error
+            disableBuildTracking();
+        }
         OutputSections.setLoading(Section.OUTPUT, false);
     }
 

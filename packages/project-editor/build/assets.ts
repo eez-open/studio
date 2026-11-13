@@ -1808,18 +1808,13 @@ export class Assets {
             return this.projectStore.project.settings.general.displayWidth;
         }
 
-        const maxPageWidth = Math.max(
+        if (this.projectStore.projectTypeTraits.hasFlowSupport) {
+            return getFlowGuiDisplaySize(this.projectStore.project).width;
+        }
+
+        return Math.max(
             ...this.projectStore.project.pages.map(page => page.width)
         );
-
-        if (this.projectStore.projectTypeTraits.hasFlowSupport) {
-            return Math.max(
-                maxPageWidth,
-                this.projectStore.project.settings.general.displayWidth
-            );
-        } else {
-            return maxPageWidth;
-        }
     }
 
     get displayHeight() {
@@ -1831,19 +1826,29 @@ export class Assets {
             return this.projectStore.project.settings.general.displayHeight;
         }
 
-        const maxPageHeight = Math.max(
+        if (this.projectStore.projectTypeTraits.hasFlowSupport) {
+            return getFlowGuiDisplaySize(this.projectStore.project).height;
+        }
+
+        return Math.max(
             ...this.projectStore.project.pages.map(page => page.height)
         );
-
-        if (this.projectStore.projectTypeTraits.hasFlowSupport) {
-            return Math.max(
-                maxPageHeight,
-                this.projectStore.project.settings.general.displayHeight
-            );
-        } else {
-            return maxPageHeight;
-        }
     }
+}
+
+// The display an EEZ-GUI project with flow support is drawn on (the Studio
+// runtime, the page editor): the display size of the project settings, or the
+// size of the largest page when it is larger. The pages of a BB3 module are
+// drawn on the BB3+ display, their project can keep the default display size.
+export function getFlowGuiDisplaySize(project: Project) {
+    const { displayWidth, displayHeight } = project.settings.general;
+    return {
+        width: Math.max(displayWidth, ...project.pages.map(page => page.width)),
+        height: Math.max(
+            displayHeight,
+            ...project.pages.map(page => page.height)
+        )
+    };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
