@@ -242,6 +242,11 @@ export class DisplayDataWidget extends Widget {
     refreshRate: string;
     // in a row or column (see Widget.getLayoutFlags)
     fitToContent?: "none" | "width" | "height" | "both";
+    // a number is shown in this unit (an expression of a unit name such as
+    // "mA") with the decimals of the precision (an expression, the smallest
+    // step in that unit): eez-framework getValueInUnit
+    displayUnit?: string;
+    precision?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -327,7 +332,22 @@ export class DisplayDataWidget extends Widget {
             },
             makeDataPropertyInfo("refreshRate", {
                 disabled: hasNotFlowSupport
-            })
+            }),
+            makeDataPropertyInfo(
+                "displayUnit",
+                {
+                    displayName: "Display unit",
+                    disabled: hasNotFlowSupport
+                },
+                "string"
+            ),
+            makeDataPropertyInfo(
+                "precision",
+                {
+                    disabled: hasNotFlowSupport
+                },
+                "float"
+            )
         ],
 
         beforeLoadHook: (
@@ -420,7 +440,9 @@ export class DisplayDataWidget extends Widget {
             displayOption: observable,
             unitAndFractionFont: observable,
             refreshRate: observable,
-            fitToContent: observable
+            fitToContent: observable,
+            displayUnit: observable,
+            precision: observable
         });
     }
 
@@ -502,6 +524,20 @@ export class DisplayDataWidget extends Widget {
             displayOption == DisplayOption.IntegerUnitAndFraction &&
                 assets.getPropertyValue(this, "unitAndFractionFont")
                 ? assets.getFontIndex(this, "unitAndFractionFont")
+                : 0
+        );
+
+        // displayUnit, precision (flow expressions, 0 if not set)
+        const hasFlowSupport =
+            assets.projectStore.projectTypeTraits.hasFlowSupport;
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.displayUnit
+                ? assets.getWidgetDataItemIndex(this, "displayUnit")
+                : 0
+        );
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.precision
+                ? assets.getWidgetDataItemIndex(this, "precision")
                 : 0
         );
     }
@@ -3699,6 +3735,10 @@ export class InputEmbeddedWidget extends Widget {
 
     precision: string;
     unit: string;
+    // a number is shown in this unit (an expression of a unit name such as
+    // "mA", empty: the unit) with the decimals of the precision: eez-framework
+    // getInputWidgetShownValue
+    displayUnit?: string;
 
     info: string;
 
@@ -3749,6 +3789,12 @@ export class InputEmbeddedWidget extends Widget {
             },
             {
                 ...makeDataPropertyInfo("unit"),
+                disabled: (widget: InputEmbeddedWidget) =>
+                    widget.inputType != "number"
+            },
+            {
+                ...makeDataPropertyInfo("displayUnit", {}, "string"),
+                displayName: "Display unit",
                 disabled: (widget: InputEmbeddedWidget) =>
                     widget.inputType != "number"
             },
@@ -3833,6 +3879,7 @@ export class InputEmbeddedWidget extends Widget {
             defaultValue: observable,
             precision: observable,
             unit: observable,
+            displayUnit: observable,
             info: observable
         });
     }
@@ -3902,6 +3949,16 @@ export class InputEmbeddedWidget extends Widget {
             this.inputType === "text"
                 ? 0
                 : assets.getWidgetDataItemIndex(this, "defaultValue"));
+
+        // displayUnit (0 if not set: the unit)
+        dataBuffer.writeInt16(
+            this.inputType === "text" || !this.displayUnit
+                ? 0
+                : assets.getWidgetDataItemIndex(this, "displayUnit")
+        );
+
+        // reserved1
+        dataBuffer.writeInt16(0);
     }
 }
 

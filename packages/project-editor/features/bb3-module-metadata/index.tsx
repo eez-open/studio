@@ -17,6 +17,7 @@ import { DataBuffer } from "project-editor/build/data-buffer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     BB3_MODULE_FIELD_TYPES,
+    isBB3ModuleFieldFloatType,
     isIntegerType,
 } from "project-editor/features/variable/value-type";
 import { getValueType } from "project-editor/build/values";
@@ -296,6 +297,16 @@ export function writeBB3ModuleMetadata(
 
             // maxSampleRate
             dataBuffer.writeFloat(maxSampleRate);
+
+            // resolution: the smallest step of a float field in its unit, 0 if
+            // not set (BB3+ shows the values with the decimals of it)
+            const resolution =
+                isBB3ModuleFieldFloatType(variable.type) &&
+                variable.bb3ModuleFieldResolution != undefined &&
+                variable.bb3ModuleFieldResolution > 0
+                    ? variable.bb3ModuleFieldResolution
+                    : 0;
+            dataBuffer.writeFloat(resolution);
 
             offset += size;
         })

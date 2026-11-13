@@ -378,6 +378,10 @@ export class Variable extends EezObject {
     native: boolean;
     bb3ModuleField: BB3ModuleField;
     bb3ModuleFieldUnit: string | undefined;
+    // the smallest step of a float field in its unit: BB3+ shows its values
+    // with the decimals of it (0.005 -> 3), the default of the widgets that
+    // have no precision (eez-framework getValueInUnit)
+    bb3ModuleFieldResolution: number | undefined;
     // samples per second, if set the module streams the field samples (YT
     // graphs, data logging) at the rate BB3+ asks for, up to this rate
     bb3ModuleFieldMaxSampleRate: number | undefined;
@@ -419,6 +423,7 @@ export class Variable extends EezObject {
             native: observable,
             bb3ModuleField: observable,
             bb3ModuleFieldUnit: observable,
+            bb3ModuleFieldResolution: observable,
             bb3ModuleFieldMaxSampleRate: observable,
             bb3ModuleFieldMeasurement: observable,
             bb3ModuleFieldMeasurementChannel: observable,
@@ -588,6 +593,17 @@ export class Variable extends EezObject {
                     id: unit.id,
                     label: unit.label
                 })),
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    variable.bb3ModuleField == undefined ||
+                    !isBB3ModuleFieldFloatType(variable.type)
+            },
+            {
+                name: "bb3ModuleFieldResolution",
+                displayName: "BB3 module field resolution",
+                type: PropertyType.Number,
+                isOptional: true,
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
                     !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
