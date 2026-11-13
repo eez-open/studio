@@ -476,6 +476,14 @@ class Model {
             let isLVGLComponent = false;
 
             if (enabledInComponentPalette) {
+                // the eez-gui-lite widgets are copies of EEZ-GUI widgets
+                if (
+                    enabledInComponentPalette(ProjectType.EEZ_GUI_LITE) &&
+                    !enabledInComponentPalette(ProjectType.FIRMWARE)
+                ) {
+                    continue;
+                }
+
                 if (enabledInComponentPalette(ProjectType.DASHBOARD)) {
                     isDashboardComponent = true;
                 }

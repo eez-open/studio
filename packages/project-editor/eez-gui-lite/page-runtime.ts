@@ -12,22 +12,21 @@ import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
-    getStyleProperty,
-    type Style
-} from "project-editor/features/style/style";
+    getLiteStyleProperty,
+    type LiteStyle
+} from "project-editor/eez-gui-lite/style";
 
 import type { Page } from "project-editor/features/page/page";
 import { Widget, type Component } from "project-editor/flow/component";
 import {
-    ButtonWidget,
-    RectangleWidget,
-    SwitchWidget,
-    TextWidget
-} from "project-editor/flow/components/widgets/eez-gui";
-import {
-    ContainerWidget,
-    SelectWidget
-} from "project-editor/flow/components/widgets";
+    ButtonLiteWidget,
+    ContainerLiteWidget,
+    LiteWidget,
+    RectangleLiteWidget,
+    SelectLiteWidget,
+    SwitchLiteWidget,
+    TextLiteWidget
+} from "project-editor/eez-gui-lite/widgets";
 
 import {
     evalConstantExpression,
@@ -77,7 +76,7 @@ export class EezGuiLiteRuntime {
     // Widget pointer → WidgetInfo mapping (for event dispatch)
     widgetPtrMap: Map<number, WidgetInfo> = new Map();
 
-    styles: Style[] = [];
+    styles: LiteStyle[] = [];
     pageStyleIndex: number;
 
     colors: string[] = [];
@@ -614,8 +613,8 @@ export class EezGuiLiteRuntime {
     // ── Styles ──────────────────────────────────────────────────────────
     //
 
-    getColorIndex(style: Style, property: string): number {
-        let colorValue = getStyleProperty(style, property, false);
+    getColorIndex(style: LiteStyle, property: string): number {
+        let colorValue = getLiteStyleProperty(style, property, false);
 
         if (colorValue == undefined) {
             colorValue = "#00000000";
@@ -652,8 +651,8 @@ export class EezGuiLiteRuntime {
         return colorIndex;
     }
 
-    getFontIndex(style: Style): number {
-        const fontName = getStyleProperty(style, "font");
+    getFontIndex(style: LiteStyle): number {
+        const fontName = getLiteStyleProperty(style, "font");
         if (fontName) {
             const fontIndex = this.project.fonts.findIndex(
                 f => f.name == fontName
@@ -745,7 +744,7 @@ export class EezGuiLiteRuntime {
         this.wasm._setStyles(stylesPtr, styles.length);
     }
 
-    getStyleIndex(style: Style): number {
+    getStyleIndex(style: LiteStyle): number {
         let styleIndex = this.styles.findIndex(s => s == style);
         if (styleIndex == -1) {
             styleIndex = this.styles.length;
@@ -754,8 +753,8 @@ export class EezGuiLiteRuntime {
         return styleIndex;
     }
 
-    getStyleIndexForWidget(widget: Widget): number {
-        return this.getStyleIndex(widget.style);
+    getStyleIndexForWidget(widget: LiteWidget): number {
+        return this.getStyleIndex(widget.liteStyle);
     }
 
     //
@@ -778,19 +777,19 @@ export class EezGuiLiteRuntime {
         const infos: WidgetInfo[] = [];
 
         for (const component of components) {
-            if (!(component instanceof Widget)) continue;
+            if (!(component instanceof LiteWidget)) continue;
             const widget = component;
 
             let widgetPtr: number;
             let children: WidgetInfo[] | undefined;
 
-            if (widget instanceof TextWidget) {
+            if (widget instanceof TextLiteWidget) {
                 widgetPtr = this.wasm._allocTextWidget();
                 this.setupWidgetBase(widgetPtr, widget);
                 const textValue = widget.text || widget.data || "";
                 const textProp = this.addStrProp(textValue);
                 this.wasm._setTextWidgetText(widgetPtr, textProp);
-            } else if (widget instanceof ButtonWidget) {
+            } else if (widget instanceof ButtonLiteWidget) {
                 widgetPtr = this.wasm._allocButtonWidget();
                 this.setupWidgetBase(widgetPtr, widget);
                 const textValue = widget.text || widget.data || "";
@@ -805,19 +804,19 @@ export class EezGuiLiteRuntime {
                         this.getStyleIndex(widget.disabledStyle)
                     );                    
                 }
-            } else if (widget instanceof RectangleWidget) {
+            } else if (widget instanceof RectangleLiteWidget) {
                 widgetPtr = this.wasm._allocRectangleWidget();
                 this.setupWidgetBase(widgetPtr, widget);
-            } else if (widget instanceof SwitchWidget) {
+            } else if (widget instanceof SwitchLiteWidget) {
                 widgetPtr = this.wasm._allocSwitchWidget();
                 this.setupWidgetBase(widgetPtr, widget);
                 const checkedProp = this.addBoolProp(widget.data);
                 this.wasm._setSwitchWidgetChecked(widgetPtr, checkedProp);
-            } else if (widget instanceof SelectWidget) {
+            } else if (widget instanceof SelectLiteWidget) {
                 widgetPtr = this.wasm._allocSelectWidget();
                 this.setupWidgetBase(widgetPtr, widget);
                 children = this.createWidgets(widget.widgets);
-            } else if (widget instanceof ContainerWidget) {
+            } else if (widget instanceof ContainerLiteWidget) {
                 widgetPtr = this.wasm._allocContainerWidget();
                 this.setupWidgetBase(widgetPtr, widget);
                 children = this.createWidgets(widget.widgets);
@@ -834,7 +833,7 @@ export class EezGuiLiteRuntime {
         return infos;
     }
 
-    setupWidgetBase(widgetPtr: number, widget: Widget) {
+    setupWidgetBase(widgetPtr: number, widget: LiteWidget) {
         this.wasm._setWidgetGeometry(
             widgetPtr,
             widget.left,
@@ -855,7 +854,7 @@ export class EezGuiLiteRuntime {
         // clickable flag
         let clickable = false;
 
-        if (widget instanceof SwitchWidget) {
+        if (widget instanceof SwitchLiteWidget) {
             clickable = true;
         } else {
             for (const eventHandler of widget.eventHandlers) {
@@ -899,11 +898,10 @@ export class EezGuiLiteRuntime {
     }
 
     getStyleIndexForPage(): number {
-        let style = this.project.styles.find(
-            style => style.name == this.page.style
-        );
+        const styles = this.project.styles as unknown as LiteStyle[];
+        let style = styles.find(style => style.name == this.page.style);
         if (!style) {
-            style = this.project.styles[0];
+            style = styles[0];
         }
         return this.getStyleIndex(style);
     }
@@ -912,15 +910,15 @@ export class EezGuiLiteRuntime {
         for (const info of infos) {
             const widget = info.widget;
 
-            if (widget instanceof TextWidget) {
+            if (widget instanceof TextLiteWidget) {
                 this.wasm._renderTextWidget(info.ptr);
-            } else if (widget instanceof ButtonWidget) {
+            } else if (widget instanceof ButtonLiteWidget) {
                 this.wasm._renderButtonWidget(info.ptr);
-            } else if (widget instanceof RectangleWidget) {
+            } else if (widget instanceof RectangleLiteWidget) {
                 this.wasm._renderRectangleWidget(info.ptr);
-            } else if (widget instanceof SwitchWidget) {
+            } else if (widget instanceof SwitchLiteWidget) {
                 this.wasm._renderSwitchWidget(info.ptr);
-            } else if (widget instanceof SelectWidget) {
+            } else if (widget instanceof SelectLiteWidget) {
                 this.wasm._renderSelectBegin(info.ptr);
                 if (info.children && info.children.length > 0) {
                     if (this.runtime) {
@@ -954,7 +952,7 @@ export class EezGuiLiteRuntime {
                     }
                 }
                 this.wasm._renderSelectEnd(info.ptr);
-            } else if (widget instanceof ContainerWidget) {
+            } else if (widget instanceof ContainerLiteWidget) {
                 this.wasm._renderContainerBegin(info.ptr);
                 if (info.children) {
                     this.renderWidgets(info.children);

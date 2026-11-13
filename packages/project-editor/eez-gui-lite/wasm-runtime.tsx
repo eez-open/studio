@@ -24,7 +24,7 @@ import {
     ShowPageActionComponent
 } from "project-editor/flow/components/actions";
 import { Page } from "project-editor/features/page/page";
-import { SwitchWidget } from "project-editor/flow/components/widgets/eez-gui";
+import { SwitchLiteWidget } from "project-editor/eez-gui-lite/widgets";
 import type { Theme } from "project-editor/features/style/theme";
 import { EezFlowLiteWasmRuntime } from "project-editor/eez-flow-lite/wasm-runtime";
 
@@ -119,7 +119,7 @@ export class EezGuiLiteWasmRuntime extends EezFlowLiteWasmRuntime {
             if (eventName) {
                 if (
                     eventName == "CLICKED" &&
-                    widget instanceof SwitchWidget &&
+                    widget instanceof SwitchLiteWidget &&
                     widget.data != undefined
                 ) {
                     const variable = evalAssignableExpression(

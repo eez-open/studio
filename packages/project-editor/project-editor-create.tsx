@@ -151,6 +151,11 @@ import {
 } from "project-editor/features/variable/variable";
 
 import { Style, PageLayoutStyle } from "project-editor/features/style/style";
+import { LiteStyle } from "project-editor/eez-gui-lite/style";
+import {
+    ContainerLiteWidget,
+    SelectLiteWidget
+} from "project-editor/eez-gui-lite/widgets";
 
 import { evalProperty } from "project-editor/flow/helper";
 import { migrateLvglVersion } from "./lvgl/migrate";
@@ -214,6 +219,8 @@ export function createProjectEditor(
         UserWidgetWidgetClass: UserWidgetWidget,
         SelectWidgetClass: SelectWidget,
         ContainerWidgetClass: ContainerWidget,
+        ContainerLiteWidgetClass: ContainerLiteWidget,
+        SelectLiteWidgetClass: SelectLiteWidget,
         ListWidgetClass: ListWidget,
         TextWidgetClass: TextWidget,
         MultilineTextWidgetClass: MultilineTextWidget,
@@ -232,6 +239,7 @@ export function createProjectEditor(
         ScpiSubsystemClass: ScpiSubsystem,
         StyleClass: Style,
         PageLayoutStyleClass: PageLayoutStyle,
+        LiteStyleClass: LiteStyle,
         BitmapClass: Bitmap,
         FontClass: Font,
         ColorClass: Color,

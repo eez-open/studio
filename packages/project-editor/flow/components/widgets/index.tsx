@@ -335,7 +335,8 @@ export class ContainerWidget extends Widget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1392,7 +1393,8 @@ export class SelectWidget extends Widget {
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Containers",
 

@@ -547,7 +547,10 @@ export function* searchForReference(
             return;
         }
 
-        if (object instanceof ProjectEditor.StyleClass) {
+        if (
+            object instanceof ProjectEditor.StyleClass ||
+            object instanceof ProjectEditor.LiteStyleClass
+        ) {
             objectParentPath = "allStyles";
         } else if (object instanceof ProjectEditor.LVGLStyleClass) {
             objectParentPath = "allLvglStyles";
@@ -829,6 +832,11 @@ export function* searchForUnusedObjects(
         let anyUsed = false;
         if (styles) {
             for (const style of styles) {
+                // a state style is used with its base style
+                if ((style as Style).state) {
+                    continue;
+                }
+
                 const childStylesUsed: boolean = yield* checkStyles(
                     group,
                     style.childStyles

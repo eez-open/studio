@@ -2250,9 +2250,10 @@ export class Project extends EezObject {
     get allStyles() {
         const styles: Style[] = [];
 
+        // the styles of an eez-gui-lite project have no child styles
         function addStyles(style: Style) {
             styles.push(style);
-            for (const childStyle of style.childStyles) {
+            for (const childStyle of style.childStyles ?? []) {
                 addStyles(childStyle);
             }
         }

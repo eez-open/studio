@@ -43,6 +43,10 @@ import {
 } from "project-editor/flow/components/actions";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
+import type {
+    ContainerLiteWidget,
+    SelectLiteWidget
+} from "project-editor/eez-gui-lite/widgets";
 import { ConnectionLine } from "project-editor/flow/connection-line";
 import {
     userPropertiesProperty,
@@ -452,6 +456,8 @@ export class FlowFragment extends EezObject {
                 let containerAncestor:
                     | ContainerWidget
                     | SelectWidget
+                    | ContainerLiteWidget
+                    | SelectLiteWidget
                     | LVGLWidget
                     | undefined;
 
@@ -461,6 +467,10 @@ export class FlowFragment extends EezObject {
                         testObject instanceof
                             ProjectEditor.ContainerWidgetClass ||
                         testObject instanceof ProjectEditor.SelectWidgetClass ||
+                        testObject instanceof
+                            ProjectEditor.ContainerLiteWidgetClass ||
+                        testObject instanceof
+                            ProjectEditor.SelectLiteWidgetClass ||
                         testObject instanceof
                             ProjectEditor.LVGLPanelWidgetClass ||
                         testObject instanceof

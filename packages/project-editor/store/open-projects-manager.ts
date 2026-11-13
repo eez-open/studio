@@ -331,7 +331,8 @@ export class OpenProjectsManager {
             this.projectStore,
             projectJs,
             this.projectStore.context.type == "project-editor",
-            isExternalProject
+            isExternalProject,
+            filePath
         ) as Project;
 
         project._isDashboardBuild = isDashboardBuild;

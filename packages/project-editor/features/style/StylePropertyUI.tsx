@@ -42,7 +42,8 @@ export const StylePropertyUI = observer(
             return getCommonProperties(this.props.objects, true).filter(
                 propertyInfo =>
                     propertyInfo.type == PropertyType.Object &&
-                    propertyInfo.typeClass == ProjectEditor.StyleClass
+                    (propertyInfo.typeClass == ProjectEditor.StyleClass ||
+                        propertyInfo.typeClass == ProjectEditor.LiteStyleClass)
             );
         }
 

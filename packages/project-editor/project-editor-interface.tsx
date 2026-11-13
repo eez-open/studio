@@ -118,6 +118,11 @@ import type {
     LVGLDropdownWidget
 } from "project-editor/lvgl/widgets";
 import type { LVGLStyle } from "project-editor/lvgl/style";
+import type { LiteStyle } from "project-editor/eez-gui-lite/style";
+import type {
+    ContainerLiteWidget,
+    SelectLiteWidget
+} from "project-editor/eez-gui-lite/widgets";
 import type { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import type { getProjectStore } from "project-editor/store";
 
@@ -174,6 +179,8 @@ export interface IProjectEditor {
     UserWidgetWidgetClass: typeof UserWidgetWidget;
     SelectWidgetClass: typeof SelectWidget;
     ContainerWidgetClass: typeof ContainerWidget;
+    ContainerLiteWidgetClass: typeof ContainerLiteWidget;
+    SelectLiteWidgetClass: typeof SelectLiteWidget;
     ListWidgetClass: typeof ListWidget;
     TextWidgetClass: typeof TextWidget;
     MultilineTextWidgetClass: typeof MultilineTextWidget;
@@ -192,6 +199,7 @@ export interface IProjectEditor {
     ScpiSubsystemClass: typeof ScpiSubsystem;
     StyleClass: typeof Style;
     PageLayoutStyleClass: typeof PageLayoutStyle;
+    LiteStyleClass: typeof LiteStyle;
     BitmapClass: typeof Bitmap;
     FontClass: typeof Font;
     ColorClass: typeof Color;

@@ -1,8 +1,13 @@
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
-import type { Style } from "project-editor/features/style/style";
+import {
+    STYLE_STATES,
+    StateStyle,
+    type Style
+} from "project-editor/features/style/style";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 export const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0;
 export const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1;
@@ -13,6 +18,43 @@ export const STYLE_FLAGS_VERT_ALIGN_BOTTOM = 1 << 3;
 export const STYLE_FLAGS_VERT_ALIGN_CENTER = 2 << 3;
 
 export const STYLE_FLAGS_BLINK = 1 << 6;
+export const STYLE_FLAGS_ELLIPSIS = 1 << 7;
+
+// The styles of the states of the styles of the assets (see Style.stateDeltas):
+// a StateStyle for each state with properties, added to the assets (the list
+// grows while it is walked, the state styles have no states). The indexes are
+// kept in assets.stateStyleIndexes for buildStyle.
+function addStateStyles(assets: Assets) {
+    for (let i = 0; i < assets.styles.length; i++) {
+        const style = assets.styles[i];
+        if (
+            !style ||
+            style.isStateStyle ||
+            assets.stateStyleIndexes.has(style)
+        ) {
+            continue;
+        }
+
+        const stateDeltas = style.stateDeltas;
+
+        const indexes = STYLE_STATES.map(state => {
+            const delta = stateDeltas?.[state];
+            if (!delta || Object.keys(delta).length == 0) {
+                return 0;
+            }
+            return assets.doGetStyleIndex(
+                ProjectEditor.getProject(style),
+                new StateStyle(style, state, delta)
+            );
+        });
+
+        assets.stateStyleIndexes.set(style, indexes);
+    }
+}
+
+function clamp(value: number, min: number, max: number) {
+    return Math.min(Math.max(Math.round(value), min), max);
+}
 
 export function buildGuiStylesEnum(assets: Assets) {
     let styles = assets.styles.filter(style => style.id != undefined || style.alwaysBuild);
@@ -58,6 +100,10 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
             flags |= STYLE_FLAGS_BLINK;
         }
 
+        if (style.ellipsisProperty) {
+            flags |= STYLE_FLAGS_ELLIPSIS;
+        }
+
         dataBuffer.writeUint16(flags);
 
         // backgroundColor
@@ -78,40 +124,6 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
             color = 0;
         }
         dataBuffer.writeUint16(color);
-
-        // activeBackgroundColor
-        let activeBackgroundColor = assets.getColorIndex(
-            style,
-            "activeBackgroundColor"
-        );
-        if (isNaN(activeBackgroundColor)) {
-            activeBackgroundColor = 0;
-        }
-        dataBuffer.writeUint16(activeBackgroundColor);
-
-        // activeColor
-        let activeColor = assets.getColorIndex(style, "activeColor");
-        if (isNaN(activeColor)) {
-            activeColor = 0;
-        }
-        dataBuffer.writeUint16(activeColor);
-
-        // focusBackgroundColor
-        let focusBackgroundColor = assets.getColorIndex(
-            style,
-            "focusBackgroundColor"
-        );
-        if (isNaN(focusBackgroundColor)) {
-            focusBackgroundColor = 0;
-        }
-        dataBuffer.writeUint16(focusBackgroundColor);
-
-        // focusColor
-        let focusColor = assets.getColorIndex(style, "focusColor");
-        if (isNaN(focusColor)) {
-            focusColor = 0;
-        }
-        dataBuffer.writeUint16(focusColor);
 
         // borderSize
         dataBuffer.writeUint8(style.borderSizeRect.top);
@@ -172,6 +184,44 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
             );
         }
         dataBuffer.writeInt16(backgroundImage);
+
+        // stateStyles
+        const stateStyleIndexes = assets.stateStyleIndexes.get(style);
+        for (let i = 0; i < STYLE_STATES.length; i++) {
+            dataBuffer.writeInt16(stateStyleIndexes ? stateStyleIndexes[i] : 0);
+        }
+
+        // letterSpacing, in 1/64 px
+        dataBuffer.writeInt16(
+            clamp(style.letterSpacingProperty * 64, -32768, 32767)
+        );
+
+        // lineHeight
+        dataBuffer.writeUint16(clamp(style.lineHeightProperty, 0, 65535));
+
+        // focusRingColor
+        let focusRingColor = assets.getColorIndex(style, "focusRingColor");
+        if (isNaN(focusRingColor)) {
+            focusRingColor = 0;
+        }
+        dataBuffer.writeUint16(focusRingColor);
+
+        // focusRingWidth, focusRingOffset
+        dataBuffer.writeUint8(clamp(style.focusRingWidthProperty, 0, 255));
+        dataBuffer.writeUint8(clamp(style.focusRingOffsetProperty, 0, 255));
+
+        // shadowColor
+        let shadowColor = assets.getColorIndex(style, "shadowColor");
+        if (isNaN(shadowColor)) {
+            shadowColor = 0;
+        }
+        dataBuffer.writeUint16(shadowColor);
+
+        // shadowOffsetX, shadowOffsetY, shadowBlur, shadowSpread
+        dataBuffer.writeInt8(clamp(style.shadowOffsetXProperty, -128, 127));
+        dataBuffer.writeInt8(clamp(style.shadowOffsetYProperty, -128, 127));
+        dataBuffer.writeUint8(clamp(style.shadowBlurProperty, 0, 255));
+        dataBuffer.writeInt8(clamp(style.shadowSpreadProperty, -128, 127));
     }
 
     // The index of a style is its position in assets.styles (id - 1 for a
@@ -179,6 +229,8 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
     // write the first style in place of a missing one.
     let styles: Style[] = [];
     if (!assets.projectStore.projectTypeTraits.isDashboard) {
+        addStateStyles(assets);
+
         const firstStyle = assets.styles.find(style => !!style);
         styles = Array.from(assets.styles, style => style ?? firstStyle!);
     }

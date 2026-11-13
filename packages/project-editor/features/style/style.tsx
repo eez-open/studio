@@ -1,4 +1,5 @@
 import React from "react";
+import fs from "fs";
 import path from "path";
 import { observable, computed, makeObservable } from "mobx";
 import { keepAliveComputed } from "project-editor/core/keep-alive";
@@ -32,11 +33,16 @@ import {
     propertyNotSetMessage,
     createObject,
     isEezObjectArray,
-    getClassInfo
+    getClassInfo,
+    type ProjectStore
 } from "project-editor/store";
 import {
+    getSerializationFilePath,
+    getSerializationOrStoreProject
+} from "project-editor/store/serialization";
+import {
     isDashboardProject,
-    isEezGuiLiteProject,
+    isEezGuiProject,
     isNotDashboardProject,
     isV1Project,
     isV3OrNewerProject
@@ -209,7 +215,7 @@ const idProperty: PropertyInfo = {
     unique: true,
     inheritable: false,
     disabled: style =>
-        isWidgetParentOfStyle(style) || isDashboardProject(style) || isEezGuiLiteProject(style),
+        isWidgetParentOfStyle(style) || isDashboardProject(style),
     defaultValue: undefined
 };
 
@@ -257,10 +263,17 @@ const descriptionProperty: PropertyInfo = {
     disabled: isWidgetParentOfStyle
 };
 
+// In EEZ-GUI v3 projects the project styles are complete and don't inherit:
+// only a widget style and a state style (its base style) use another style.
 const useStyleProperty: PropertyInfo = {
     name: "useStyle",
+    displayName: (style: Style) => (style.state ? "Base style" : "Use style"),
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "allStyles",
+    disabled: (style: Style) =>
+        !isNotEezGuiV3Style(style) &&
+        !isWidgetParentOfStyle(style) &&
+        !style.state,
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
         const projectStore = getProjectStore(props.objects[0]);
 
@@ -316,9 +329,25 @@ const useStyleProperty: PropertyInfo = {
                                 const stylePropertyValues: any = {};
                                 const objectPropertyValues: any = {};
 
+                                // in EEZ-GUI v3 projects the new style is
+                                // complete (all the values the style has)
+                                const isComplete = !isNotEezGuiV3Style(object);
+
                                 properties.forEach(propertyInfo => {
                                     stylePropertyValues[propertyInfo.name] =
-                                        getProperty(object, propertyInfo.name);
+                                        isComplete && propertyInfo.inheritable
+                                            ? getStyleProperty(
+                                                  object,
+                                                  propertyInfo.name,
+                                                  false
+                                              )
+                                            : isComplete &&
+                                                propertyInfo == useStyleProperty
+                                              ? undefined
+                                              : getProperty(
+                                                    object,
+                                                    propertyInfo.name
+                                                );
 
                                     objectPropertyValues[propertyInfo.name] =
                                         undefined;
@@ -620,7 +649,7 @@ const activeColorProperty: PropertyInfo = {
     inheritable: true,
     cssAttributeName: "color",
     propertyMenu,
-    disabled: isV1Project
+    disabled: isNotOldStateColorStyle
 };
 
 const activeBackgroundColorProperty: PropertyInfo = {
@@ -630,7 +659,7 @@ const activeBackgroundColorProperty: PropertyInfo = {
     referencedObjectCollectionPath: "colors",
     defaultValue: "#ffffff",
     inheritable: true,
-    disabled: isV1Project,
+    disabled: isNotOldStateColorStyle,
     cssAttributeName: "background-color",
     propertyMenu: backgroundColorPropertyMenu
 };
@@ -643,7 +672,7 @@ const focusColorProperty: PropertyInfo = {
     inheritable: true,
     cssAttributeName: "color",
     propertyMenu,
-    disabled: isV1Project
+    disabled: isNotOldStateColorStyle
 };
 
 const focusBackgroundColorProperty: PropertyInfo = {
@@ -655,7 +684,7 @@ const focusBackgroundColorProperty: PropertyInfo = {
     inheritable: true,
     cssAttributeName: "background-color",
     propertyMenu: backgroundColorPropertyMenu,
-    disabled: isV1Project
+    disabled: isNotOldStateColorStyle
 };
 
 const borderSizeProperty: PropertyInfo = {
@@ -772,6 +801,166 @@ const blinkProperty: PropertyInfo = {
     checkboxStyleSwitch: true
 };
 
+// The properties of the styles of the EEZ-GUI v3 projects (eez-framework),
+// hidden in LVGL and dashboard projects.
+function isNotEezGuiV3Style(object: IEezObject) {
+    return !isEezGuiProject(object) || !isV3OrNewerProject(object);
+}
+
+// The active and focus colors are in the EEZ-GUI v2 and dashboard projects
+// (the EEZ-GUI v3 projects have the pressed and focused state styles, an
+// EEZ-GUI v1 project has no active and focus colors).
+function isNotOldStateColorStyle(object: IEezObject) {
+    return isV1Project(object) || !isNotEezGuiV3Style(object);
+}
+
+// the states of a widget with their own style, in the order of
+// Style::stateStyles in the framework (StyleState)
+export const STYLE_STATES = [
+    "pressed",
+    "focused",
+    "disabled",
+    "selected",
+    "checked"
+] as const;
+
+export type StyleStateName = (typeof STYLE_STATES)[number];
+
+// A state style is a project style with a state that uses its base style
+// ("useStyle"): it holds the properties the base style has in that state. The
+// widgets drawn with the base style (also with some of its properties changed
+// in the widget style) use them in that state, over their own style.
+const stateProperty: PropertyInfo = {
+    name: "state",
+    type: PropertyType.Enum,
+    enumItems: STYLE_STATES.map(id => ({ id })),
+    nonInheritable: true,
+    disabled: (style: Style) =>
+        isNotEezGuiV3Style(style) || isWidgetParentOfStyle(style)
+};
+
+const letterSpacingProperty: PropertyInfo = {
+    name: "letterSpacing",
+    displayName: "Letter spacing",
+    type: PropertyType.Number,
+    defaultValue: 0,
+    inheritable: true,
+    disabled: isNotEezGuiV3Style
+};
+
+const lineHeightProperty: PropertyInfo = {
+    name: "lineHeight",
+    displayName: "Line height",
+    type: PropertyType.Number,
+    defaultValue: 0,
+    inheritable: true,
+    disabled: isNotEezGuiV3Style
+};
+
+const ellipsisProperty: PropertyInfo = {
+    name: "ellipsis",
+    type: PropertyType.Boolean,
+    defaultValue: false,
+    inheritable: true,
+    checkboxStyleSwitch: true,
+    disabled: isNotEezGuiV3Style
+};
+
+const focusRingWidthProperty: PropertyInfo = {
+    name: "focusRingWidth",
+    displayName: "Focus ring width",
+    type: PropertyType.Number,
+    defaultValue: 0,
+    inheritable: true,
+    disabled: isNotEezGuiV3Style
+};
+
+const focusRingOffsetProperty: PropertyInfo = {
+    name: "focusRingOffset",
+    displayName: "Focus ring offset",
+    type: PropertyType.Number,
+    defaultValue: 0,
+    inheritable: true,
+    disabled: isNotEezGuiV3Style
+};
+
+const focusRingColorProperty: PropertyInfo = {
+    name: "focusRingColor",
+    displayName: "Focus ring color",
+    type: PropertyType.ThemedColor,
+    referencedObjectCollectionPath: "colors",
+    defaultValue: "transparent",
+    inheritable: true,
+    propertyMenu,
+    disabled: isNotEezGuiV3Style
+};
+
+const shadowOffsetXProperty: PropertyInfo = {
+    name: "shadowOffsetX",
+    displayName: "Shadow offset X",
+    type: PropertyType.Number,
+    defaultValue: 0,
+    inheritable: true,
+    disabled: isNotEezGuiV3Style
+};
+
+const shadowOffsetYProperty: PropertyInfo = {
+    name: "shadowOffsetY",
+    displayName: "Shadow offset Y",
+    type: PropertyType.Number,
+    defaultValue: 0,
+    inheritable: true,
+    disabled: isNotEezGuiV3Style
+};
+
+const shadowBlurProperty: PropertyInfo = {
+    name: "shadowBlur",
+    displayName: "Shadow blur",
+    type: PropertyType.Number,
+    defaultValue: 0,
+    inheritable: true,
+    disabled: isNotEezGuiV3Style
+};
+
+const shadowSpreadProperty: PropertyInfo = {
+    name: "shadowSpread",
+    displayName: "Shadow spread",
+    type: PropertyType.Number,
+    defaultValue: 0,
+    inheritable: true,
+    disabled: isNotEezGuiV3Style
+};
+
+const shadowColorProperty: PropertyInfo = {
+    name: "shadowColor",
+    displayName: "Shadow color",
+    type: PropertyType.ThemedColor,
+    referencedObjectCollectionPath: "colors",
+    defaultValue: "transparent",
+    inheritable: true,
+    propertyMenu,
+    disabled: isNotEezGuiV3Style
+};
+
+// the number properties of the EEZ-GUI v3 styles: name, label in the check
+// messages and the range
+const NUMBER_PROPERTY_RANGES: {
+    name: string;
+    label: string;
+    min: number;
+    max: number;
+    integer: boolean;
+}[] = [
+    { name: "letterSpacing", label: "Letter spacing", min: -100, max: 100, integer: false },
+    { name: "lineHeight", label: "Line height", min: 0, max: 1000, integer: true },
+    { name: "focusRingWidth", label: "Focus ring width", min: 0, max: 255, integer: true },
+    { name: "focusRingOffset", label: "Focus ring offset", min: 0, max: 255, integer: true },
+    { name: "shadowOffsetX", label: "Shadow offset X", min: -128, max: 127, integer: true },
+    { name: "shadowOffsetY", label: "Shadow offset Y", min: -128, max: 127, integer: true },
+    { name: "shadowBlur", label: "Shadow blur", min: 0, max: 255, integer: true },
+    { name: "shadowSpread", label: "Shadow spread", min: -128, max: 127, integer: true }
+];
+
 const cssProperty: PropertyInfo = {
     name: "css",
     displayName: "Additional CSS",
@@ -830,6 +1019,7 @@ const properties = [
     nameProperty,
     tagsProperty,
     descriptionProperty,
+    stateProperty,
     useStyleProperty,
     conditionalStylesProperty,
     fontProperty,
@@ -856,6 +1046,17 @@ const properties = [
     opacityProperty,
     boxShadowProperty,
     blinkProperty,
+    letterSpacingProperty,
+    lineHeightProperty,
+    ellipsisProperty,
+    focusRingWidthProperty,
+    focusRingOffsetProperty,
+    focusRingColorProperty,
+    shadowOffsetXProperty,
+    shadowOffsetYProperty,
+    shadowBlurProperty,
+    shadowSpreadProperty,
+    shadowColorProperty,
     cssProperty,
     dynamicCssProperty,
     cssPreviewProperty,
@@ -877,6 +1078,7 @@ export class Style extends EezObject {
     tags?: string;
     description?: string;
     useStyle?: string;
+    state?: StyleStateName;
     conditionalStyles?: ConditionalStyle[];
     childStyles: Style[];
     alwaysBuild: boolean;
@@ -905,11 +1107,25 @@ export class Style extends EezObject {
     opacity: number;
     boxShadow?: string;
     blink?: boolean;
+    letterSpacing?: number;
+    lineHeight?: number;
+    ellipsis?: boolean;
+    focusRingWidth?: number;
+    focusRingOffset?: number;
+    focusRingColor?: string;
+    shadowOffsetX?: number;
+    shadowOffsetY?: number;
+    shadowBlur?: number;
+    shadowSpread?: number;
+    shadowColor?: string;
 
     css?: string;
     dynamicCSS?: string;
 
     _transientId: number;
+
+    // a style of a state built from the state child styles (see StateStyle)
+    isStateStyle = false;
 
     constructor() {
         super();
@@ -984,6 +1200,22 @@ export class Style extends EezObject {
 
             blinkProperty: keepAliveComputed(),
 
+            letterSpacingProperty: keepAliveComputed(),
+            lineHeightProperty: keepAliveComputed(),
+            ellipsisProperty: keepAliveComputed(),
+            focusRingWidthProperty: keepAliveComputed(),
+            focusRingOffsetProperty: keepAliveComputed(),
+            focusRingColorProperty: keepAliveComputed(),
+            shadowOffsetXProperty: keepAliveComputed(),
+            shadowOffsetYProperty: keepAliveComputed(),
+            shadowBlurProperty: keepAliveComputed(),
+            shadowSpreadProperty: keepAliveComputed(),
+            shadowColorProperty: keepAliveComputed(),
+
+            stateBaseStyle: keepAliveComputed(),
+            stateDeltas: keepAliveComputed(),
+            stateKey: keepAliveComputed(),
+
             cssDeclarations: computed,
             cssPreview: computed,
             classNames: computed,
@@ -1000,6 +1232,7 @@ export class Style extends EezObject {
             tags: observable,
             description: observable,
             useStyle: observable,
+            state: observable,
             conditionalStyles: observable,
             childStyles: observable,
             alwaysBuild: observable,
@@ -1027,6 +1260,17 @@ export class Style extends EezObject {
             opacity: observable,
             boxShadow: observable,
             blink: observable,
+            letterSpacing: observable,
+            lineHeight: observable,
+            ellipsis: observable,
+            focusRingWidth: observable,
+            focusRingOffset: observable,
+            focusRingColor: observable,
+            shadowOffsetX: observable,
+            shadowOffsetY: observable,
+            shadowBlur: observable,
+            shadowSpread: observable,
+            shadowColor: observable,
             css: observable
         });
     }
@@ -1041,6 +1285,13 @@ export class Style extends EezObject {
                 hideInPropertyGrid: true
             }
         ],
+        // eez-gui-lite projects have their own style class
+        // (eez-gui-lite/style.tsx)
+        getClass: (projectStore: ProjectStore) =>
+            getSerializationOrStoreProject(projectStore)?.projectTypeTraits
+                .isEezGuiLite
+                ? ProjectEditor.LiteStyleClass
+                : Style,
         beforeLoadHook(object: Style, jsObject: any) {
             if (
                 jsObject.paddingHorizontal !== undefined ||
@@ -1074,6 +1325,9 @@ export class Style extends EezObject {
         propertiesPanelLabel: (style: Style) => {
             return `Project style: ${style.name}`;
         },
+        // no child styles in EEZ-GUI v3 projects
+        findPastePlaceInside: (style: Style) =>
+            isNotEezGuiV3Style(style) ? style.childStyles : undefined,
         isPropertyMenuSupported: true,
         newItem: async (parent: IEezObject) => {
             const result = await showGenericDialog({
@@ -1147,6 +1401,36 @@ export class Style extends EezObject {
             checkColor("focusColor");
             checkColor("focusBackgroundColor");
             checkColor("borderColor");
+            checkColor("focusRingColor");
+            checkColor("shadowColor");
+
+            if (!isNotEezGuiV3Style(style)) {
+                for (const range of NUMBER_PROPERTY_RANGES) {
+                    const value = (style as any)[range.name];
+                    if (value == undefined) {
+                        continue;
+                    }
+                    if (
+                        typeof value != "number" ||
+                        !Number.isFinite(value) ||
+                        value < range.min ||
+                        value > range.max ||
+                        (range.integer && !Number.isInteger(value))
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.ERROR,
+                                `"${range.label}": must be ${
+                                    range.integer ? "an integer " : ""
+                                }from ${range.min} to ${range.max}.`,
+                                getChildOfObject(style, range.name)
+                            )
+                        );
+                    }
+                }
+
+                checkFlatStyle(style, messages);
+            }
 
             if (projectStore.projectTypeTraits.isDashboard) {
                 if (
@@ -1349,7 +1633,14 @@ export class Style extends EezObject {
                 }
             }
         },
-        showTreeCollapseIcon: "has-children"
+        showTreeCollapseIcon: "has-children",
+        // sorted by name, a state style is listed under its base style
+        sortedTreeParent: (style: Style) =>
+            style.state && style.useStyle && !isWidgetParentOfStyle(style)
+                ? ProjectEditor.getProject(style).allStyles.find(
+                      projectStyle => projectStyle.name == style.useStyle
+                  )
+                : undefined
     };
 
     get parentStyle(): Style | undefined {
@@ -1806,6 +2097,142 @@ export class Style extends EezObject {
         return getStyleProperty(this, "blink");
     }
 
+    getNumberStyleProperty(propertyName: string) {
+        const value = Number(getStyleProperty(this, propertyName));
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    get letterSpacingProperty(): number {
+        return this.getNumberStyleProperty("letterSpacing");
+    }
+
+    get lineHeightProperty(): number {
+        return this.getNumberStyleProperty("lineHeight");
+    }
+
+    get ellipsisProperty(): boolean {
+        return !!getStyleProperty(this, "ellipsis");
+    }
+
+    get focusRingWidthProperty(): number {
+        return this.getNumberStyleProperty("focusRingWidth");
+    }
+
+    get focusRingOffsetProperty(): number {
+        return this.getNumberStyleProperty("focusRingOffset");
+    }
+
+    get focusRingColorProperty(): string {
+        return this.getColorStyleProperty("focusRingColor");
+    }
+
+    get shadowOffsetXProperty(): number {
+        return this.getNumberStyleProperty("shadowOffsetX");
+    }
+
+    get shadowOffsetYProperty(): number {
+        return this.getNumberStyleProperty("shadowOffsetY");
+    }
+
+    get shadowBlurProperty(): number {
+        return this.getNumberStyleProperty("shadowBlur");
+    }
+
+    get shadowSpreadProperty(): number {
+        return this.getNumberStyleProperty("shadowSpread");
+    }
+
+    get shadowColorProperty(): string {
+        return this.getColorStyleProperty("shadowColor");
+    }
+
+    // The project style whose state styles this style has: this one, or the
+    // one a widget style (or its style in a page layout) uses.
+    get stateBaseStyle(): Style | undefined {
+        const visited = new Set<Style>();
+        for (
+            let style: Style | undefined = this;
+            style && !visited.has(style);
+            style = style.parentStyle
+        ) {
+            visited.add(style);
+            if (!isWidgetParentOfStyle(style)) {
+                return style.state ? undefined : style;
+            }
+        }
+        return undefined;
+    }
+
+    // The properties of the style in each state: the own properties of the
+    // state styles of its project style (stateBaseStyle). undefined for a style
+    // without states and for a state style.
+    get stateDeltas():
+        | Partial<Record<StyleStateName, { [propertyName: string]: any }>>
+        | undefined {
+        if (this.isStateStyle || this.state || isNotEezGuiV3Style(this)) {
+            return undefined;
+        }
+
+        const baseStyle = this.stateBaseStyle;
+        if (!baseStyle) {
+            return undefined;
+        }
+
+        let result:
+            | Partial<Record<StyleStateName, { [propertyName: string]: any }>>
+            | undefined;
+
+        for (const stateStyle of getStateStyles(baseStyle)) {
+            if (!result) {
+                result = {};
+            }
+            let delta = result[stateStyle.state!];
+            if (!delta) {
+                delta = {};
+                result[stateStyle.state!] = delta;
+            }
+
+            for (const propertyInfo of stateStyleProperties) {
+                const value = getProperty(stateStyle, propertyInfo.name);
+                if (value !== undefined && !(propertyInfo.name in delta)) {
+                    delta[propertyInfo.name] = value;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // the state properties (stateDeltas) as a string, the same for the styles
+    // with the same states
+    get stateKey(): string {
+        const stateDeltas = this.stateDeltas;
+        if (!stateDeltas) {
+            return "";
+        }
+        return JSON.stringify(
+            STYLE_STATES.map(state => {
+                const delta = stateDeltas[state];
+                return delta
+                    ? Object.keys(delta)
+                          .sort()
+                          .map(name => [name, delta[name]])
+                    : [];
+            })
+        );
+    }
+
+    // true if the style has no style properties of its own (useStyle is not
+    // a style property)
+    get hasNoOwnStyleProperties(): boolean {
+        for (const propertyInfo of stateStyleProperties) {
+            if (getProperty(this, propertyInfo.name) !== undefined) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     compareTo(otherStyle: Style): boolean {
         return (
             this.fontName === otherStyle.fontName &&
@@ -1836,7 +2263,23 @@ export class Style extends EezObject {
             this.marginProperty === otherStyle.marginProperty &&
             this.opacityProperty === otherStyle.opacityProperty &&
             this.boxShadowProperty === otherStyle.boxShadowProperty &&
-            this.blinkProperty === otherStyle.blinkProperty
+            this.blinkProperty === otherStyle.blinkProperty &&
+            this.letterSpacingProperty === otherStyle.letterSpacingProperty &&
+            this.lineHeightProperty === otherStyle.lineHeightProperty &&
+            this.ellipsisProperty === otherStyle.ellipsisProperty &&
+            this.focusRingWidthProperty ===
+                otherStyle.focusRingWidthProperty &&
+            this.focusRingOffsetProperty ===
+                otherStyle.focusRingOffsetProperty &&
+            this.focusRingColorProperty ===
+                otherStyle.focusRingColorProperty &&
+            this.shadowOffsetXProperty === otherStyle.shadowOffsetXProperty &&
+            this.shadowOffsetYProperty === otherStyle.shadowOffsetYProperty &&
+            this.shadowBlurProperty === otherStyle.shadowBlurProperty &&
+            this.shadowSpreadProperty === otherStyle.shadowSpreadProperty &&
+            this.shadowColorProperty === otherStyle.shadowColorProperty &&
+            // the states of a state style are not used
+            (this.isStateStyle || this.stateKey === otherStyle.stateKey)
         );
     }
 
@@ -2313,6 +2756,743 @@ export class PageLayoutStyle extends Style {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// the style properties a state child style can change
+const stateStyleProperties = pageLayoutStyleProperties.filter(
+    propertyInfo => propertyInfo != useStyleProperty
+);
+
+// The style of a widget in a state, built for the assets: the properties of
+// the state (see Style.stateDeltas) over the base style.
+export class StateStyle extends Style {
+    constructor(
+        public baseStyle: Style,
+        public stateName: StyleStateName,
+        delta: { [propertyName: string]: any }
+    ) {
+        super();
+
+        this.isStateStyle = true;
+
+        definePageLayoutStyleProperties(this, propertyName =>
+            propertyName == "useStyle" ? undefined : delta[propertyName]
+        );
+
+        setParent(this, baseStyle);
+    }
+
+    override get parentStyle(): Style | undefined {
+        return this.baseStyle;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// the state styles of a project style (in the same project), in the order of
+// the project styles
+function getStateStyles(baseStyle: Style) {
+    if (!baseStyle.name) {
+        return [];
+    }
+    return ProjectEditor.getProject(baseStyle).allStyles.filter(
+        style => style.state && style.useStyle == baseStyle.name
+    );
+}
+
+// the checks of the project styles of an EEZ-GUI v3 project (see
+// useStyleProperty and stateProperty)
+function checkFlatStyle(style: Style, messages: IMessage[]) {
+    if (isWidgetParentOfStyle(style)) {
+        return;
+    }
+
+    if (!style.state) {
+        if (style.useStyle) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    `A project style doesn't use another style, only a state style uses its base style.`,
+                    getChildOfObject(style, "useStyle")
+                )
+            );
+        }
+        return;
+    }
+
+    if (!style.useStyle) {
+        messages.push(propertyNotSetMessage(style, "useStyle"));
+        return;
+    }
+
+    const baseStyle = ProjectEditor.getProject(style).allStyles.find(
+        projectStyle => projectStyle.name == style.useStyle
+    );
+    if (!baseStyle) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `The base style "${style.useStyle}" is not a style of this project.`,
+                getChildOfObject(style, "useStyle")
+            )
+        );
+        return;
+    }
+
+    if (baseStyle.state) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `The base style "${style.useStyle}" is a state style.`,
+                getChildOfObject(style, "useStyle")
+            )
+        );
+        return;
+    }
+
+    if (
+        getStateStyles(baseStyle).find(
+            stateStyle => stateStyle != style && stateStyle.state == style.state
+        )
+    ) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `More than one state style for the state "${style.state}" of the style "${style.useStyle}".`,
+                getChildOfObject(style, "state")
+            )
+        );
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const EEZ_GUI_PROJECT_TYPES = [
+    "firmware",
+    "firmware-module",
+    "resource",
+    "applet"
+];
+
+// the project JSON of an EEZ-GUI v3 project (see isNotEezGuiV3Style)
+function isEezGuiV3ProjectJs(projectJs: any) {
+    const general = projectJs?.settings?.general;
+    return (
+        !!general &&
+        EEZ_GUI_PROJECT_TYPES.indexOf(general.projectType) != -1 &&
+        general.projectVersion != "v1" &&
+        general.projectVersion != "v2"
+    );
+}
+
+// true if the project styles have child styles or a style that is not a
+// state style uses another style
+function hasStyleInheritanceJs(styles: any[] | undefined) {
+    return (
+        Array.isArray(styles) &&
+        styles.some(
+            style =>
+                (Array.isArray(style.childStyles) &&
+                    style.childStyles.length > 0) ||
+                (!!style.useStyle && !style.state)
+        )
+    );
+}
+
+// The project styles of an EEZ-GUI v3 project that is loaded: flattened (see
+// flattenEezGuiStylesJs), the looks of the states as state styles (see
+// convertEezGuiStateLooksJs).
+export function convertEezGuiProjectStylesJs(projectJs: any) {
+    if (!isEezGuiV3ProjectJs(projectJs)) {
+        return;
+    }
+    flattenEezGuiProjectStylesJs(projectJs);
+    convertEezGuiStateLooksJs(projectJs);
+}
+
+// The project styles of an EEZ-GUI v3 project that is loaded, flattened (see
+// flattenEezGuiStylesJs). The styles of a module project can use the styles of
+// its master project, which is read for that.
+function flattenEezGuiProjectStylesJs(projectJs: any) {
+    if (!hasStyleInheritanceJs(projectJs.styles)) {
+        return;
+    }
+
+    let masterStyles: any[] | undefined;
+
+    const masterProject = projectJs.settings.general.masterProject;
+    const filePath = getSerializationFilePath();
+    if (masterProject && filePath) {
+        try {
+            // as OpenProjectsManager.getAbsoluteFilePath (not imported, it
+            // would load the project modules before this one is loaded)
+            const normalize = (filePath: string) =>
+                filePath.replace(/(\\|\/)/g, "/");
+            const masterProjectJs = JSON.parse(
+                fs.readFileSync(
+                    path.resolve(
+                        path.dirname(normalize(filePath)),
+                        normalize(masterProject)
+                    ),
+                    "utf8"
+                )
+            );
+            if (isEezGuiV3ProjectJs(masterProjectJs)) {
+                flattenEezGuiStylesJs(masterProjectJs, undefined);
+                masterStyles = masterProjectJs.styles;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    flattenEezGuiStylesJs(projectJs, masterStyles);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const OLD_STATE_COLOR_PROPERTIES = [
+    "activeColor",
+    "activeBackgroundColor",
+    "focusColor",
+    "focusBackgroundColor"
+];
+
+// the state style of a widget in the EEZ-GUI v1/v2 projects
+const OLD_WIDGET_STATE_STYLES: { [propertyName: string]: StyleStateName } = {
+    disabledStyle: "disabled",
+    checkedStyle: "checked",
+    selectedStyle: "selected"
+};
+
+// true for a fully transparent color (also a theme color of the first theme)
+function isTransparentColorJs(projectJs: any, color: any): boolean {
+    if (typeof color != "string") {
+        return false;
+    }
+    const value = color.trim().toLowerCase().replace(/\s+/g, "");
+    if (
+        value == "transparent" ||
+        value == "rgba(0,0,0,0)" ||
+        /^#[0-9a-f]{6}00$/.test(value)
+    ) {
+        return true;
+    }
+    const colorIndex = (projectJs.colors ?? []).findIndex(
+        (themeColor: any) => themeColor.name == color
+    );
+    if (colorIndex != -1) {
+        const themeValue = projectJs.themes?.[0]?.colors?.[colorIndex];
+        return typeof themeValue == "string" && isTransparentColorJs({}, themeValue);
+    }
+    return false;
+}
+
+// The looks of the states in an older EEZ-GUI v3 project (active and focus
+// colors, the state styles of some widgets) as state styles (see
+// stateProperty). The project styles are flat (flattenEezGuiStylesJs).
+// - pressed: from the active colors of a style that has them. Without a
+//   pressed state style a pressed widget is drawn with the color and the
+//   background swapped (not over a transparent background), so there is a
+//   pressed state style only for another look. A style used only by Switch and
+//   Progress widgets gets none (their active background was the on/filled
+//   part).
+// - checked: the active background of a style of Switch widgets (the on part,
+//   without a checked state style it is the background) and Progress widgets
+//   (the filled part, without a checked state style it is the color).
+// - focused: from the focus colors of a style that has them, a focus ring for
+//   a ScrollBar (it drew a 2 px frame in the focus color).
+// - disabled, checked, selected: from the disabled style of a Button, the
+//   checked style of a ToggleButton, the selected style of a ButtonGroup: the
+//   properties that differ from the style of the widget. Only if the widget
+//   style uses a style of this project which has no state style for the state
+//   yet (otherwise the look of the widget is lost).
+// The active and focus colors of the widget styles and the focus style of
+// Text and DisplayData widgets (not used in EEZ-GUI v3) are dropped. A new
+// state style is named <style>_<state> and placed after the style and its
+// state styles.
+function convertEezGuiStateLooksJs(projectJs: any) {
+    if (!Array.isArray(projectJs.styles)) {
+        return;
+    }
+
+    const styles: any[] = projectJs.styles;
+
+    const byName = new Map<string, any>();
+    for (const style of styles) {
+        if (style.name != undefined && !byName.has(style.name)) {
+            byName.set(style.name, style);
+        }
+    }
+
+    const defaults: { [propertyName: string]: any } = {};
+    for (const propertyInfo of properties) {
+        if (propertyInfo.defaultValue !== undefined) {
+            defaults[propertyInfo.name] = propertyInfo.defaultValue;
+        }
+    }
+    const getValue = (style: any, propertyName: string) =>
+        style[propertyName] !== undefined
+            ? style[propertyName]
+            : defaults[propertyName];
+
+    // the widgets, the widget types (without "Widget") that use each style
+    // and the style objects of the pages
+    const widgets: any[] = [];
+    const users = new Map<string, Set<string>>();
+    const pageStyles: any[] = [];
+    const walk = (object: any) => {
+        if (Array.isArray(object)) {
+            object.forEach(walk);
+        } else if (object && typeof object == "object") {
+            if (
+                object.useStyle !== undefined ||
+                object.conditionalStyles !== undefined
+            ) {
+                pageStyles.push(object);
+            }
+            if (
+                typeof object.type == "string" &&
+                object.style &&
+                typeof object.style == "object"
+            ) {
+                widgets.push(object);
+                const type = object.type.endsWith("Widget")
+                    ? object.type.slice(0, -"Widget".length)
+                    : object.type;
+                const useStyle = object.style.useStyle;
+                if (useStyle) {
+                    let types = users.get(useStyle);
+                    if (!types) {
+                        types = new Set();
+                        users.set(useStyle, types);
+                    }
+                    types.add(type);
+                }
+            }
+            for (const value of Object.values(object)) {
+                walk(value);
+            }
+        }
+    };
+    for (const page of [
+        ...(projectJs.userPages ?? []),
+        ...(projectJs.userWidgets ?? [])
+    ]) {
+        walk(page.components ?? []);
+    }
+
+    const names = new Set(byName.keys());
+    const getUniqueName = (name: string) => {
+        let uniqueName = name;
+        for (let i = 2; names.has(uniqueName); i++) {
+            uniqueName = `${name}_${i}`;
+        }
+        names.add(uniqueName);
+        return uniqueName;
+    };
+
+    const newStateStyles = new Map<any, any[]>();
+    const hasStateStyle = (baseStyle: any, state: string) =>
+        styles.some(
+            style => style.state == state && style.useStyle == baseStyle.name
+        ) ||
+        (newStateStyles.get(baseStyle) ?? []).some(
+            style => style.state == state
+        );
+    const addStateStyle = (baseStyle: any, state: string, props: any) => {
+        if (hasStateStyle(baseStyle, state)) {
+            return;
+        }
+        let stateStyles = newStateStyles.get(baseStyle);
+        if (!stateStyles) {
+            stateStyles = [];
+            newStateStyles.set(baseStyle, stateStyles);
+        }
+        stateStyles.push({
+            name: getUniqueName(`${baseStyle.name}_${state}`),
+            state,
+            useStyle: baseStyle.name,
+            ...props
+        });
+    };
+
+    for (const baseStyle of styles) {
+        if (baseStyle.state || baseStyle.name == undefined) {
+            continue;
+        }
+
+        const types = users.get(baseStyle.name) ?? new Set<string>();
+        const isSwitchOrProgress = types.has("Switch") || types.has("Progress");
+        const isOnlySwitchOrProgress =
+            types.size > 0 &&
+            [...types].every(type => type == "Switch" || type == "Progress");
+
+        const color = getValue(baseStyle, "color");
+        const backgroundColor = getValue(baseStyle, "backgroundColor");
+        const activeColor = getValue(baseStyle, "activeColor");
+        const activeBackgroundColor = getValue(
+            baseStyle,
+            "activeBackgroundColor"
+        );
+
+        if (
+            (baseStyle.activeColor !== undefined ||
+                baseStyle.activeBackgroundColor !== undefined) &&
+            !isOnlySwitchOrProgress
+        ) {
+            const [swappedColor, swappedBackgroundColor] = isTransparentColorJs(
+                projectJs,
+                backgroundColor
+            )
+                ? [color, backgroundColor]
+                : [backgroundColor, color];
+            if (
+                activeColor != swappedColor ||
+                activeBackgroundColor != swappedBackgroundColor
+            ) {
+                // can be empty: the colors stay when pressed
+                const props: any = {};
+                if (activeColor != color) {
+                    props.color = activeColor;
+                }
+                if (activeBackgroundColor != backgroundColor) {
+                    props.backgroundColor = activeBackgroundColor;
+                }
+                addStateStyle(baseStyle, "pressed", props);
+            }
+        }
+
+        if (
+            isSwitchOrProgress &&
+            ((types.has("Switch") && activeBackgroundColor != backgroundColor) ||
+                (types.has("Progress") && activeBackgroundColor != color))
+        ) {
+            addStateStyle(baseStyle, "checked", {
+                backgroundColor: activeBackgroundColor
+            });
+        }
+
+        if (
+            baseStyle.focusColor !== undefined ||
+            baseStyle.focusBackgroundColor !== undefined
+        ) {
+            const focusColor = getValue(baseStyle, "focusColor");
+            const focusBackgroundColor = getValue(
+                baseStyle,
+                "focusBackgroundColor"
+            );
+            if (types.has("ScrollBar")) {
+                addStateStyle(baseStyle, "focused", {
+                    focusRingWidth: 2,
+                    focusRingOffset: 0,
+                    focusRingColor: focusColor
+                });
+            } else if (
+                focusColor != color ||
+                focusBackgroundColor != backgroundColor
+            ) {
+                const props: any = {};
+                if (focusColor != color) {
+                    props.color = focusColor;
+                }
+                if (focusBackgroundColor != backgroundColor) {
+                    props.backgroundColor = focusBackgroundColor;
+                }
+                addStateStyle(baseStyle, "focused", props);
+            }
+        }
+    }
+
+    const stateNames = stateStyleProperties
+        .map(propertyInfo => propertyInfo.name)
+        .filter(name => OLD_STATE_COLOR_PROPERTIES.indexOf(name) == -1);
+
+    for (const widget of widgets) {
+        for (const [propertyName, state] of Object.entries(
+            OLD_WIDGET_STATE_STYLES
+        )) {
+            const stateStyleJs = widget[propertyName];
+            if (stateStyleJs === undefined) {
+                continue;
+            }
+            delete widget[propertyName];
+
+            if (!stateStyleJs || typeof stateStyleJs != "object") {
+                continue;
+            }
+            const ownNames = stateNames.filter(
+                name => stateStyleJs[name] !== undefined
+            );
+            if (
+                (!stateStyleJs.useStyle || stateStyleJs.useStyle == "default") &&
+                ownNames.length == 0
+            ) {
+                continue;
+            }
+
+            const baseStyle = byName.get(widget.style.useStyle);
+            if (!baseStyle || baseStyle.state) {
+                continue;
+            }
+            const usedStyle = stateStyleJs.useStyle
+                ? byName.get(stateStyleJs.useStyle)
+                : undefined;
+
+            const props: any = {};
+            for (const name of stateNames) {
+                const value =
+                    stateStyleJs[name] !== undefined
+                        ? stateStyleJs[name]
+                        : usedStyle
+                          ? getValue(usedStyle, name)
+                          : getValue(baseStyle, name);
+                if (value !== getValue(baseStyle, name)) {
+                    props[name] = value;
+                }
+            }
+            if (Object.keys(props).length > 0) {
+                addStateStyle(baseStyle, state, props);
+            }
+        }
+
+        delete widget.focusStyle;
+    }
+
+    for (const style of [...styles, ...pageStyles]) {
+        for (const name of OLD_STATE_COLOR_PROPERTIES) {
+            delete style[name];
+        }
+    }
+
+    if (newStateStyles.size > 0) {
+        const result: any[] = [];
+        for (let i = 0; i < styles.length; i++) {
+            const style = styles[i];
+            result.push(style);
+            const stateStyles = newStateStyles.get(style);
+            if (stateStyles) {
+                // after the state styles of the style
+                while (
+                    i + 1 < styles.length &&
+                    styles[i + 1].state &&
+                    styles[i + 1].useStyle == style.name
+                ) {
+                    result.push(styles[++i]);
+                }
+                result.push(...stateStyles);
+            }
+        }
+        projectJs.styles = result;
+    }
+}
+
+// The project styles of an older EEZ-GUI v3 project (a tree of styles that
+// inherit from their parent style or from the style in "useStyle", with child
+// styles for the states) as a flat list of complete styles, in the order of the
+// tree (depth first):
+// - each style gets the properties it inherited as its own
+// - each style gets its state styles right after it: a state style has the
+//   state, uses the style ("useStyle") and has the properties of the state the
+//   style had (from the state child styles of the style and of the styles it
+//   inherited from, the nearest one wins, see Style.stateDeltas before). A
+//   state child style of the style itself is kept, the others are new styles
+//   named <style>_<state>.
+// masterStyles: the (flat) styles of the master project, for the styles that
+// use one of them. Called with the project JSON before the project is loaded;
+// the widget styles keep their "useStyle".
+export function flattenEezGuiStylesJs(
+    projectJs: any,
+    masterStyles: any[] | undefined
+) {
+    if (!hasStyleInheritanceJs(projectJs.styles)) {
+        return;
+    }
+
+    const list: { style: any; parent: any }[] = [];
+    const byName = new Map<string, any>();
+
+    function collect(styles: any[], parent: any) {
+        for (const style of styles) {
+            list.push({ style, parent });
+            if (style.name != undefined && !byName.has(style.name)) {
+                byName.set(style.name, style);
+            }
+            if (Array.isArray(style.childStyles)) {
+                collect(style.childStyles, style);
+            }
+        }
+    }
+    collect(projectJs.styles, undefined);
+
+    const masterByName = new Map<string, any>();
+    for (const style of masterStyles ?? []) {
+        if (style.name != undefined && !masterByName.has(style.name)) {
+            masterByName.set(style.name, style);
+        }
+    }
+
+    const findByName = (name: string) =>
+        byName.get(name) ?? masterByName.get(name);
+
+    const parents = new Map(list.map(({ style, parent }) => [style, parent]));
+
+    const getBase = (style: any) =>
+        style.useStyle
+            ? findByName(style.useStyle)
+            : parents.get(style);
+
+    // the state styles of a style: its child styles with a state and the
+    // styles with a state that use it
+    const stateStylesOf = new Map<any, any[]>();
+    const addStateStyle = (baseStyle: any, stateStyle: any) => {
+        let stateStyles = stateStylesOf.get(baseStyle);
+        if (!stateStyles) {
+            stateStyles = [];
+            stateStylesOf.set(baseStyle, stateStyles);
+        }
+        stateStyles.push(stateStyle);
+    };
+    // the base style of a state style is the one in "useStyle" (a state
+    // child style in the older format has its parent style)
+    for (const { style, parent } of list) {
+        if (style.state) {
+            const baseStyle = style.useStyle
+                ? findByName(style.useStyle)
+                : parent;
+            if (baseStyle) {
+                addStateStyle(baseStyle, style);
+            }
+        }
+    }
+    for (const style of masterStyles ?? []) {
+        if (style.state && style.useStyle) {
+            const baseStyle = masterByName.get(style.useStyle);
+            if (baseStyle) {
+                addStateStyle(baseStyle, style);
+            }
+        }
+    }
+
+    // undefined: the default value (also for an inheritance cycle)
+    const resolve = (style: any, propertyName: string) => {
+        const visited = new Set<any>();
+        for (let s = style; s && !visited.has(s); s = getBase(s)) {
+            visited.add(s);
+            if (s[propertyName] !== undefined) {
+                return s[propertyName];
+            }
+        }
+        return undefined;
+    };
+
+    const inheritable = properties
+        .filter(propertyInfo => propertyInfo.inheritable)
+        .map(propertyInfo => propertyInfo.name);
+    const stateNames = stateStyleProperties.map(
+        propertyInfo => propertyInfo.name
+    );
+
+    // all values before any style is changed
+    const results = list
+        .filter(({ style }) => !style.state)
+        .map(({ style }) => {
+            const values = inheritable.map(propertyName =>
+                resolve(style, propertyName)
+            );
+
+            const deltas: { [state: string]: { [name: string]: any } } = {};
+            const visited = new Set<any>();
+            for (let s = style; s && !visited.has(s); s = getBase(s)) {
+                visited.add(s);
+                for (const stateStyle of stateStylesOf.get(s) ?? []) {
+                    let delta = deltas[stateStyle.state];
+                    if (!delta) {
+                        delta = {};
+                        deltas[stateStyle.state] = delta;
+                    }
+                    for (const propertyName of stateNames) {
+                        if (
+                            stateStyle[propertyName] !== undefined &&
+                            !(propertyName in delta)
+                        ) {
+                            delta[propertyName] = stateStyle[propertyName];
+                        }
+                    }
+                }
+            }
+
+            return { style, values, deltas };
+        });
+
+    const names = new Set([...byName.keys(), ...masterByName.keys()]);
+    const getUniqueName = (name: string) => {
+        let uniqueName = name;
+        for (let i = 2; names.has(uniqueName); i++) {
+            uniqueName = `${name}_${i}`;
+        }
+        names.add(uniqueName);
+        return uniqueName;
+    };
+
+    const ownStyles = new Set(list.map(({ style }) => style));
+    const usedStateStyles = new Set<any>();
+    const styles: any[] = [];
+
+    for (const { style, values, deltas } of results) {
+        inheritable.forEach((propertyName, i) => {
+            if (values[i] === undefined) {
+                delete style[propertyName];
+            } else {
+                style[propertyName] = values[i];
+            }
+        });
+        delete style.useStyle;
+        delete style.childStyles;
+        styles.push(style);
+
+        for (const state of STYLE_STATES) {
+            const delta = deltas[state];
+            if (!delta) {
+                continue;
+            }
+
+            let stateStyle = (stateStylesOf.get(style) ?? []).find(
+                stateStyle =>
+                    stateStyle.state == state &&
+                    ownStyles.has(stateStyle) &&
+                    !usedStateStyles.has(stateStyle)
+            );
+            if (!stateStyle) {
+                stateStyle = {
+                    name: getUniqueName(`${style.name}_${state}`),
+                    state
+                };
+            }
+            usedStateStyles.add(stateStyle);
+
+            for (const propertyName of stateNames) {
+                delete stateStyle[propertyName];
+            }
+            Object.assign(stateStyle, delta);
+            stateStyle.useStyle = style.name;
+            delete stateStyle.childStyles;
+            styles.push(stateStyle);
+        }
+    }
+
+    // the state styles that are no state of a style of this project are kept
+    for (const { style, parent } of list) {
+        if (style.state && !usedStateStyles.has(style)) {
+            if (!style.useStyle && parent) {
+                style.useStyle = parent.name;
+            }
+            delete style.childStyles;
+            styles.push(style);
+        }
+    }
+
+    projectJs.styles = styles;
+}
+
 function isWidgetParentOfStyle(object: IEezObject) {
     while (true) {
         if (object instanceof ProjectEditor.ComponentClass) {
@@ -2365,7 +3545,9 @@ function getInheritedValue(
                     propertyName === "activeBackgroundColor" ||
                     propertyName === "focusColor" ||
                     propertyName === "focusBackgroundColor" ||
-                    propertyName === "borderColor")
+                    propertyName === "borderColor" ||
+                    propertyName === "focusRingColor" ||
+                    propertyName === "shadowColor")
             ) {
                 value = getThemedColor(
                     getProjectStore(styleObject),
@@ -2429,6 +3611,11 @@ export function getAdditionalStyleFlowProperties(widget: Widget) {
             propertyInfo.typeClass == Style
         ) {
             const style = (widget as any)[propertyInfo.name] as Style;
+            // an optional style (e.g. the disabled style of a Button in an
+            // EEZ-GUI v3 project)
+            if (!style) {
+                continue;
+            }
 
             if (style.conditionalStyles) {
                 for (
@@ -2472,6 +3659,15 @@ const feature: ProjectEditorFeature = {
     typeClass: Style,
     icon: "material:format_color_fill",
     create: () => [],
+    // the project styles of the eez-gui-lite and EEZ-GUI v3 projects don't
+    // inherit: the styles of an older project are flattened
+    fromJsHook: (projectJs: any) => {
+        if (projectJs?.settings?.general?.projectType == "eez-gui-lite") {
+            ProjectEditor.LiteStyleClass.flattenStylesJs(projectJs);
+        } else {
+            convertEezGuiProjectStylesJs(projectJs);
+        }
+    },
     check: (projectStore, object: EezObject[], messages: IMessage[]) => {
         const projects = getAllProjectsWithThemes(projectStore);
         if (projects.length > 1) {

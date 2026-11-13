@@ -16,6 +16,7 @@ import { StylesTreeNavigation } from "project-editor/features/style/StylesTreeNa
 import { isEezGuiEditorWasmProject } from "project-editor/flow/editor/eez-gui-editor-wasm-switch";
 import { EezGuiStylePreview } from "project-editor/flow/editor/eez-gui-style-preview";
 import type { Project } from "project-editor/project/project";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -111,7 +112,7 @@ const StylesNavigation = observer(
 export function drawStylePreview(
     project: Project,
     canvas: HTMLCanvasElement,
-    style: Style,
+    style: eezGuiDraw.DrawStyle,
     text: string,
     inverse: boolean
 ) {
@@ -230,7 +231,10 @@ const StyleEditor = observer(
                 return undefined;
             }
 
-            if (style instanceof Style) {
+            if (
+                style instanceof Style ||
+                style instanceof ProjectEditor.LiteStyleClass
+            ) {
                 return style;
             }
 
@@ -245,7 +249,10 @@ const StyleEditor = observer(
                 return null;
             }
 
-            if (this.context.projectTypeTraits.isDashboard) {
+            if (
+                this.context.projectTypeTraits.isDashboard &&
+                style instanceof Style
+            ) {
                 return (
                     <div className="EezStudio_StylePreviewContainer">
                         <div
@@ -258,7 +265,10 @@ const StyleEditor = observer(
                         </div>
                     </div>
                 );
-            } else if (isEezGuiEditorWasmProject(this.context.project)) {
+            } else if (
+                style instanceof Style &&
+                isEezGuiEditorWasmProject(this.context.project)
+            ) {
                 return (
                     <EezGuiStylePreview
                         project={this.context.project}

@@ -27,6 +27,7 @@ import { visitObjects } from "project-editor/core/search";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { LVGLWidget } from "project-editor/lvgl/widgets";
 import type { Style } from "project-editor/features/style/style";
+import type { LiteStyle } from "project-editor/eez-gui-lite/style";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -507,19 +508,25 @@ function ensureUniqueProperties(
         }
     } else {
         // make sure style names are unique
-        const newStyles: Style[] = [];
+        const newStyles: (Style | LiteStyle)[] = [];
 
         objects.forEach(object => {
-            if (object instanceof ProjectEditor.StyleClass) {
+            if (
+                object instanceof ProjectEditor.StyleClass ||
+                object instanceof ProjectEditor.LiteStyleClass
+            ) {
                 newStyles.push(object);
             }
         });
 
         if (newStyles.length > 0) {
-            const existingStyles: Style[] = [];
+            const existingStyles: (Style | LiteStyle)[] = [];
 
             for (const style of visitObjects(project)) {
-                if (style instanceof ProjectEditor.StyleClass) {
+                if (
+                    style instanceof ProjectEditor.StyleClass ||
+                    style instanceof ProjectEditor.LiteStyleClass
+                ) {
                     existingStyles.push(style);
                 }
             }

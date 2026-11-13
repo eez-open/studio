@@ -942,9 +942,10 @@ export const Tree = observer(
                                 onDoubleClick={this.onRowDoubleClick}
                                 collapsable={
                                     row.collapsable &&
-                                    treeAdapter.getShowTreeCollapseIcon(
-                                        row.item
-                                    )
+                                    (row.hasSortedTreeChildren ||
+                                        treeAdapter.getShowTreeCollapseIcon(
+                                            row.item
+                                        ))
                                 }
                                 onToggleCollapse={this.onRowToggleCollapse}
                                 onEditItem={onEditItem}

@@ -198,6 +198,7 @@ class PasteObject {
 
         if (
             this.object instanceof ProjectEditor.StyleClass ||
+            this.object instanceof ProjectEditor.LiteStyleClass ||
             this.object instanceof ProjectEditor.LVGLStyleClass
         ) {
             return this.destinationStyle
@@ -401,7 +402,10 @@ class PasteWithDependenciesModel {
             } else {
                 addObject(projectStore.project.userPages, object);
             }
-        } else if (object instanceof ProjectEditor.StyleClass) {
+        } else if (
+            object instanceof ProjectEditor.StyleClass ||
+            object instanceof ProjectEditor.LiteStyleClass
+        ) {
             addObject(projectStore.project.styles, object);
         } else if (object instanceof ProjectEditor.LVGLStyleClass) {
             addObject(projectStore.project.lvglStyles.styles, object);
@@ -438,6 +442,7 @@ class PasteWithDependenciesModel {
         let parentStyleObject: CommonStyle | undefined;
         if (
             object instanceof ProjectEditor.StyleClass ||
+            object instanceof ProjectEditor.LiteStyleClass ||
             object instanceof ProjectEditor.LVGLStyleClass
         ) {
             const collection = getParent(object);
@@ -690,7 +695,9 @@ class PasteWithDependenciesModel {
                         (existingObject instanceof
                             ProjectEditor.LVGLStyleClass ||
                             existingObject instanceof
-                                ProjectEditor.StyleClass) &&
+                                ProjectEditor.StyleClass ||
+                            existingObject instanceof
+                                ProjectEditor.LiteStyleClass) &&
                         propertyInfo.name == "childStyles"
                     ) {
                         continue;
@@ -900,6 +907,7 @@ class PasteWithDependenciesModel {
 
         if (
             pasteObject.object instanceof ProjectEditor.StyleClass ||
+            pasteObject.object instanceof ProjectEditor.LiteStyleClass ||
             pasteObject.object instanceof ProjectEditor.LVGLStyleClass
         ) {
             if (
@@ -1071,7 +1079,10 @@ class PasteWithDependenciesModel {
                         return 5;
                     } else if (object instanceof ProjectEditor.PageClass) {
                         return !object.isUsedAsUserWidget ? 6 : 7;
-                    } else if (object instanceof ProjectEditor.StyleClass) {
+                    } else if (
+                        object instanceof ProjectEditor.StyleClass ||
+                        object instanceof ProjectEditor.LiteStyleClass
+                    ) {
                         return 8;
                     } else if (object instanceof ProjectEditor.LVGLStyleClass) {
                         return 9;
@@ -1091,6 +1102,7 @@ class PasteWithDependenciesModel {
                 if (result == 0) {
                     if (
                         a.object instanceof ProjectEditor.StyleClass ||
+                        a.object instanceof ProjectEditor.LiteStyleClass ||
                         a.object instanceof ProjectEditor.LVGLStyleClass
                     ) {
                         function getRootStyle(object: EezObject) {
@@ -1106,6 +1118,7 @@ class PasteWithDependenciesModel {
 
                             if (
                                 parent instanceof ProjectEditor.StyleClass ||
+                                parent instanceof ProjectEditor.LiteStyleClass ||
                                 parent instanceof ProjectEditor.LVGLStyleClass
                             ) {
                                 return getRootStyle(parent);
@@ -1346,7 +1359,10 @@ class PasteWithDependenciesModel {
                         collection =
                             this.destinationProjectStore.project.userPages;
                     }
-                } else if (object instanceof ProjectEditor.StyleClass) {
+                } else if (
+                    object instanceof ProjectEditor.StyleClass ||
+                    object instanceof ProjectEditor.LiteStyleClass
+                ) {
                     if (pasteObject.styleLevel == 0) {
                         collection =
                             this.destinationProjectStore.project.styles;
@@ -2162,7 +2178,7 @@ export function getAllObjects(project: Project) {
                     icon: ProjectEditor.StyleClass.classInfo.icon!
                 });
 
-                addStyles(style.childStyles);
+                addStyles(style.childStyles ?? []);
             });
         }
 

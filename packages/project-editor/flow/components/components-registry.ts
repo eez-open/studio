@@ -212,6 +212,8 @@ export function getComponentName(componentClassName: string) {
         name = name.substring(0, name.length - "EmbeddedWidget".length);
     } else if (name.endsWith("DashboardWidget")) {
         name = name.substring(0, name.length - "DashboardWidget".length);
+    } else if (name.endsWith("LiteWidget")) {
+        name = name.substring(0, name.length - "LiteWidget".length);
     } else if (name.endsWith("Widget")) {
         name = name.substring(0, name.length - "Widget".length);
     } else if (name.endsWith("ActionComponent")) {

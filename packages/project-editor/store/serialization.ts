@@ -48,13 +48,16 @@ export function createObject<T extends EezObject>(
 }
 
 // isExternalProject: imported or master project loaded into the main project's store
+// filePath: the file of the project, if it is loaded from a file
 export function loadProject(
     projectStore: ProjectStore,
     projectObjectOrString: any | string,
     makeEditable: boolean,
-    isExternalProject: boolean = false
+    isExternalProject: boolean = false,
+    filePath?: string
 ): Project {
     currentProjectStore = projectStore;
+    currentLoadFilePath = filePath;
     isLoadProject = true;
     isLoadExternalProject = isExternalProject;
     loadProjectMakeEditable = makeEditable;
@@ -92,6 +95,7 @@ export function loadProject(
     rewireEnd(project);
 
     currentProject = undefined;
+    currentLoadFilePath = undefined;
     isLoadExternalProject = false;
 
     return project;
@@ -535,4 +539,25 @@ export function wireSourceChanged(
 
 export function getSerializationProject() {
     return currentProject!;
+}
+
+let currentLoadFilePath: string | undefined;
+
+// the file of the project that is loaded (see loadProject)
+export function getSerializationFilePath() {
+    return currentLoadFilePath;
+}
+
+// The store an object is created in (createObject) or a project is loaded into
+// (loadProject), undefined otherwise.
+export function getSerializationProjectStore(): ProjectStore | undefined {
+    return currentProjectStore;
+}
+
+// The project that is loaded, or the project of the store when no project is
+// loaded (an object is created, added or pasted).
+export function getSerializationOrStoreProject(
+    projectStore: ProjectStore
+): Project | undefined {
+    return currentProject ?? projectStore.project;
 }

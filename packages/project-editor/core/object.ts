@@ -474,6 +474,11 @@ export interface ClassInfo {
 
     showTreeCollapseIcon?: "always" | "has-children" | "never";
 
+    // In a tree sorted by name: the object is listed as a child of the
+    // returned object, another item of the same list (e.g. a state style under
+    // its base style), see TreeAdapter.allRows.
+    sortedTreeParent?: (object: IEezObject) => IEezObject | undefined;
+
     getAdditionalFlowProperties?: (object: IEezObject) => PropertyInfo[];
 
     execute?: (context: IDashboardComponentContext) => void;

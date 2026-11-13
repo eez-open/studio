@@ -188,6 +188,7 @@ import {
 } from "project-editor/flow/helper";
 
 import {
+    getSerializationOrStoreProject,
     getSerializationProject,
     wireSourceChanged
 } from "project-editor/store/serialization";
@@ -324,6 +325,8 @@ function getClassFromType(projectStore: ProjectStore, type: string) {
         type = "OverrideStyleActionComponent";
     }
 
+    type = getLiteWidgetType(projectStore, type);
+
     let componentClass;
 
     const projectTypeTraits =
@@ -425,7 +428,42 @@ export function getComponentClass(projectStore: ProjectStore, jsObject: any) {
     if (jsObject.type == "SCPITerminalWidget") {
         jsObject.type = "InstrumentTerminalWidget";
     }
+    jsObject.type = getLiteWidgetType(projectStore, jsObject.type);
     return getClassFromType(projectStore, jsObject.type);
+}
+
+// The widgets of the eez-gui-lite projects (eez-gui-lite/widgets.tsx) and the
+// EEZ-GUI widgets they are copies of. An eez-gui-lite project loads the EEZ-GUI
+// widget types as the eez-gui-lite ones, the other projects load the
+// eez-gui-lite types (pasted widgets) as the EEZ-GUI ones.
+const LITE_WIDGET_TYPES: [string, string][] = [
+    ["TextWidget", "TextLiteWidget"],
+    ["ButtonWidget", "ButtonLiteWidget"],
+    ["RectangleWidget", "RectangleLiteWidget"],
+    ["SwitchWidget", "SwitchLiteWidget"],
+    ["ContainerWidget", "ContainerLiteWidget"],
+    ["SelectWidget", "SelectLiteWidget"]
+];
+
+function getLiteWidgetType(projectStore: ProjectStore, type: string) {
+    if (
+        getSerializationOrStoreProject(projectStore)?.projectTypeTraits
+            .isEezGuiLite
+    ) {
+        for (const [eezGuiType, liteType] of LITE_WIDGET_TYPES) {
+            // old projects have "Container" and "Select"
+            if (type == eezGuiType || type + "Widget" == eezGuiType) {
+                return liteType;
+            }
+        }
+    } else {
+        for (const [eezGuiType, liteType] of LITE_WIDGET_TYPES) {
+            if (type == liteType) {
+                return eezGuiType;
+            }
+        }
+    }
+    return type;
 }
 
 export function outputIsOptionalIfAtLeastOneOutputExists(
@@ -1877,7 +1915,10 @@ export class Component extends EezObject {
             let selectChildLabel: string | undefined;
             const parentArray = getParent(component);
             const selectWidget = parentArray && getParent(parentArray);
-            if (selectWidget instanceof ProjectEditor.SelectWidgetClass) {
+            if (
+                selectWidget instanceof ProjectEditor.SelectWidgetClass ||
+                selectWidget instanceof ProjectEditor.SelectLiteWidgetClass
+            ) {
                 selectChildLabel = selectWidget.getChildLabel(
                     component as Widget
                 );
@@ -3441,7 +3482,11 @@ export class Widget extends Component {
                                         widget instanceof
                                             ProjectEditor.ContainerWidgetClass ||
                                         widget instanceof
-                                            ProjectEditor.SelectWidgetClass
+                                            ProjectEditor.SelectWidgetClass ||
+                                        widget instanceof
+                                            ProjectEditor.ContainerLiteWidgetClass ||
+                                        widget instanceof
+                                            ProjectEditor.SelectLiteWidgetClass
                                     ) {
                                         for (const childWidget of widget.widgets) {
                                             const left = Math.floor(

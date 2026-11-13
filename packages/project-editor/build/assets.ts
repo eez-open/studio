@@ -19,7 +19,10 @@ import {
     findVariable
 } from "project-editor/project/project";
 
-import { Style, getStyleProperty } from "project-editor/features/style/style";
+import {
+    Style,
+    getStyleProperty
+} from "project-editor/features/style/style";
 import { Page, PageLayout } from "project-editor/features/page/page";
 import {
     findPageLayoutPage,
@@ -106,7 +109,7 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { AssetsMap } from "eez-studio-types";
 import { isDashboardProject } from "project-editor/project/project-type-traits";
 import type { LVGLStyle } from "project-editor/lvgl/style";
-import { BuildEezGuiLite } from "project-editor/eez-gui-lite/build";
+import { buildEezGuiLiteSections } from "project-editor/eez-gui-lite/build";
 import { ColorFormat } from "project-editor/features/style/color-format";
 import type { Color } from "project-editor/features/style/theme";
 
@@ -900,6 +903,9 @@ export class Assets {
 
     styleCache: any;
 
+    // the indexes of the state styles of the styles (see addStateStyles)
+    stateStyleIndexes = new Map<Style, number[]>();
+
     doGetStyleIndex(
         project: Project,
         styleNameOrObject: string | Style
@@ -1210,6 +1216,8 @@ export class Assets {
             | "focusColor"
             | "focusBackgroundColor"
             | "borderColor"
+            | "focusRingColor"
+            | "shadowColor"
     ) {
         return this.getColorIndexFromStyleColor(
             getStyleProperty(style, propertyName, false)
@@ -1285,6 +1293,10 @@ export class Assets {
             } else {
                 if (project.allStyles?.length > 0) {
                     project.allStyles.forEach(style => {
+                        if (style.state) {
+                            // used with the states of its parent style
+                            return;
+                        }
                         if (
                             !this.styles.find(usedStyle => {
                                 if (!usedStyle) {
@@ -2078,6 +2090,11 @@ export async function buildAssets(
         return buildV2(project, sectionNames, buildConfiguration);
     }
 
+    // eez-gui-lite builds its own code, without the EEZ-GUI assets
+    if (project.projectTypeTraits.isEezGuiLite) {
+        return buildEezGuiLiteSections(project, sectionNames, option);
+    }
+
     const result: any = {};
 
     let assets = new Assets(project, buildConfiguration, option);
@@ -2401,17 +2418,6 @@ export async function buildAssets(
     }
 
     result.EEZ_FLOW_IS_USING_CRYPTO_SHA256 = assets.isUsingCrypyoSha256;
-
-    // build eez-gui-lite source code
-    if (sectionNames && (sectionNames.indexOf("EEZ_GUI_LITE_DECL") !== -1 || sectionNames.indexOf("EEZ_GUI_LITE_DEF") !== -1)) {
-        const buildEezGuiLite = new BuildEezGuiLite(assets); 
-        if (sectionNames!.indexOf("EEZ_GUI_LITE_DECL") !== -1) {
-            result.EEZ_GUI_LITE_DECL = buildEezGuiLite.buildDecl();
-        }
-        if (sectionNames!.indexOf("EEZ_GUI_LITE_DEF") !== -1) {
-            result.EEZ_GUI_LITE_DEF = buildEezGuiLite.BuildDef();
-        }
-    }
 
     return Object.assign(
         result,

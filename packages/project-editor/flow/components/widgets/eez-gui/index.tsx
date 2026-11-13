@@ -29,7 +29,8 @@ import {
     IContextMenuContext,
     objectToJS,
     replaceObject,
-    createObject
+    createObject,
+    getSerializationProjectStore
 } from "project-editor/store";
 import {
     isProjectWithFlowSupport,
@@ -37,8 +38,7 @@ import {
     isNotProjectWithFlowSupport,
     isV3OrNewerProject,
     hasNotFlowSupport,
-    hasFlowSupport,
-    isEezGuiLiteProject
+    hasFlowSupport
 } from "project-editor/project/project-type-traits";
 
 import {
@@ -155,6 +155,45 @@ import { isArray } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// A style of a widget state in the EEZ-GUI v1/v2 projects (the disabled style
+// of the Button, ...). In the EEZ-GUI v3 projects a widget is drawn in the
+// states of its style, the style of the state is a state style (the load turns
+// these properties of an older project into state styles, see
+// convertEezGuiStateLooksJs in features/style/style.tsx).
+function makeOldStateStylePropertyInfo(name: string, displayName?: string) {
+    return Object.assign(makeStylePropertyInfo(name, displayName), {
+        disabled: isV3OrNewerProject,
+        isOptional: isOldStateStyleOptional
+    });
+}
+
+// Optional in the v3 projects. Also asked while an object is loaded, when a
+// widget created on its own (palette, paste, previews) has no project yet:
+// then the project of the store it is created in.
+function isOldStateStyleOptional(object: IEezObject) {
+    const project = getProject(object);
+    if (project && project.settings) {
+        return isV3OrNewerProject(project);
+    }
+    const storeProject = getSerializationProjectStore()?.project;
+    return storeProject ? isV3OrNewerProject(storeProject) : true;
+}
+
+// only the v1/v2 projects have the widget state styles
+function migrateOldStateStyleProperty(
+    jsObject: any,
+    propertyName: string,
+    project: Project
+) {
+    if (isV3OrNewerProject(project)) {
+        delete jsObject[propertyName];
+    } else {
+        migrateStyleProperty(jsObject, propertyName);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum DisplayOption {
     All = 0,
     Integer = 1,
@@ -219,11 +258,8 @@ export class DisplayDataWidget extends Widget {
             },
             makeStylePropertyInfo("style", "Default style"),
             Object.assign(
-                makeStylePropertyInfo("focusStyle", "Focused style"),
-                { hideInPropertyGrid: isNotV1Project },
-                {
-                    isOptional: true
-                }
+                makeOldStateStylePropertyInfo("focusStyle", "Focused style"),
+                { hideInPropertyGrid: isNotV1Project }
             ),
             {
                 name: "displayOption",
@@ -282,7 +318,7 @@ export class DisplayDataWidget extends Widget {
             jsObject: any,
             project: Project
         ) => {
-            migrateStyleProperty(jsObject, "focusStyle");
+            migrateOldStateStyleProperty(jsObject, "focusStyle", project);
             if (jsObject.refreshRate == undefined) {
                 if (project.projectTypeTraits.hasFlowSupport) {
                     jsObject.refreshRate = "0";
@@ -470,7 +506,8 @@ export class TextWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         flowComponentId: WIDGET_TYPE_TEXT,
 
@@ -519,8 +556,7 @@ export class TextWidget extends Widget {
             {
                 name: "preview",
                 type: PropertyType.String,
-                propertyGridGroup: specificGroup,
-                disabled: isEezGuiLiteProject
+                propertyGridGroup: specificGroup
             },
             {
                 name: "ignoreLuminocity",
@@ -544,11 +580,8 @@ export class TextWidget extends Widget {
             },
             makeStylePropertyInfo("style", "Default style"),
             Object.assign(
-                makeStylePropertyInfo("focusStyle", "Focused style"),
-                { enabled: isNotV1Project },
-                {
-                    isOptional: true
-                }
+                makeOldStateStylePropertyInfo("focusStyle", "Focused style"),
+                { enabled: isNotV1Project }
             )
         ],
 
@@ -640,7 +673,7 @@ export class TextWidget extends Widget {
                 }
             }
 
-            migrateStyleProperty(jsObject, "focusStyle");
+            migrateOldStateStyleProperty(jsObject, "focusStyle", project);
 
             if (jsObject.fitToContent == undefined) {
                 jsObject.fitToContent = "none";
@@ -1103,7 +1136,8 @@ export class RectangleWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         flowComponentId: WIDGET_TYPE_RECTANGLE,
 
@@ -1416,7 +1450,8 @@ export class ButtonWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         flowComponentId: WIDGET_TYPE_BUTTON,
 
@@ -1435,7 +1470,7 @@ export class ButtonWidget extends Widget {
             }),
             makeDataPropertyInfo("enabled"),
             makeStylePropertyInfo("style", "Default style"),
-            makeStylePropertyInfo("disabledStyle")
+            makeOldStateStylePropertyInfo("disabledStyle")
         ],
 
         beforeLoadHook: (
@@ -1452,7 +1487,7 @@ export class ButtonWidget extends Widget {
                 }
             }
 
-            migrateStyleProperty(jsObject, "disabledStyle");
+            migrateOldStateStyleProperty(jsObject, "disabledStyle", project);
         },
 
         defaultValue: {
@@ -1476,18 +1511,12 @@ export class ButtonWidget extends Widget {
                 ? {
                       style: {
                           useStyle: "button_M"
-                      },
-                      disabledStyle: {
-                          useStyle: "button_M_disabled"
                       }
                   }
                 : projectStore.projectTypeTraits.isFirmware
                 ? {
                       style: {
                           useStyle: "button"
-                      },
-                      disabledStyle: {
-                          useStyle: "button_disabled"
                       }
                   }
                 : {};
@@ -1544,9 +1573,6 @@ export class ButtonWidget extends Widget {
 
         // enabled
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "enabled"));
-
-        // disabledStyle
-        dataBuffer.writeInt16(assets.getStyleIndex(this, "disabledStyle"));
     }
 }
 
@@ -1576,7 +1602,7 @@ export class ToggleButtonWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             makeStylePropertyInfo("style", "Default style"),
-            makeStylePropertyInfo("checkedStyle")
+            makeOldStateStylePropertyInfo("checkedStyle")
         ],
 
         defaultValue: {
@@ -1637,9 +1663,6 @@ export class ToggleButtonWidget extends Widget {
 
         // text 2
         buildWidgetText(assets, dataBuffer, this.text2);
-
-        // checkedStyle
-        dataBuffer.writeInt16(assets.getStyleIndex(this, "checkedStyle"));
     }
 }
 
@@ -1679,7 +1702,7 @@ export class ButtonGroupWidget extends Widget {
                 }
             }),
             makeStylePropertyInfo("style", "Default style"),
-            makeStylePropertyInfo("selectedStyle")
+            makeOldStateStylePropertyInfo("selectedStyle")
         ],
 
         defaultValue: {
@@ -1689,8 +1712,8 @@ export class ButtonGroupWidget extends Widget {
             height: 32
         },
 
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            migrateStyleProperty(jsObject, "selectedStyle");
+        beforeLoadHook: (object: IEezObject, jsObject: any, project: Project) => {
+            migrateOldStateStyleProperty(jsObject, "selectedStyle", project);
         },
 
         icon: (
@@ -1759,9 +1782,6 @@ export class ButtonGroupWidget extends Widget {
 
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // selectedStyle
-        dataBuffer.writeInt16(assets.getStyleIndex(this, "selectedStyle"));
-
         // selectedButton
         let selectedButton =
             assets.projectStore.project.projectTypeTraits.hasFlowSupport &&
@@ -4013,7 +4033,8 @@ export class SwitchWidget extends Widget {
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD,
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
 
         componentPaletteGroupName: "!1Input",
 

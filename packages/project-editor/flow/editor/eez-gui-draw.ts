@@ -7,7 +7,7 @@
 import { getColorRGB } from "eez-studio-shared/color";
 
 import { findBitmap, Project } from "project-editor/project/project";
-import type { Style } from "project-editor/features/style/style";
+import type { EezObject } from "project-editor/core/object";
 import type { Font } from "project-editor/features/font/font";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
@@ -32,6 +32,42 @@ type BorderRadiusSpec = {
     bottomRightX: number;
     bottomRightY: number;
 };
+
+const NO_BORDER_RADIUS: BorderRadiusSpec = {
+    topLeftX: 0,
+    topLeftY: 0,
+    topRightX: 0,
+    topRightY: 0,
+    bottomLeftX: 0,
+    bottomLeftY: 0,
+    bottomRightX: 0,
+    bottomRightY: 0
+};
+
+type RectSpec = {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+};
+
+// The style properties drawText uses: a Style (EEZ-GUI v1/v2 projects) or a
+// LiteStyle (eez-gui-lite projects, which have no opacity, border radius and
+// background image).
+export interface DrawStyle extends EezObject {
+    fontObject: Font | undefined;
+    alignHorizontalProperty: string;
+    alignVerticalProperty: string;
+    colorProperty: string;
+    backgroundColorProperty: string;
+    borderSizeRect: RectSpec;
+    borderColorProperty: string;
+    paddingRect: RectSpec;
+    blinkProperty: number | boolean;
+    opacityProperty?: number;
+    borderRadiusSpec?: BorderRadiusSpec;
+    backgroundImageProperty?: string;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -586,23 +622,23 @@ function drawBitmap(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function styleIsHorzAlignLeft(style: Style) {
+function styleIsHorzAlignLeft(style: DrawStyle) {
     return style.alignHorizontalProperty == "left";
 }
 
-function styleIsHorzAlignRight(style: Style) {
+function styleIsHorzAlignRight(style: DrawStyle) {
     return style.alignHorizontalProperty == "right";
 }
 
-function styleIsVertAlignTop(style: Style) {
+function styleIsVertAlignTop(style: DrawStyle) {
     return style.alignVerticalProperty == "top";
 }
 
-function styleIsVertAlignBottom(style: Style) {
+function styleIsVertAlignBottom(style: DrawStyle) {
     return style.alignVerticalProperty == "bottom";
 }
 
-export function styleGetFont(style: Style) {
+export function styleGetFont(style: DrawStyle) {
     return style.fontObject;
 }
 
@@ -614,7 +650,7 @@ function drawBackground(
     y: number,
     width: number,
     height: number,
-    style: Style,
+    style: DrawStyle,
     inverse: boolean,
     color?: string
 ) {
@@ -625,7 +661,7 @@ function drawBackground(
 
     if (width > 0 && height > 0) {
         const savedGlobalAlpha = ctx.globalAlpha;
-        ctx.globalAlpha = style.opacityProperty / 255;
+        ctx.globalAlpha = (style.opacityProperty ?? 255) / 255;
 
         if (color == undefined) {
             color = inverse
@@ -642,7 +678,7 @@ function drawBackground(
         ) {
             setColor(style.borderColorProperty);
 
-            let borderRadius = style.borderRadiusSpec;
+            let borderRadius = style.borderRadiusSpec ?? NO_BORDER_RADIUS;
             if (
                 borderRadius.topLeftX > 0 ||
                 borderRadius.topLeftY > 0 ||
@@ -696,7 +732,7 @@ function drawBackground(
             x2 -= borderSize.right;
             y2 -= borderSize.bottom;
         } else {
-            let borderRadius = style.borderRadiusSpec;
+            let borderRadius = style.borderRadiusSpec ?? NO_BORDER_RADIUS;
             if (
                 borderRadius.topLeftX > 0 ||
                 borderRadius.topLeftY > 0 ||
@@ -749,7 +785,7 @@ export function drawText(
     y: number,
     w: number,
     h: number,
-    style: Style,
+    style: DrawStyle,
     inverse: boolean,
     overrideBackgroundColor?: string,
     boolSkipBackground: boolean = false

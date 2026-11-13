@@ -2,6 +2,7 @@ import type { Rect } from "eez-studio-shared/geometry";
 import { IEezObject, IMessage, MessageType } from "project-editor/core/object";
 import { getLabel, Message } from "project-editor/store";
 import type { Widget } from "project-editor/flow/component";
+import type { Style } from "project-editor/features/style/style";
 import type { PageLayout } from "project-editor/features/page/page";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
@@ -40,6 +41,43 @@ function isIgnored(widget: Widget) {
         widget instanceof ProjectEditor.BitmapWidgetClass ||
         widget instanceof ProjectEditor.RectangleWidgetClass
     );
+}
+
+// The rectangle of the widget with the shadow of its style: the shadow is
+// drawn outside of the widget, so it overlaps the widgets there (see
+// expandRectWithStyleShadow in the framework).
+function getRectWithShadow(widget: Widget, rect: Rect): Rect {
+    const style = (widget as any).style as Style | undefined;
+    if (!style || typeof style.shadowBlurProperty != "number") {
+        return rect;
+    }
+
+    const color = style.shadowColorProperty;
+    const offsetX = style.shadowOffsetXProperty;
+    const offsetY = style.shadowOffsetYProperty;
+    const blur = style.shadowBlurProperty;
+    const spread = style.shadowSpreadProperty;
+    if (
+        !color ||
+        color == "transparent" ||
+        (blur <= 0 && spread <= 0 && offsetX == 0 && offsetY == 0)
+    ) {
+        return rect;
+    }
+
+    const sigma = blur > 1 ? blur / 2 : 0.5;
+    const reach = Math.ceil(3 * sigma) + spread;
+    const left = Math.max(reach - offsetX, 0);
+    const right = Math.max(reach + offsetX, 0);
+    const top = Math.max(reach - offsetY, 0);
+    const bottom = Math.max(reach + offsetY, 0);
+
+    return {
+        left: rect.left - left,
+        top: rect.top - top,
+        width: rect.width + left + right,
+        height: rect.height + top + bottom
+    };
 }
 
 function isOverlapping(a: Rect, b: Rect) {
@@ -104,7 +142,9 @@ function checkOverlappingChildrenInPageLayout(
     pageLayout: PageLayout | undefined,
     messages: IMessage[]
 ) {
-    const rects = widgets.map(widget => widget.getRectInPageLayout(pageLayout));
+    const rects = widgets.map(widget =>
+        getRectWithShadow(widget, widget.getRectInPageLayout(pageLayout))
+    );
 
     for (let i = 1; i < widgets.length; i++) {
         const widget = widgets[i];

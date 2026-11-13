@@ -4,41 +4,45 @@ import { resolve } from "path";
 import { isDev, writeTextFile } from "eez-studio-shared/util-electron";
 import { getColorRGB } from "eez-studio-shared/color";
 
-import { Assets } from "project-editor/build/assets";
+import { MessageType } from "project-editor/core/object";
+import { Section } from "project-editor/store";
 import { addGeneratedFileNote } from "project-editor/build/build";
 import { Build, NamingConvention, getName } from "project-editor/build/helper";
-import {
-    ButtonWidget,
-    SwitchWidget,
-    TextWidget
-} from "project-editor/flow/components/widgets/eez-gui";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import { Page } from "project-editor/features/page/page";
+import type { Font } from "project-editor/features/font/font";
 import {
     Component,
     Widget
 } from "project-editor/flow/component";
 import {
-    getStyleProperty,
-    type Style
-} from "project-editor/features/style/style";
+    getLiteStyleProperty,
+    type LiteStyle
+} from "project-editor/eez-gui-lite/style";
+import {
+    ButtonLiteWidget,
+    ContainerLiteWidget,
+    SelectLiteWidget,
+    SwitchLiteWidget,
+    TextLiteWidget
+} from "project-editor/eez-gui-lite/widgets";
 
 import type { ConnectionLine } from "project-editor/flow/connection-line/connection-line";
 import { escapeCString } from "project-editor/lvgl/widget-common";
-import {
-    ContainerWidget,
-    SelectWidget
-} from "project-editor/flow/components/widgets";
 
 import {
     evalConstantExpression
 } from "project-editor/eez-flow-lite/expression";
 import { BuildEezFlowLite } from "project-editor/eez-flow-lite/build";
-import type { Project } from "project-editor/project/project";
+import {
+    findFont,
+    findStyle,
+    type Project
+} from "project-editor/project/project";
 import { sourceRootDir } from "eez-studio-shared/util";
 
 interface BuildStyle {
-    style: Style;
+    style: LiteStyle;
     isUsed: boolean;
     styleName: string;
 }
@@ -65,6 +69,227 @@ interface WidgetProperty {
     value: string;
 }
 
+// The styles and fonts of the generated code, numbered as the EEZ-GUI asset
+// build (build/assets.ts) numbered them when eez-gui-lite used it, so the
+// generated code stays the same:
+// - styles: the styles with "Always add to the generated code", then the styles
+//   in the order the pages use them (the page style, then for each widget its
+//   style, the disabled style of a Button and the widgets of a Container or
+//   Select); a widget style that gives the same eezgui_style_t as a style
+//   already in the list is that style
+// - fonts: the fonts with an ID (at ID - 1), the fonts with "Always add to the
+//   generated code", then the fonts of the styles in the style order
+export class LiteAssets {
+    styles: LiteStyle[] = [];
+    fonts: Font[] = [];
+
+    styleIndexes = new Map<string | LiteStyle, number>();
+
+    constructor(public project: Project) {
+        for (const style of project.allStyles as unknown as LiteStyle[]) {
+            if (style.alwaysBuild) {
+                this.styles.push(style);
+            }
+        }
+
+        for (const page of project.pages) {
+            this.getStyleIndex(page, "style");
+            this.addWidgetStyles(page.components);
+        }
+
+        this.collectFonts();
+    }
+
+    addWidgetStyles(components: Component[]) {
+        for (const widget of components) {
+            if (!(widget instanceof Widget)) {
+                continue;
+            }
+
+            this.getStyleIndex(widget, "style");
+
+            if (widget instanceof ButtonLiteWidget) {
+                this.getStyleIndex(widget, "disabledStyle");
+            } else if (
+                widget instanceof ContainerLiteWidget ||
+                widget instanceof SelectLiteWidget
+            ) {
+                this.addWidgetStyles(widget.widgets);
+            }
+        }
+    }
+
+    // 1 based index in the styles, 0 if there is no such style
+    getStyleIndex(object: any, propertyName: string): number {
+        let style: string | LiteStyle | undefined = object[propertyName];
+        if (style === undefined) {
+            style = this.findStyle("default");
+            if (!style) {
+                return 0;
+            }
+        }
+
+        return this.doGetStyleIndex(style);
+    }
+
+    findStyle(styleName: string) {
+        return findStyle(this.project, styleName) as unknown as
+            | LiteStyle
+            | undefined;
+    }
+
+    doGetStyleIndex(styleNameOrObject: string | LiteStyle): number {
+        let styleIndex = this.styleIndexes.get(styleNameOrObject);
+        if (styleIndex != undefined) {
+            return styleIndex;
+        }
+
+        styleIndex = 0;
+
+        if (typeof styleNameOrObject === "string") {
+            const styleName = styleNameOrObject;
+            const i = this.styles.findIndex(style => style.name == styleName);
+            if (i != -1) {
+                styleIndex = i + 1;
+            } else {
+                const style = this.findStyle(styleName);
+                if (style) {
+                    this.styles.push(style);
+                    styleIndex = this.styles.length;
+                }
+            }
+        } else {
+            const style = styleNameOrObject;
+            const parentStyle = style.parentStyle;
+            if (parentStyle && style.compareTo(parentStyle)) {
+                styleIndex = this.doGetStyleIndex(
+                    parentStyle.name ?? parentStyle
+                );
+            } else {
+                const i = this.styles.findIndex(s => style.compareTo(s));
+                if (i != -1) {
+                    styleIndex = i + 1;
+                } else {
+                    this.styles.push(style);
+                    styleIndex = this.styles.length;
+                }
+            }
+        }
+
+        this.styleIndexes.set(styleNameOrObject, styleIndex);
+
+        return styleIndex;
+    }
+
+    collectFonts() {
+        const fonts = this.project.fonts ?? [];
+
+        for (const font of fonts) {
+            if (font.id != undefined) {
+                this.fonts[font.id - 1] = font;
+            }
+        }
+
+        for (const font of fonts) {
+            if (font.id == undefined && font.alwaysBuild) {
+                this.fonts.push(font);
+            }
+        }
+
+        for (let i = 0; i < this.fonts.length; i++) {
+            if (!this.fonts[i]) {
+                this.project._store.outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.WARNING,
+                    `Missing font with ID = ${i + 1}`,
+                    this.project.fonts
+                );
+                this.fonts[i] = this.fonts.find(font => !!font)!;
+            }
+        }
+
+        for (const style of this.styles) {
+            if (style.fontName) {
+                const font = findFont(this.project, style.fontName);
+                if (font && this.fonts.indexOf(font) == -1) {
+                    this.fonts.push(font);
+                }
+            }
+        }
+    }
+
+    reportUnusedAssets() {
+        const outputSectionsStore = this.project._store.outputSectionsStore;
+
+        for (const style of this.project.allStyles as unknown as LiteStyle[]) {
+            const isUsed = this.styles.find(usedStyle => {
+                for (
+                    let baseStyle: LiteStyle | undefined = usedStyle;
+                    baseStyle;
+                    baseStyle = baseStyle.parentStyle
+                ) {
+                    if (baseStyle == style) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (!isUsed) {
+                outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.INFO,
+                    "Unused style: " + style.name,
+                    style
+                );
+            }
+        }
+
+        for (const font of this.project.fonts ?? []) {
+            if (this.fonts.indexOf(font) == -1) {
+                outputSectionsStore.write(
+                    Section.OUTPUT,
+                    MessageType.INFO,
+                    "Unused font: " + font.name,
+                    font
+                );
+            }
+        }
+    }
+}
+
+// the eez-gui-lite sections of the build: EEZ_GUI_LITE_DECL and
+// EEZ_GUI_LITE_DEF
+export function buildEezGuiLiteSections(
+    project: Project,
+    sectionNames: string[] | undefined,
+    option: "check" | "buildAssets" | "buildFiles"
+) {
+    const result: any = {};
+
+    const assets = new LiteAssets(project);
+    assets.reportUnusedAssets();
+
+    const buildDecl =
+        option == "check" ||
+        (sectionNames && sectionNames.indexOf("EEZ_GUI_LITE_DECL") !== -1);
+    const buildDef =
+        option == "check" ||
+        (sectionNames && sectionNames.indexOf("EEZ_GUI_LITE_DEF") !== -1);
+
+    if (buildDecl || buildDef) {
+        const buildEezGuiLite = new BuildEezGuiLite(assets);
+        if (buildDecl) {
+            result.EEZ_GUI_LITE_DECL = buildEezGuiLite.buildDecl();
+        }
+        if (buildDef) {
+            result.EEZ_GUI_LITE_DEF = buildEezGuiLite.BuildDef();
+        }
+    }
+
+    return result;
+}
+
 export class BuildEezGuiLite {
     buildStyles: BuildStyle[] = [];
     nonThemeColors: string[] = [];
@@ -73,8 +298,8 @@ export class BuildEezGuiLite {
 
     buildFlow: BuildEezFlowLite;
 
-    constructor(public assets: Assets) {
-        this.buildFlow = new BuildEezFlowLite(assets.projectStore.project);
+    constructor(public assets: LiteAssets) {
+        this.buildFlow = new BuildEezFlowLite(assets.project);
 
         this.analyseProject();
     }
@@ -84,7 +309,7 @@ export class BuildEezGuiLite {
     //
 
     get project() {
-        return this.assets.projectStore.project;
+        return this.assets.project;
     }
 
     getUniqueVarName(prefix: string, varNames: Set<string>) {
@@ -144,8 +369,8 @@ export class BuildEezGuiLite {
         return widgetProperty.name;
     }
 
-    addColor(style: Style, property: string) {
-        let colorValue = getStyleProperty(
+    addColor(style: LiteStyle, property: string) {
+        let colorValue = getLiteStyleProperty(
             style,
             property,
             false /* do not translate themed colors */
@@ -170,8 +395,8 @@ export class BuildEezGuiLite {
         }
     }
 
-    getColor(style: Style, property: string) {
-        let colorValue = getStyleProperty(
+    getColor(style: LiteStyle, property: string) {
+        let colorValue = getLiteStyleProperty(
             style,
             property,
             false /* do not translate themed colors */
@@ -208,7 +433,7 @@ export class BuildEezGuiLite {
         }));
 
         // pages
-        for (const page of this.assets.projectStore.project.pages) {
+        for (const page of this.project.pages) {
             //
             let buildStyle;
             const styleIndex = this.assets.getStyleIndex(page, "style") - 1;
@@ -268,7 +493,7 @@ export class BuildEezGuiLite {
 
                         // if there is an event handler with a connection line, mark the widget as clickable
                         let clickable = false;
-                        if (widget instanceof SwitchWidget) {
+                        if (widget instanceof SwitchLiteWidget) {
                             clickable = true;
                         } else {
                             for (const eventHandler of buildWidget.widget
@@ -306,13 +531,13 @@ export class BuildEezGuiLite {
                             );
                         }
 
-                        if (widget instanceof TextWidget) {
+                        if (widget instanceof TextLiteWidget) {
                             this.addWidgetProperty(
                                 widget,
                                 widget.text || widget.data || "",
                                 "string"
                             );
-                        } else if (widget instanceof ButtonWidget) {
+                        } else if (widget instanceof ButtonLiteWidget) {
                             this.addWidgetProperty(
                                 widget,
                                 widget.text || widget.data || "",
@@ -339,13 +564,13 @@ export class BuildEezGuiLite {
                                     buildStyles[styleIndex].isUsed = true;
                                 }                                
                             }
-                        } else if (widget instanceof SwitchWidget) {
+                        } else if (widget instanceof SwitchLiteWidget) {
                             this.addWidgetProperty(
                                 widget,
                                 widget.data || "false",
                                 "boolean"
                             );
-                        } else if (widget instanceof SelectWidget) {
+                        } else if (widget instanceof SelectLiteWidget) {
                             this.addWidgetProperty(
                                 widget,
                                 widget.data || "0",
@@ -353,7 +578,7 @@ export class BuildEezGuiLite {
                             );
                             buildWidget.widgets = [];
                             addWidgets(widget.widgets, buildWidget.widgets);
-                        } else if (widget instanceof ContainerWidget) {
+                        } else if (widget instanceof ContainerLiteWidget) {
                             buildWidget.widgets = [];
                             addWidgets(widget.widgets, buildWidget.widgets);
                         }
@@ -404,16 +629,12 @@ export class BuildEezGuiLite {
         }
     }
 
-    analyseStyle(style: Style) {
+    analyseStyle(style: LiteStyle) {
         this.addColor(style, "color");
         this.addColor(style, "backgroundColor");
         this.addColor(style, "borderColor");
         this.addColor(style, "activeColor");
         this.addColor(style, "activeBackgroundColor");
-
-        for (const childStyle of style.childStyles) {
-            this.analyseStyle(childStyle);
-        }
     }
 
     //
@@ -898,7 +1119,7 @@ export class BuildEezGuiLite {
             build.line(
                 `.font = FONT_${getName(
                     "",
-                    getStyleProperty(style, "font"),
+                    getLiteStyleProperty(style, "font"),
                     NamingConvention.UnderscoreUpperCase
                 )},`
             );
@@ -1020,8 +1241,8 @@ export class BuildEezGuiLite {
                             `${buildWidget.varType} ${buildWidget.varName};`
                         );
                         if (
-                            buildWidget.widget instanceof SelectWidget ||
-                            buildWidget.widget instanceof ContainerWidget
+                            buildWidget.widget instanceof SelectLiteWidget ||
+                            buildWidget.widget instanceof ContainerLiteWidget
                         ) {
                             buildWidgetMembers(buildWidget.widgets!);
                         }
@@ -1070,7 +1291,7 @@ export class BuildEezGuiLite {
 
                     build.blockEnd("},");
 
-                    if (buildWidget.widget instanceof TextWidget) {
+                    if (buildWidget.widget instanceof TextLiteWidget) {
                         build.line(
                             `.text = ${this.addWidgetProperty(
                                 buildWidget.widget,
@@ -1080,7 +1301,7 @@ export class BuildEezGuiLite {
                                 "string"
                             )},`
                         );
-                    } else if (buildWidget.widget instanceof ButtonWidget) {
+                    } else if (buildWidget.widget instanceof ButtonLiteWidget) {
                         build.line(
                             `.text = ${this.addWidgetProperty(
                                 buildWidget.widget,
@@ -1110,7 +1331,7 @@ export class BuildEezGuiLite {
                                 );
                             }
                         }
-                    } else if (buildWidget.widget instanceof SwitchWidget) {
+                    } else if (buildWidget.widget instanceof SwitchLiteWidget) {
                         build.line(
                             `.is_checked = ${this.addWidgetProperty(
                                 buildWidget.widget,
@@ -1122,8 +1343,8 @@ export class BuildEezGuiLite {
                     build.blockEnd("},");
 
                     if (
-                        buildWidget.widget instanceof SelectWidget ||
-                        buildWidget.widget instanceof ContainerWidget
+                        buildWidget.widget instanceof SelectLiteWidget ||
+                        buildWidget.widget instanceof ContainerLiteWidget
                     ) {
                         buildWidgetDefs(buildWidget.widgets!);
                     }
@@ -1203,7 +1424,7 @@ export class BuildEezGuiLite {
                             buildWidget.widget.type
                         ).toLowerCase();
 
-                        if (buildWidget.widget instanceof SelectWidget) {
+                        if (buildWidget.widget instanceof SelectLiteWidget) {
                             build.blockStart("{");
 
                             build.line(
@@ -1247,7 +1468,7 @@ export class BuildEezGuiLite {
 
                             build.blockEnd("}");
                         } else if (
-                            buildWidget.widget instanceof ContainerWidget
+                            buildWidget.widget instanceof ContainerLiteWidget
                         ) {
                             build.line(
                                 `eezgui_container_begin(ctx, &${buildPage.page.name}_widgets.${buildWidget.varName});`
@@ -1289,7 +1510,7 @@ export class BuildEezGuiLite {
             page: Page
         ) => {
             for (const buildWidget of buildWidgets) {
-                if (buildWidget.widget instanceof SwitchWidget) {
+                if (buildWidget.widget instanceof SwitchLiteWidget) {
                     build.blockStart(
                         `if (event->widget == &${page.name}_widgets.${buildWidget.varName}.base && event->type == EEZGUI_EVENT_CLICKED) {`
                     );
@@ -1391,8 +1612,8 @@ export class BuildEezGuiLite {
                 }
 
                 if (
-                    buildWidget.widget instanceof SelectWidget ||
-                    buildWidget.widget instanceof ContainerWidget
+                    buildWidget.widget instanceof SelectLiteWidget ||
+                    buildWidget.widget instanceof ContainerLiteWidget
                 ) {
                     buildEventHandlersForWidgets(buildWidget.widgets!, page);
                 }

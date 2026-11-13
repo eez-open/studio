@@ -1,7 +1,7 @@
 // Previews of EEZ-GUI projects drawn with the framework WASM: a page that isn't
 // in the project, built and drawn as the page editor draws a page (see
 // eez-gui-editor-page.tsx). The style preview shows a Text widget in the style
-// and one in its active colors, the font preview (vector fonts) sample texts in
+// and one in its pressed look, the font preview (vector fonts) sample texts in
 // the font.
 
 import React from "react";
@@ -22,7 +22,10 @@ import type { Style } from "project-editor/features/style/style";
 import type { Font } from "project-editor/features/font/font";
 import type { Project } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getProjectWithThemes } from "project-editor/features/style/theme";
+import {
+    getProjectWithThemes,
+    getThemedColor
+} from "project-editor/features/style/theme";
 import { buildEditorAssets } from "project-editor/build/editor-build";
 import { EezGuiEditorWasm } from "project-editor/flow/editor/eez-gui-editor-wasm";
 
@@ -170,6 +173,19 @@ const EezGuiPreview = observer(
     }
 );
 
+// true for a fully transparent color ("transparent", rgba with alpha 0, #rrggbb00)
+function isTransparentColor(color: string | undefined) {
+    if (typeof color != "string") {
+        return false;
+    }
+    const value = color.trim().toLowerCase().replace(/\s+/g, "");
+    return (
+        value == "transparent" ||
+        /^rgba\(\d+,\d+,\d+,0(\.0*)?\)$/.test(value) ||
+        /^#[0-9a-f]{6}00$/.test(value)
+    );
+}
+
 function textWidget(
     left: number,
     top: number,
@@ -196,35 +212,52 @@ export const EezGuiStylePreview = observer(
         width: number;
         height: number;
         text: string;
-        // a blinking style is shown in turns in its colors and in its active
-        // colors
+        // a blinking style is shown and hidden in turns
         inverse: boolean;
     }> {
+        // the pressed look: the pressed state style, without one the color and
+        // the background swapped (not over a transparent background), as the
+        // framework draws a pressed widget
+        get pressedStyle() {
+            const { project, style } = this.props;
+            const pressed = style.stateDeltas?.pressed;
+            if (pressed) {
+                return { useStyle: style.name, blink: false, ...pressed };
+            }
+            const backgroundColor = getThemedColor(
+                project._store,
+                style.backgroundColorProperty
+            ).colorValue;
+            if (isTransparentColor(backgroundColor)) {
+                return { useStyle: style.name, blink: false };
+            }
+            return {
+                useStyle: style.name,
+                blink: false,
+                color: style.backgroundColorProperty,
+                backgroundColor: style.colorProperty
+            };
+        }
+
         getComponents = (width: number, height: number) => {
             const { style, text } = this.props;
 
-            // the framework blinks a blinking style on its own, the preview
-            // shows the two colors in turns
             const normalStyle = { useStyle: style.name, blink: false };
-            const activeStyle = {
-                useStyle: style.name,
-                blink: false,
-                color: style.activeColorProperty,
-                backgroundColor: style.activeBackgroundColorProperty
-            };
 
+            // the framework fades a blinking style out and in on its own, the
+            // preview shows it and hides it (faded out) in turns
             if (style.blinkProperty) {
-                return [
-                    textWidget(
-                        0,
-                        0,
-                        width,
-                        height,
-                        text,
-                        this.props.inverse ? activeStyle : normalStyle
-                    )
-                ];
+                return this.props.inverse
+                    ? []
+                    : [textWidget(0, 0, width, height, text, normalStyle)];
             }
+
+            // a state style: the look of its base style in the state
+            if (style.state) {
+                return [textWidget(0, 0, width, height, text, normalStyle)];
+            }
+
+            const activeStyle = this.pressedStyle;
 
             if (width > height) {
                 const w = Math.floor(width / 2) - 4;

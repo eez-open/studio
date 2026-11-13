@@ -814,9 +814,52 @@ export interface ITreeRow {
     level: number;
     draggable: boolean;
     collapsable: boolean;
+    // other items of its list are listed under it (ClassInfo.sortedTreeParent)
+    hasSortedTreeChildren?: boolean;
 }
 
 export type SortDirectionType = "asc" | "desc" | "none";
+
+// In a tree sorted by name: the items of a list that are listed under another
+// item of the same list (ClassInfo.sortedTreeParent), by that item, in the
+// order of the list. One level: an item stays where it is when the item it
+// belongs to is itself listed under another one.
+function getSortedTreeChildren(items: TreeObjectAdapter[]) {
+    const children = new Map<TreeObjectAdapter, TreeObjectAdapter[]>();
+    const nested = new Set<TreeObjectAdapter>();
+
+    let itemByObject: Map<IEezObject, TreeObjectAdapter> | undefined;
+
+    const getParentItem = (item: TreeObjectAdapter) => {
+        const sortedTreeParent = getClassInfo(item.object).sortedTreeParent;
+        if (!sortedTreeParent) {
+            return undefined;
+        }
+        const parentObject = sortedTreeParent(item.object);
+        if (!parentObject || parentObject == item.object) {
+            return undefined;
+        }
+        if (!itemByObject) {
+            itemByObject = new Map(items.map(item => [item.object, item]));
+        }
+        return itemByObject.get(parentObject);
+    };
+
+    for (const item of items) {
+        const parentItem = getParentItem(item);
+        if (parentItem && !getParentItem(parentItem)) {
+            nested.add(item);
+            let parentChildren = children.get(parentItem);
+            if (!parentChildren) {
+                parentChildren = [];
+                children.set(parentItem, parentChildren);
+            }
+            parentChildren.push(item);
+        }
+    }
+
+    return { children, nested };
+}
 
 export enum DropPosition {
     DROP_POSITION_NONE,
@@ -904,6 +947,8 @@ export class TreeAdapter {
 
         const draggable = true;
 
+        const sorted = sortDirection === "asc" || sortDirection === "desc";
+
         const children: ITreeRow[] = [];
 
         const getChildren = (
@@ -939,7 +984,16 @@ export class TreeAdapter {
         };
 
         function enumChildren(childItems: TreeObjectAdapter[], level: number) {
+            const sortedTree = sorted
+                ? getSortedTreeChildren(childItems)
+                : undefined;
+
             childItems.forEach(childItem => {
+                if (sortedTree?.nested.has(childItem)) {
+                    // listed under the item it belongs to
+                    return;
+                }
+
                 const showOnlyChildren =
                     childItem.children.length == 1 &&
                     isArray(childItem.object) &&
@@ -950,11 +1004,15 @@ export class TreeAdapter {
                 if (showOnlyChildren) {
                     enumChildren(childItems, level);
                 } else {
-                    const row = {
+                    const sortedTreeChildren =
+                        sortedTree?.children.get(childItem) ?? [];
+
+                    const row: ITreeRow = {
                         item: childItem,
                         level,
                         draggable,
-                        collapsable: false
+                        collapsable: false,
+                        hasSortedTreeChildren: sortedTreeChildren.length > 0
                     };
 
                     const savedIndex = children.length;
@@ -962,18 +1020,20 @@ export class TreeAdapter {
                     const maxLevelReached =
                         maxLevel !== undefined && level === maxLevel;
 
-                    if (
-                        !maxLevelReached &&
-                        childItem.expanded &&
-                        childItems.length > 0
-                    ) {
-                        enumChildren(childItems, level + 1);
+                    if (!maxLevelReached && childItem.expanded) {
+                        if (childItems.length > 0) {
+                            enumChildren(childItems, level + 1);
+                        }
+                        if (sortedTreeChildren.length > 0) {
+                            enumChildren(sortedTreeChildren, level + 1);
+                        }
                     }
 
                     row.collapsable =
                         collapsable! &&
                         !maxLevelReached &&
                         (childItems.length > 0 ||
+                            sortedTreeChildren.length > 0 ||
                             canContainChildren(childItem.object));
 
                     if (
@@ -1023,13 +1083,31 @@ export class TreeAdapter {
                 );
         }
 
+        const masterSortedTree = sorted
+            ? getSortedTreeChildren(masterItems)
+            : undefined;
+
         for (const item of masterItems) {
+            if (masterSortedTree?.nested.has(item)) {
+                continue;
+            }
+
             children.push({
                 item,
                 level: 0,
                 draggable: false,
                 collapsable: false
             });
+
+            for (const childItem of masterSortedTree?.children.get(item) ??
+                []) {
+                children.push({
+                    item: childItem,
+                    level: 1,
+                    draggable: false,
+                    collapsable: false
+                });
+            }
         }
 
         return children;

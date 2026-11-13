@@ -107,7 +107,10 @@ export function findSnapLines(
                 break;
             }
 
-            if (parent instanceof ProjectEditor.SelectWidgetClass) {
+            if (
+                parent instanceof ProjectEditor.SelectWidgetClass ||
+                parent instanceof ProjectEditor.SelectLiteWidgetClass
+            ) {
                 const index = parent.getSelectedIndex(flowContext);
                 let selectedWidget =
                     index >= 0 && index < parent.widgets.length
@@ -275,7 +278,8 @@ export function findSnapLines(
 
             if (
                 node.object instanceof ProjectEditor.PageClass ||
-                node.object instanceof ProjectEditor.ContainerWidgetClass
+                node.object instanceof ProjectEditor.ContainerWidgetClass ||
+                node.object instanceof ProjectEditor.ContainerLiteWidgetClass
             ) {
                 // add inner margin for page and container
                 marginRect.left += 10;

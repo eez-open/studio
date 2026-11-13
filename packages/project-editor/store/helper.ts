@@ -961,6 +961,10 @@ export function isObjectReferencable(object: IEezObject) {
         return true;
     }
 
+    if (ProjectEditor.LiteStyleClass.classInfo == objectClassInfo) {
+        return true;
+    }
+
     if (ProjectEditor.LVGLStyleClass.classInfo == objectClassInfo) {
         return true;
     }
