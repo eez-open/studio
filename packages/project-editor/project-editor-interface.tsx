@@ -115,7 +115,8 @@ import type {
     LVGLButtonMatrixWidget,
     LVGLLedWidget,
     LVGLTabviewWidget,
-    LVGLDropdownWidget
+    LVGLDropdownWidget,
+    LVGLCalendarWidget
 } from "project-editor/lvgl/widgets";
 import type { LVGLStyle } from "project-editor/lvgl/style";
 import type { LiteStyle } from "project-editor/eez-gui-lite/style";
@@ -212,6 +213,7 @@ export interface IProjectEditor {
     LVGLTabviewWidgetClass: typeof LVGLTabviewWidget;
     LVGLTabWidgetClass: typeof LVGLTabWidget;
     LVGLDropdownWidgetClass: typeof LVGLDropdownWidget;
+    LVGLCalendarWidgetClass: typeof LVGLCalendarWidget;
     LVGLRollerWidgetClass: typeof LVGLRollerWidget;
     LVGLButtonMatrixWidgetClass: typeof LVGLButtonMatrixWidget;
     LVGLLedWidgetClass: typeof LVGLLedWidget;
