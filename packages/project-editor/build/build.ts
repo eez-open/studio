@@ -587,7 +587,6 @@ async function buildOne(
         } = {};
 
         if (
-            project.settings.general.projectVersion !== "v1" &&
             project.settings.build.configurations.length > 0 &&
             (!projectStore.masterProject ||
                 projectStore.project.settings.general.projectType ==

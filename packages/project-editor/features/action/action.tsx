@@ -21,8 +21,7 @@ import {
     isAppletProject,
     isDashboardProject,
     isEezGuiLiteProject,
-    isLVGLProject,
-    isNotV1Project
+    isLVGLProject
 } from "project-editor/project/project-type-traits";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { getProjectStore } from "project-editor/store";
@@ -230,8 +229,7 @@ export class Action extends Flow {
                 propertyGridGroup: specificGroup,
                 disabled: (action: Action) => {
                     return (
-                        (isNotV1Project(action) && !hasFlowSupport(action)) ||
-                        isDashboardProject(action)
+                        !hasFlowSupport(action) || isDashboardProject(action)
                     );
                 }
             },
@@ -251,11 +249,13 @@ export class Action extends Flow {
                     );
                 }
             },
+            // the C++ code of the action that the ACTIONS_FUNCS_DEF build
+            // section writes, only in the project file (not edited in Studio)
             {
                 name: "implementation",
                 type: PropertyType.CPP,
-                propertyGridGroup: specificGroup,
-                disabled: isNotV1Project
+                hideInPropertyGrid: true,
+                skipSearch: true
             },
             {
                 name: "usedIn",

@@ -55,8 +55,6 @@ export function isPageLayoutsSupported(page: Page) {
     return (
         project.projectTypeTraits.isFirmware &&
         !project.projectTypeTraits.isEezGuiLite &&
-        project.settings.general.projectVersion !== "v1" &&
-        project.settings.general.projectVersion !== "v2" &&
         !page.isUsedAsUserWidget
     );
 }

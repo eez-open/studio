@@ -51,10 +51,7 @@ import {
 import {
     isEezGuiLiteProject,
     isEezGuiProject,
-    isLVGLProject,
-    isNotV1Project,
-    isV1Project,
-    isV3OrNewerProject
+    isLVGLProject
 } from "project-editor/project/project-type-traits";
 
 import type { Project } from "project-editor/project/project";
@@ -1458,12 +1455,11 @@ const ChangeBitsPerPixel = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 // Vector fonts (Font.vector) are drawn by eez-framework at runtime: the EEZ-GUI
-// projects whose pages the framework WASM draws in the editor (v3 with flow
+// projects whose pages the framework WASM draws in the editor (with flow
 // support), not eez-gui-lite.
 export function isVectorFontProject(object: IEezObject) {
     return (
         isEezGuiProject(object) &&
-        isV3OrNewerProject(object) &&
         ProjectEditor.getProject(object).projectTypeTraits.hasFlowSupport
     );
 }
@@ -1482,7 +1478,6 @@ export class Font extends EezObject {
     ascent: number;
     descent: number;
     glyphs: Glyph[];
-    screenOrientation: string;
     alwaysBuild: boolean;
 
     vector: boolean;
@@ -1533,7 +1528,6 @@ export class Font extends EezObject {
             ascent: observable,
             descent: observable,
             glyphs: observable,
-            screenOrientation: observable,
             alwaysBuild: observable,
             vector: observable,
             vectorFeatures: observable,
@@ -1609,9 +1603,7 @@ export class Font extends EezObject {
                 readOnlyInPropertyGrid: true,
                 enumDisallowUndefined: true,
                 disabled: (font: Font) =>
-                    (isNotV1Project(font) &&
-                        !isLVGLProject(font) &&
-                        !isEezGuiLiteProject(font)) ||
+                    (!isLVGLProject(font) && !isEezGuiLiteProject(font)) ||
                     (isLVGLProject(font) && font.lvglUseFreeType)
             },
             {
@@ -1658,22 +1650,6 @@ export class Font extends EezObject {
                 type: PropertyType.Array,
                 isOptional: true,
                 hideInPropertyGrid: true
-            },
-            {
-                name: "screenOrientation",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "all"
-                    },
-                    {
-                        id: "portrait"
-                    },
-                    {
-                        id: "landscape"
-                    }
-                ],
-                disabled: isNotV1Project
             },
             {
                 name: "alwaysBuild",
@@ -2239,7 +2215,6 @@ export class Font extends EezObject {
                                         type: "enum",
                                         enumItems: [1, 2, 4, 8],
                                         visible: () =>
-                                            isV1Project(parent) ||
                                             isEezGuiLiteProject(parent)
                                     },
                                     {

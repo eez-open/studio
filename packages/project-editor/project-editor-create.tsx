@@ -111,10 +111,7 @@ import "project-editor/flow/components/actions/udp";
 
 import { Bitmap, getBitmapData } from "project-editor/features/bitmap/bitmap";
 import { Font } from "project-editor/features/font/font";
-import {
-    migrateProjectVersion,
-    migrateProjectType
-} from "project-editor/project/migrate-project";
+import { migrateProjectType } from "project-editor/project/migrate-project";
 import {
     getNavigationObject,
     navigateTo,
@@ -267,7 +264,6 @@ export function createProjectEditor(
         getWidget,
         getWidgetParent,
         getBitmapData,
-        migrateProjectVersion,
         migrateProjectType,
         migrateLvglVersion,
         getNavigationObject,

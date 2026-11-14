@@ -16,10 +16,6 @@ Style is used to render a button that is not selected.
 
 Determines which button is selected. It is a zero-based integer, which means that if its value is 0, the first button will be selected, if its value is 1, the second button will be selected, etc. If we want no button to be selected, we will use the value -1.
 
-## Selected style
-
-Style used to render the selected button.
-
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

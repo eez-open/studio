@@ -19,13 +19,6 @@ If an expression is used for the `Text` property that cannot be calculated durin
 ## Static text [EMPTY]
 
 
-## Ignore luminocity [EMPTY]
-
-
-## Focused style
-
-Style to be used for rendering if the Widget is in focus.
-
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

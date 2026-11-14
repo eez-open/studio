@@ -38,8 +38,7 @@ import {
 import {
     isLVGLProject,
     isNotDashboardProject,
-    isNotLVGLProject,
-    isNotV1Project
+    isNotLVGLProject
 } from "project-editor/project/project-type-traits";
 
 import type { Action } from "project-editor/features/action/action";
@@ -93,7 +92,6 @@ export class BuildConfiguration extends EezObject {
     name: string;
     description: string;
     properties: string;
-    screenOrientation: "landscape" | "portrait";
 
     static classInfo: ClassInfo = {
         properties: [
@@ -109,19 +107,6 @@ export class BuildConfiguration extends EezObject {
             {
                 name: "properties",
                 type: PropertyType.JSON
-            },
-            {
-                name: "screenOrientation",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "landscape"
-                    },
-                    {
-                        id: "portrait"
-                    }
-                ],
-                disabled: isNotV1Project
             }
         ],
         newItem: async (parent: IEezObject) => {
@@ -177,8 +162,7 @@ export class BuildConfiguration extends EezObject {
         makeObservable(this, {
             name: observable,
             description: observable,
-            properties: observable,
-            screenOrientation: observable
+            properties: observable
         });
     }
 }
@@ -760,7 +744,7 @@ registerClass("ResourceFile", ResourceFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export type ProjectVersion = "v1" | "v2" | "v3";
+export type ProjectVersion = "v3";
 
 export const PROJECT_TYPE_NAMES = {
     [ProjectType.UNDEFINED]: "Undefined",
@@ -861,29 +845,12 @@ export class General extends EezObject {
                 readOnlyInPropertyGrid: (general: General) =>
                     general.projectType != ProjectType.UNDEFINED
             },
+            // always "v3": the projects of the older versions are not opened
+            // (see checkProjectVersion in store/serialization.ts)
             {
                 name: "projectVersion",
-                displayName: (object: General) => {
-                    if (object.projectType == ProjectType.RESOURCE) {
-                        return "Target BB3 firmware";
-                    }
-                    return "Project version";
-                },
-                type: PropertyType.Enum,
-                enumItems: (object: General) => {
-                    if (object.projectType == ProjectType.RESOURCE) {
-                        return [
-                            { id: "v2", label: "1.7.X or older" },
-                            { id: "v3", label: "1.8 or newer" }
-                        ];
-                    } else {
-                        return [{ id: "v1" }, { id: "v2" }, { id: "v3" }];
-                    }
-                },
-                disabled: (general: General) =>
-                    general.projectType != ProjectType.UNDEFINED &&
-                    general.projectType != ProjectType.RESOURCE &&
-                    general.projectVersion == "v3"
+                type: PropertyType.String,
+                hideInPropertyGrid: true
             },
             {
                 name: "commandsProtocol",
@@ -1210,21 +1177,15 @@ export class General extends EezObject {
             }
         },
         beforeLoadHook(object: IEezObject, jsObject: any) {
-            if (!jsObject.projectType) {
-                if (jsObject.projectVersion === "v1") {
-                    jsObject.projectType = ProjectType.FIRMWARE;
-                } else {
-                    if (!jsObject.projectVersion) {
-                        jsObject.projectVersion = "v3";
-                    }
+            jsObject.projectVersion = "v3";
 
-                    if (jsObject.masterProject) {
-                        jsObject.projectType = ProjectType.RESOURCE;
-                    } else if (jsObject.namespace) {
-                        jsObject.projectType = ProjectType.FIRMWARE_MODULE;
-                    } else {
-                        jsObject.projectType = ProjectType.FIRMWARE;
-                    }
+            if (!jsObject.projectType) {
+                if (jsObject.masterProject) {
+                    jsObject.projectType = ProjectType.RESOURCE;
+                } else if (jsObject.namespace) {
+                    jsObject.projectType = ProjectType.FIRMWARE_MODULE;
+                } else {
+                    jsObject.projectType = ProjectType.FIRMWARE;
                 }
             } else {
                 if (jsObject.projectType == "master") {

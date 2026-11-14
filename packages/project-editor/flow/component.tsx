@@ -62,8 +62,7 @@ import {
     isLVGLProject,
     isNotDashboardProject,
     isNotLVGLProject,
-    isNotProjectWithFlowSupport,
-    isV3OrNewerProject
+    isNotProjectWithFlowSupport
 } from "project-editor/project/project-type-traits";
 import { isOverlappingChildrenSupported } from "project-editor/flow/components/widgets/overlapping-widgets";
 import { objectToJS } from "project-editor/store";
@@ -737,14 +736,13 @@ export function getWidgetParent(widget: Component | Page) {
     return parent as Component | Page;
 }
 
-// A row or column: a Container of an EEZ-GUI v3 project with the layout
+// A row or column: a Container of an EEZ-GUI project with the layout
 // horizontal or vertical, eez-framework lays out its children (gui/layout.h).
 export function isRowOrColumn(object: IEezObject) {
     return (
         object instanceof ProjectEditor.ContainerWidgetClass &&
         (object.layout == "horizontal" || object.layout == "vertical") &&
-        isEezGuiProject(object) &&
-        isV3OrNewerProject(object)
+        isEezGuiProject(object)
     );
 }
 
@@ -3533,12 +3531,9 @@ export class Widget extends Component {
                         })
                     );
 
-                    // rows and columns: EEZ-GUI v3 projects (eez-framework
+                    // rows and columns: EEZ-GUI projects (eez-framework
                     // gui/layout.h)
-                    if (
-                        isEezGuiProject(objects[0]) &&
-                        isV3OrNewerProject(objects[0])
-                    ) {
+                    if (isEezGuiProject(objects[0])) {
                         for (const [label, layout] of [
                             ["Put in Row", "horizontal"],
                             ["Put in Column", "vertical"]

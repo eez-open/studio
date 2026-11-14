@@ -8,12 +8,6 @@ This Widget renders a solid rectangle using the background color from the `Defau
 
 Style used when rendering the background of the Widget.
 
-## Invert colors [EMPTY]
-
-
-## Ignore luminocity [EMPTY]
-
-
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

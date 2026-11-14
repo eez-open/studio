@@ -82,19 +82,6 @@ export const PropertyGrid = observer(
 
             if (
                 this.objects.length == 1 &&
-                (propertyValues as any).projectVersion != undefined
-            ) {
-                const project = ProjectEditor.getProject(this.objects[0]);
-                if (project.settings.general == this.objects[0]) {
-                    ProjectEditor.migrateProjectVersion(
-                        project,
-                        (propertyValues as any).projectVersion
-                    );
-                }
-            }
-
-            if (
-                this.objects.length == 1 &&
                 ((propertyValues as any).projectType != undefined ||
                     (propertyValues as any).flowSupport != undefined)
             ) {

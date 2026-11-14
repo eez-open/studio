@@ -19,10 +19,6 @@ Style to be used for rendering if the Widget is enabled.
 
 If it is true, then the button is enabled, otherwise it will be eisabled.
 
-## Disabled style
-
-Style to be used for rendering if the Widget is disabled.
-
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

@@ -43,9 +43,7 @@ import {
 import {
     isDashboardProject,
     isEezGuiProject,
-    isNotDashboardProject,
-    isV1Project,
-    isV3OrNewerProject
+    isNotDashboardProject
 } from "project-editor/project/project-type-traits";
 import { getProjectStore } from "project-editor/store";
 import { validators } from "eez-studio-shared/validation";
@@ -271,7 +269,7 @@ const useStyleProperty: PropertyInfo = {
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "allStyles",
     disabled: (style: Style) =>
-        !isNotEezGuiV3Style(style) &&
+        !isNotEezGuiStyle(style) &&
         !isWidgetParentOfStyle(style) &&
         !style.state,
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
@@ -331,7 +329,7 @@ const useStyleProperty: PropertyInfo = {
 
                                 // in EEZ-GUI v3 projects the new style is
                                 // complete (all the values the style has)
-                                const isComplete = !isNotEezGuiV3Style(object);
+                                const isComplete = !isNotEezGuiStyle(object);
 
                                 properties.forEach(propertyInfo => {
                                     stylePropertyValues[propertyInfo.name] =
@@ -766,14 +764,6 @@ const paddingProperty: PropertyInfo = {
     inheritable: true
 };
 
-const marginProperty: PropertyInfo = {
-    name: "margin",
-    type: PropertyType.String,
-    defaultValue: "0",
-    inheritable: true,
-    disabled: isV3OrNewerProject
-};
-
 const opacityProperty: PropertyInfo = {
     name: "opacity",
     type: PropertyType.Number,
@@ -801,17 +791,16 @@ const blinkProperty: PropertyInfo = {
     checkboxStyleSwitch: true
 };
 
-// The properties of the styles of the EEZ-GUI v3 projects (eez-framework),
+// The properties of the styles of the EEZ-GUI projects (eez-framework),
 // hidden in LVGL and dashboard projects.
-function isNotEezGuiV3Style(object: IEezObject) {
-    return !isEezGuiProject(object) || !isV3OrNewerProject(object);
+function isNotEezGuiStyle(object: IEezObject) {
+    return !isEezGuiProject(object);
 }
 
-// The active and focus colors are in the EEZ-GUI v2 and dashboard projects
-// (the EEZ-GUI v3 projects have the pressed and focused state styles, an
-// EEZ-GUI v1 project has no active and focus colors).
+// The active and focus colors are in the dashboard projects (the EEZ-GUI
+// projects have the pressed and focused state styles).
 function isNotOldStateColorStyle(object: IEezObject) {
-    return isV1Project(object) || !isNotEezGuiV3Style(object);
+    return isEezGuiProject(object);
 }
 
 // the states of a widget with their own style, in the order of
@@ -836,7 +825,7 @@ const stateProperty: PropertyInfo = {
     enumItems: STYLE_STATES.map(id => ({ id })),
     nonInheritable: true,
     disabled: (style: Style) =>
-        isNotEezGuiV3Style(style) || isWidgetParentOfStyle(style)
+        isNotEezGuiStyle(style) || isWidgetParentOfStyle(style)
 };
 
 const letterSpacingProperty: PropertyInfo = {
@@ -845,7 +834,7 @@ const letterSpacingProperty: PropertyInfo = {
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const lineHeightProperty: PropertyInfo = {
@@ -854,7 +843,7 @@ const lineHeightProperty: PropertyInfo = {
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const ellipsisProperty: PropertyInfo = {
@@ -863,7 +852,7 @@ const ellipsisProperty: PropertyInfo = {
     defaultValue: false,
     inheritable: true,
     checkboxStyleSwitch: true,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const focusRingWidthProperty: PropertyInfo = {
@@ -872,7 +861,7 @@ const focusRingWidthProperty: PropertyInfo = {
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const focusRingOffsetProperty: PropertyInfo = {
@@ -881,7 +870,7 @@ const focusRingOffsetProperty: PropertyInfo = {
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const focusRingColorProperty: PropertyInfo = {
@@ -892,7 +881,7 @@ const focusRingColorProperty: PropertyInfo = {
     defaultValue: "transparent",
     inheritable: true,
     propertyMenu,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const shadowOffsetXProperty: PropertyInfo = {
@@ -901,7 +890,7 @@ const shadowOffsetXProperty: PropertyInfo = {
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const shadowOffsetYProperty: PropertyInfo = {
@@ -910,7 +899,7 @@ const shadowOffsetYProperty: PropertyInfo = {
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const shadowBlurProperty: PropertyInfo = {
@@ -919,7 +908,7 @@ const shadowBlurProperty: PropertyInfo = {
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const shadowSpreadProperty: PropertyInfo = {
@@ -928,7 +917,7 @@ const shadowSpreadProperty: PropertyInfo = {
     type: PropertyType.Number,
     defaultValue: 0,
     inheritable: true,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 const shadowColorProperty: PropertyInfo = {
@@ -939,7 +928,7 @@ const shadowColorProperty: PropertyInfo = {
     defaultValue: "transparent",
     inheritable: true,
     propertyMenu,
-    disabled: isNotEezGuiV3Style
+    disabled: isNotEezGuiStyle
 };
 
 // the number properties of the EEZ-GUI v3 styles: name, label in the check
@@ -1042,7 +1031,6 @@ const properties = [
     borderColorProperty,
     borderStyleProperty,
     paddingProperty,
-    marginProperty,
     opacityProperty,
     boxShadowProperty,
     blinkProperty,
@@ -1103,7 +1091,6 @@ export class Style extends EezObject {
     borderColor?: string;
     borderStyle?: string;
     padding?: string;
-    margin?: string;
     opacity: number;
     boxShadow?: string;
     blink?: boolean;
@@ -1190,10 +1177,6 @@ export class Style extends EezObject {
 
             paddingRect: keepAliveComputed(),
 
-            marginProperty: keepAliveComputed(),
-
-            marginRect: keepAliveComputed(),
-
             opacityProperty: keepAliveComputed(),
 
             boxShadowProperty: keepAliveComputed(),
@@ -1256,7 +1239,6 @@ export class Style extends EezObject {
             borderColor: observable,
             borderStyle: observable,
             padding: observable,
-            margin: observable,
             opacity: observable,
             boxShadow: observable,
             blink: observable,
@@ -1327,7 +1309,7 @@ export class Style extends EezObject {
         },
         // no child styles in EEZ-GUI v3 projects
         findPastePlaceInside: (style: Style) =>
-            isNotEezGuiV3Style(style) ? style.childStyles : undefined,
+            isNotEezGuiStyle(style) ? style.childStyles : undefined,
         isPropertyMenuSupported: true,
         newItem: async (parent: IEezObject) => {
             const result = await showGenericDialog({
@@ -1408,7 +1390,7 @@ export class Style extends EezObject {
                 borderColorValue.trim().split(/\s+/).length > 1
             ) {
                 const sides = getBorderColors(borderColorValue);
-                if (isNotEezGuiV3Style(style)) {
+                if (isNotEezGuiStyle(style)) {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
@@ -1447,7 +1429,7 @@ export class Style extends EezObject {
             checkColor("focusRingColor");
             checkColor("shadowColor");
 
-            if (!isNotEezGuiV3Style(style)) {
+            if (!isNotEezGuiStyle(style)) {
                 for (const range of NUMBER_PROPERTY_RANGES) {
                     const value = (style as any)[range.name];
                     if (value == undefined) {
@@ -1604,42 +1586,37 @@ export class Style extends EezObject {
                         );
                     }
 
-                    if (
-                        projectStore.project.settings.general.projectVersion !==
-                        "v1"
-                    ) {
-                        if (isNaN(style.activeColor16)) {
-                            messages.push(
-                                propertyInvalidValueMessage(
-                                    style,
-                                    "activeColor"
-                                )
-                            );
-                        }
+                    if (isNaN(style.activeColor16)) {
+                        messages.push(
+                            propertyInvalidValueMessage(
+                                style,
+                                "activeColor"
+                            )
+                        );
+                    }
 
-                        if (isNaN(style.activeBackgroundColor16)) {
-                            messages.push(
-                                propertyInvalidValueMessage(
-                                    style,
-                                    "activeBackgroundColor"
-                                )
-                            );
-                        }
+                    if (isNaN(style.activeBackgroundColor16)) {
+                        messages.push(
+                            propertyInvalidValueMessage(
+                                style,
+                                "activeBackgroundColor"
+                            )
+                        );
+                    }
 
-                        if (isNaN(style.focusColor16)) {
-                            messages.push(
-                                propertyInvalidValueMessage(style, "focusColor")
-                            );
-                        }
+                    if (isNaN(style.focusColor16)) {
+                        messages.push(
+                            propertyInvalidValueMessage(style, "focusColor")
+                        );
+                    }
 
-                        if (isNaN(style.focusBackgroundColor16)) {
-                            messages.push(
-                                propertyInvalidValueMessage(
-                                    style,
-                                    "focusBackgroundColor"
-                                )
-                            );
-                        }
+                    if (isNaN(style.focusBackgroundColor16)) {
+                        messages.push(
+                            propertyInvalidValueMessage(
+                                style,
+                                "focusBackgroundColor"
+                            )
+                        );
                     }
 
                     if (isNaN(style.borderColor16)) {
@@ -1661,20 +1638,6 @@ export class Style extends EezObject {
                         );
                     }
 
-                    if (!isV3OrNewerProject(style)) {
-                        let marginError = Style.getRect(
-                            style.marginProperty
-                        ).error;
-                        if (marginError) {
-                            messages.push(
-                                new Message(
-                                    MessageType.ERROR,
-                                    `"Margin": ${marginError}.`,
-                                    getChildOfObject(style, "margin")
-                                )
-                            );
-                        }
-                    }
                 }
             }
         },
@@ -2118,14 +2081,6 @@ export class Style extends EezObject {
         return Style.getRect(this.paddingProperty).rect;
     }
 
-    get marginProperty(): string {
-        return getStyleProperty(this, "margin");
-    }
-
-    get marginRect() {
-        return Style.getRect(this.marginProperty).rect;
-    }
-
     get opacityProperty(): number {
         const opacity = getStyleProperty(this, "opacity");
         if (isNaN(opacity)) {
@@ -2214,7 +2169,7 @@ export class Style extends EezObject {
     get stateDeltas():
         | Partial<Record<StyleStateName, { [propertyName: string]: any }>>
         | undefined {
-        if (this.isStateStyle || this.state || isNotEezGuiV3Style(this)) {
+        if (this.isStateStyle || this.state || isNotEezGuiStyle(this)) {
             return undefined;
         }
 
@@ -2305,7 +2260,6 @@ export class Style extends EezObject {
             this.borderColorProperty === otherStyle.borderColorProperty &&
             this.borderStyleProperty === otherStyle.borderStyleProperty &&
             this.paddingProperty === otherStyle.paddingProperty &&
-            this.marginProperty === otherStyle.marginProperty &&
             this.opacityProperty === otherStyle.opacityProperty &&
             this.boxShadowProperty === otherStyle.boxShadowProperty &&
             this.blinkProperty === otherStyle.blinkProperty &&
@@ -2917,14 +2871,11 @@ const EEZ_GUI_PROJECT_TYPES = [
     "applet"
 ];
 
-// the project JSON of an EEZ-GUI v3 project (see isNotEezGuiV3Style)
-function isEezGuiV3ProjectJs(projectJs: any) {
+// the project JSON of an EEZ-GUI project (see isNotEezGuiStyle)
+function isEezGuiProjectJs(projectJs: any) {
     const general = projectJs?.settings?.general;
     return (
-        !!general &&
-        EEZ_GUI_PROJECT_TYPES.indexOf(general.projectType) != -1 &&
-        general.projectVersion != "v1" &&
-        general.projectVersion != "v2"
+        !!general && EEZ_GUI_PROJECT_TYPES.indexOf(general.projectType) != -1
     );
 }
 
@@ -2946,7 +2897,7 @@ function hasStyleInheritanceJs(styles: any[] | undefined) {
 // flattenEezGuiStylesJs), the looks of the states as state styles (see
 // convertEezGuiStateLooksJs).
 export function convertEezGuiProjectStylesJs(projectJs: any) {
-    if (!isEezGuiV3ProjectJs(projectJs)) {
+    if (!isEezGuiProjectJs(projectJs)) {
         return;
     }
     flattenEezGuiProjectStylesJs(projectJs);
@@ -2980,7 +2931,7 @@ function flattenEezGuiProjectStylesJs(projectJs: any) {
                     "utf8"
                 )
             );
-            if (isEezGuiV3ProjectJs(masterProjectJs)) {
+            if (isEezGuiProjectJs(masterProjectJs)) {
                 flattenEezGuiStylesJs(masterProjectJs, undefined);
                 masterStyles = masterProjectJs.styles;
             }

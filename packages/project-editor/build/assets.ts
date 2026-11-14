@@ -87,8 +87,6 @@ import {
 } from "project-editor/store";
 import { ValueType } from "project-editor/features/variable/value-type";
 
-import { build as buildV1 } from "project-editor/build/v1";
-import { build as buildV2 } from "project-editor/build/v2";
 import {
     dumpData,
     getName,
@@ -2091,14 +2089,6 @@ export async function buildAssets(
     buildConfiguration: BuildConfiguration | undefined,
     option: "check" | "buildAssets" | "buildFiles"
 ): Promise<BuildResult> {
-    if (project.settings.general.projectVersion === "v1") {
-        return buildV1(project, sectionNames, buildConfiguration);
-    }
-
-    if (project.settings.general.projectVersion === "v2") {
-        return buildV2(project, sectionNames, buildConfiguration);
-    }
-
     // eez-gui-lite builds its own code, without the EEZ-GUI assets
     if (project.projectTypeTraits.isEezGuiLite) {
         return buildEezGuiLiteSections(project, sectionNames, option);

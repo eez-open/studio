@@ -326,24 +326,6 @@ export function isNotProjectWithFlowSupport(object: IEezObject) {
     return !isProjectWithFlowSupport(object);
 }
 
-export function isV1Project(object: IEezObject) {
-    const project = ProjectEditor.getProject(object);
-    return project.settings.general.projectVersion === "v1";
-}
-
-export function isNotV1Project(object: IEezObject) {
-    const project = ProjectEditor.getProject(object);
-    return project.settings.general.projectVersion !== "v1";
-}
-
-export function isV3OrNewerProject(object: IEezObject) {
-    const project = ProjectEditor.getProject(object);
-    return (
-        project.settings.general.projectVersion !== "v1" &&
-        project.settings.general.projectVersion !== "v2"
-    );
-}
-
 export function isLVGLProject(object: IEezObject) {
     const project = ProjectEditor.getProject(object);
     return project.projectTypeTraits.isLVGL;

@@ -234,8 +234,6 @@ export class WizardModel {
     bb3ProjectFile: string | undefined;
     bb3ProjectFileError: string | undefined;
 
-    projectVersion: string = "v3";
-
     createProjectInProgress: boolean = false;
 
     templateProjects: TemplateProject[] = [];
@@ -257,7 +255,6 @@ export class WizardModel {
         createDirectory: boolean;
         bb3ProjectOption: "download" | "local";
         bb3ProjectFile: string | undefined;
-        projectVersion: string;
         gitClone: boolean;
         gitInit: boolean;
         lvglVersion: string;
@@ -283,7 +280,6 @@ export class WizardModel {
             bb3ProjectFileDownloadError: observable,
             bb3ProjectFile: observable,
             bb3ProjectFileError: observable,
-            projectVersion: observable,
             templateProjects: observable,
             projectCreationError: observable,
             gitClone: observable,
@@ -339,7 +335,6 @@ export class WizardModel {
                     this.createDirectory = options.createDirectory;
                     this.bb3ProjectOption = options.bb3ProjectOption;
                     this.bb3ProjectFile = options.bb3ProjectFile;
-                    this.projectVersion = options.projectVersion;
                     this.gitClone = options.gitClone;
                     this.gitInit = options.gitInit;
                     this.lvglVersion = options.lvglVersion ?? "8.4.0";
@@ -355,7 +350,6 @@ export class WizardModel {
             createDirectory: this.createDirectory,
             bb3ProjectOption: this.bb3ProjectOption,
             bb3ProjectFile: this.bb3ProjectFile,
-            projectVersion: this.projectVersion,
             gitClone: this.gitClone,
             gitInit: this.gitInit,
             lvglVersion: this.lvglVersion,
@@ -378,7 +372,6 @@ export class WizardModel {
                     createDirectory: this.createDirectory,
                     bb3ProjectOption: this.bb3ProjectOption,
                     bb3ProjectFile: this.bb3ProjectFile,
-                    projectVersion: this.projectVersion,
                     gitClone: this.gitClone,
                     gitInit: this.gitInit,
                     lvglVersion: this.lvglVersion,
@@ -391,7 +384,6 @@ export class WizardModel {
                 createDirectory: this.createDirectory,
                 bb3ProjectOption: this.bb3ProjectOption,
                 bb3ProjectFile: this.bb3ProjectFile,
-                projectVersion: this.projectVersion,
                 gitClone: this.gitClone,
                 gitInit: this.gitInit,
                 lvglVersion: this.lvglVersion,
@@ -411,7 +403,6 @@ export class WizardModel {
                     createDirectory: this.lastOptions.createDirectory,
                     bb3ProjectOption: this.lastOptions.bb3ProjectOption,
                     bb3ProjectFile: this.lastOptions.bb3ProjectFile,
-                    projectVersion: this.lastOptions.projectVersion,
                     gitClone: this.lastOptions.gitClone,
                     gitInit: this.lastOptions.gitInit,
 
@@ -1236,9 +1227,7 @@ export class WizardModel {
     downloadBB3ProjectFile() {
         return new Promise<void>((resolve, reject) => {
             const bb3ProjectFileUrl =
-                this.projectVersion == "v3"
-                    ? "https://raw.githubusercontent.com/eez-open/modular-psu-firmware/master/modular-psu-firmware.eez-project"
-                    : "https://raw.githubusercontent.com/eez-open/modular-psu-firmware/1.7.3/modular-psu-firmware.eez-project";
+                "https://raw.githubusercontent.com/eez-open/modular-psu-firmware/master/modular-psu-firmware.eez-project";
 
             let req = new XMLHttpRequest();
             req.responseType = "json";
@@ -1622,9 +1611,7 @@ export class WizardModel {
                         return false;
                     }
 
-                    // set projectVersion
-                    projectTemplate.settings.general.projectVersion =
-                        this.type == "resource" ? this.projectVersion : "v3";
+                    projectTemplate.settings.general.projectVersion = "v3";
 
                     if (this.type == "applet" || this.type == "resource") {
                         // set masterProject
@@ -2568,68 +2555,6 @@ const ProjectProperties = observer(
                                     </>
                                 )}
 
-                            {wizardModel.section == "templates" &&
-                                wizardModel.type == "resource" && (
-                                    <div className="mb-3">
-                                        <label className="form-label">
-                                            Target BB3 firmware
-                                        </label>
-
-                                        <div className="form-check ms-4">
-                                            <input
-                                                id="new-project-wizard-bb3-target-version-v3"
-                                                className="form-check-input"
-                                                type="radio"
-                                                name="new-project-wizard-bb3-target"
-                                                value={"v3"}
-                                                checked={
-                                                    wizardModel.projectVersion ==
-                                                    "v3"
-                                                }
-                                                onChange={action(
-                                                    event =>
-                                                        (wizardModel.projectVersion =
-                                                            event.target.checked
-                                                                ? "v3"
-                                                                : "v2")
-                                                )}
-                                            />
-                                            <label
-                                                className="form-check-label"
-                                                htmlFor="new-project-wizard-bb3-target-version-v3"
-                                            >
-                                                1.8 or newer
-                                            </label>
-                                        </div>
-
-                                        <div className="form-check ms-4">
-                                            <input
-                                                id="new-project-wizard-bb3-target-version-v2"
-                                                className="form-check-input"
-                                                type="radio"
-                                                name="new-project-wizard-bb3-target"
-                                                value={"v2"}
-                                                checked={
-                                                    wizardModel.projectVersion ==
-                                                    "v2"
-                                                }
-                                                onChange={action(
-                                                    event =>
-                                                        (wizardModel.projectVersion =
-                                                            event.target.checked
-                                                                ? "v2"
-                                                                : "v3")
-                                                )}
-                                            />
-                                            <label
-                                                className="form-check-label"
-                                                htmlFor="new-project-wizard-bb3-target-version-v2"
-                                            >
-                                                1.7.X or older
-                                            </label>
-                                        </div>
-                                    </div>
-                                )}
 
                             <div className="d-flex justify-content-end">
                                 {wizardModel.section == "templates" ? (

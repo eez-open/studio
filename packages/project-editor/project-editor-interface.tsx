@@ -55,10 +55,7 @@ import type {
     getBitmapData
 } from "project-editor/features/bitmap/bitmap";
 import type { Font } from "project-editor/features/font/font";
-import type {
-    migrateProjectVersion,
-    migrateProjectType
-} from "project-editor/project/migrate-project";
+import type { migrateProjectType } from "project-editor/project/migrate-project";
 import type {
     getNavigationObject,
     navigateTo,
@@ -227,7 +224,6 @@ export interface IProjectEditor {
     getWidget: typeof getWidget;
     getWidgetParent: typeof getWidgetParent;
     getBitmapData: typeof getBitmapData;
-    migrateProjectVersion: typeof migrateProjectVersion;
     migrateProjectType: typeof migrateProjectType;
     migrateLvglVersion: typeof migrateLvglVersion;
     getNavigationObject: typeof getNavigationObject;

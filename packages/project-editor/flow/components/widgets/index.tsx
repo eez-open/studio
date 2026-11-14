@@ -93,10 +93,7 @@ import {
     WIDGET_TYPE_USER_WIDGET
 } from "project-editor/flow/components/component-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    isEezGuiProject,
-    isV3OrNewerProject
-} from "project-editor/project/project-type-traits";
+import { isEezGuiProject } from "project-editor/project/project-type-traits";
 import {
     getEditorWidgetBox,
     isScrollableInEditor
@@ -516,7 +513,6 @@ export class ContainerWidget extends Widget {
                 propertyGridGroup: layoutGroup,
                 hideInPropertyGrid: (widget: ContainerWidget) =>
                     !isEezGuiProject(widget) ||
-                    !isV3OrNewerProject(widget) ||
                     widget.layout == "docking-manager"
             },
             {

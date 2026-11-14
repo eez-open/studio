@@ -12,10 +12,6 @@ An expression that, when calculated, is converted into a string and displayed in
 
 Style used when rendering of the Widget.
 
-## Focused style
-
-Style to be used for rendering if the Widget is in focus.
-
 ## Display option
 
 If the calculated `Data` is a floating point number, then with this property we can choose which part of the floating point number is displayed:

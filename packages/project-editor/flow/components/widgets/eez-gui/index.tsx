@@ -30,14 +30,11 @@ import {
     IContextMenuContext,
     objectToJS,
     replaceObject,
-    createObject,
-    getSerializationProjectStore
+    createObject
 } from "project-editor/store";
 import {
     isProjectWithFlowSupport,
-    isNotV1Project,
     isNotProjectWithFlowSupport,
-    isV3OrNewerProject,
     hasNotFlowSupport,
     hasFlowSupport
 } from "project-editor/project/project-type-traits";
@@ -159,45 +156,6 @@ import { isArray } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// A style of a widget state in the EEZ-GUI v1/v2 projects (the disabled style
-// of the Button, ...). In the EEZ-GUI v3 projects a widget is drawn in the
-// states of its style, the style of the state is a state style (the load turns
-// these properties of an older project into state styles, see
-// convertEezGuiStateLooksJs in features/style/style.tsx).
-function makeOldStateStylePropertyInfo(name: string, displayName?: string) {
-    return Object.assign(makeStylePropertyInfo(name, displayName), {
-        disabled: isV3OrNewerProject,
-        isOptional: isOldStateStyleOptional
-    });
-}
-
-// Optional in the v3 projects. Also asked while an object is loaded, when a
-// widget created on its own (palette, paste, previews) has no project yet:
-// then the project of the store it is created in.
-function isOldStateStyleOptional(object: IEezObject) {
-    const project = getProject(object);
-    if (project && project.settings) {
-        return isV3OrNewerProject(project);
-    }
-    const storeProject = getSerializationProjectStore()?.project;
-    return storeProject ? isV3OrNewerProject(storeProject) : true;
-}
-
-// only the v1/v2 projects have the widget state styles
-function migrateOldStateStyleProperty(
-    jsObject: any,
-    propertyName: string,
-    project: Project
-) {
-    if (isV3OrNewerProject(project)) {
-        delete jsObject[propertyName];
-    } else {
-        migrateStyleProperty(jsObject, propertyName);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 enum DisplayOption {
     All = 0,
     Integer = 1,
@@ -258,7 +216,6 @@ const labelPositionPropertyInfo: PropertyInfo = {
 
 export class DisplayDataWidget extends Widget {
     preview: string;
-    focusStyle: Style;
     displayOption: DisplayOption;
     unitAndFractionFont: string;
     refreshRate: string;
@@ -308,10 +265,6 @@ export class DisplayDataWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             makeStylePropertyInfo("style", "Default style"),
-            Object.assign(
-                makeOldStateStylePropertyInfo("focusStyle", "Focused style"),
-                { hideInPropertyGrid: isNotV1Project }
-            ),
             makeStylePropertyInfo("labelStyle", "Label style", {
                 styleWithoutFont: true
             }),
@@ -407,7 +360,6 @@ export class DisplayDataWidget extends Widget {
             jsObject: any,
             project: Project
         ) => {
-            migrateOldStateStyleProperty(jsObject, "focusStyle", project);
             migrateOptionalStyleProperty(jsObject, "labelStyle");
             migrateOptionalStyleProperty(jsObject, "unitStyle");
             if (jsObject.refreshRate == undefined) {
@@ -448,13 +400,7 @@ export class DisplayDataWidget extends Widget {
             }
 
             if (object.displayOption === undefined) {
-                if (
-                    getProject(object).settings.general.projectVersion !== "v1"
-                ) {
-                    messages.push(
-                        propertyNotSetMessage(object, "displayOption")
-                    );
-                }
+                messages.push(propertyNotSetMessage(object, "displayOption"));
             }
 
             // The widget's own unit and fraction font is used if the display
@@ -490,7 +436,6 @@ export class DisplayDataWidget extends Widget {
 
         makeObservable(this, {
             preview: observable,
-            focusStyle: observable,
             displayOption: observable,
             unitAndFractionFont: observable,
             refreshRate: observable,
@@ -561,14 +506,12 @@ export class DisplayDataWidget extends Widget {
 
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        if (isV3OrNewerProject(this)) {
-            // refreshRate
-            dataBuffer.writeInt16(
-                assets.projectStore.projectTypeTraits.hasFlowSupport
-                    ? assets.getWidgetDataItemIndex(this, "refreshRate")
-                    : 0
-            );
-        }
+        // refreshRate
+        dataBuffer.writeInt16(
+            assets.projectStore.projectTypeTraits.hasFlowSupport
+                ? assets.getWidgetDataItemIndex(this, "refreshRate")
+                : 0
+        );
 
         // displayOption, in the page layout which is built
         const displayOption = assets.getPropertyValue(this, "displayOption");
@@ -626,7 +569,6 @@ export class TextWidget extends Widget {
     name: string;
     text?: string;
     preview: string;
-    focusStyle: Style;
     fitToContent: TextWidgetFitToContent;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -697,11 +639,7 @@ export class TextWidget extends Widget {
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup
             },
-            makeStylePropertyInfo("style", "Default style"),
-            Object.assign(
-                makeOldStateStylePropertyInfo("focusStyle", "Focused style"),
-                { enabled: isNotV1Project }
-            )
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         setRect: (widget: TextWidget, value: Partial<Rect>) => {
@@ -792,8 +730,6 @@ export class TextWidget extends Widget {
                 }
             }
 
-            migrateOldStateStyleProperty(jsObject, "focusStyle", project);
-
             if (jsObject.fitToContent == undefined) {
                 jsObject.fitToContent = "none";
             }
@@ -880,7 +816,6 @@ export class TextWidget extends Widget {
             name: observable,
             text: observable,
             preview: observable,
-            focusStyle: observable,
             fitToContent: observable,
             contentSize: computed
         });
@@ -1040,7 +975,6 @@ export class TextWidget extends Widget {
 
         jsObject.type = "MultilineTextWidget";
         delete jsObject.preview;
-        delete jsObject.focusStyle;
         delete jsObject.fitToContent;
 
         return replaceObject(
@@ -1242,7 +1176,6 @@ registerClass("MultilineTextWidget", MultilineTextWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RectangleWidget extends Widget {
-    invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1252,16 +1185,7 @@ export class RectangleWidget extends Widget {
 
         flowComponentId: WIDGET_TYPE_RECTANGLE,
 
-        properties: [
-            {
-                name: "invertColors",
-                type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup,
-                defaultValue: false,
-                disabled: isV3OrNewerProject
-            },
-            makeStylePropertyInfo("style", "Default style")
-        ],
+        properties: [makeStylePropertyInfo("style", "Default style")],
 
         defaultValue: {
             left: 0,
@@ -1291,25 +1215,9 @@ export class RectangleWidget extends Widget {
         }
     });
 
-    override makeEditable() {
-        super.makeEditable();
-
-        makeObservable(this, {
-            invertColors: observable
-        });
-    }
-
-
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // flags
-        let flags: number = 0;
-
-        // invertColors
-        if (isV3OrNewerProject(this) || this.invertColors) {
-            flags |= 1 << 0;
-        }
-
-        dataBuffer.writeUint8(flags);
+        // flags: invertColors (the style background color fills the widget)
+        dataBuffer.writeUint8(1 << 0);
     }
 }
 
@@ -1543,7 +1451,6 @@ registerClass("BitmapWidget", BitmapWidget);
 export class ButtonWidget extends Widget {
     text?: string;
     enabled?: string;
-    disabledStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1567,8 +1474,7 @@ export class ButtonWidget extends Widget {
                 disabled: isProjectWithFlowSupport
             }),
             makeDataPropertyInfo("enabled"),
-            makeStylePropertyInfo("style", "Default style"),
-            makeOldStateStylePropertyInfo("disabledStyle")
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         beforeLoadHook: (
@@ -1584,8 +1490,6 @@ export class ButtonWidget extends Widget {
                     delete jsObject.text;
                 }
             }
-
-            migrateOldStateStyleProperty(jsObject, "disabledStyle", project);
         },
 
         defaultValue: {
@@ -1655,8 +1559,7 @@ export class ButtonWidget extends Widget {
 
         makeObservable(this, {
             text: observable,
-            enabled: observable,
-            disabledStyle: observable
+            enabled: observable
         });
     }
 
@@ -1699,8 +1602,7 @@ export class ToggleButtonWidget extends Widget {
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
             },
-            makeStylePropertyInfo("style", "Default style"),
-            makeOldStateStylePropertyInfo("checkedStyle")
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         defaultValue: {
@@ -1742,15 +1644,13 @@ export class ToggleButtonWidget extends Widget {
 
     text1?: string;
     text2?: string;
-    checkedStyle: Style;
 
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
             text1: observable,
-            text2: observable,
-            checkedStyle: observable
+            text2: observable
         });
     }
 
@@ -1781,10 +1681,7 @@ export class ButtonGroupWidget extends Widget {
             makeDataPropertyInfo("data", {
                 displayName: (widget: ButtonGroupWidget) => {
                     const project = ProjectEditor.getProject(widget);
-                    if (
-                        project.projectTypeTraits.hasFlowSupport &&
-                        project.settings.general.projectVersion == "v3"
-                    ) {
+                    if (project.projectTypeTraits.hasFlowSupport) {
                         return "Button labels";
                     }
                     return "Data";
@@ -1793,14 +1690,10 @@ export class ButtonGroupWidget extends Widget {
             makeDataPropertyInfo("selectedButton", {
                 disabled: (widget: ButtonGroupWidget) => {
                     const project = ProjectEditor.getProject(widget);
-                    return !(
-                        project.projectTypeTraits.hasFlowSupport &&
-                        project.settings.general.projectVersion == "v3"
-                    );
+                    return !project.projectTypeTraits.hasFlowSupport;
                 }
             }),
-            makeStylePropertyInfo("style", "Default style"),
-            makeOldStateStylePropertyInfo("selectedStyle")
+            makeStylePropertyInfo("style", "Default style")
         ],
 
         defaultValue: {
@@ -1808,10 +1701,6 @@ export class ButtonGroupWidget extends Widget {
             top: 0,
             width: 64,
             height: 32
-        },
-
-        beforeLoadHook: (object: IEezObject, jsObject: any, project: Project) => {
-            migrateOldStateStyleProperty(jsObject, "selectedStyle", project);
         },
 
         icon: (
@@ -1836,24 +1725,18 @@ export class ButtonGroupWidget extends Widget {
         }
     });
 
-    selectedStyle: Style;
     selectedButton: string;
 
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
-            selectedStyle: observable,
             selectedButton: observable
         });
     }
 
     getButtonLabels(flowContext: IFlowContext): string[] {
-        if (
-            flowContext.projectStore.project.projectTypeTraits.hasFlowSupport &&
-            flowContext.projectStore.project.settings.general.projectVersion ==
-                "v3"
-        ) {
+        if (flowContext.projectStore.project.projectTypeTraits.hasFlowSupport) {
             const buttonLabels = getAnyValue(flowContext, this, "data", []);
             if (isArray(buttonLabels)) {
                 return buttonLabels.map(label => label.toString());
@@ -1867,11 +1750,7 @@ export class ButtonGroupWidget extends Widget {
     }
 
     getSelectedButton(flowContext: IFlowContext): number {
-        if (
-            flowContext.projectStore.project.projectTypeTraits.hasFlowSupport &&
-            flowContext.projectStore.project.settings.general.projectVersion ==
-                "v3"
-        ) {
+        if (flowContext.projectStore.project.projectTypeTraits.hasFlowSupport) {
             return 0;
         }
 
@@ -1881,11 +1760,10 @@ export class ButtonGroupWidget extends Widget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // selectedButton
-        let selectedButton =
-            assets.projectStore.project.projectTypeTraits.hasFlowSupport &&
-            assets.projectStore.project.settings.general.projectVersion == "v3"
-                ? assets.getWidgetDataItemIndex(this, "selectedButton")
-                : 0;
+        let selectedButton = assets.projectStore.project.projectTypeTraits
+            .hasFlowSupport
+            ? assets.getWidgetDataItemIndex(this, "selectedButton")
+            : 0;
         dataBuffer.writeInt16(selectedButton);
     }
 }
@@ -2058,20 +1936,18 @@ export class BarGraphWidget extends Widget {
         // line2Style
         dataBuffer.writeInt16(assets.getStyleIndex(this, "line2Style"));
 
-        if (isV3OrNewerProject(this)) {
-            // min
-            dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+        // min
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
 
-            // max
-            dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
+        // max
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
 
-            // refreshRate
-            dataBuffer.writeInt16(
-                assets.projectStore.projectTypeTraits.hasFlowSupport
-                    ? assets.getWidgetDataItemIndex(this, "refreshRate")
-                    : 0
-            );
-        }
+        // refreshRate
+        dataBuffer.writeInt16(
+            assets.projectStore.projectTypeTraits.hasFlowSupport
+                ? assets.getWidgetDataItemIndex(this, "refreshRate")
+                : 0
+        );
 
         // orientation, in the page layout which is built
         let orientation: number;
@@ -2103,10 +1979,6 @@ registerClass("BarGraphWidget", BarGraphWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class YTGraphWidget extends Widget {
-    y1Style: Style;
-    y2Data?: string;
-    y2Style: Style;
-
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
@@ -2117,22 +1989,7 @@ export class YTGraphWidget extends Widget {
 
         flowComponentId: WIDGET_TYPE_YT_GRAPH,
 
-        properties: [
-            Object.assign(makeStylePropertyInfo("y1Style"), {
-                hideInPropertyGrid: isNotV1Project
-            }),
-            Object.assign(makeStylePropertyInfo("y2Style"), {
-                hideInPropertyGrid: isNotV1Project
-            }),
-            Object.assign(makeDataPropertyInfo("y2Data"), {
-                hideInPropertyGrid: isNotV1Project
-            })
-        ],
-
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            migrateStyleProperty(jsObject, "y1Style");
-            migrateStyleProperty(jsObject, "y2Style");
-        },
+        properties: [],
 
         defaultValue: {
             left: 0,
@@ -2160,32 +2017,8 @@ export class YTGraphWidget extends Widget {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
-
-            const project = getProject(object);
-
-            if (project.settings.general.projectVersion === "v1") {
-                if (object.y2Data) {
-                    if (!findVariable(project, object.y2Data)) {
-                        messages.push(
-                            propertyNotFoundMessage(object, "y2Data")
-                        );
-                    }
-                } else {
-                    messages.push(propertyNotSetMessage(object, "y2Data"));
-                }
-            }
         }
     });
-
-    override makeEditable() {
-        super.makeEditable();
-
-        makeObservable(this, {
-            y1Style: observable,
-            y2Data: observable,
-            y2Style: observable
-        });
-    }
 
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {}
@@ -2683,13 +2516,11 @@ export class UpDownWidget extends Widget {
         // buttonStyle
         dataBuffer.writeInt16(assets.getStyleIndex(this, "buttonsStyle"));
 
-        if (isV3OrNewerProject(this)) {
-            // min
-            dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
+        // min
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "min"));
 
-            // max
-            dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
-        }
+        // max
+        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "max"));
     }
 }
 

@@ -20,10 +20,6 @@ The text that is displayed when the Widget is in the `Default` state.
 
 The text that is displayed when the Widget is in the `Checked` state.
 
-## Checked style
-
-Style to be used for rendering if the Widget is the `Checked` state.
-
 # INPUTS [EMPTY]
 
 # OUTPUTS [EMPTY]

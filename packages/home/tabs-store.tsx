@@ -538,7 +538,12 @@ export class ProjectEditorTab implements IHomeTab {
             }
 
             runInAction(() => {
-                this.error = "Failed to load file!";
+                // ProjectLoadError (project-editor/store/serialization.ts):
+                // its message tells why the project isn't opened
+                this.error =
+                    err instanceof Error && err.name == "ProjectLoadError"
+                        ? err.message
+                        : "Failed to load file!";
             });
         }
     }
@@ -930,7 +935,12 @@ export class ProjectEditorTab implements IHomeTab {
                     }}
                 >
                     {this.error ? (
-                        <div className="error">{this.error}</div>
+                        <div
+                            className="error"
+                            style={{ maxWidth: 640, textAlign: "center" }}
+                        >
+                            {this.error}
+                        </div>
                     ) : (
                         <Loader size={60} />
                     )}

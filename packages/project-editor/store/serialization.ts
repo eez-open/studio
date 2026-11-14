@@ -47,6 +47,26 @@ export function createObject<T extends EezObject>(
     return result as T;
 }
 
+// A project file Studio doesn't open, the message is for the user (the project
+// tab shows it).
+export class ProjectLoadError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "ProjectLoadError";
+    }
+}
+
+// The EEZ-GUI projects of version 1 and 2 are opened only by EEZ Studio 0.29.0
+// and older.
+function checkProjectVersion(projectJs: any) {
+    const projectVersion = projectJs?.settings?.general?.projectVersion;
+    if (projectVersion == "v1" || projectVersion == "v2") {
+        throw new ProjectLoadError(
+            `This is an EEZ-GUI ${projectVersion} project. EEZ-GUI projects older than v3 are no longer supported. Use EEZ Studio 0.29.0 or older to open this project.`
+        );
+    }
+}
+
 // isExternalProject: imported or master project loaded into the main project's store
 // filePath: the file of the project, if it is loaded from a file
 export function loadProject(
@@ -56,6 +76,13 @@ export function loadProject(
     isExternalProject: boolean = false,
     filePath?: string
 ): Project {
+    const projectJs =
+        typeof projectObjectOrString == "string"
+            ? JSON.parse(projectObjectOrString)
+            : projectObjectOrString;
+
+    checkProjectVersion(projectJs);
+
     currentProjectStore = projectStore;
     currentLoadFilePath = filePath;
     isLoadProject = true;
@@ -73,7 +100,7 @@ export function loadProject(
     try {
         project = loadObjectInternal(
             undefined,
-            projectObjectOrString,
+            projectJs,
             ProjectEditor.ProjectClass,
             undefined
         ) as Project;
