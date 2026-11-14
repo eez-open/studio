@@ -626,7 +626,6 @@ export class TextWidget extends Widget {
     name: string;
     text?: string;
     preview: string;
-    ignoreLuminocity: boolean;
     focusStyle: Style;
     fitToContent: TextWidgetFitToContent;
 
@@ -684,13 +683,6 @@ export class TextWidget extends Widget {
                 name: "preview",
                 type: PropertyType.String,
                 propertyGridGroup: specificGroup
-            },
-            {
-                name: "ignoreLuminocity",
-                type: PropertyType.Boolean,
-                defaultValue: false,
-                propertyGridGroup: specificGroup,
-                disabled: isV3OrNewerProject
             },
             {
                 name: "fitToContent",
@@ -888,7 +880,6 @@ export class TextWidget extends Widget {
             name: observable,
             text: observable,
             preview: observable,
-            ignoreLuminocity: observable,
             focusStyle: observable,
             fitToContent: observable,
             contentSize: computed
@@ -1049,7 +1040,6 @@ export class TextWidget extends Widget {
 
         jsObject.type = "MultilineTextWidget";
         delete jsObject.preview;
-        delete jsObject.ignoreLuminocity;
         delete jsObject.focusStyle;
         delete jsObject.fitToContent;
 
@@ -1086,11 +1076,6 @@ export class TextWidget extends Widget {
 
         // flags
         let flags: number = 0;
-
-        // ignoreLuminocity
-        if (this.ignoreLuminocity) {
-            flags |= 1 << 0;
-        }
 
         // fitToContent
         if (this.isFitToContentWidth) {
@@ -1257,7 +1242,6 @@ registerClass("MultilineTextWidget", MultilineTextWidget);
 ////////////////////////////////////////////////////////////////////////////////
 
 export class RectangleWidget extends Widget {
-    ignoreLuminocity: boolean;
     invertColors: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -1271,13 +1255,6 @@ export class RectangleWidget extends Widget {
         properties: [
             {
                 name: "invertColors",
-                type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup,
-                defaultValue: false,
-                disabled: isV3OrNewerProject
-            },
-            {
-                name: "ignoreLuminocity",
                 type: PropertyType.Boolean,
                 propertyGridGroup: specificGroup,
                 defaultValue: false,
@@ -1318,7 +1295,6 @@ export class RectangleWidget extends Widget {
         super.makeEditable();
 
         makeObservable(this, {
-            ignoreLuminocity: observable,
             invertColors: observable
         });
     }
@@ -1331,11 +1307,6 @@ export class RectangleWidget extends Widget {
         // invertColors
         if (isV3OrNewerProject(this) || this.invertColors) {
             flags |= 1 << 0;
-        }
-
-        // ignoreLuminocity
-        if (this.ignoreLuminocity) {
-            flags |= 1 << 1;
         }
 
         dataBuffer.writeUint8(flags);

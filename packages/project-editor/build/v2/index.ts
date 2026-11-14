@@ -1075,11 +1075,6 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // flags
         let flags: number = 0;
 
-        // ignoreLuminocity
-        if (widget.ignoreLuminocity) {
-            flags |= 1 << 0;
-        }
-
         specific.addField(new UInt8(flags));
     } else if (type == WIDGET_TYPE_MULTILINE_TEXT) {
         let widget = object as MultilineTextWidget;
@@ -1110,11 +1105,6 @@ function buildWidget(object: Widget | Page, assets: Assets) {
         // invertColors
         if (widget.invertColors) {
             flags |= 1 << 0;
-        }
-
-        // ignoreLuminocity
-        if (widget.ignoreLuminocity) {
-            flags |= 1 << 1;
         }
 
         specific.addField(new UInt8(flags));
