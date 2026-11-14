@@ -16,7 +16,8 @@ import {
     ClassInfo,
     RectObject,
     IMessage,
-    PropertyProps
+    PropertyProps,
+    PropertyInfo
 } from "project-editor/core/object";
 import {
     ProjectStore,
@@ -239,6 +240,22 @@ function findStartOfUnit(text: string) {
     return i;
 }
 
+// The label above the value (top, the default) or left of it (eez-framework
+// ValueParts::labelLeft), of DisplayDataWidget and InputEmbeddedWidget
+type LabelPosition = "top" | "left";
+
+const labelPositionPropertyInfo: PropertyInfo = {
+    name: "labelPosition",
+    displayName: "Label position",
+    type: PropertyType.Enum,
+    enumItems: [
+        { id: "top", label: "Top" },
+        { id: "left", label: "Left" }
+    ],
+    propertyGridGroup: specificGroup,
+    disabled: (widget: IEezObject) => !(widget as { label?: string }).label
+};
+
 export class DisplayDataWidget extends Widget {
     preview: string;
     focusStyle: Style;
@@ -252,10 +269,11 @@ export class DisplayDataWidget extends Widget {
     // step in that unit): eez-framework getValueInUnit
     displayUnit?: string;
     precision?: string;
-    // a text above the value (an expression) in the label style, the unit in
-    // the unit style with the "Value and unit" option (see eez-framework
-    // drawValueParts)
+    // a text above or left of the value (an expression) in the label style,
+    // the unit in the unit style with the "Value and unit" option (see
+    // eez-framework drawValueParts)
     label?: string;
+    labelPosition?: LabelPosition;
     labelStyle: Style;
     unitStyle: Style;
 
@@ -380,7 +398,8 @@ export class DisplayDataWidget extends Widget {
                         ) == DisplayOption.IntegerUnitAndFraction
                 },
                 "string"
-            )
+            ),
+            labelPositionPropertyInfo
         ],
 
         beforeLoadHook: (
@@ -479,6 +498,7 @@ export class DisplayDataWidget extends Widget {
             displayUnit: observable,
             precision: observable,
             label: observable,
+            labelPosition: observable,
             labelStyle: observable,
             unitStyle: observable
         });
@@ -554,8 +574,13 @@ export class DisplayDataWidget extends Widget {
         const displayOption = assets.getPropertyValue(this, "displayOption");
         dataBuffer.writeUint8(displayOption || 0);
 
-        // reserved1
-        dataBuffer.writeUint8(0);
+        // flags
+        const DISPLAY_DATA_WIDGET_LABEL_LEFT_FLAG = 0x01;
+        dataBuffer.writeUint8(
+            this.label && this.labelPosition == "left"
+                ? DISPLAY_DATA_WIDGET_LABEL_LEFT_FLAG
+                : 0
+        );
 
         // unitAndFractionFont
         dataBuffer.writeInt16(
@@ -3790,9 +3815,10 @@ export class InputEmbeddedWidget extends Widget {
 
     info: string;
 
-    // a text above the value (an expression) in the label style, see
-    // eez-framework drawValueParts
+    // a text above or left of the value (an expression) in the label style,
+    // see eez-framework drawValueParts
     label?: string;
+    labelPosition?: LabelPosition;
     labelStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
@@ -3864,6 +3890,7 @@ export class InputEmbeddedWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             makeDataPropertyInfo("label", {}, "string"),
+            labelPositionPropertyInfo,
             makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("labelStyle", "Label style", {
                 styleWithoutFont: true
@@ -3943,6 +3970,7 @@ export class InputEmbeddedWidget extends Widget {
             displayUnit: observable,
             info: observable,
             label: observable,
+            labelPosition: observable,
             labelStyle: observable
         });
     }
@@ -3955,6 +3983,7 @@ export class InputEmbeddedWidget extends Widget {
         const INPUT_WIDGET_TYPE_TEXT = 0x0001;
         const INPUT_WIDGET_TYPE_NUMBER = 0x0002;
         const INPUT_WIDGET_PASSWORD_FLAG = 0x0100;
+        const INPUT_WIDGET_LABEL_LEFT_FLAG = 0x0200;
 
         // the editor build gives a data that isn't a constant the editor text
         // ({expression}), which only a text input shows as it is
@@ -3974,6 +4003,10 @@ export class InputEmbeddedWidget extends Widget {
             }
         } else if (this.inputType === "number") {
             flags |= INPUT_WIDGET_TYPE_NUMBER;
+        }
+
+        if (this.label && this.labelPosition == "left") {
+            flags |= INPUT_WIDGET_LABEL_LEFT_FLAG;
         }
 
         dataBuffer.writeUint16(flags);
