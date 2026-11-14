@@ -4207,7 +4207,19 @@ registerClass("RollerWidget", RollerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// A switch (eez-framework SwitchWidget). With a label or the state text it is
+// a row: the label at the left (in the label style, from the left padding of
+// the widget style), "On" or "Off" (in the state text style, its checked state
+// when on) and the track at the right; the whole widget toggles the data.
 export class SwitchWidget extends Widget {
+    label?: string;
+    labelStyle: Style;
+    showStateText?: boolean;
+    stateTextStyle: Style;
+    // an expression: the switch can be changed (not set: always), else it is
+    // drawn in the disabled state styles and doesn't change
+    enabled?: string;
+
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
             projectType !== ProjectType.LVGL &&
@@ -4220,8 +4232,29 @@ export class SwitchWidget extends Widget {
 
         properties: [
             makeDataPropertyInfo("data", {}, "boolean"),
-            makeStylePropertyInfo("style", "Default style")
+            makeDataPropertyInfo("label", {}, "string"),
+            {
+                name: "showStateText",
+                displayName: "On/Off text",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup
+            },
+            makeDataPropertyInfo("enabled", {}, "boolean"),
+            makeStylePropertyInfo("style", "Default style"),
+            makeStylePropertyInfo("labelStyle", "Label style", {
+                styleWithoutFont: true
+            }),
+            makeStylePropertyInfo("stateTextStyle", "On/Off text style", {
+                styleWithoutFont: true,
+                hideInPropertyGrid: (widget: SwitchWidget) =>
+                    !widget.showStateText
+            })
         ],
+
+        beforeLoadHook: (object: IEezObject, jsObject: any) => {
+            migrateOptionalStyleProperty(jsObject, "labelStyle");
+            migrateOptionalStyleProperty(jsObject, "stateTextStyle");
+        },
 
         defaultValue: {
             left: 0,
@@ -4251,6 +4284,45 @@ export class SwitchWidget extends Widget {
         icon: SWITCH_WIDGET_ICON
     });
 
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            label: observable,
+            labelStyle: observable,
+            showStateText: observable,
+            stateTextStyle: observable,
+            enabled: observable
+        });
+    }
+
+    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        // label (a flow expression, 0 if not set), labelStyle, stateTextStyle
+        // (0 if not set: the widget style)
+        dataBuffer.writeInt16(
+            this.label ? assets.getWidgetDataItemIndex(this, "label") : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
+        dataBuffer.writeInt16(
+            this.showStateText
+                ? getOptionalStyleIndex(assets, this, "stateTextStyle")
+                : 0
+        );
+
+        // enabled (a flow expression, 0 if not set: always)
+        dataBuffer.writeInt16(
+            this.enabled ? assets.getWidgetDataItemIndex(this, "enabled") : 0
+        );
+
+        // flags
+        const SWITCH_WIDGET_FLAG_STATE_TEXT = 1 << 0;
+        dataBuffer.writeUint16(
+            this.showStateText ? SWITCH_WIDGET_FLAG_STATE_TEXT : 0
+        );
+
+        // reserved
+        dataBuffer.writeInt16(0);
+    }
 }
 
 registerClass("SwitchWidget", SwitchWidget);

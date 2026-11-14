@@ -356,6 +356,9 @@ export class ContainerWidget extends Widget {
     // EEZ-GUI: the children taller than the container scroll vertically
     // (touch drag, clipped, the scroll indicator of the List)
     scroll?: "none" | "vertical";
+    // EEZ-GUI, a row or column: a line of 1 px in the border color of the
+    // style between the visible children (a group of settings)
+    dividers?: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -452,6 +455,13 @@ export class ContainerWidget extends Widget {
                 propertyGridGroup: layoutGroup,
                 hideInPropertyGrid: (widget: ContainerWidget) =>
                     !isRowOrColumn(widget)
+            },
+            {
+                name: "dividers",
+                type: PropertyType.Boolean,
+                propertyGridGroup: layoutGroup,
+                hideInPropertyGrid: (widget: ContainerWidget) =>
+                    !isRowOrColumn(widget) || !isEezGuiProject(widget)
             },
             {
                 name: "justifyContent",
@@ -663,7 +673,8 @@ export class ContainerWidget extends Widget {
             justifyContent: observable,
             alignItems: observable,
             fitToContent: observable,
-            scroll: observable
+            scroll: observable,
+            dividers: observable
         });
     }
 
@@ -1060,6 +1071,12 @@ export class ContainerWidget extends Widget {
 
         if (this.allowOverlappingChildren && this.layout == "static") {
             flags |= OVERLAPPING_CHILDREN_FLAG;
+        }
+
+        // a row or column: the lines between the children
+        const CONTAINER_WIDGET_DIVIDERS_FLAG = 1 << 6;
+        if (this.dividers && isRowOrColumn(this)) {
+            flags |= CONTAINER_WIDGET_DIVIDERS_FLAG;
         }
 
         dataBuffer.writeUint16(flags);

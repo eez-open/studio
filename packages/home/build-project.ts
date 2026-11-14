@@ -3,6 +3,7 @@ import { autorun, observable, runInAction } from "mobx";
 import fs from "fs";
 
 import { Message, ProjectStore, Section } from "project-editor/store";
+import type { IMessage } from "project-editor/core/object";
 
 import { loadProjectEditor } from "project-editor/project-editor-loader";
 
@@ -169,6 +170,51 @@ export async function buildProject(
             }
             dumpMessages(messages.messages, "");
         });
+
+        // EEZ_CHECK_PROJECT=1: also the messages of the Checks section of the
+        // project editor (the checks the build doesn't do)
+        if (process.env.EEZ_CHECK_PROJECT) {
+            const { backgroundCheck } = await import(
+                "project-editor/build/build"
+            );
+            const { MessageType } = await import("project-editor/core/object");
+            const { getLabel } = await import("project-editor/store");
+            let numErrors = 0;
+            let numWarnings = 0;
+            const dumpChecks = (messages: IMessage[], path: string) => {
+                for (const message of messages) {
+                    if (message.type == MessageType.GROUP) {
+                        dumpChecks(
+                            (message as Message).messages ?? [],
+                            path + "/" + message.text
+                        );
+                    } else if (
+                        message.type == MessageType.ERROR ||
+                        message.type == MessageType.WARNING
+                    ) {
+                        const isError = message.type == MessageType.ERROR;
+                        if (isError) {
+                            numErrors++;
+                        } else {
+                            numWarnings++;
+                        }
+                        ipcRenderer.send(
+                            "on-build-project-message",
+                            `Check ${isError ? "error" : "warning"}: ${path}${
+                                message.object
+                                    ? " (" + getLabel(message.object) + ")"
+                                    : ""
+                            }: ${message.text}`
+                        );
+                    }
+                }
+            };
+            dumpChecks(backgroundCheck(projectStore), "");
+            ipcRenderer.send(
+                "on-build-project-message",
+                `Checks: ${numErrors} errors, ${numWarnings} warnings`
+            );
+        }
 
         if (renderPageOptions) {
             await renderPage(projectStore, renderPageOptions);
