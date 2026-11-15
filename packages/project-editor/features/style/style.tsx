@@ -1169,6 +1169,8 @@ export class Style extends EezObject {
 
             borderColorProperty: keepAliveComputed(),
 
+            borderColorsProperty: keepAliveComputed(),
+
             borderColor16: keepAliveComputed(),
 
             borderStyleProperty: keepAliveComputed(),
@@ -2065,6 +2067,24 @@ export class Style extends EezObject {
         return this.getColorStyleProperty("borderColor");
     }
 
+    // the colors of the four sides (see getBorderColors), each as a hex string:
+    // borderColorProperty is only the color of the top side
+    get borderColorsProperty(): string {
+        const value = getStyleProperty(this, "borderColor");
+        const sides = getBorderColors(value);
+        if (!sides) {
+            return value;
+        }
+        const project = ProjectEditor.getProject(this);
+        return sides
+            .map(color =>
+                color == "transparent" || color == "rgba(0, 0, 0, 0)"
+                    ? color
+                    : ColorFormat.parse(color, project).getHexString()
+            )
+            .join(" ");
+    }
+
     get borderColor16(): number {
         return strToColor16(this.borderColorProperty);
     }
@@ -2257,7 +2277,7 @@ export class Style extends EezObject {
                 otherStyle.focusBackgroundColorProperty &&
             this.borderSizeProperty === otherStyle.borderSizeProperty &&
             this.borderRadiusProperty === otherStyle.borderRadiusProperty &&
-            this.borderColorProperty === otherStyle.borderColorProperty &&
+            this.borderColorsProperty === otherStyle.borderColorsProperty &&
             this.borderStyleProperty === otherStyle.borderStyleProperty &&
             this.paddingProperty === otherStyle.paddingProperty &&
             this.opacityProperty === otherStyle.opacityProperty &&
