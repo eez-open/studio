@@ -10,6 +10,7 @@ import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { createTemporaryObject } from "project-editor/core/keep-alive";
 
 export const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0;
 export const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1;
@@ -46,7 +47,9 @@ function addStateStyles(assets: Assets) {
             }
             return assets.doGetStyleIndex(
                 ProjectEditor.getProject(style),
-                new StateStyle(style, state, delta)
+                createTemporaryObject(
+                    () => new StateStyle(style, state, delta)
+                )
             );
         });
 
