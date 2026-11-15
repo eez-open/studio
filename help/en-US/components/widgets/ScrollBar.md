@@ -33,11 +33,11 @@ Set here the name of the `struct:$ScrollbarState` type variable.
 
 ## Default style
 
-Style used when rendering the background of the Widget.
+Style of the track: the track is filled with the background color of this style.
 
 ## Thumb style
 
-Style that will be used to render the scrollbar thumb.
+Style of the scrollbar thumb: the thumb is filled with the background color of this style.
 
 ## Buttons style
 

@@ -56,7 +56,7 @@ import type {
 } from "project-editor/flow/flow-interfaces";
 import { ComponentEnclosure } from "project-editor/flow/editor/render";
 
-import { Style } from "project-editor/features/style/style";
+import { Style, getStyleProperty } from "project-editor/features/style/style";
 import {
     DROP_DOWN_LIST_CHANGE_EVENT_STRUCT_NAME,
     ValueType
@@ -1212,13 +1212,45 @@ export class RectangleWidget extends Widget {
             if (object.data) {
                 messages.push(propertySetButNotUsedMessage(object, "data"));
             }
+
+            // the rectangle is filled with the background color of its style:
+            // a color set on its style with a transparent background is likely
+            // a mistake (an inherited color isn't, e.g. a spacer that uses a
+            // text style)
+            if (
+                object.style &&
+                object.style.color != undefined &&
+                !isTransparentColorValue(
+                    getStyleProperty(object.style, "color")
+                ) &&
+                isTransparentColorValue(
+                    getStyleProperty(object.style, "backgroundColor")
+                )
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.WARNING,
+                        `Rectangle is filled with the background color of its style, the color of the style isn't used`,
+                        getChildOfObject(object, "style")
+                    )
+                );
+            }
         }
     });
+}
 
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // flags: invertColors (the style background color fills the widget)
-        dataBuffer.writeUint8(1 << 0);
+// a resolved style color (getStyleProperty) that is fully transparent
+function isTransparentColorValue(value: any) {
+    if (value == undefined || value == "transparent") {
+        return true;
     }
+    if (typeof value != "string") {
+        return false;
+    }
+    return (
+        /^rgba\(.*,\s*0(\.0*)?\s*\)$/i.test(value) ||
+        /^#[0-9a-f]{6}00$/i.test(value)
+    );
 }
 
 registerClass("RectangleWidget", RectangleWidget);
