@@ -116,7 +116,8 @@ export class NavigationStore {
     projectExplorerSelectedGroup: string = LayoutModels.PAGES_TAB_ID;
     // the group last selected from each of the toolbar menus (menu id -> group key)
     projectExplorerMenuSelectedGroups: { [menuId: string]: string } = {};
-    projectExplorerSearchText: string = "";
+    // each Project Explorer group has its own search text
+    projectExplorerSearchTexts: { [groupKey: string]: string } = {};
     projectExplorerSortDirection: SortDirectionType = "none";
 
     // pinned Properties dialog was opened when the project was closed
@@ -131,7 +132,7 @@ export class NavigationStore {
             subnavigationSelectedItems: observable,
             projectExplorerSelectedGroup: observable,
             projectExplorerMenuSelectedGroups: observable,
-            projectExplorerSearchText: observable,
+            projectExplorerSearchTexts: observable,
             projectExplorerSortDirection: observable,
             propertyGridObjects: computed,
             setSelectedPanel: action,

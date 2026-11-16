@@ -754,7 +754,11 @@ const AllGroups = observer(
                 const getNavigationStore = () => this.context.navigationStore;
                 filter = {
                     get searchText() {
-                        return getNavigationStore().projectExplorerSearchText;
+                        return (
+                            getNavigationStore().projectExplorerSearchTexts[
+                                getGroupKey(ALL_GROUP)
+                            ] ?? ""
+                        );
                     },
                     get sortDirection() {
                         return getNavigationStore()
@@ -835,10 +839,11 @@ export const ProjectExplorer = observer(
             super(props);
 
             const getNavigationStore = () => this.context.navigationStore;
+            const getSearchText = () => this.searchText;
 
             this.filter = {
                 get searchText() {
-                    return getNavigationStore().projectExplorerSearchText;
+                    return getSearchText();
                 },
                 get sortDirection() {
                     return getNavigationStore().projectExplorerSortDirection;
@@ -849,6 +854,7 @@ export const ProjectExplorer = observer(
                 groups: computed,
                 toolbarItems: computed,
                 selectedGroup: computed,
+                searchText: computed,
                 onSelectGroup: action.bound,
                 onSearchChange: action.bound,
                 onSearchClear: action.bound,
@@ -971,14 +977,33 @@ export const ProjectExplorer = observer(
             }
         }
 
+        // each group has its own search text
+        get searchText() {
+            const selectedGroup = this.selectedGroup;
+            return (
+                (selectedGroup &&
+                    this.context.navigationStore.projectExplorerSearchTexts[
+                        getGroupKey(selectedGroup)
+                    ]) ||
+                ""
+            );
+        }
+
+        setSearchText(searchText: string) {
+            const selectedGroup = this.selectedGroup;
+            if (selectedGroup) {
+                this.context.navigationStore.projectExplorerSearchTexts[
+                    getGroupKey(selectedGroup)
+                ] = searchText;
+            }
+        }
+
         onSearchChange(event: any) {
-            this.context.navigationStore.projectExplorerSearchText = (
-                $(event.target).val() as string
-            ).trim();
+            this.setSearchText(($(event.target).val() as string).trim());
         }
 
         onSearchClear() {
-            this.context.navigationStore.projectExplorerSearchText = "";
+            this.setSearchText("");
         }
 
         onSortDirectionChanged(direction: SortDirectionType) {
@@ -1018,9 +1043,7 @@ export const ProjectExplorer = observer(
                                 )}
                             >
                                 <SearchInput
-                                    searchText={
-                                        navigationStore.projectExplorerSearchText
-                                    }
+                                    searchText={this.searchText}
                                     onClear={this.onSearchClear}
                                     onChange={this.onSearchChange}
                                     onKeyDown={this.onSearchChange}
