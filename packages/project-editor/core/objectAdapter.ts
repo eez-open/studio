@@ -8,7 +8,6 @@ import {
     makeObservable,
     toJS
 } from "mobx";
-import { createTransformer } from "mobx-utils";
 import { map, find, each, pickBy } from "lodash-es";
 
 import { stringCompare } from "eez-studio-shared/string";
@@ -74,15 +73,20 @@ import { isArray } from "eez-studio-shared/util";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type TreeObjectAdapterTransformer = (
+    object: IEezObject,
+    expanded?: boolean
+) => TreeObjectAdapter;
+
 export class TreeObjectAdapter {
-    protected transformer: (object: IEezObject) => TreeObjectAdapter;
+    protected transformer: TreeObjectAdapterTransformer;
 
     selected: boolean;
     expanded: boolean;
 
     constructor(
         public object: IEezObject,
-        transformer?: (object: IEezObject) => TreeObjectAdapter,
+        transformer?: TreeObjectAdapterTransformer,
         expanded?: boolean
     ) {
         this.expanded = expanded ?? false;
@@ -90,7 +94,7 @@ export class TreeObjectAdapter {
         makeObservable(this, {
             selected: observable,
             expanded: observable,
-            children: computed({ keepAlive: true }),
+            children: computed,
             rect: computed,
             selectedItems: computed,
             selectedObject: computed,
@@ -109,13 +113,27 @@ export class TreeObjectAdapter {
         if (transformer) {
             this.transformer = transformer;
         } else {
-            this.transformer = createTransformer((object: IEezObject) => {
-                return new TreeObjectAdapter(
-                    object,
-                    this.transformer,
-                    expanded
-                );
-            });
+            // The adapters of the descendants (they keep the selected and
+            // expanded state of the tree items) live as long as this adapter
+            // and their objects. They were kept with a keepAlive children, but
+            // a keepAlive computed value stays subscribed to the objects it has
+            // read, so an adapter (and all its descendants) was never released.
+            const adapters = new WeakMap<IEezObject, TreeObjectAdapter>();
+            this.transformer = (
+                object: IEezObject,
+                childExpanded?: boolean
+            ) => {
+                let adapter = adapters.get(object);
+                if (!adapter) {
+                    adapter = new TreeObjectAdapter(
+                        object,
+                        this.transformer,
+                        childExpanded ?? expanded
+                    );
+                    adapters.set(object, adapter);
+                }
+                return adapter;
+            };
         }
     }
 
@@ -159,9 +177,8 @@ export class TreeObjectAdapter {
                 const childObject = getProperty(this.object, propertyInfo.name);
 
                 if (isArray(childObject)) {
-                    children[propertyInfo.name] = new TreeObjectAdapter(
+                    children[propertyInfo.name] = this.transformer(
                         childObject,
-                        this.transformer,
                         this.expanded
                     );
                 } else {
