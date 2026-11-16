@@ -114,8 +114,6 @@ export class NavigationStore {
     // layout is selected). The selected group is identified by the id of the
     // tab which shows the same items in the "Classic" layout.
     projectExplorerSelectedGroup: string = LayoutModels.PAGES_TAB_ID;
-    // the group last selected from each of the toolbar menus (menu id -> group key)
-    projectExplorerMenuSelectedGroups: { [menuId: string]: string } = {};
     // each Project Explorer group has its own search text
     projectExplorerSearchTexts: { [groupKey: string]: string } = {};
     projectExplorerSortDirection: SortDirectionType = "none";
@@ -131,7 +129,6 @@ export class NavigationStore {
             selectedPanelForRuntime: observable,
             subnavigationSelectedItems: observable,
             projectExplorerSelectedGroup: observable,
-            projectExplorerMenuSelectedGroups: observable,
             projectExplorerSearchTexts: observable,
             projectExplorerSortDirection: observable,
             propertyGridObjects: computed,
@@ -347,14 +344,6 @@ export class NavigationStore {
             }
 
             if (
-                state.projectExplorerMenuSelectedGroups &&
-                typeof state.projectExplorerMenuSelectedGroups == "object"
-            ) {
-                this.projectExplorerMenuSelectedGroups =
-                    state.projectExplorerMenuSelectedGroups;
-            }
-
-            if (
                 state.projectExplorerSortDirection == "asc" ||
                 state.projectExplorerSortDirection == "desc" ||
                 state.projectExplorerSortDirection == "none"
@@ -450,8 +439,6 @@ export class NavigationStore {
             subnavigationSelectedItems: this.subnavigationSelectedItems,
 
             projectExplorerSelectedGroup: this.projectExplorerSelectedGroup,
-            projectExplorerMenuSelectedGroups:
-                this.projectExplorerMenuSelectedGroups,
             projectExplorerSortDirection: this.projectExplorerSortDirection,
 
             propertiesDialogOpened:

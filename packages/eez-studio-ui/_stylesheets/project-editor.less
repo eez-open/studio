@@ -666,16 +666,6 @@
         }
     }
 
-    .EezStudio_ProjectExplorer_GroupName {
-        flex-shrink: 1;
-        min-width: 0;
-        max-width: 50%;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
     .EezStudio_ProjectExplorer_Order {
         flex-shrink: 0;
         display: flex;
@@ -709,88 +699,29 @@
     .EezStudio_ProjectExplorer_Search {
         flex-grow: 1;
         min-width: 0;
-        margin-left: 8px;
 
         .EezStudio_SearchInput_Container {
             width: 100%;
+            height: 30px;
+            border: 1px solid @borderColor;
+            border-radius: 4px;
+            overflow: hidden;
         }
     }
 
-    .EezStudio_ProjectExplorer_Groups {
+    // dropdown which selects the group: icon, name and chevron
+    .EezStudio_ProjectExplorer_GroupDropdown {
+        // the full group name is always shown, the search box shrinks
+        flex-shrink: 0;
         display: flex;
         flex-direction: row;
-        flex-wrap: wrap;
-        gap: 2px;
-        margin-bottom: 4px;
-    }
-
-    .EezStudio_ProjectExplorer_Group {
-        position: relative;
-        display: flex;
         align-items: center;
-        justify-content: center;
-        width: 30px;
+        gap: 4px;
         height: 30px;
-        padding: 0;
-        border: 1px solid transparent;
+        margin-right: 6px;
+        padding: 0 6px 0 0;
+        border: 1px solid @borderColor;
         border-radius: 4px;
-        background-color: transparent;
-        color: @textColor;
-
-        &:hover {
-            background-color: @hoverBackgroundColor;
-            color: @hoverColor;
-        }
-
-        &.selected {
-            background-color: @selectionBackgroundColor;
-            color: @selectionColor;
-        }
-    }
-
-    // group button and chevron button which opens a popup to select one of
-    // the groups, joined into one split button
-    .EezStudio_ProjectExplorer_GroupMenu {
-        display: flex;
-        flex-direction: row;
-        border-radius: 4px;
-        // keeps the chevron visually closer to its own group button than to
-        // the next button
-        margin-right: 3px;
-
-        & > .EezStudio_ProjectExplorer_Group {
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-        }
-
-        // one selection background for both buttons
-        &.selected {
-            background-color: @selectionBackgroundColor;
-            color: @selectionColor;
-
-            & > .EezStudio_ProjectExplorer_Group,
-            & > .EezStudio_ProjectExplorer_GroupChevron {
-                background-color: transparent;
-                color: inherit;
-            }
-
-            // chevron still opens the popup, so it shows hover
-            & > .EezStudio_ProjectExplorer_GroupChevron:hover,
-            & > .EezStudio_ProjectExplorer_GroupChevron.open {
-                background-color: lighten(@selectionBackgroundColor, 10%);
-            }
-        }
-    }
-
-    .EezStudio_ProjectExplorer_GroupChevron {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 12px;
-        height: 30px;
-        padding: 0;
-        border: 1px solid transparent;
-        border-radius: 0 4px 4px 0;
         background-color: transparent;
         color: @textColor;
 
@@ -804,6 +735,12 @@
             flex-shrink: 0;
             opacity: 0.8;
         }
+    }
+
+    .EezStudio_ProjectExplorer_GroupDropdownTitle {
+        flex-grow: 1;
+        text-align: left;
+        white-space: nowrap;
     }
 
     .EezStudio_ProjectExplorer_Body {
@@ -889,7 +826,7 @@
     }
 }
 
-// group icon in the Project Explorer toolbar and in the groups popup
+// group icon in the Project Explorer groups dropdown and its popup
 .EezStudio_ProjectExplorer_GroupIcon {
     position: relative;
     flex-shrink: 0;
@@ -916,9 +853,11 @@
     }
 }
 
-// popup opened from a Project Explorer toolbar button with multiple groups
+// popup opened from the Project Explorer groups dropdown
 .EezStudio_ProjectExplorer_GroupsPopup.dropdown-menu {
     position: fixed;
+    max-height: calc(100vh - 8px);
+    overflow-y: auto;
     min-width: 0;
     margin: 0;
     padding: 4px;
