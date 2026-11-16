@@ -339,6 +339,34 @@ export function migrateOptionalStyleProperty(
     }
 }
 
+// The style of a part of a widget that is made when the part is set (the
+// icons of a Text or an Input, the label of a DropDownList), in the
+// updateObjectValueHook of the widget: parts is a list of [part property,
+// style property]. A widget without the part has no style object, so a
+// project file doesn't grow.
+export function addPartStyles(
+    widget: Widget,
+    values: any,
+    parts: [string, string][]
+) {
+    for (const [partName, styleName] of parts) {
+        if (
+            values[partName] &&
+            !(widget as any)[styleName] &&
+            values[styleName] === undefined
+        ) {
+            const style = createObject<Style>(
+                getProjectStore(widget),
+                {} as any,
+                Style,
+                styleName
+            );
+            setParent(style, widget);
+            values[styleName] = style;
+        }
+    }
+}
+
 export function getOptionalStyleIndex(
     assets: Assets,
     widget: Widget,

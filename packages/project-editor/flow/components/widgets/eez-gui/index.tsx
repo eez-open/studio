@@ -72,6 +72,7 @@ import {
     migrateStyleProperty,
     migrateOptionalStyleProperty,
     getOptionalStyleIndex,
+    addPartStyles,
     makeExpressionProperty,
     getLayoutParent
 } from "project-editor/flow/component";
@@ -225,7 +226,13 @@ type TextWidgetFitToContent = "none" | "width" | "height" | "both";
 // has a value is always shown, so a widget never hides what it uses; to use a
 // hidden property the widget is changed to a name that shows it (see
 // "Change to" in the context menu).
-type TextWidgetPropertyGroup = "number" | "label" | "enabled";
+type TextWidgetPropertyGroup = "number" | "label" | "icon" | "enabled";
+
+// the icon parts of a widget and their styles (see addPartStyles)
+const ICON_PART_STYLES: [string, string][] = [
+    ["icon", "iconStyle"],
+    ["trailingIcon", "trailingIconStyle"]
+];
 
 function isTextWidgetPropertyEmpty(widget: TextWidget, propertyName: string) {
     const value = (widget as any)[propertyName];
@@ -276,6 +283,14 @@ export class TextWidget extends Widget {
     labelPosition?: LabelPosition;
     labelStyle?: Style;
     unitStyle?: Style;
+    // An icon at the left of the widget, before the label, and one at the
+    // right, after the value and the unit (a row of a settings group): a text
+    // (an expression) in the font of its style, see eez-framework ValueParts.
+    // The style is made when the icon is set.
+    icon?: string;
+    iconStyle?: Style;
+    trailingIcon?: string;
+    trailingIconStyle?: Style;
     // the widget can be used (an expression); not enabled: drawn in the
     // disabled state, its action doesn't run
     enabled?: string;
@@ -367,6 +382,12 @@ export class TextWidget extends Widget {
                 isOptional: (widget: IEezObject) =>
                     !(widget instanceof DisplayDataWidget)
             }),
+            makeStylePropertyInfo("iconStyle", "Icon style", {
+                isOptional: true
+            }),
+            makeStylePropertyInfo("trailingIconStyle", "Trailing icon style", {
+                isOptional: true
+            }),
             {
                 name: "displayOption",
                 type: PropertyType.Enum,
@@ -457,6 +478,26 @@ export class TextWidget extends Widget {
                 "string"
             ),
             labelPositionPropertyInfo,
+            makeDataPropertyInfo(
+                "icon",
+                {
+                    disabled: hasNotFlowSupport,
+                    hideInPropertyGrid: hideInTextWidget("icon", "icon")
+                },
+                "string"
+            ),
+            makeDataPropertyInfo(
+                "trailingIcon",
+                {
+                    displayName: "Trailing icon",
+                    disabled: hasNotFlowSupport,
+                    hideInPropertyGrid: hideInTextWidget(
+                        "icon",
+                        "trailingIcon"
+                    )
+                },
+                "string"
+            ),
             makeDataPropertyInfo("enabled", {
                 hideInPropertyGrid: hideInTextWidget("enabled", "enabled")
             })
@@ -501,6 +542,8 @@ export class TextWidget extends Widget {
         },
 
         updateObjectValueHook: (widget: TextWidget, values: any) => {
+            addPartStyles(widget, values, ICON_PART_STYLES);
+
             if (
                 values.fitToContent == undefined ||
                 values.fitToContent == widget.fitToContent
@@ -701,6 +744,10 @@ export class TextWidget extends Widget {
             labelPosition: observable,
             labelStyle: observable,
             unitStyle: observable,
+            icon: observable,
+            iconStyle: observable,
+            trailingIcon: observable,
+            trailingIconStyle: observable,
             enabled: observable,
             contentSize: computed
         });
@@ -1037,6 +1084,23 @@ export class TextWidget extends Widget {
         dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
         dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "unitStyle"));
 
+        // icon, trailingIcon (flow expressions, 0 if not set) and their
+        // styles (0 if not set: the widget style)
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.icon
+                ? assets.getWidgetDataItemIndex(this, "icon")
+                : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "iconStyle"));
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.trailingIcon
+                ? assets.getWidgetDataItemIndex(this, "trailingIcon")
+                : 0
+        );
+        dataBuffer.writeInt16(
+            getOptionalStyleIndex(assets, this, "trailingIconStyle")
+        );
+
         // reserved
         dataBuffer.writeInt16(0);
     }
@@ -1112,7 +1176,7 @@ export class DisplayDataWidget extends TextWidget {
     });
 
     override get shownPropertyGroups(): TextWidgetPropertyGroup[] {
-        return ["number", "label", "enabled"];
+        return ["number", "label", "icon", "enabled"];
     }
 
     // The size of a DisplayData is set by "Fit to content" only in a row or
@@ -1194,7 +1258,7 @@ export class ButtonWidget extends TextWidget {
     });
 
     override get shownPropertyGroups(): TextWidgetPropertyGroup[] {
-        return ["enabled"];
+        return ["icon", "enabled"];
     }
 }
 
@@ -3728,6 +3792,14 @@ export class InputEmbeddedWidget extends Widget {
     label?: string;
     labelPosition?: LabelPosition;
     labelStyle: Style;
+    // An icon at the left of the widget, before the label, and one at the
+    // right, after the value (a row of a settings group): a text (an
+    // expression) in the font of its style, see eez-framework ValueParts. The
+    // style is made when the icon is set.
+    icon?: string;
+    iconStyle?: Style;
+    trailingIcon?: string;
+    trailingIconStyle?: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -3799,14 +3871,30 @@ export class InputEmbeddedWidget extends Widget {
             },
             makeDataPropertyInfo("label", {}, "string"),
             labelPositionPropertyInfo,
+            makeDataPropertyInfo("icon", {}, "string"),
+            makeDataPropertyInfo(
+                "trailingIcon",
+                { displayName: "Trailing icon" },
+                "string"
+            ),
             makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("labelStyle", "Label style", {
                 styleWithoutFont: true
+            }),
+            makeStylePropertyInfo("iconStyle", "Icon style", {
+                isOptional: true
+            }),
+            makeStylePropertyInfo("trailingIconStyle", "Trailing icon style", {
+                isOptional: true
             })
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateOptionalStyleProperty(jsObject, "labelStyle");
+        },
+
+        updateObjectValueHook: (widget: InputEmbeddedWidget, values: any) => {
+            addPartStyles(widget, values, ICON_PART_STYLES);
         },
 
         defaultValue: {
@@ -3879,7 +3967,11 @@ export class InputEmbeddedWidget extends Widget {
             info: observable,
             label: observable,
             labelPosition: observable,
-            labelStyle: observable
+            labelStyle: observable,
+            icon: observable,
+            iconStyle: observable,
+            trailingIcon: observable,
+            trailingIconStyle: observable
         });
     }
 
@@ -3967,6 +4059,21 @@ export class InputEmbeddedWidget extends Widget {
             this.label ? assets.getWidgetDataItemIndex(this, "label") : 0
         );
         dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
+
+        // icon, trailingIcon (flow expressions, 0 if not set) and their
+        // styles (0 if not set: the widget style)
+        dataBuffer.writeInt16(
+            this.icon ? assets.getWidgetDataItemIndex(this, "icon") : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "iconStyle"));
+        dataBuffer.writeInt16(
+            this.trailingIcon
+                ? assets.getWidgetDataItemIndex(this, "trailingIcon")
+                : 0
+        );
+        dataBuffer.writeInt16(
+            getOptionalStyleIndex(assets, this, "trailingIconStyle")
+        );
 
         // reserved1
         dataBuffer.writeInt16(0);
@@ -4458,6 +4565,12 @@ registerClass("SliderWidget", SliderWidget);
 
 export class DropDownListWidget extends Widget {
     options: string;
+    // With a label (an expression) the widget is a row: the label at the left
+    // in the label style, the box at the right in the box width (not set:
+    // half of the widget). The style is made when the label is set.
+    label?: string;
+    labelStyle?: Style;
+    boxWidth?: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -4474,8 +4587,23 @@ export class DropDownListWidget extends Widget {
         properties: [
             makeDataPropertyInfo("data", {}, "integer"),
             makeDataPropertyInfo("options"),
-            makeStylePropertyInfo("style", "Default style")
+            makeDataPropertyInfo("label", {}, "string"),
+            {
+                name: "boxWidth",
+                displayName: "Box width",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup,
+                disabled: (widget: DropDownListWidget) => !widget.label
+            },
+            makeStylePropertyInfo("style", "Default style"),
+            makeStylePropertyInfo("labelStyle", "Label style", {
+                isOptional: true
+            })
         ],
+
+        updateObjectValueHook: (widget: DropDownListWidget, values: any) => {
+            addPartStyles(widget, values, [["label", "labelStyle"]]);
+        },
 
         defaultValue: {
             left: 0,
@@ -4521,13 +4649,24 @@ export class DropDownListWidget extends Widget {
         super.makeEditable();
 
         makeObservable(this, {
-            options: observable
+            options: observable,
+            label: observable,
+            labelStyle: observable,
+            boxWidth: observable
         });
     }
 
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "options"));
+
+        // label (a flow expression, 0 if not set), labelStyle (0 if not set),
+        // boxWidth (0 if not set)
+        dataBuffer.writeInt16(
+            this.label ? assets.getWidgetDataItemIndex(this, "label") : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
+        dataBuffer.writeInt16(this.label && this.boxWidth ? this.boxWidth : 0);
     }
 }
 
