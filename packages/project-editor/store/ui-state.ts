@@ -20,11 +20,12 @@ export class UIStateStore {
     features: any;
     savedState: any;
 
-    searchPattern: string;
-    searchMatchCase: boolean;
-    searchMatchWholeWord: boolean;
-    replaceEnabled: boolean;
-    replaceText: string;
+    // Search panel state, not persisted
+    searchPattern: string = "";
+    searchMatchCase: boolean = false;
+    searchMatchWholeWord: boolean = false;
+    replaceEnabled: boolean = false;
+    replaceText: string = "";
 
     activeOutputSection = Section.CHECKS;
     _pageEditorFrontFace: boolean = false;
@@ -167,12 +168,6 @@ export class UIStateStore {
             this.activeOutputSection =
                 uiState.activeOutputSection ?? Section.CHECKS;
 
-            this.searchPattern = uiState.searchPattern ?? "";
-            this.searchMatchCase = uiState.searchMatchCase ?? false;
-            this.searchMatchWholeWord = uiState.searchMatchWholeWord ?? false;
-            this.replaceEnabled = uiState.replaceEnabled ?? false;
-            this.replaceText = uiState.replaceText ?? "";
-
             this._pageEditorFrontFace = uiState.pageEditorFrontFace;
 
             this._pageRuntimeFrontFace = uiState.pageRuntimeFrontFace;
@@ -293,11 +288,6 @@ export class UIStateStore {
             features: this.featuresJS,
             objects: this.objectsJS,
             activeOutputSection: this.activeOutputSection,
-            searchPattern: this.searchPattern,
-            searchMatchCase: this.searchMatchCase,
-            searchMatchWholeWord: this.searchMatchWholeWord,
-            replaceEnabled: this.replaceEnabled,
-            replaceText: this.replaceText,
             pageEditorFrontFace: this._pageEditorFrontFace,
             pageRuntimeFrontFace: this._pageRuntimeFrontFace,
             breakpoints: Array.from(this.breakpoints).reduce(
