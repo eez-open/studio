@@ -832,8 +832,9 @@ export function* searchForUnusedObjects(
         let anyUsed = false;
         if (styles) {
             for (const style of styles) {
-                // a state style is used with its base style
-                if ((style as Style).state) {
+                // a state style and a variant style are used with their base
+                // style
+                if ((style as Style).state || (style as Style).variant) {
                     continue;
                 }
 

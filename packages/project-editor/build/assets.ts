@@ -21,7 +21,9 @@ import {
 
 import {
     Style,
-    getStyleProperty
+    getStyleProperty,
+    getStyleVariantId,
+    WIDGET_VARIANT_NONE
 } from "project-editor/features/style/style";
 import { Page, PageLayout } from "project-editor/features/page/page";
 import {
@@ -908,6 +910,39 @@ export class Assets {
     // the indexes of the state styles of the styles (see addStateStyles)
     stateStyleIndexes = new Map<Style, number[]>();
 
+    // The indexes of the variant styles of the styles that have them (see
+    // addVariantStyles): the number of variants, then the index of the style
+    // of each variant at its id (0 if the style has none for it).
+    variantStyleIndexes = new Map<Style, number[]>();
+
+    // The Variant of the widget for the assets (Widget::variant and
+    // Widget::fixedVariant): the data item of its rules and its fixed variant.
+    getWidgetVariant(widget: Widget): [number, number] {
+        if (!widget.variant && !(widget.variantRules?.length > 0)) {
+            return [0, 0];
+        }
+
+        let fixedVariant = 0;
+        if (widget.variant == WIDGET_VARIANT_NONE) {
+            fixedVariant = 0xffff;
+        } else if (widget.variant) {
+            fixedVariant = getStyleVariantId(widget, widget.variant);
+        }
+
+        // The rules have no value in the editor. A UserWidgetWidget has no
+        // rules: every flow property after the fixed ones is a user property.
+        let variant = 0;
+        if (
+            !this.editorBuild &&
+            !(widget instanceof ProjectEditor.UserWidgetWidgetClass) &&
+            widget.variantExpression
+        ) {
+            variant = this.getWidgetDataItemIndex(widget, "variantExpression");
+        }
+
+        return [variant, fixedVariant];
+    }
+
     doGetStyleIndex(
         project: Project,
         styleNameOrObject: string | Style
@@ -1295,8 +1330,9 @@ export class Assets {
             } else {
                 if (project.allStyles?.length > 0) {
                     project.allStyles.forEach(style => {
-                        if (style.state) {
-                            // used with the states of its parent style
+                        if (style.state || style.variant) {
+                            // used with the states and the variants of its
+                            // base style
                             return;
                         }
                         if (

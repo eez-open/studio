@@ -107,8 +107,12 @@ import {
 } from "project-editor/features/page/page-layouts";
 import {
     getAdditionalStyleFlowProperties,
+    getStyleVariants,
+    getVariantRulesExpression,
     isStyleEmpty,
-    Style
+    Style,
+    VariantRule,
+    WIDGET_VARIANT_NONE
 } from "project-editor/features/style/style";
 import type {
     ContainerWidget,
@@ -3184,6 +3188,14 @@ export const eventHandlersProperty: PropertyInfo = {
 export class Widget extends Component {
     data?: string;
     visible?: string;
+
+    // The variant of the styles of the widget (see StyleVariant): undefined
+    // to take the variant of the container, WIDGET_VARIANT_NONE for no
+    // variant, or the name of the variant the widget always has. The rules
+    // give the variant by data: the variant of the first rule whose condition
+    // is true, and the one above when no rule applies.
+    variant?: string;
+    variantRules: VariantRule[];
     resizing: IResizing;
     style: Style;
 
@@ -3263,6 +3275,58 @@ export class Widget extends Component {
                     disabled: isLVGLProject
                 },
                 "boolean"
+            ),
+            {
+                name: "variant",
+                displayName: "Variant",
+                type: PropertyType.Enum,
+                enumItems: (widget: IEezObject) => [
+                    ...getStyleVariants(widget).map(styleVariant => ({
+                        id: styleVariant.name,
+                        label: styleVariant.name
+                    })),
+                    { id: WIDGET_VARIANT_NONE, label: "None" }
+                ],
+                propertyGridGroup: styleGroup,
+                disabled: (widget: Widget) => !isEezGuiProject(widget)
+            },
+            {
+                name: "variantRules",
+                displayName: "Variant rules",
+                type: PropertyType.Array,
+                typeClass: VariantRule,
+                defaultValue: [],
+                propertyGridGroup: styleGroup,
+                partOfNavigation: false,
+                enumerable: false,
+                disabled: (widget: Widget) =>
+                    !isEezGuiProject(widget) ||
+                    widget instanceof ProjectEditor.UserWidgetWidgetClass
+            },
+            // The expression built from the rules (see variantExpression).
+            // Not hidden with hideInPropertyGrid: the flow build skips the
+            // hidden properties.
+            makeDataPropertyInfo(
+                "variantExpression",
+                {
+                    computed: true,
+                    propertyGridRowComponent: () => null,
+                    // Only in EEZ-GUI projects, so the flow properties of
+                    // the widgets of the other projects keep their indexes.
+                    // Not in a UserWidgetWidget: all its flow properties
+                    // after the fixed ones are user properties, so it has
+                    // no Variant rules.
+                    flowProperty: (widget: Widget | undefined) =>
+                        widget &&
+                        isEezGuiProject(widget) &&
+                        !(widget instanceof ProjectEditor.UserWidgetWidgetClass)
+                            ? "input"
+                            : undefined,
+                    hideInDocumentation: "all",
+                    skipSearch: true,
+                    disabled: (widget: Widget) => !isEezGuiProject(widget)
+                },
+                "integer"
             ),
             makeStylePropertyInfo("style", "Default style", {
                 hideInDocumentation: "all"
@@ -3963,6 +4027,8 @@ export class Widget extends Component {
         makeObservable(this, {
             data: observable,
             visible: observable,
+            variant: observable,
+            variantRules: observable,
             resizing: observable,
             style: observable,
             visibleInLayout: observable,
@@ -4011,6 +4077,10 @@ export class Widget extends Component {
     // The Widget::flags bits of a child of a row or column (eez-framework
     // core/assets.h): WIDGET_FLAG_GROW, the align self and the fit to content
     // ("fitToContent" of Text, DisplayData and a row or column).
+    get variantExpression(): string | undefined {
+        return getVariantRulesExpression(this, this.variantRules);
+    }
+
     getLayoutFlags() {
         if (!getLayoutParent(this)) {
             return 0;

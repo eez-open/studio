@@ -19,6 +19,8 @@ export interface RenderPageOptions {
     // the preview background of a user widget page (a theme color name or a
     // color value)
     background?: string;
+    // only draw the page, without the rebuilds that measure the times
+    quick?: boolean;
 }
 
 async function renderPage(projectStore: ProjectStore, options: RenderPageOptions) {
@@ -98,8 +100,10 @@ async function renderPage(projectStore: ProjectStore, options: RenderPageOptions
 
     const rebuild = () => runInAction(() => trigger.set(trigger.get() + 1));
 
-    for (let i = 0; i < 12; i++) {
-        rebuild();
+    if (!options.quick) {
+        for (let i = 0; i < 12; i++) {
+            rebuild();
+        }
     }
 
     // EEZ_PROFILE_RENDER=<file>: CPU profile of 20 rebuilds (for measuring)
@@ -217,7 +221,30 @@ export async function buildProject(
         }
 
         if (renderPageOptions) {
-            await renderPage(projectStore, renderPageOptions);
+            // EEZ_RENDER_PAGES=<JSON file>: a list of render options, many
+            // pages drawn with one load of the project (the options of the
+            // command line are not used)
+            const listFile = process.env.EEZ_RENDER_PAGES;
+            if (listFile) {
+                const list: RenderPageOptions[] = JSON.parse(
+                    fs.readFileSync(listFile, "utf8")
+                );
+                for (const options of list) {
+                    try {
+                        await renderPage(projectStore, {
+                            ...options,
+                            quick: true
+                        });
+                    } catch (err: any) {
+                        ipcRenderer.send(
+                            "on-build-project-message",
+                            `Render error: ${options.pageName} ${options.outFile}: ${err}`
+                        );
+                    }
+                }
+            } else {
+                await renderPage(projectStore, renderPageOptions);
+            }
         } else {
             await projectStore.build();
         }

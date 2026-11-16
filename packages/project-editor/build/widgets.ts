@@ -79,6 +79,15 @@ export function buildWidget(
     }
     dataBuffer.writeUint16(flags);
 
+    // variant, fixedVariant
+    let variant = 0;
+    let fixedVariant = 0;
+    if (object instanceof ProjectEditor.WidgetClass) {
+        [variant, fixedVariant] = assets.getWidgetVariant(object);
+    }
+    dataBuffer.writeInt16(variant);
+    dataBuffer.writeUint16(fixedVariant);
+
     // timeline
     if (object instanceof ProjectEditor.WidgetClass) {
         dataBuffer.writeArray(object.timeline, keyframe => {

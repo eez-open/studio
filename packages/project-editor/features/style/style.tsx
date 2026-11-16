@@ -55,6 +55,7 @@ import {
     ITheme
 } from "project-editor/features/style/theme";
 import type { Font } from "project-editor/features/font/font";
+import type { StyleVariant } from "project-editor/project/project";
 import {
     Project,
     findFont,
@@ -206,6 +207,167 @@ export class ConditionalStyle extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// The style variants of the project of the object (see StyleVariant): the
+// ones of the project itself, of its master project or of the first imported
+// project that has them.
+export function getStyleVariants(object: IEezObject): StyleVariant[] {
+    const project = ProjectEditor.getProject(object);
+    if (!project) {
+        return [];
+    }
+
+    const own = project.settings?.general?.styleVariants;
+    if (own && own.length > 0) {
+        return own;
+    }
+
+    const masterProject = project.masterProject;
+    if (masterProject) {
+        return masterProject.settings?.general?.styleVariants ?? [];
+    }
+
+    for (const importDirective of project.settings?.general?.imports ?? []) {
+        const imported =
+            importDirective.project?.settings?.general?.styleVariants;
+        if (imported && imported.length > 0) {
+            return imported;
+        }
+    }
+
+    return [];
+}
+
+// the Variant of a widget that has no variant, also not the one of its
+// container
+export const WIDGET_VARIANT_NONE = "none";
+
+// the id of the variant in the assets: 0 if there is no such variant
+export function getStyleVariantId(
+    object: IEezObject,
+    variantName: string | undefined
+) {
+    if (!variantName) {
+        return 0;
+    }
+    return (
+        getStyleVariants(object).find(
+            styleVariant => styleVariant.name == variantName
+        )?.id ?? 0
+    );
+}
+
+function getStyleVariantEnumItems(object: IEezObject) {
+    return getStyleVariants(object).map(styleVariant => ({
+        id: styleVariant.name,
+        label: styleVariant.name
+    }));
+}
+
+const variantRuleConditionProperty = makeExpressionProperty(
+    {
+        name: "condition",
+        type: PropertyType.MultilineText
+    },
+    "boolean"
+);
+
+// A rule of the Variant of a widget: the widget has the variant when the
+// condition is true (the first such rule, see Widget.variantRules).
+export class VariantRule extends EezObject {
+    variant: string;
+    condition: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "variant",
+                type: PropertyType.Enum,
+                enumItems: (object: IEezObject) => [
+                    ...getStyleVariantEnumItems(object),
+                    { id: WIDGET_VARIANT_NONE, label: "None" }
+                ]
+            },
+            variantRuleConditionProperty
+        ],
+        check: (variantRule: VariantRule, messages: IMessage[]) => {
+            if (!variantRule.variant) {
+                messages.push(propertyNotSetMessage(variantRule, "variant"));
+            } else if (
+                variantRule.variant != WIDGET_VARIANT_NONE &&
+                !getStyleVariantId(variantRule, variantRule.variant)
+            ) {
+                messages.push(propertyNotFoundMessage(variantRule, "variant"));
+            }
+
+            if (!variantRule.condition) {
+                messages.push(propertyNotSetMessage(variantRule, "condition"));
+            } else {
+                try {
+                    checkExpression(
+                        ProjectEditor.getWidget(variantRule)!,
+                        variantRule.condition
+                    );
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid condition: ${err}`,
+                            getChildOfObject(variantRule, "condition")
+                        )
+                    );
+                }
+            }
+        },
+        defaultValue: {},
+        listLabel: (variantRule: VariantRule, collapsed) =>
+            !collapsed ? (
+                ""
+            ) : (
+                <>
+                    {variantRule.variant} when {variantRule.condition}
+                </>
+            )
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            variant: observable,
+            condition: observable
+        });
+    }
+}
+
+registerClass("VariantRule", VariantRule);
+
+// The Variant expression of a widget from its rules: the id of the variant of
+// the first rule whose condition is true, -1 for None, 0 if no rule applies.
+export function getVariantRulesExpression(
+    object: IEezObject,
+    variantRules: VariantRule[] | undefined
+): string | undefined {
+    const rules = (variantRules ?? []).filter(
+        rule => rule.variant && rule.condition && rule.condition.trim()
+    );
+    if (rules.length == 0) {
+        return undefined;
+    }
+
+    let expression = "0";
+    for (let i = rules.length - 1; i >= 0; i--) {
+        const rule = rules[i];
+        const id =
+            rule.variant == WIDGET_VARIANT_NONE
+                ? "(0 - 1)"
+                : getStyleVariantId(object, rule.variant);
+        expression = `(${rule.condition.trim()}) ? ${id} : (${expression})`;
+    }
+    return expression;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 const idProperty: PropertyInfo = {
     name: "id",
     type: PropertyType.Number,
@@ -265,13 +427,15 @@ const descriptionProperty: PropertyInfo = {
 // only a widget style and a state style (its base style) use another style.
 const useStyleProperty: PropertyInfo = {
     name: "useStyle",
-    displayName: (style: Style) => (style.state ? "Base style" : "Use style"),
+    displayName: (style: Style) =>
+        style.state || style.variant ? "Base style" : "Use style",
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "allStyles",
     disabled: (style: Style) =>
         !isNotEezGuiStyle(style) &&
         !isWidgetParentOfStyle(style) &&
-        !style.state,
+        !style.state &&
+        !style.variant,
     propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
         const projectStore = getProjectStore(props.objects[0]);
 
@@ -828,6 +992,20 @@ const stateProperty: PropertyInfo = {
         isNotEezGuiStyle(style) || isWidgetParentOfStyle(style)
 };
 
+// A variant style is a project style with a variant (see StyleVariant) that
+// uses its base style ("useStyle"): it holds the properties the base style has
+// in that variant. With a state too, it holds the properties of that state of
+// the variant. A widget drawn with the base style uses it when the widget has
+// the variant (see Widget.variant).
+const variantProperty: PropertyInfo = {
+    name: "variant",
+    type: PropertyType.Enum,
+    enumItems: (style: IEezObject) => getStyleVariantEnumItems(style),
+    nonInheritable: true,
+    disabled: (style: Style) =>
+        isNotEezGuiStyle(style) || isWidgetParentOfStyle(style)
+};
+
 const letterSpacingProperty: PropertyInfo = {
     name: "letterSpacing",
     displayName: "Letter spacing",
@@ -1009,6 +1187,7 @@ const properties = [
     tagsProperty,
     descriptionProperty,
     stateProperty,
+    variantProperty,
     useStyleProperty,
     conditionalStylesProperty,
     fontProperty,
@@ -1067,6 +1246,7 @@ export class Style extends EezObject {
     description?: string;
     useStyle?: string;
     state?: StyleStateName;
+    variant?: string;
     conditionalStyles?: ConditionalStyle[];
     childStyles: Style[];
     alwaysBuild: boolean;
@@ -1113,6 +1293,13 @@ export class Style extends EezObject {
 
     // a style of a state built from the state child styles (see StateStyle)
     isStateStyle = false;
+
+    // a style of a variant built from the variant styles (see VariantStyle),
+    // with the properties of its states
+    isVariantStyle = false;
+    variantStateDeltas:
+        | Partial<Record<StyleStateName, { [propertyName: string]: any }>>
+        | undefined;
 
     constructor() {
         super();
@@ -1200,6 +1387,8 @@ export class Style extends EezObject {
             stateBaseStyle: keepAliveComputed(),
             stateDeltas: keepAliveComputed(),
             stateKey: keepAliveComputed(),
+            variantDeltas: keepAliveComputed(),
+            variantKey: keepAliveComputed(),
 
             cssDeclarations: computed,
             cssPreview: computed,
@@ -1218,6 +1407,7 @@ export class Style extends EezObject {
             description: observable,
             useStyle: observable,
             state: observable,
+            variant: observable,
             conditionalStyles: observable,
             childStyles: observable,
             alwaysBuild: observable,
@@ -1644,9 +1834,12 @@ export class Style extends EezObject {
             }
         },
         showTreeCollapseIcon: "has-children",
-        // sorted by name, a state style is listed under its base style
+        // sorted by name, a state style and a variant style are listed under
+        // their base style
         sortedTreeParent: (style: Style) =>
-            style.state && style.useStyle && !isWidgetParentOfStyle(style)
+            (style.state || style.variant) &&
+            style.useStyle &&
+            !isWidgetParentOfStyle(style)
                 ? ProjectEditor.getProject(style).allStyles.find(
                       projectStyle => projectStyle.name == style.useStyle
                   )
@@ -2177,7 +2370,7 @@ export class Style extends EezObject {
         ) {
             visited.add(style);
             if (!isWidgetParentOfStyle(style)) {
-                return style.state ? undefined : style;
+                return style.state || style.variant ? undefined : style;
             }
         }
         return undefined;
@@ -2189,7 +2382,33 @@ export class Style extends EezObject {
     get stateDeltas():
         | Partial<Record<StyleStateName, { [propertyName: string]: any }>>
         | undefined {
-        if (this.isStateStyle || this.state || isNotEezGuiStyle(this)) {
+        if (this.isVariantStyle) {
+            // the states of the base style, then the states of the variant
+            const baseDeltas = this.parentStyle?.stateDeltas;
+            const variantDeltas = this.variantStateDeltas;
+            if (!baseDeltas && !variantDeltas) {
+                return undefined;
+            }
+            const merged: Partial<
+                Record<StyleStateName, { [propertyName: string]: any }>
+            > = {};
+            for (const state of STYLE_STATES) {
+                if (baseDeltas?.[state] || variantDeltas?.[state]) {
+                    merged[state] = {
+                        ...baseDeltas?.[state],
+                        ...variantDeltas?.[state]
+                    };
+                }
+            }
+            return merged;
+        }
+
+        if (
+            this.isStateStyle ||
+            this.state ||
+            this.variant ||
+            isNotEezGuiStyle(this)
+        ) {
             return undefined;
         }
 
@@ -2239,6 +2458,106 @@ export class Style extends EezObject {
                           .map(name => [name, delta[name]])
                     : [];
             })
+        );
+    }
+
+    // The properties of the style in each variant: the own properties of the
+    // variant styles of its project style (stateBaseStyle), and of the variant
+    // styles with a state. undefined for a style without variants, for a
+    // state style and for a variant style.
+    get variantDeltas():
+        | {
+              [variantName: string]: {
+                  delta: { [propertyName: string]: any };
+                  states: Partial<
+                      Record<StyleStateName, { [propertyName: string]: any }>
+                  >;
+              };
+          }
+        | undefined {
+        if (
+            this.isStateStyle ||
+            this.isVariantStyle ||
+            this.state ||
+            this.variant ||
+            isNotEezGuiStyle(this)
+        ) {
+            return undefined;
+        }
+
+        const baseStyle = this.stateBaseStyle;
+        if (!baseStyle) {
+            return undefined;
+        }
+
+        let result:
+            | {
+                  [variantName: string]: {
+                      delta: { [propertyName: string]: any };
+                      states: Partial<
+                          Record<
+                              StyleStateName,
+                              { [propertyName: string]: any }
+                          >
+                      >;
+                  };
+              }
+            | undefined;
+
+        for (const variantStyle of getVariantStyles(baseStyle)) {
+            if (!result) {
+                result = {};
+            }
+            let entry = result[variantStyle.variant!];
+            if (!entry) {
+                entry = { delta: {}, states: {} };
+                result[variantStyle.variant!] = entry;
+            }
+
+            let delta = entry.delta;
+            if (variantStyle.state) {
+                let stateDelta = entry.states[variantStyle.state];
+                if (!stateDelta) {
+                    stateDelta = {};
+                    entry.states[variantStyle.state] = stateDelta;
+                }
+                delta = stateDelta;
+            }
+
+            for (const propertyInfo of stateStyleProperties) {
+                const value = getProperty(variantStyle, propertyInfo.name);
+                if (value !== undefined && !(propertyInfo.name in delta)) {
+                    delta[propertyInfo.name] = value;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // the variant properties (variantDeltas) as a string, the same for the
+    // styles with the same variants
+    get variantKey(): string {
+        const variantDeltas = this.variantDeltas;
+        if (!variantDeltas) {
+            return "";
+        }
+        const sorted = (delta: { [propertyName: string]: any } | undefined) =>
+            delta
+                ? Object.keys(delta)
+                      .sort()
+                      .map(name => [name, delta[name]])
+                : [];
+        return JSON.stringify(
+            Object.keys(variantDeltas)
+                .sort()
+                .map(variantName => [
+                    variantName,
+                    sorted(variantDeltas[variantName].delta),
+                    STYLE_STATES.map(state =>
+                        sorted(variantDeltas[variantName].states[state])
+                    )
+                ])
         );
     }
 
@@ -2298,7 +2617,9 @@ export class Style extends EezObject {
             this.shadowSpreadProperty === otherStyle.shadowSpreadProperty &&
             this.shadowColorProperty === otherStyle.shadowColorProperty &&
             // the states of a state style are not used
-            (this.isStateStyle || this.stateKey === otherStyle.stateKey)
+            (this.isStateStyle || this.stateKey === otherStyle.stateKey) &&
+            // a style with other variants is another style
+            this.variantKey === otherStyle.variantKey
         );
     }
 
@@ -2804,16 +3125,56 @@ export class StateStyle extends Style {
     }
 }
 
+// The style of a widget in a variant, built for the assets: the properties
+// of the variant (see Style.variantDeltas) over the base style. Its states are
+// the states of the base style with the states of the variant over them (see
+// Style.stateDeltas).
+export class VariantStyle extends Style {
+    constructor(
+        public baseStyle: Style,
+        public variantName: string,
+        delta: { [propertyName: string]: any },
+        states: Partial<Record<StyleStateName, { [propertyName: string]: any }>>
+    ) {
+        super();
+
+        this.isVariantStyle = true;
+        this.variantStateDeltas = states;
+
+        definePageLayoutStyleProperties(this, propertyName =>
+            propertyName == "useStyle" ? undefined : delta[propertyName]
+        );
+
+        setParent(this, baseStyle);
+    }
+
+    override get parentStyle(): Style | undefined {
+        return this.baseStyle;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // the state styles of a project style (in the same project), in the order of
-// the project styles
+// the project styles; the states of its variants are not among them
 function getStateStyles(baseStyle: Style) {
     if (!baseStyle.name) {
         return [];
     }
     return ProjectEditor.getProject(baseStyle).allStyles.filter(
-        style => style.state && style.useStyle == baseStyle.name
+        style =>
+            style.state && !style.variant && style.useStyle == baseStyle.name
+    );
+}
+
+// the variant styles of a project style (in the same project), also the
+// ones with a state, in the order of the project styles
+function getVariantStyles(baseStyle: Style) {
+    if (!baseStyle.name) {
+        return [];
+    }
+    return ProjectEditor.getProject(baseStyle).allStyles.filter(
+        style => style.variant && style.useStyle == baseStyle.name
     );
 }
 
@@ -2824,17 +3185,31 @@ function checkFlatStyle(style: Style, messages: IMessage[]) {
         return;
     }
 
-    if (!style.state) {
+    if (!style.state && !style.variant) {
         if (style.useStyle) {
             messages.push(
                 new Message(
                     MessageType.ERROR,
-                    `A project style doesn't use another style, only a state style uses its base style.`,
+                    `A project style doesn't use another style, only a state style or a variant style uses its base style.`,
                     getChildOfObject(style, "useStyle")
                 )
             );
         }
         return;
+    }
+
+    if (style.variant && !getStyleVariantId(style, style.variant)) {
+        messages.push(propertyNotFoundMessage(style, "variant"));
+    }
+
+    if (style.id != undefined) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `A state style or a variant style has no id, it is used through its base style.`,
+                getChildOfObject(style, "id")
+            )
+        );
     }
 
     if (!style.useStyle) {
@@ -2856,11 +3231,11 @@ function checkFlatStyle(style: Style, messages: IMessage[]) {
         return;
     }
 
-    if (baseStyle.state) {
+    if (baseStyle.state || baseStyle.variant) {
         messages.push(
             new Message(
                 MessageType.ERROR,
-                `The base style "${style.useStyle}" is a state style.`,
+                `The base style "${style.useStyle}" is a state style or a variant style.`,
                 getChildOfObject(style, "useStyle")
             )
         );
@@ -2868,15 +3243,23 @@ function checkFlatStyle(style: Style, messages: IMessage[]) {
     }
 
     if (
-        getStateStyles(baseStyle).find(
-            stateStyle => stateStyle != style && stateStyle.state == style.state
+        ProjectEditor.getProject(style).allStyles.find(
+            otherStyle =>
+                otherStyle != style &&
+                otherStyle.useStyle == style.useStyle &&
+                otherStyle.state == style.state &&
+                otherStyle.variant == style.variant
         )
     ) {
         messages.push(
             new Message(
                 MessageType.ERROR,
-                `More than one state style for the state "${style.state}" of the style "${style.useStyle}".`,
-                getChildOfObject(style, "state")
+                style.variant
+                    ? `More than one style for the variant "${style.variant}"${
+                          style.state ? ` in the state "${style.state}"` : ""
+                      } of the style "${style.useStyle}".`
+                    : `More than one state style for the state "${style.state}" of the style "${style.useStyle}".`,
+                getChildOfObject(style, style.variant ? "variant" : "state")
             )
         );
     }
@@ -2908,7 +3291,7 @@ function hasStyleInheritanceJs(styles: any[] | undefined) {
             style =>
                 (Array.isArray(style.childStyles) &&
                     style.childStyles.length > 0) ||
-                (!!style.useStyle && !style.state)
+                (!!style.useStyle && !style.state && !style.variant)
         )
     );
 }
@@ -3369,8 +3752,9 @@ export function flattenEezGuiStylesJs(
     };
     // the base style of a state style is the one in "useStyle" (a state
     // child style in the older format has its parent style)
+    // (a variant style is not a state of its base style, it is kept as it is)
     for (const { style, parent } of list) {
-        if (style.state) {
+        if (style.state && !style.variant) {
             const baseStyle = style.useStyle
                 ? findByName(style.useStyle)
                 : parent;
@@ -3380,7 +3764,7 @@ export function flattenEezGuiStylesJs(
         }
     }
     for (const style of masterStyles ?? []) {
-        if (style.state && style.useStyle) {
+        if (style.state && !style.variant && style.useStyle) {
             const baseStyle = masterByName.get(style.useStyle);
             if (baseStyle) {
                 addStateStyle(baseStyle, style);
@@ -3409,7 +3793,7 @@ export function flattenEezGuiStylesJs(
 
     // all values before any style is changed
     const results = list
-        .filter(({ style }) => !style.state)
+        .filter(({ style }) => !style.state && !style.variant)
         .map(({ style }) => {
             const values = inheritable.map(propertyName =>
                 resolve(style, propertyName)
@@ -3495,9 +3879,10 @@ export function flattenEezGuiStylesJs(
         }
     }
 
-    // the state styles that are no state of a style of this project are kept
+    // the state styles that are no state of a style of this project and the
+    // variant styles are kept
     for (const { style, parent } of list) {
-        if (style.state && !usedStateStyles.has(style)) {
+        if ((style.state || style.variant) && !usedStateStyles.has(style)) {
             if (!style.useStyle && parent) {
                 style.useStyle = parent.name;
             }

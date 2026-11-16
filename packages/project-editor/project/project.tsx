@@ -22,7 +22,8 @@ import {
     ProjectType,
     MessageType,
     IMessage,
-    PropertyProps
+    PropertyProps,
+    getParent
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -744,6 +745,116 @@ registerClass("ResourceFile", ResourceFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// A variant of the styles of an EEZ-GUI project: a look of a style that a
+// widget chooses (see Style.variant and Widget.variant). The id is what the
+// assets store, so the ids are 1, 2, ... without holes.
+export class StyleVariant extends EezObject {
+    id: number;
+    name: string;
+    description?: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "id",
+                type: PropertyType.Number,
+                isOptional: false,
+                unique: true
+            },
+            {
+                name: "name",
+                type: PropertyType.String,
+                isOptional: false,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.String
+            }
+        ],
+        listLabel: (styleVariant: StyleVariant, collapsed: boolean) => {
+            if (!collapsed) return "";
+            return `${styleVariant.id}: ${styleVariant.name}`;
+        },
+        defaultValue: {},
+        newItem: async (parent: IEezObject) => {
+            const styleVariants = parent as any as StyleVariant[];
+            return createObject<StyleVariant>(
+                getProjectStore(parent),
+                {
+                    id:
+                        styleVariants.reduce(
+                            (max, styleVariant) =>
+                                Math.max(max, styleVariant.id || 0),
+                            0
+                        ) + 1,
+                    name: ""
+                } as any,
+                StyleVariant
+            );
+        },
+        check: (object: StyleVariant, messages: IMessage[]) => {
+            if (!object.name) {
+                messages.push(propertyNotSetMessage(object, "name"));
+            } else if (object.name == "none") {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `"none" is not a name of a style variant.`,
+                        getChildOfObject(object, "name")
+                    )
+                );
+            }
+
+            const styleVariants = getParent(object) as any as StyleVariant[];
+            const index = styleVariants.indexOf(object);
+            if (
+                !Number.isInteger(object.id) ||
+                object.id < 1 ||
+                object.id > 255
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        "The id of a style variant is a number from 1 to 255.",
+                        getChildOfObject(object, "id")
+                    )
+                );
+            } else if (
+                index == styleVariants.length - 1 &&
+                styleVariants.some(
+                    (_, i) =>
+                        !styleVariants.find(
+                            styleVariant => styleVariant.id == i + 1
+                        )
+                )
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `The ids of the style variants must be 1 to ${styleVariants.length}, without holes.`,
+                        getChildOfObject(object, "id")
+                    )
+                );
+            }
+        }
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            id: observable,
+            name: observable,
+            description: observable
+        });
+    }
+}
+
+registerClass("StyleVariant", StyleVariant);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type ProjectVersion = "v3";
 
 export const PROJECT_TYPE_NAMES = {
@@ -769,6 +880,7 @@ export class General extends EezObject {
     masterProject: string;
     extensions: ExtensionDirective[];
     imports: ImportDirective[];
+    styleVariants: StyleVariant[];
     flowSupport: boolean;
     displayWidth: number;
     displayHeight: number;
@@ -930,6 +1042,24 @@ export class General extends EezObject {
                         !!project.masterProject ||
                         project.projectTypeTraits.isApplet ||
                         project.projectTypeTraits.isIEXT
+                    );
+                }
+            },
+            {
+                name: "styleVariants",
+                displayName: "Style variants",
+                type: PropertyType.Array,
+                typeClass: StyleVariant,
+                defaultValue: [],
+                // edited here, not in the tree of the settings
+                partOfNavigation: false,
+                enumerable: false,
+                disabled: (general: General) => {
+                    const projectTypeTraits =
+                        getProject(general).projectTypeTraits;
+                    return (
+                        !projectTypeTraits.isFirmware ||
+                        projectTypeTraits.isEezGuiLite
                     );
                 }
             },
@@ -1294,6 +1424,7 @@ export class General extends EezObject {
             masterProject: observable,
             extensions: observable,
             imports: observable,
+            styleVariants: observable,
             flowSupport: observable,
             displayWidth: observable,
             displayHeight: observable,

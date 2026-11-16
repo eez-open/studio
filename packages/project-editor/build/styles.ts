@@ -2,8 +2,10 @@ import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import {
     STYLE_STATES,
     StateStyle,
+    VariantStyle,
     getBorderColors,
     getStyleProperty,
+    getStyleVariants,
     type Style
 } from "project-editor/features/style/style";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
@@ -54,6 +56,65 @@ function addStateStyles(assets: Assets) {
         });
 
         assets.stateStyleIndexes.set(style, indexes);
+    }
+}
+
+// The styles of the variants of the styles of the assets (see
+// Style.variantDeltas): a VariantStyle for each variant with properties, added
+// to the assets (the list grows while it is walked, a variant style has no
+// variants). The indexes are kept in assets.variantStyleIndexes for
+// buildStyle. Runs before addStateStyles, which adds the states of the
+// variant styles too.
+function addVariantStyles(assets: Assets) {
+    for (let i = 0; i < assets.styles.length; i++) {
+        const style = assets.styles[i];
+        if (
+            !style ||
+            style.isStateStyle ||
+            style.isVariantStyle ||
+            assets.variantStyleIndexes.has(style)
+        ) {
+            continue;
+        }
+
+        const variantDeltas = style.variantDeltas;
+        if (!variantDeltas) {
+            continue;
+        }
+
+        const styleVariants = getStyleVariants(style);
+        const count = styleVariants.reduce(
+            (max, styleVariant) => Math.max(max, styleVariant.id || 0),
+            0
+        );
+
+        const indexes = new Array<number>(count + 1).fill(0);
+        indexes[0] = count;
+        let hasVariantStyle = false;
+
+        for (const styleVariant of styleVariants) {
+            const entry = variantDeltas[styleVariant.name];
+            if (!entry || !(styleVariant.id >= 1)) {
+                continue;
+            }
+            indexes[styleVariant.id] = assets.doGetStyleIndex(
+                ProjectEditor.getProject(style),
+                createTemporaryObject(
+                    () =>
+                        new VariantStyle(
+                            style,
+                            styleVariant.name,
+                            entry.delta,
+                            entry.states
+                        )
+                )
+            );
+            hasVariantStyle = true;
+        }
+
+        if (hasVariantStyle) {
+            assets.variantStyleIndexes.set(style, indexes);
+        }
     }
 }
 
@@ -241,6 +302,21 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeUint16(borderColors[1]);
         dataBuffer.writeUint16(borderColors[2]);
         dataBuffer.writeUint16(borderColors[3]);
+
+        // reserved
+        dataBuffer.writeUint16(0);
+
+        // variantStyles
+        const variantStyleIndexes = assets.variantStyleIndexes.get(style);
+        if (variantStyleIndexes) {
+            dataBuffer.writeObjectOffset(() => {
+                for (const index of variantStyleIndexes) {
+                    dataBuffer.writeInt16(index);
+                }
+            });
+        } else {
+            dataBuffer.writeUint32(0);
+        }
     }
 
     // The index of a style is its position in assets.styles (id - 1 for a
@@ -248,6 +324,7 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
     // write the first style in place of a missing one.
     let styles: Style[] = [];
     if (!assets.projectStore.projectTypeTraits.isDashboard) {
+        addVariantStyles(assets);
         addStateStyles(assets);
 
         const firstStyle = assets.styles.find(style => !!style);
