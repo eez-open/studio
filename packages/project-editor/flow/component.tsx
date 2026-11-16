@@ -4207,7 +4207,7 @@ export class Widget extends Component {
                         },
                         {
                             name: "icon",
-                            displayName: "Icon (Material icon name)",
+                            displayName: "Icon (SVG)",
                             type: "string"
                         }
                     ]

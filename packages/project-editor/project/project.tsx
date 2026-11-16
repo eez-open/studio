@@ -29,7 +29,8 @@ import {
 } from "project-editor/core/object";
 import {
     getAllComponentClasses,
-    getComponentName
+    getComponentName,
+    getSvgIcon
 } from "project-editor/flow/components/components-registry";
 import type { Widget } from "project-editor/flow/component";
 import {
@@ -874,8 +875,8 @@ registerClass("StyleVariant", StyleVariant);
 export class WidgetPreset extends EezObject {
     name: string;
     description?: string;
-    // the icon in the palette: the name of a Material icon, the icon of the
-    // widget type if not set
+    // the icon in the palette: the text of an SVG image ("<svg ...>"), the
+    // icon of the widget type if not set
     icon?: string;
     // the widget with the property values of the preset; it is on no page,
     // its position and its children are not used
@@ -902,8 +903,8 @@ export class WidgetPreset extends EezObject {
             },
             {
                 name: "icon",
-                displayName: "Icon (Material icon name)",
-                type: PropertyType.String
+                displayName: "Icon (SVG)",
+                type: PropertyType.MultilineText
             },
             {
                 name: "widget",
@@ -937,6 +938,14 @@ export class WidgetPreset extends EezObject {
             jsObject: any,
             project: Project
         ) => {
+            // (the icon was the name of a Material icon)
+            if (
+                typeof jsObject.icon == "string" &&
+                !jsObject.icon.trim().startsWith("<")
+            ) {
+                delete jsObject.icon;
+            }
+
             if (jsObject.widget || !jsObject.widgetType) {
                 return;
             }
@@ -1001,7 +1010,7 @@ export class WidgetPreset extends EezObject {
                         },
                         {
                             name: "icon",
-                            displayName: "Icon (Material icon name)",
+                            displayName: "Icon (SVG)",
                             type: "string"
                         }
                     ]
@@ -1048,6 +1057,16 @@ export class WidgetPreset extends EezObject {
                         MessageType.ERROR,
                         "The widget preset has no widget.",
                         object
+                    )
+                );
+            }
+
+            if (object.icon && !getSvgIcon(object.icon)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        "The icon is not an SVG image.",
+                        getChildOfObject(object, "icon")
                     )
                 );
             }

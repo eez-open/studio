@@ -688,9 +688,9 @@ export interface IObjectClassInfo {
     displayName?: string;
     componentPaletteGroupName?: string;
     props?: any;
-    // the icon in the palette instead of the icon of the class (the name of
-    // a Material icon), see WidgetPreset
-    materialIcon?: string;
+    // the icon in the palette instead of the icon of the class (the text of
+    // an SVG image), see WidgetPreset
+    svgIcon?: string;
 }
 
 export function getClassesDerivedFrom(
