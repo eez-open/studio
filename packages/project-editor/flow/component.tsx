@@ -3303,14 +3303,14 @@ export class Widget extends Component {
                     !isEezGuiProject(widget) ||
                     widget instanceof ProjectEditor.UserWidgetWidgetClass
             },
-            // The expression built from the rules (see variantExpression).
-            // Not hidden with hideInPropertyGrid: the flow build skips the
-            // hidden properties.
+            // The expression built from the rules (see variantExpression):
+            // not shown, but built (the flow build skips the other hidden
+            // properties, see buildComponent).
             makeDataPropertyInfo(
                 "variantExpression",
                 {
                     computed: true,
-                    propertyGridRowComponent: () => null,
+                    hideInPropertyGrid: true,
                     // Only in EEZ-GUI projects, so the flow properties of
                     // the widgets of the other projects keep their indexes.
                     // Not in a UserWidgetWidget: all its flow properties

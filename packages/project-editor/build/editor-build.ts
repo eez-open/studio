@@ -23,6 +23,8 @@ export interface EditorBuildOptions {
     // filled with the offsets of the widgets in the returned assets data (see
     // EezGuiEditorWasm.getWidgetBoxes)
     widgetOffsets?: Map<number, Widget | Page>;
+    // see EditorBuild.getVariantPreview
+    getVariantPreview?: (widget: Widget) => string | undefined;
 }
 
 // widgets whose "data" (or "text") is shown as text
@@ -163,6 +165,7 @@ export function buildEditorAssets(
         userWidgetPages: getUserWidgetPages(page),
         pageBackgroundColor: options.pageBackgroundColor,
         widgetOffsets: options.widgetOffsets,
+        getVariantPreview: options.getVariantPreview,
         getWidgetPropertyExpression: (
             widget,
             propertyName,

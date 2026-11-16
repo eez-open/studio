@@ -140,6 +140,10 @@ export interface EditorBuild {
     // buffer (buildEditorAssets adds the header), see
     // EezGuiEditorWasm.getWidgetBoxes
     widgetOffsets?: Map<number, Widget | Page>;
+    // The variant a widget is drawn in instead of its Variant (the rules have
+    // no value in the editor): the name of a variant, WIDGET_VARIANT_NONE, or
+    // undefined for its Variant.
+    getVariantPreview?: (widget: Widget) => string | undefined;
 }
 
 // the project store as the editor build sees it: the Output panel messages are
@@ -922,11 +926,13 @@ export class Assets {
             return [0, 0];
         }
 
+        const fixedVariantName =
+            this.editorBuild?.getVariantPreview?.(widget) ?? widget.variant;
         let fixedVariant = 0;
-        if (widget.variant == WIDGET_VARIANT_NONE) {
+        if (fixedVariantName == WIDGET_VARIANT_NONE) {
             fixedVariant = 0xffff;
-        } else if (widget.variant) {
-            fixedVariant = getStyleVariantId(widget, widget.variant);
+        } else if (fixedVariantName) {
+            fixedVariant = getStyleVariantId(widget, fixedVariantName);
         }
 
         // The rules have no value in the editor. A UserWidgetWidget has no

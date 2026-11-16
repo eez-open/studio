@@ -21,6 +21,10 @@ export interface RenderPageOptions {
     background?: string;
     // only draw the page, without the rebuilds that measure the times
     quick?: boolean;
+    // The variant a widget with Variant rules is drawn in, by the objID of the
+    // widget: the variant for each selectChildIndex ("" for its Variant). For
+    // comparing a widget with rules with the Select it replaced.
+    variantPreviews?: { [objID: string]: string[] };
 }
 
 async function renderPage(projectStore: ProjectStore, options: RenderPageOptions) {
@@ -84,7 +88,16 @@ async function renderPage(projectStore: ProjectStore, options: RenderPageOptions
         let t = performance.now();
         const assets = buildEditorAssets(page, pageLayout, {
             getSelectChildIndex: () => options.selectChildIndex ?? 0,
-            pageBackgroundColor: options.background
+            pageBackgroundColor: options.background,
+            getVariantPreview: options.variantPreviews
+                ? widget => {
+                      const variants = options.variantPreviews![widget.objID];
+                      const variant =
+                          variants?.[options.selectChildIndex ?? 0] ??
+                          variants?.[0];
+                      return variant ? variant : undefined;
+                  }
+                : undefined
         });
         buildTimes.push(performance.now() - t);
         assetsSize = assets.length;

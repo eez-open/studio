@@ -248,7 +248,9 @@ function buildComponent(
         )
     );
     dataBuffer.writeArray(properties, (propertyInfo, propertyIndex) => {
-        if (!isPropertyHidden(component, propertyInfo)) {
+        // a computed property is never shown and is built (the Variant rules
+        // of a widget, see Widget "variantExpression")
+        if (propertyInfo.computed || !isPropertyHidden(component, propertyInfo)) {
             try {
                 if (isFlowPropertyBuildable(component, propertyInfo)) {
                     let expression = getProperty(component, propertyInfo.name);
