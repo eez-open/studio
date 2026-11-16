@@ -32,7 +32,8 @@ import { List } from "project-editor/ui-components/List";
 import { ProjectContext } from "project-editor/project/context";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getExportedItems } from "project-editor/project/helper";
+import { getExternalItems } from "project-editor/project/helper";
+import type { Project } from "project-editor/project/project";
 import {
     IProjectExplorerFilter,
     isHiddenByProjectExplorerSearch,
@@ -148,7 +149,7 @@ const DeleteButton = observer(
                     onClick={this.onDelete}
                     enabled={
                         this.props.listAdapter.anySelected() &&
-                        this.props.listAdapter.selectedMasterItems.length == 0
+                        this.props.listAdapter.selectedExternalItems.length == 0
                     }
                 />
             );
@@ -174,12 +175,13 @@ interface ListNavigationProps {
     onFilesDrop?: (files: File[], filePaths: string[]) => void;
     doNotUsePropertyGrid?: boolean;
     className?: string;
-    // the same collection in the master project: its exported items are
+    // the same collection in another project: the exported items of it in
+    // the master project and all its items in the imported projects are
     // listed (read-only) after the items of navigationObject
-    masterNavigationObject?: IEezObject[];
-    // or the master project items to list, when it is not only the
-    // exported ones (all master colors can be used in a module project)
-    masterObjects?: IEezObject[];
+    externalCollection?: (project: Project) => IEezObject[] | undefined;
+    // or the items of other projects to list (all master colors can be used
+    // in a module project)
+    externalObjects?: IEezObject[];
     // set when rendered inside the Project Explorer, which then provides
     // the search text and the sort direction
     explorerFilter?: IProjectExplorerFilter;
@@ -288,8 +290,11 @@ export const ListNavigation = withProjectExplorerFilter(observer(
                 explorerFilter ? explorerFilter.searchText : this.searchText,
                 this.props.editable ?? true,
                 undefined,
-                this.props.masterObjects ??
-                    getExportedItems(this.props.masterNavigationObject)
+                this.props.externalObjects ??
+                    getExternalItems(
+                        this.context.project,
+                        this.props.externalCollection
+                    )
             );
         }
 
@@ -369,7 +374,7 @@ export const ListNavigation = withProjectExplorerFilter(observer(
             this.listAdapter.selectItems(
                 this.listAdapter.allRows
                     .map(row => row.item)
-                    .filter(item => !this.listAdapter.isMasterItem(item))
+                    .filter(item => !this.listAdapter.isExternalItem(item))
             );
         }
         onFocus = () => {

@@ -118,9 +118,7 @@ const Content = observer(
                             this.context.navigationStore.selectedUserPageObject
                         }
                         editable={!this.context.runtime}
-                        masterNavigationObject={
-                            this.context.project.masterProject?.userPages
-                        }
+                        externalCollection={project => project.userPages}
                     />
                 );
             }
@@ -135,9 +133,7 @@ const Content = observer(
                                 .selectedUserWidgetObject
                         }
                         editable={!this.context.runtime}
-                        masterNavigationObject={
-                            this.context.project.masterProject?.userWidgets
-                        }
+                        externalCollection={project => project.userWidgets}
                     />
                 );
             }
@@ -151,9 +147,7 @@ const Content = observer(
                             this.context.navigationStore.selectedActionObject
                         }
                         editable={!this.context.runtime}
-                        masterNavigationObject={
-                            this.context.project.masterProject?.actions
-                        }
+                        externalCollection={project => project.actions}
                     />
                 );
             }

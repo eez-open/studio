@@ -1140,8 +1140,8 @@ button.EezStudio_Action {
             }
         }
 
-        // item of the master project listed in a module project (read-only)
-        &.tree-row-master-project-item {
+        // item of the master project or of an imported project (read-only)
+        &.tree-row-external-project-item {
             font-style: italic;
 
             & > * {
@@ -1149,7 +1149,7 @@ button.EezStudio_Action {
             }
         }
 
-        // exported item (master project) or master project item (module)
+        // exported item, item of the master project or of an imported project
         & > .tree-row-marker {
             display: flex;
             align-items: center;

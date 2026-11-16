@@ -886,9 +886,10 @@ export enum DropPosition {
 }
 
 export class TreeAdapter {
-    // Items of the master project listed after the items of rootItem
-    // (read-only: they can be selected, but not edited, dragged or deleted).
-    masterItems: TreeObjectAdapter[];
+    // Items of the master project or of the imported projects listed after
+    // the items of rootItem (read-only: they can be selected, but not edited,
+    // dragged or deleted).
+    externalItems: TreeObjectAdapter[];
 
     constructor(
         public rootItem: TreeObjectAdapter,
@@ -902,12 +903,12 @@ export class TreeAdapter {
         protected searchText?: string,
         protected editable?: boolean,
         protected hideRootItem?: boolean,
-        masterObjects?: IEezObject[]
+        externalObjects?: IEezObject[]
     ) {
         this.onClickCallback = onClick;
         this.onDoubleClickCallback = onDoubleClick;
 
-        this.masterItems = (masterObjects ?? []).map(
+        this.externalItems = (externalObjects ?? []).map(
             object => new TreeObjectAdapter(object)
         );
 
@@ -918,31 +919,31 @@ export class TreeAdapter {
                 if (childItem) {
                     this.rootItem.selectItem(childItem);
                 } else {
-                    const masterItem = this.getMasterItem(getId(object));
-                    if (masterItem) {
-                        runInAction(() => (masterItem.selected = true));
+                    const externalItem = this.getExternalItem(getId(object));
+                    if (externalItem) {
+                        runInAction(() => (externalItem.selected = true));
                     }
                 }
             }
         }
     }
 
-    getMasterItem(id: string) {
-        return this.masterItems.find(item => getId(item.object) == id);
+    getExternalItem(id: string) {
+        return this.externalItems.find(item => getId(item.object) == id);
     }
 
-    isMasterItem(item: TreeObjectAdapter) {
-        return this.masterItems.indexOf(item) != -1;
+    isExternalItem(item: TreeObjectAdapter) {
+        return this.externalItems.indexOf(item) != -1;
     }
 
-    get selectedMasterItems() {
-        return this.masterItems.filter(item => item.selected);
+    get selectedExternalItems() {
+        return this.externalItems.filter(item => item.selected);
     }
 
     get selectedObjects() {
         return [
             ...this.rootItem.selectedObjects,
-            ...this.selectedMasterItems.map(item => item.object)
+            ...this.selectedExternalItems.map(item => item.object)
         ];
     }
 
@@ -1070,14 +1071,14 @@ export class TreeAdapter {
 
         enumChildren(getChildren(this.rootItem, this.hideRootItem ?? false), 0);
 
-        let masterItems = this.masterItems;
+        let externalItems = this.externalItems;
 
         if (filter) {
-            masterItems = masterItems.filter(item => filter(item.object));
+            externalItems = externalItems.filter(item => filter(item.object));
         }
 
         if (searchText) {
-            masterItems = masterItems.filter(item =>
+            externalItems = externalItems.filter(item =>
                 isObjectMatchingSearchText(
                     item.object,
                     objectToString(item.object),
@@ -1087,25 +1088,25 @@ export class TreeAdapter {
         }
 
         if (sortDirection === "asc") {
-            masterItems = masterItems
+            externalItems = externalItems
                 .slice()
                 .sort((a, b) =>
                     stringCompare(getLabel(a.object), getLabel(b.object))
                 );
         } else if (sortDirection === "desc") {
-            masterItems = masterItems
+            externalItems = externalItems
                 .slice()
                 .sort((a, b) =>
                     stringCompare(getLabel(b.object), getLabel(a.object))
                 );
         }
 
-        const masterSortedTree = sorted
-            ? getSortedTreeChildren(masterItems)
+        const externalSortedTree = sorted
+            ? getSortedTreeChildren(externalItems)
             : undefined;
 
-        for (const item of masterItems) {
-            if (masterSortedTree?.nested.has(item)) {
+        for (const item of externalItems) {
+            if (externalSortedTree?.nested.has(item)) {
                 continue;
             }
 
@@ -1116,7 +1117,7 @@ export class TreeAdapter {
                 collapsable: false
             });
 
-            for (const childItem of masterSortedTree?.children.get(item) ??
+            for (const childItem of externalSortedTree?.children.get(item) ??
                 []) {
                 children.push({
                     item: childItem,
@@ -1156,11 +1157,11 @@ export class TreeAdapter {
     }
 
     getItemFromId(id: string): TreeObjectAdapter | undefined {
-        return this.rootItem.getObjectAdapter(id) ?? this.getMasterItem(id);
+        return this.rootItem.getObjectAdapter(id) ?? this.getExternalItem(id);
     }
 
     getItemParent(item: TreeObjectAdapter): TreeObjectAdapter | undefined {
-        if (this.isMasterItem(item)) {
+        if (this.isExternalItem(item)) {
             return undefined;
         }
         return this.rootItem.getParent(item);
@@ -1182,7 +1183,7 @@ export class TreeAdapter {
     anySelected() {
         return (
             this.rootItem.selectedItems.length > 0 ||
-            this.selectedMasterItems.length > 0
+            this.selectedExternalItems.length > 0
         );
     }
 
@@ -1204,13 +1205,13 @@ export class TreeAdapter {
 
     selectItems(items: TreeObjectAdapter[]) {
         runInAction(() => {
-            for (const masterItem of this.masterItems) {
-                masterItem.selected = items.indexOf(masterItem) != -1;
+            for (const externalItem of this.externalItems) {
+                externalItem.selected = items.indexOf(externalItem) != -1;
             }
         });
 
         this.rootItem.selectItems(
-            items.filter(item => !this.isMasterItem(item))
+            items.filter(item => !this.isExternalItem(item))
         );
     }
 
@@ -1225,7 +1226,7 @@ export class TreeAdapter {
 
         const selectedItems = [
             ...this.rootItem.selectedItems,
-            ...this.selectedMasterItems
+            ...this.selectedExternalItems
         ];
 
         const visibleSelectedItems = selectedItems.filter(item =>
@@ -1280,7 +1281,7 @@ export class TreeAdapter {
     }
 
     toggleSelected(item: TreeObjectAdapter): void {
-        if (this.isMasterItem(item)) {
+        if (this.isExternalItem(item)) {
             runInAction(() => (item.selected = !item.selected));
         } else {
             this.rootItem.toggleSelected(item);
@@ -1288,14 +1289,14 @@ export class TreeAdapter {
     }
 
     showSelectionContextMenu() {
-        if (this.selectedMasterItems.length > 0) {
+        if (this.selectedExternalItems.length > 0) {
             return;
         }
         this.rootItem.showSelectionContextMenu(this.editable ?? true);
     }
 
     canCut() {
-        return this.selectedMasterItems.length == 0 && this.rootItem.canCut();
+        return this.selectedExternalItems.length == 0 && this.rootItem.canCut();
     }
 
     cutSelection() {
@@ -1305,7 +1306,7 @@ export class TreeAdapter {
     }
 
     canCopy() {
-        return this.selectedMasterItems.length == 0 && this.rootItem.canCopy();
+        return this.selectedExternalItems.length == 0 && this.rootItem.canCopy();
     }
 
     copySelection() {
@@ -1324,7 +1325,7 @@ export class TreeAdapter {
 
     canDelete() {
         return (
-            this.selectedMasterItems.length == 0 && this.rootItem.canDelete()
+            this.selectedExternalItems.length == 0 && this.rootItem.canDelete()
         );
     }
 
@@ -1346,15 +1347,15 @@ export class TreeAdapter {
         item.toggleExpanded();
     }
 
-    // master project items are not opened in an editor
+    // external items are not opened in an editor
     onClick(item: TreeObjectAdapter): void {
-        if (this.onClickCallback && !this.isMasterItem(item)) {
+        if (this.onClickCallback && !this.isExternalItem(item)) {
             this.onClickCallback(item.object);
         }
     }
 
     onDoubleClick(item: TreeObjectAdapter): void {
-        if (this.onDoubleClickCallback && !this.isMasterItem(item)) {
+        if (this.onDoubleClickCallback && !this.isExternalItem(item)) {
             this.onDoubleClickCallback(item.object);
         }
     }
@@ -1507,7 +1508,7 @@ export class TreeAdapter {
             return false;
         }
 
-        if (this.isMasterItem(dropItem)) {
+        if (this.isExternalItem(dropItem)) {
             return false;
         }
 
@@ -1556,7 +1557,7 @@ export class TreeAdapter {
     }
 
     canDropInside(dropItem: TreeObjectAdapter) {
-        if (this.isMasterItem(dropItem)) {
+        if (this.isExternalItem(dropItem)) {
             return false;
         }
 

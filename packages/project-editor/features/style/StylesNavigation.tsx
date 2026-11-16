@@ -78,9 +78,7 @@ const StylesNavigation = observer(
                         selectedObject={
                             this.context.navigationStore.selectedStyleObject
                         }
-                        masterNavigationObject={
-                            this.context.project.masterProject?.styles
-                        }
+                        externalCollection={project => project.styles}
                     />
                 );
             }

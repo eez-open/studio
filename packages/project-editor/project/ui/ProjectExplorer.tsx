@@ -114,9 +114,7 @@ const PROJECT_EXPLORER_GROUPS: IProjectExplorerGroup[] = [
                     projectStore.navigationStore.selectedUserPageObject
                 }
                 editable={!projectStore.runtime}
-                masterNavigationObject={
-                    projectStore.project.masterProject?.userPages
-                }
+                externalCollection={project => project.userPages}
             />
         )
     },
@@ -135,9 +133,7 @@ const PROJECT_EXPLORER_GROUPS: IProjectExplorerGroup[] = [
                     projectStore.navigationStore.selectedUserWidgetObject
                 }
                 editable={!projectStore.runtime}
-                masterNavigationObject={
-                    projectStore.project.masterProject?.userWidgets
-                }
+                externalCollection={project => project.userWidgets}
             />
         )
     },
@@ -156,9 +152,7 @@ const PROJECT_EXPLORER_GROUPS: IProjectExplorerGroup[] = [
                     projectStore.navigationStore.selectedActionObject
                 }
                 editable={!projectStore.runtime}
-                masterNavigationObject={
-                    projectStore.project.masterProject?.actions
-                }
+                externalCollection={project => project.actions}
             />
         )
     },
@@ -182,9 +176,8 @@ const PROJECT_EXPLORER_GROUPS: IProjectExplorerGroup[] = [
                 selectedObject={
                     projectStore.navigationStore.selectedGlobalVariableObject
                 }
-                masterNavigationObject={
-                    projectStore.project.masterProject?.variables
-                        ?.globalVariables
+                externalCollection={project =>
+                    project.variables?.globalVariables
                 }
             />
         )

@@ -16,8 +16,8 @@ import {
 import { ProjectContext } from "project-editor/project/context";
 import {
     getExportedId,
-    getProject,
-    isMasterProjectObject
+    getExternalProjectKind,
+    getProject
 } from "project-editor/project/helper";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -109,19 +109,22 @@ const TreeRow = observer(
                 onEditItem
             } = this.props;
 
-            // the item of the master project (in a module project) or the
-            // item exported to the module projects (in the master project)
-            const isMasterItem = isMasterProjectObject(item.object);
-            const exportedId = isMasterItem
-                ? undefined
-                : getExportedId(item.object);
+            // the item of the master project (in a module project) or of an
+            // imported project (read-only), the item exported to the module
+            // projects (in the master project, or imported from it)
+            const externalProjectKind = getExternalProjectKind(item.object);
+            const isExternalItem = externalProjectKind != undefined;
+            const exportedId =
+                externalProjectKind == "master"
+                    ? undefined
+                    : getExportedId(item.object);
 
             let className = classNames("tree-row", {
                 selected: treeAdapter.isSelected(item),
                 "drag-source":
                     treeAdapter.draggableAdapter &&
                     treeAdapter.draggableAdapter.isDragSource(item),
-                "tree-row-master-project-item": isMasterItem
+                "tree-row-external-project-item": isExternalItem
             });
 
             let triangle: JSX.Element | undefined;
@@ -169,10 +172,10 @@ const TreeRow = observer(
                         </span>
                     )}
 
-                    {isMasterItem && (
+                    {isExternalItem && (
                         <span
                             className="tree-row-marker"
-                            title={`From the master project ${
+                            title={`From the ${externalProjectKind} project ${
                                 getProject(item.object).projectName
                             } (read-only)`}
                         >
@@ -190,7 +193,7 @@ const TreeRow = observer(
                         </span>
                     )}
 
-                    {onEditItem && !isMasterItem && (
+                    {onEditItem && !isExternalItem && (
                         <Icon
                             icon="material:edit"
                             size={18}

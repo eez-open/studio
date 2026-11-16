@@ -401,7 +401,7 @@ export const ThemesSideView = observer(
                                 ? this.context.project.colors
                                 : this.project.colors
                         }
-                        masterObjects={
+                        externalObjects={
                             isModule ? this.project.colors : undefined
                         }
                         selectedObject={

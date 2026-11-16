@@ -53,9 +53,7 @@ export const BitmapsTab = observer(
                         selectedObject={
                             this.context.navigationStore.selectedBitmapObject
                         }
-                        masterNavigationObject={
-                            this.context.project.masterProject?.bitmaps
-                        }
+                        externalCollection={project => project.bitmaps}
                         onFilesDrop={async (files, filePaths) => {
                             this.context.undoManager.setCombineCommands(true);
 

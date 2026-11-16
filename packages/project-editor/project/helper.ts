@@ -131,31 +131,76 @@ export function getExportedId(object: IEezObject): number | undefined {
     return id;
 }
 
-// True for an object of the master project of the opened (module) project.
-export function isMasterProjectObject(object: IEezObject) {
+// "master" for an object of the master project of the opened project,
+// "imported" for an object of a project the opened project imports,
+// undefined otherwise.
+export function getExternalProjectKind(
+    object: IEezObject
+): "master" | "imported" | undefined {
     const project = getProject(object);
     if (!(project instanceof ProjectEditor.ProjectClass)) {
-        return false;
+        return undefined;
     }
-    const masterProject = project._store?.project?.masterProject;
-    return !!masterProject && project === masterProject;
+    const openedProject = project._store?.project;
+    if (!openedProject || project === openedProject) {
+        return undefined;
+    }
+    if (project === openedProject.masterProject) {
+        return "master";
+    }
+    if (
+        openedProject.settings.general.imports.some(
+            importDirective => importDirective.project === project
+        )
+    ) {
+        return "imported";
+    }
+    return undefined;
 }
 
-// The exported items of a master project collection, the child styles of a
+// The items of other projects listed (read-only) after the items of a
+// collection of the opened project: getCollection gives the same collection
+// in another project, of which the exported items of the master project and
+// all the items of the imported projects are listed. The child styles of a
 // style are listed after it.
-export function getExportedItems(collection: IEezObject[] | undefined) {
+export function getExternalItems(
+    openedProject: Project,
+    getCollection: ((project: Project) => IEezObject[] | undefined) | undefined
+) {
     const items: IEezObject[] = [];
+    if (!getCollection) {
+        return items;
+    }
 
-    function add(object: IEezObject) {
-        if (getExportedId(object) != undefined) {
+    function add(object: IEezObject, onlyExported: boolean) {
+        if (!onlyExported || getExportedId(object) != undefined) {
             items.push(object);
         }
         if (object instanceof ProjectEditor.StyleClass) {
-            object.childStyles.forEach(add);
+            object.childStyles.forEach(child => add(child, onlyExported));
         }
     }
 
-    collection?.forEach(add);
+    const masterProject = openedProject.masterProject;
+    if (masterProject) {
+        getCollection(masterProject)?.forEach(object => add(object, true));
+    }
+
+    // a project imported more than once, the master project or the opened
+    // project itself (imported back by a project it imports) is listed once
+    const listed = new Set<Project>([openedProject]);
+    if (masterProject) {
+        listed.add(masterProject);
+    }
+    for (const importDirective of openedProject.settings.general.imports) {
+        const importedProject = importDirective.project;
+        if (importedProject && !listed.has(importedProject)) {
+            listed.add(importedProject);
+            getCollection(importedProject)?.forEach(object =>
+                add(object, false)
+            );
+        }
+    }
 
     return items;
 }

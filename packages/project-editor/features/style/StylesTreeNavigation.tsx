@@ -32,7 +32,8 @@ import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Tree } from "project-editor/ui-components/Tree";
 import { SortControl } from "project-editor/ui-components/ListNavigation";
-import { getExportedItems } from "project-editor/project/helper";
+import { getExternalItems } from "project-editor/project/helper";
+import type { Project } from "project-editor/project/project";
 import {
     IProjectExplorerFilter,
     isHiddenByProjectExplorerSearch,
@@ -111,7 +112,7 @@ const DeleteButton = observer(
                     onClick={this.onDelete}
                     enabled={
                         this.props.treeAdapter.anySelected() &&
-                        this.props.treeAdapter.selectedMasterItems.length == 0
+                        this.props.treeAdapter.selectedExternalItems.length == 0
                     }
                 />
             );
@@ -135,9 +136,10 @@ interface StylesTreeNavigationProps {
     searchInput?: boolean;
     editable?: boolean;
     onFilesDrop?: (files: File[], filePaths: string[]) => void;
-    // the styles of the master project: the exported ones are listed
+    // the styles of another project: the exported styles of the master
+    // project and all the styles of the imported projects are listed
     // (read-only) after the styles of navigationObject
-    masterNavigationObject?: IEezObject[];
+    externalCollection?: (project: Project) => IEezObject[] | undefined;
     // set when rendered inside the Project Explorer
     explorerFilter?: IProjectExplorerFilter;
 }
@@ -279,7 +281,10 @@ export const StylesTreeNavigation = withProjectExplorerFilter(observer(
                 explorerFilter ? explorerFilter.searchText : this.searchText,
                 this.props.editable ?? true,
                 undefined,
-                getExportedItems(this.props.masterNavigationObject)
+                getExternalItems(
+                    this.context.project,
+                    this.props.externalCollection
+                )
             );
         }
 
