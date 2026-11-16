@@ -216,19 +216,19 @@ export function getStyleVariants(object: IEezObject): StyleVariant[] {
         return [];
     }
 
-    const own = project.settings?.general?.styleVariants;
+    const own = project.settings?.eezGui?.styleVariants;
     if (own && own.length > 0) {
         return own;
     }
 
     const masterProject = project.masterProject;
     if (masterProject) {
-        return masterProject.settings?.general?.styleVariants ?? [];
+        return masterProject.settings?.eezGui?.styleVariants ?? [];
     }
 
     for (const importDirective of project.settings?.general?.imports ?? []) {
         const imported =
-            importDirective.project?.settings?.general?.styleVariants;
+            importDirective.project?.settings?.eezGui?.styleVariants;
         if (imported && imported.length > 0) {
             return imported;
         }
@@ -1294,10 +1294,11 @@ export class Style extends EezObject {
     // a style of a state built from the state child styles (see StateStyle)
     isStateStyle = false;
 
-    // a style of a variant built from the variant styles (see VariantStyle),
-    // with the properties of its states
-    isVariantStyle = false;
-    variantStateDeltas:
+    // A style of a variant built from the variant styles (see VariantStyle),
+    // with the properties of its states. (The names start with an underscore:
+    // such a field is not saved in the project file.)
+    _isVariantStyle = false;
+    _variantStateDeltas:
         | Partial<Record<StyleStateName, { [propertyName: string]: any }>>
         | undefined;
 
@@ -2382,10 +2383,10 @@ export class Style extends EezObject {
     get stateDeltas():
         | Partial<Record<StyleStateName, { [propertyName: string]: any }>>
         | undefined {
-        if (this.isVariantStyle) {
+        if (this._isVariantStyle) {
             // the states of the base style, then the states of the variant
             const baseDeltas = this.parentStyle?.stateDeltas;
-            const variantDeltas = this.variantStateDeltas;
+            const variantDeltas = this._variantStateDeltas;
             if (!baseDeltas && !variantDeltas) {
                 return undefined;
             }
@@ -2477,7 +2478,7 @@ export class Style extends EezObject {
         | undefined {
         if (
             this.isStateStyle ||
-            this.isVariantStyle ||
+            this._isVariantStyle ||
             this.state ||
             this.variant ||
             isNotEezGuiStyle(this)
@@ -3138,8 +3139,8 @@ export class VariantStyle extends Style {
     ) {
         super();
 
-        this.isVariantStyle = true;
-        this.variantStateDeltas = states;
+        this._isVariantStyle = true;
+        this._variantStateDeltas = states;
 
         definePageLayoutStyleProperties(this, propertyName =>
             propertyName == "useStyle" ? undefined : delta[propertyName]

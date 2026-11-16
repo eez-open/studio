@@ -922,7 +922,7 @@ export class Assets {
     // The Variant of the widget for the assets (Widget::variant and
     // Widget::fixedVariant): the data item of its rules and its fixed variant.
     getWidgetVariant(widget: Widget): [number, number] {
-        if (!widget.variant && !(widget.variantRules?.length > 0)) {
+        if (!widget.variant && !((widget.variantRules?.length ?? 0) > 0)) {
             return [0, 0];
         }
 

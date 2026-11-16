@@ -23,8 +23,16 @@ import {
     MessageType,
     IMessage,
     PropertyProps,
-    getParent
+    getParent,
+    getClassByName,
+    getDefaultValue
 } from "project-editor/core/object";
+import {
+    getAllComponentClasses,
+    getComponentName,
+    getSvgIcon
+} from "project-editor/flow/components/components-registry";
+import type { Widget } from "project-editor/flow/component";
 import {
     getChildOfObject,
     Message,
@@ -773,6 +781,8 @@ export class StyleVariant extends EezObject {
             }
         ],
         listLabel: (styleVariant: StyleVariant, collapsed: boolean) => {
+            // (the tree of the settings asks for the label of the list too)
+            if (Array.isArray(styleVariant)) return "Style Variants";
             if (!collapsed) return "";
             return `${styleVariant.id}: ${styleVariant.name}`;
         },
@@ -855,6 +865,298 @@ registerClass("StyleVariant", StyleVariant);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// A widget preset of an EEZ-GUI project: a named widget with its property
+// values (its styles, its size, ...), which a widget made from the palette
+// gets. A preset with the name of a widget of Studio ("Button") gives that
+// widget its defaults; a preset with another name ("Value row") is one more
+// entry of the palette. The widget keeps the name of its preset
+// (Widget.preset), there is no link: a change of the preset doesn't change
+// the widgets made from it. See getWidgetPresets.
+export class WidgetPreset extends EezObject {
+    name: string;
+    description?: string;
+    // the icon in the palette: the text of an SVG image ("<svg ...>"), the
+    // icon of the widget type if not set
+    icon?: string;
+    // the widget with the property values of the preset; it is on no page,
+    // its position and its children are not used
+    widget: Widget;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                isOptional: false,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.String
+            },
+            {
+                name: "widgetType",
+                displayName: "Widget",
+                type: PropertyType.String,
+                computed: true,
+                readOnlyInPropertyGrid: true
+            },
+            {
+                name: "icon",
+                displayName: "Icon (SVG)",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "widget",
+                type: PropertyType.Object,
+                // (the widget classes are not loaded yet here)
+                get typeClass() {
+                    return ProjectEditor.WidgetClass;
+                },
+                // edited in the settings below the properties of the preset,
+                // see SettingsContent
+                hideInPropertyGrid: true,
+                enumerable: false,
+                partOfNavigation: false,
+                // a widget of a preset has no data, no action, ...
+                skipChecks: true
+            }
+        ],
+        listLabel: (widgetPreset: WidgetPreset, collapsed: boolean) => {
+            // (the tree of the settings asks for the label of the list too)
+            if (Array.isArray(widgetPreset)) return "Widget Presets";
+            if (!collapsed) return "";
+            const widget = getComponentName(widgetPreset.widgetType);
+            return widget && widget != widgetPreset.name
+                ? `${widgetPreset.name} (${widget})`
+                : widgetPreset.name;
+        },
+        // the property values were JSON text, with the name of the widget
+        // class next to them
+        beforeLoadHook: (
+            object: IEezObject,
+            jsObject: any,
+            project: Project
+        ) => {
+            // (the icon was the name of a Material icon)
+            if (
+                typeof jsObject.icon == "string" &&
+                !jsObject.icon.trim().startsWith("<")
+            ) {
+                delete jsObject.icon;
+            }
+
+            if (jsObject.widget || !jsObject.widgetType) {
+                return;
+            }
+            let values = {};
+            try {
+                values = JSON.parse(jsObject.properties || "{}");
+            } catch (err) {}
+            jsObject.widget = getPresetWidgetValues(
+                project._store,
+                jsObject.widgetType,
+                values
+            );
+            delete jsObject.widgetType;
+            delete jsObject.properties;
+        },
+        newItem: async (parent: IEezObject) => {
+            const projectStore = getProjectStore(parent);
+
+            // the widgets of the palette, with the values the palette gives
+            // them
+            const widgetClasses = getAllComponentClasses(
+                projectStore,
+                ProjectEditor.WidgetClass
+            ).filter(
+                widgetClass =>
+                    widgetClass.id == widgetClass.name &&
+                    !(
+                        widgetClass.objectClass.classInfo
+                            .enabledInComponentPalette &&
+                        !widgetClass.objectClass.classInfo.enabledInComponentPalette(
+                            projectStore.project.settings.general.projectType,
+                            projectStore
+                        )
+                    )
+            );
+            if (widgetClasses.length == 0) {
+                return undefined;
+            }
+
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New Widget Preset",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validators.unique({}, parent)
+                            ]
+                        },
+                        {
+                            name: "widgetType",
+                            displayName: "Widget",
+                            type: "enum",
+                            enumItems: widgetClasses
+                                .map(widgetClass => ({
+                                    id: widgetClass.name,
+                                    label: getComponentName(widgetClass.name)
+                                }))
+                                .sort((a, b) => a.label.localeCompare(b.label))
+                        },
+                        {
+                            name: "icon",
+                            displayName: "Icon (SVG)",
+                            type: "string"
+                        }
+                    ]
+                },
+                values: {
+                    name: "",
+                    widgetType: widgetClasses.find(
+                        widgetClass => widgetClass.name == "TextWidget"
+                    )
+                        ? "TextWidget"
+                        : widgetClasses[0].name,
+                    icon: ""
+                },
+                dialogContext: projectStore.project
+            });
+
+            const widgetType = result.values.widgetType;
+            const widgetClass = widgetClasses.find(
+                widgetClass => widgetClass.name == widgetType
+            );
+
+            return createObject<WidgetPreset>(
+                projectStore,
+                {
+                    name: result.values.name.trim(),
+                    icon: result.values.icon.trim() || undefined,
+                    widget: getPresetWidgetValues(
+                        projectStore,
+                        widgetType,
+                        widgetClass?.props
+                    )
+                } as any,
+                WidgetPreset
+            );
+        },
+        check: (object: WidgetPreset, messages: IMessage[]) => {
+            if (!object.name) {
+                messages.push(propertyNotSetMessage(object, "name"));
+            }
+
+            if (!object.widget) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        "The widget preset has no widget.",
+                        object
+                    )
+                );
+            }
+
+            if (object.icon && !getSvgIcon(object.icon)) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        "The icon is not an SVG image.",
+                        getChildOfObject(object, "icon")
+                    )
+                );
+            }
+        }
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            icon: observable,
+            widget: observable
+        });
+    }
+
+    // the class name of the widget ("InputEmbeddedWidget")
+    get widgetType(): string {
+        return this.widget ? this.widget.type : "";
+    }
+
+    // the property values a widget made from the preset gets
+    get values(): { [propertyName: string]: any } {
+        return this.widget ? this.widget.presetValues : {};
+    }
+}
+
+// The property values of the widget of a preset: those of a new widget of
+// the type, as the palette makes it, and "values" over them.
+export function getPresetWidgetValues(
+    projectStore: ProjectStore,
+    widgetType: string,
+    values: any
+) {
+    const result: any = {};
+
+    const widgetClass = getClassByName(projectStore, widgetType);
+    if (widgetClass) {
+        Object.assign(
+            result,
+            getDefaultValue(projectStore, widgetClass.classInfo)
+        );
+        if (widgetClass.classInfo.componentDefaultValue) {
+            // (not while the project is being loaded: the values depend on
+            // the type of the project)
+            try {
+                Object.assign(
+                    result,
+                    widgetClass.classInfo.componentDefaultValue(projectStore)
+                );
+            } catch (err) {}
+        }
+    }
+
+    Object.assign(result, values);
+
+    result.type = widgetType;
+    result.left = 0;
+    result.top = 0;
+    delete result.preset;
+
+    return JSON.parse(JSON.stringify(result));
+}
+
+registerClass("WidgetPreset", WidgetPreset);
+
+// The widget presets a project uses: its own, then the ones of its master
+// project and of the projects it imports (the first preset with a name).
+export function getWidgetPresets(project: Project): WidgetPreset[] {
+    const presets: WidgetPreset[] = [];
+    const add = (other: Project | undefined) => {
+        for (const preset of other?.settings?.eezGui?.widgetPresets ?? []) {
+            if (!presets.find(p => p.name == preset.name)) {
+                presets.push(preset);
+            }
+        }
+    };
+
+    add(project);
+    add(project.masterProject);
+    for (const importDirective of project.settings?.general?.imports ?? []) {
+        add(importDirective.project);
+    }
+
+    return presets;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type ProjectVersion = "v3";
 
 export const PROJECT_TYPE_NAMES = {
@@ -880,7 +1182,6 @@ export class General extends EezObject {
     masterProject: string;
     extensions: ExtensionDirective[];
     imports: ImportDirective[];
-    styleVariants: StyleVariant[];
     flowSupport: boolean;
     displayWidth: number;
     displayHeight: number;
@@ -1042,24 +1343,6 @@ export class General extends EezObject {
                         !!project.masterProject ||
                         project.projectTypeTraits.isApplet ||
                         project.projectTypeTraits.isIEXT
-                    );
-                }
-            },
-            {
-                name: "styleVariants",
-                displayName: "Style variants",
-                type: PropertyType.Array,
-                typeClass: StyleVariant,
-                defaultValue: [],
-                // edited here, not in the tree of the settings
-                partOfNavigation: false,
-                enumerable: false,
-                disabled: (general: General) => {
-                    const projectTypeTraits =
-                        getProject(general).projectTypeTraits;
-                    return (
-                        !projectTypeTraits.isFirmware ||
-                        projectTypeTraits.isEezGuiLite
                     );
                 }
             },
@@ -1424,7 +1707,6 @@ export class General extends EezObject {
             masterProject: observable,
             extensions: observable,
             imports: observable,
-            styleVariants: observable,
             flowSupport: observable,
             displayWidth: observable,
             displayHeight: observable,
@@ -1457,8 +1739,61 @@ registerClass("General", General);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// the project types of an EEZ-GUI project (General.projectType)
+const EEZ_GUI_SETTINGS_PROJECT_TYPES: string[] = [
+    ProjectType.FIRMWARE,
+    ProjectType.FIRMWARE_MODULE,
+    ProjectType.RESOURCE,
+    ProjectType.APPLET
+];
+
+// The settings only an EEZ-GUI project has, the section "EEZ GUI" of the
+// project settings: the style variants (see StyleVariant) and the widget
+// presets (see WidgetPreset). A project without them has no list, and saves
+// none.
+export class EezGuiSettings extends EezObject {
+    styleVariants?: StyleVariant[];
+    widgetPresets?: WidgetPreset[];
+
+    static classInfo: ClassInfo = {
+        label: () => "EEZ GUI",
+        properties: [
+            {
+                name: "styleVariants",
+                displayName: "Style Variants",
+                type: PropertyType.Array,
+                typeClass: StyleVariant,
+                isOptional: true,
+                showOnlyChildrenInTree: false
+            },
+            {
+                name: "widgetPresets",
+                displayName: "Widget Presets",
+                type: PropertyType.Array,
+                typeClass: WidgetPreset,
+                isOptional: true,
+                showOnlyChildrenInTree: false
+            }
+        ],
+        defaultValue: {}
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            styleVariants: observable,
+            widgetPresets: observable
+        });
+    }
+}
+
+registerClass("EezGuiSettings", EezGuiSettings);
+
 export class Settings extends EezObject {
     general: General;
+    // only in an EEZ-GUI project
+    eezGui?: EezGuiSettings;
     build: Build;
 
     static classInfo: ClassInfo = {
@@ -1469,6 +1804,19 @@ export class Settings extends EezObject {
                 type: PropertyType.Object,
                 typeClass: General,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "eezGui",
+                type: PropertyType.Object,
+                typeClass: EezGuiSettings,
+                hideInPropertyGrid: true,
+                // (loaded after "general")
+                isOptional: (settings: IEezObject) =>
+                    EEZ_GUI_SETTINGS_PROJECT_TYPES.indexOf(
+                        (settings as Settings).general?.projectType
+                    ) == -1,
+                enumerable: (settings: IEezObject) =>
+                    (settings as Settings).eezGui != undefined
             },
             {
                 name: "build",
@@ -1489,6 +1837,36 @@ export class Settings extends EezObject {
                 }
             }
         ],
+        // the style variants and the widget presets were in "general"
+        beforeLoadHook: (
+            object: IEezObject,
+            jsObject: any,
+            project: Project
+        ) => {
+            // The project has its settings from here on, not only when all
+            // of them are loaded: the widget of a widget preset is loaded
+            // with the settings, and the load of a widget asks for the type
+            // of the project ("general", loaded first).
+            if (project && !project.settings) {
+                project.settings = object as Settings;
+            }
+
+            const general = jsObject?.general;
+            if (!general) {
+                return;
+            }
+            for (const name of ["styleVariants", "widgetPresets"]) {
+                if (general[name] !== undefined) {
+                    if (!jsObject.eezGui) {
+                        jsObject.eezGui = {};
+                    }
+                    if (jsObject.eezGui[name] === undefined) {
+                        jsObject.eezGui[name] = general[name];
+                    }
+                    delete general[name];
+                }
+            }
+        },
         hideInProperties: true,
         icon: "material:settings"
     };
@@ -1498,6 +1876,7 @@ export class Settings extends EezObject {
 
         makeObservable(this, {
             general: observable,
+            eezGui: observable,
             build: observable
         });
     }

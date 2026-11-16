@@ -71,7 +71,7 @@ function addVariantStyles(assets: Assets) {
         if (
             !style ||
             style.isStateStyle ||
-            style.isVariantStyle ||
+            style._isVariantStyle ||
             assets.variantStyleIndexes.has(style)
         ) {
             continue;

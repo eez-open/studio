@@ -259,6 +259,8 @@ export interface PropertyInfo {
         propertyInfo: PropertyInfo
     ) => string;
     partOfNavigation?: boolean;
+    // the project checks don't look into this object or array
+    skipChecks?: boolean;
     fileFilters?: any;
 
     flowProperty?:
@@ -688,6 +690,9 @@ export interface IObjectClassInfo {
     displayName?: string;
     componentPaletteGroupName?: string;
     props?: any;
+    // the icon in the palette instead of the icon of the class (the text of
+    // an SVG image), see WidgetPreset
+    svgIcon?: string;
 }
 
 export function getClassesDerivedFrom(

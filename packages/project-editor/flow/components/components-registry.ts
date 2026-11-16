@@ -4,6 +4,7 @@ import {
     getClassesDerivedFrom,
     isProperSubclassOf
 } from "project-editor/core/object";
+import React from "react";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { mostReadable } from "eez-studio-shared/color";
 import type { ProjectStore } from "project-editor/store";
@@ -102,7 +103,60 @@ export function getAllComponentClasses(
         );
     }
 
-    return [...stockComponents, ...userWidgets, ...userActions];
+    // The widget presets of an EEZ-GUI project (see WidgetPreset): a preset
+    // with the name of a widget gives the widget its property values, the
+    // others are entries of their own.
+    const presetWidgets: IObjectClassInfo[] = [];
+    if (
+        baseClass == ProjectEditor.WidgetClass &&
+        projectStore.projectTypeTraits.isFirmware &&
+        !projectStore.projectTypeTraits.isEezGuiLite
+    ) {
+        const presets = ProjectEditor.getWidgetPresets(projectStore.project);
+
+        stockComponents = stockComponents.map(objectClassInfo => {
+            const preset = presets.find(
+                preset =>
+                    preset.widgetType == objectClassInfo.name &&
+                    preset.name == getComponentName(objectClassInfo.name)
+            );
+            return preset
+                ? {
+                      ...objectClassInfo,
+                      props: { ...objectClassInfo.props, ...preset.values }
+                  }
+                : objectClassInfo;
+        });
+
+        for (const preset of presets) {
+            if (preset.name == getComponentName(preset.widgetType)) {
+                continue;
+            }
+            const objectClassInfo = stockComponents.find(
+                objectClassInfo => objectClassInfo.name == preset.widgetType
+            );
+            if (!objectClassInfo) {
+                continue;
+            }
+            presetWidgets.push({
+                id: `WidgetPreset<${preset.name}>`,
+                name: objectClassInfo.name,
+                objectClass: objectClassInfo.objectClass,
+                displayName: preset.name,
+                // (the first group of the palette)
+                componentPaletteGroupName: "!0Presets",
+                props: { ...preset.values, preset: preset.name },
+                svgIcon: preset.icon || undefined
+            });
+        }
+    }
+
+    return [
+        ...stockComponents,
+        ...presetWidgets,
+        ...userWidgets,
+        ...userActions
+    ];
 }
 
 export function getComponentGroupName(
@@ -141,6 +195,7 @@ export function getComponentGroupName(
 }
 
 // Groups sort order:
+//  !0 -> "Presets" (the widget presets of an EEZ-GUI project)
 //  !1 -> "Common Widgets" and odther LVGL widget groups
 //  !2 -> "LVGL Actions"
 //  !3 -> "Common Actions"
@@ -223,6 +278,80 @@ export function getComponentName(componentClassName: string) {
     return name;
 }
 
+// An icon given as the text of an SVG image (the icon of a widget preset), as
+// an element like the icons of the classes; undefined if the text is not an
+// SVG image. Scripts, event handlers and foreign content are removed: the text
+// comes from a project file.
+const svgIcons = new Map<string, React.ReactElement | null>();
+
+const SVG_ROOT_ATTRIBUTES: { [name: string]: string } = {
+    viewBox: "viewBox",
+    fill: "fill",
+    stroke: "stroke",
+    "stroke-width": "strokeWidth",
+    "stroke-linecap": "strokeLinecap",
+    "stroke-linejoin": "strokeLinejoin",
+    "fill-rule": "fillRule",
+    "clip-rule": "clipRule"
+};
+
+export function getSvgIcon(svg: string): React.ReactElement | undefined {
+    let icon = svgIcons.get(svg);
+    if (icon === undefined) {
+        icon = null;
+        try {
+            const root = new DOMParser().parseFromString(
+                svg.trim(),
+                "image/svg+xml"
+            ).documentElement;
+            if (
+                root &&
+                root.nodeName.toLowerCase() == "svg" &&
+                !root.querySelector("parsererror")
+            ) {
+                for (const element of [
+                    ...root.querySelectorAll(
+                        "script, foreignObject, iframe, object, embed"
+                    )
+                ]) {
+                    element.remove();
+                }
+                for (const element of [...root.querySelectorAll("*")]) {
+                    for (const attribute of [...element.attributes]) {
+                        if (
+                            /^on/i.test(attribute.name) ||
+                            /^\s*javascript:/i.test(attribute.value)
+                        ) {
+                            element.removeAttribute(attribute.name);
+                        }
+                    }
+                }
+
+                const props: any = {};
+                for (const name of Object.keys(SVG_ROOT_ATTRIBUTES)) {
+                    const value = root.getAttribute(name);
+                    if (value != null) {
+                        props[SVG_ROOT_ATTRIBUTES[name]] = value;
+                    }
+                }
+                if (!props.viewBox) {
+                    const width = parseFloat(root.getAttribute("width") ?? "");
+                    const height = parseFloat(
+                        root.getAttribute("height") ?? ""
+                    );
+                    if (width > 0 && height > 0) {
+                        props.viewBox = `0 0 ${width} ${height}`;
+                    }
+                }
+                props.dangerouslySetInnerHTML = { __html: root.innerHTML };
+                icon = React.createElement("svg", props);
+            }
+        } catch (err) {}
+        svgIcons.set(svg, icon);
+    }
+    return icon ?? undefined;
+}
+
 export function getComponentVisualData(
     componentClass: IObjectClassInfo,
     projectStore: ProjectStore | undefined
@@ -237,6 +366,13 @@ export function getComponentVisualData(
 
     if (icon == undefined) {
         icon = classInfo.icon as any;
+    }
+
+    if (componentClass.svgIcon) {
+        const svgIcon = getSvgIcon(componentClass.svgIcon);
+        if (svgIcon) {
+            icon = svgIcon;
+        }
     }
 
     let label = componentClass.displayName

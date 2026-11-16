@@ -66,6 +66,7 @@ import {
 } from "project-editor/project/project-type-traits";
 import { isOverlappingChildrenSupported } from "project-editor/flow/components/widgets/overlapping-widgets";
 import { objectToJS } from "project-editor/store";
+import { getClass } from "project-editor/core/object";
 import { IContextMenuContext, getProjectStore } from "project-editor/store";
 
 import type {
@@ -227,7 +228,9 @@ const resizingProperty: PropertyInfo = {
     propertyGridRowComponent: ResizingProperty,
     skipSearch: true,
     hideInPropertyGrid: (widget: Widget) =>
-        isLVGLProject(widget) || isWidgetUnderDockingManager(widget),
+        isLVGLProject(widget) ||
+        isWidgetUnderDockingManager(widget) ||
+        isPresetWidget(widget),
     layoutSpecific: true
 };
 
@@ -333,6 +336,34 @@ export function migrateOptionalStyleProperty(
 ) {
     if (jsObject[propertyName] === undefined) {
         jsObject[propertyName] = {};
+    }
+}
+
+// The style of a part of a widget that is made when the part is set (the
+// icons of a Text or an Input, the label of a DropDownList), in the
+// updateObjectValueHook of the widget: parts is a list of [part property,
+// style property]. A widget without the part has no style object, so a
+// project file doesn't grow.
+export function addPartStyles(
+    widget: Widget,
+    values: any,
+    parts: [string, string][]
+) {
+    for (const [partName, styleName] of parts) {
+        if (
+            values[partName] &&
+            !(widget as any)[styleName] &&
+            values[styleName] === undefined
+        ) {
+            const style = createObject<Style>(
+                getProjectStore(widget),
+                {} as any,
+                Style,
+                styleName
+            );
+            setParent(style, widget);
+            values[styleName] = style;
+        }
     }
 }
 
@@ -1829,6 +1860,12 @@ function getComponentLabel(component: Component) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// The widget of a widget preset (see WidgetPreset): it is on no page, so it
+// has no position.
+function isPresetWidget(widget: Component) {
+    return getParent(widget) instanceof ProjectEditor.WidgetPresetClass;
+}
+
 function isWidgetUnderDockingManager(widget: Component) {
     const parent = getWidgetParent(widget);
     return (
@@ -2096,6 +2133,7 @@ export class Component extends EezObject {
                 disabled: isActionComponent,
                 hideInPropertyGrid: (component: Component) =>
                     isWidgetUnderDockingManager(component) ||
+                    isPresetWidget(component) ||
                     isSetByLayout(component, "left"),
                 hideInDocumentation: "action",
                 layoutSpecific: true
@@ -2107,6 +2145,7 @@ export class Component extends EezObject {
                 disabled: isActionComponent,
                 hideInPropertyGrid: (component: Component) =>
                     isWidgetUnderDockingManager(component) ||
+                    isPresetWidget(component) ||
                     isSetByLayout(component, "top"),
                 hideInDocumentation: "action",
                 layoutSpecific: true
@@ -2152,7 +2191,9 @@ export class Component extends EezObject {
                 propertyGridGroup: geometryGroup,
                 computed: true,
                 disabled: isActionComponent,
-                hideInPropertyGrid: isWidgetUnderDockingManager,
+                hideInPropertyGrid: (component: Component) =>
+                    isWidgetUnderDockingManager(component) ||
+                    isPresetWidget(component),
                 hideInDocumentation: "action"
             },
             {
@@ -3195,7 +3236,11 @@ export class Widget extends Component {
     // give the variant by data: the variant of the first rule whose condition
     // is true, and the one above when no rule applies.
     variant?: string;
-    variantRules: VariantRule[];
+    variantRules?: VariantRule[];
+
+    // the name of the widget preset the widget was made from (see
+    // WidgetPreset): only a name, shown in the widget tree
+    preset?: string;
     resizing: IResizing;
     style: Style;
 
@@ -3277,6 +3322,14 @@ export class Widget extends Component {
                 "boolean"
             ),
             {
+                name: "preset",
+                type: PropertyType.String,
+                propertyGridGroup: generalGroup,
+                readOnlyInPropertyGrid: true,
+                hideInPropertyGrid: (widget: Widget) => !widget.preset,
+                disabled: (widget: Widget) => !isEezGuiProject(widget)
+            },
+            {
                 name: "variant",
                 displayName: "Variant",
                 type: PropertyType.Enum,
@@ -3295,7 +3348,8 @@ export class Widget extends Component {
                 displayName: "Variant rules",
                 type: PropertyType.Array,
                 typeClass: VariantRule,
-                defaultValue: [],
+                // a widget without rules has no list (and saves none)
+                isOptional: true,
                 propertyGridGroup: styleGroup,
                 partOfNavigation: false,
                 enumerable: false,
@@ -3346,7 +3400,9 @@ export class Widget extends Component {
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
                 disabled: component => isLVGLProject(component),
-                hideInPropertyGrid: isWidgetUnderDockingManager
+                hideInPropertyGrid: (widget: Widget) =>
+                    isWidgetUnderDockingManager(widget) ||
+                    isPresetWidget(widget)
             },
             {
                 name: "allowOverlapping",
@@ -3354,7 +3410,8 @@ export class Widget extends Component {
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
                 hideInPropertyGrid: (widget: Widget) =>
-                    !isOverlappingChildrenSupported(widget)
+                    !isOverlappingChildrenSupported(widget) ||
+                    isPresetWidget(widget)
             },
             {
                 name: "locked",
@@ -3616,6 +3673,16 @@ export class Widget extends Component {
                                 })
                             );
                         }
+                    }
+
+                    if (isEezGuiProject(objects[0]) && objects.length === 1) {
+                        additionalMenuItems.push(
+                            new MenuItem({
+                                label: "Save as Preset...",
+                                click: () =>
+                                    (objects[0] as Widget).saveAsPreset()
+                            })
+                        );
                     }
 
                     additionalMenuItems.push(
@@ -4029,6 +4096,7 @@ export class Widget extends Component {
             visible: observable,
             variant: observable,
             variantRules: observable,
+            preset: observable,
             resizing: observable,
             style: observable,
             visibleInLayout: observable,
@@ -4079,6 +4147,111 @@ export class Widget extends Component {
     // ("fitToContent" of Text, DisplayData and a row or column).
     get variantExpression(): string | undefined {
         return getVariantRulesExpression(this, this.variantRules);
+    }
+
+    // The property values a preset made from this widget has: all but what
+    // belongs to the place of the widget (its position, its children, its
+    // ids).
+    get presetValues() {
+        const strip = (value: any): any => {
+            if (Array.isArray(value)) {
+                return value.map(strip);
+            }
+            if (value && typeof value == "object") {
+                const result: any = {};
+                for (const key of Object.keys(value)) {
+                    if (key != "objID" && key != "wireID") {
+                        result[key] = strip(value[key]);
+                    }
+                }
+                return result;
+            }
+            return value;
+        };
+
+        const values = strip(objectToJS(this));
+        for (const key of [
+            "type",
+            "left",
+            "top",
+            "preset",
+            "layoutProperties",
+            "locked",
+            "hiddenInEditor"
+        ]) {
+            delete values[key];
+        }
+        if (Array.isArray(values.widgets)) {
+            values.widgets = [];
+        }
+        return values;
+    }
+
+    // "Save as Preset": a widget preset of the project with the property
+    // values of this widget (see WidgetPreset). A preset of the project with
+    // the same name is replaced.
+    async saveAsPreset() {
+        const projectStore = getProjectStore(this);
+        const widgetType = getClass(this).name;
+
+        let result;
+        try {
+            result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "Save as Preset",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required]
+                        },
+                        {
+                            name: "icon",
+                            displayName: "Icon (SVG)",
+                            type: "string"
+                        }
+                    ]
+                },
+                values: {
+                    name: this.preset || getComponentName(widgetType),
+                    icon: ""
+                },
+                dialogContext: projectStore.project
+            });
+        } catch (err) {
+            return;
+        }
+
+        const name = result.values.name.trim();
+        const eezGui = projectStore.project.settings.eezGui;
+        if (!eezGui) {
+            return;
+        }
+        if (!eezGui.widgetPresets) {
+            projectStore.updateObject(eezGui, { widgetPresets: [] });
+        }
+        const widgetPresets = eezGui.widgetPresets!;
+        const existing = widgetPresets.find(preset => preset.name == name);
+        const widgetPreset = createObject<any>(
+            projectStore,
+            {
+                name,
+                description: existing?.description,
+                icon: result.values.icon.trim() || undefined,
+                widget: ProjectEditor.getPresetWidgetValues(
+                    projectStore,
+                    widgetType,
+                    this.presetValues
+                )
+            },
+            ProjectEditor.WidgetPresetClass
+        );
+
+        if (existing) {
+            replaceObject(existing, widgetPreset);
+        } else {
+            projectStore.addObject(widgetPresets, widgetPreset);
+        }
     }
 
     getLayoutFlags() {
