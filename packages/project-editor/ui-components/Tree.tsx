@@ -23,6 +23,12 @@ import { ProjectEditor } from "project-editor/project-editor-interface";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// While an ancestor element has this attribute, the selected rows do not
+// scroll themselves into view when they are mounted.
+export const NO_SCROLL_INTO_VIEW_ATTR = "data-eez-no-scroll-into-view";
+
+////////////////////////////////////////////////////////////////////////////////
+
 const DropMark = observer(
     ({
         left,
@@ -85,7 +91,12 @@ const TreeRow = observer(
                         this.props.treeAdapter.draggableAdapter.isDragging
                     )
                 ) {
-                    if (hasClass(this.ref.current, "selected")) {
+                    if (
+                        hasClass(this.ref.current, "selected") &&
+                        !this.ref.current!.closest(
+                            `[${NO_SCROLL_INTO_VIEW_ATTR}]`
+                        )
+                    ) {
                         this.ref.current!.scrollIntoView({ block: "center" });
                     }
                 }

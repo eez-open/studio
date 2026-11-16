@@ -16,6 +16,7 @@ import { SearchInput } from "eez-studio-ui/search-input";
 import type { SortDirectionType } from "project-editor/core/objectAdapter";
 import { LayoutModels, NavigationStore, ProjectStore } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
+import { NO_SCROLL_INTO_VIEW_ATTR } from "project-editor/ui-components/Tree";
 import {
     ListNavigation,
     SortControl
@@ -730,11 +731,38 @@ const AllGroups = observer(
             return filter;
         }
 
+        divRef = React.createRef<HTMLDivElement>();
+        initialScrollTimeout: any;
+
+        // When the "All" group is shown, the selected item of each list would
+        // scroll itself into view (see TreeRow), so the group would end up
+        // scrolled somewhere in the middle. This keeps it at the top.
+        componentDidMount() {
+            const div = this.divRef.current;
+            if (div) {
+                div.setAttribute(NO_SCROLL_INTO_VIEW_ATTR, "");
+                this.initialScrollTimeout = setTimeout(() => {
+                    this.initialScrollTimeout = undefined;
+                    div.removeAttribute(NO_SCROLL_INTO_VIEW_ATTR);
+                }, 300);
+            }
+        }
+
+        componentWillUnmount() {
+            if (this.initialScrollTimeout) {
+                clearTimeout(this.initialScrollTimeout);
+                this.initialScrollTimeout = undefined;
+            }
+        }
+
         render() {
             const projectStore = this.context;
 
             return (
-                <div className="EezStudio_ProjectExplorer_All">
+                <div
+                    ref={this.divRef}
+                    className="EezStudio_ProjectExplorer_All"
+                >
                     {getAllGroupSections(projectStore).map(section => (
                         <div
                             key={section.title}
