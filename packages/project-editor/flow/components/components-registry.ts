@@ -4,6 +4,8 @@ import {
     getClassesDerivedFrom,
     isProperSubclassOf
 } from "project-editor/core/object";
+import React from "react";
+import { Icon } from "eez-studio-ui/icon";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { mostReadable } from "eez-studio-shared/color";
 import type { ProjectStore } from "project-editor/store";
@@ -102,7 +104,59 @@ export function getAllComponentClasses(
         );
     }
 
-    return [...stockComponents, ...userWidgets, ...userActions];
+    // The widget presets of an EEZ-GUI project (see WidgetPreset): a preset
+    // with the name of a widget gives the widget its property values, the
+    // others are entries of their own.
+    const presetWidgets: IObjectClassInfo[] = [];
+    if (
+        baseClass == ProjectEditor.WidgetClass &&
+        projectStore.projectTypeTraits.isFirmware &&
+        !projectStore.projectTypeTraits.isEezGuiLite
+    ) {
+        const presets = ProjectEditor.getWidgetPresets(projectStore.project);
+
+        stockComponents = stockComponents.map(objectClassInfo => {
+            const preset = presets.find(
+                preset =>
+                    preset.widgetType == objectClassInfo.name &&
+                    preset.name == getComponentName(objectClassInfo.name)
+            );
+            return preset
+                ? {
+                      ...objectClassInfo,
+                      props: { ...objectClassInfo.props, ...preset.values }
+                  }
+                : objectClassInfo;
+        });
+
+        for (const preset of presets) {
+            if (preset.name == getComponentName(preset.widgetType)) {
+                continue;
+            }
+            const objectClassInfo = stockComponents.find(
+                objectClassInfo => objectClassInfo.name == preset.widgetType
+            );
+            if (!objectClassInfo) {
+                continue;
+            }
+            presetWidgets.push({
+                id: `WidgetPreset<${preset.name}>`,
+                name: objectClassInfo.name,
+                objectClass: objectClassInfo.objectClass,
+                displayName: preset.name,
+                componentPaletteGroupName: "!6Presets",
+                props: { ...preset.values, preset: preset.name },
+                materialIcon: preset.icon || undefined
+            });
+        }
+    }
+
+    return [
+        ...stockComponents,
+        ...presetWidgets,
+        ...userWidgets,
+        ...userActions
+    ];
 }
 
 export function getComponentGroupName(
@@ -237,6 +291,12 @@ export function getComponentVisualData(
 
     if (icon == undefined) {
         icon = classInfo.icon as any;
+    }
+
+    if (componentClass.materialIcon) {
+        icon = React.createElement(Icon, {
+            icon: `material:${componentClass.materialIcon}`
+        });
     }
 
     let label = componentClass.displayName

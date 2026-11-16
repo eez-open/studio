@@ -23,7 +23,8 @@ import {
     MessageType,
     IMessage,
     PropertyProps,
-    getParent
+    getParent,
+    getClassByName
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -855,6 +856,142 @@ registerClass("StyleVariant", StyleVariant);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// A widget preset of an EEZ-GUI project: a named set of property values of a
+// widget type (its styles, its size, ...), applied when a widget is made from
+// the palette. A preset with the name of a widget of Studio ("Button") gives
+// that widget its defaults; a preset with another name ("Value row") is one
+// more entry of the palette. The widget keeps the name of its preset
+// (Widget.preset), there is no link: a change of the preset doesn't change
+// the widgets made from it. See getWidgetPresets.
+export class WidgetPreset extends EezObject {
+    name: string;
+    description?: string;
+    // the class name of the widget ("InputEmbeddedWidget")
+    widgetType: string;
+    // the icon in the palette: the name of a Material icon, the icon of the
+    // widget type if not set
+    icon?: string;
+    // the property values, as JSON
+    properties: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                isOptional: false,
+                unique: true
+            },
+            {
+                name: "description",
+                type: PropertyType.String
+            },
+            {
+                name: "widgetType",
+                displayName: "Widget",
+                type: PropertyType.String,
+                readOnlyInPropertyGrid: true
+            },
+            {
+                name: "icon",
+                type: PropertyType.String
+            },
+            {
+                name: "properties",
+                type: PropertyType.JSON
+            }
+        ],
+        listLabel: (widgetPreset: WidgetPreset, collapsed: boolean) => {
+            if (!collapsed) return "";
+            return `${widgetPreset.name} (${widgetPreset.widgetType.replace(
+                /Widget$/,
+                ""
+            )})`;
+        },
+        defaultValue: {},
+        check: (object: WidgetPreset, messages: IMessage[]) => {
+            if (!object.name) {
+                messages.push(propertyNotSetMessage(object, "name"));
+            }
+
+            if (!object.widgetType) {
+                messages.push(propertyNotSetMessage(object, "widgetType"));
+            } else if (
+                !getClassByName(getProjectStore(object), object.widgetType)
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Unknown widget "${object.widgetType}".`,
+                        getChildOfObject(object, "widgetType")
+                    )
+                );
+            }
+
+            if (object.properties) {
+                try {
+                    JSON.parse(object.properties);
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid JSON: ${err}`,
+                            getChildOfObject(object, "properties")
+                        )
+                    );
+                }
+            }
+        }
+    };
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            name: observable,
+            description: observable,
+            widgetType: observable,
+            icon: observable,
+            properties: observable
+        });
+    }
+
+    // the property values of the preset, {} if they are not valid JSON
+    get values(): { [propertyName: string]: any } {
+        try {
+            const values = JSON.parse(this.properties || "{}");
+            return values && typeof values == "object" ? values : {};
+        } catch (err) {
+            return {};
+        }
+    }
+}
+
+registerClass("WidgetPreset", WidgetPreset);
+
+// The widget presets a project uses: its own, then the ones of its master
+// project and of the projects it imports (the first preset with a name).
+export function getWidgetPresets(project: Project): WidgetPreset[] {
+    const presets: WidgetPreset[] = [];
+    const add = (other: Project | undefined) => {
+        for (const preset of other?.settings?.general?.widgetPresets ?? []) {
+            if (!presets.find(p => p.name == preset.name)) {
+                presets.push(preset);
+            }
+        }
+    };
+
+    add(project);
+    add(project.masterProject);
+    for (const importDirective of project.settings?.general?.imports ?? []) {
+        add(importDirective.project);
+    }
+
+    return presets;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 export type ProjectVersion = "v3";
 
 export const PROJECT_TYPE_NAMES = {
@@ -880,7 +1017,9 @@ export class General extends EezObject {
     masterProject: string;
     extensions: ExtensionDirective[];
     imports: ImportDirective[];
-    styleVariants: StyleVariant[];
+    // (a project without them has no list, and saves none)
+    styleVariants?: StyleVariant[];
+    widgetPresets?: WidgetPreset[];
     flowSupport: boolean;
     displayWidth: number;
     displayHeight: number;
@@ -1050,7 +1189,25 @@ export class General extends EezObject {
                 displayName: "Style variants",
                 type: PropertyType.Array,
                 typeClass: StyleVariant,
-                defaultValue: [],
+                isOptional: true,
+                // edited here, not in the tree of the settings
+                partOfNavigation: false,
+                enumerable: false,
+                disabled: (general: General) => {
+                    const projectTypeTraits =
+                        getProject(general).projectTypeTraits;
+                    return (
+                        !projectTypeTraits.isFirmware ||
+                        projectTypeTraits.isEezGuiLite
+                    );
+                }
+            },
+            {
+                name: "widgetPresets",
+                displayName: "Widget presets",
+                type: PropertyType.Array,
+                typeClass: WidgetPreset,
+                isOptional: true,
                 // edited here, not in the tree of the settings
                 partOfNavigation: false,
                 enumerable: false,
@@ -1425,6 +1582,7 @@ export class General extends EezObject {
             extensions: observable,
             imports: observable,
             styleVariants: observable,
+            widgetPresets: observable,
             flowSupport: observable,
             displayWidth: observable,
             displayHeight: observable,

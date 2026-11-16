@@ -43,7 +43,14 @@ export const StylePropertyUI = observer(
                 propertyInfo =>
                     propertyInfo.type == PropertyType.Object &&
                     (propertyInfo.typeClass == ProjectEditor.StyleClass ||
-                        propertyInfo.typeClass == ProjectEditor.LiteStyleClass)
+                        propertyInfo.typeClass ==
+                            ProjectEditor.LiteStyleClass) &&
+                    // an optional part style the widget doesn't have (the
+                    // label style of a Text widget)
+                    this.props.objects.every(
+                        object =>
+                            (object as any)[propertyInfo.name] !== undefined
+                    )
             );
         }
 

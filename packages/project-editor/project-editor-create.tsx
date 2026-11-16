@@ -22,7 +22,9 @@ import {
     checkAssetId,
     ImportDirective,
     BuildFile,
-    getPage
+    getPage,
+    WidgetPreset,
+    getWidgetPresets
 } from "project-editor/project/project";
 
 import {
@@ -262,6 +264,8 @@ export function createProjectEditor(
         getObjectVariableTypeFromType,
         getComponent,
         getWidget,
+        WidgetPresetClass: WidgetPreset,
+        getWidgetPresets,
         getWidgetParent,
         getBitmapData,
         migrateProjectType,

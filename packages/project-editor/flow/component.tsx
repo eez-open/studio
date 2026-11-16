@@ -66,6 +66,7 @@ import {
 } from "project-editor/project/project-type-traits";
 import { isOverlappingChildrenSupported } from "project-editor/flow/components/widgets/overlapping-widgets";
 import { objectToJS } from "project-editor/store";
+import { getClass } from "project-editor/core/object";
 import { IContextMenuContext, getProjectStore } from "project-editor/store";
 
 import type {
@@ -3195,7 +3196,11 @@ export class Widget extends Component {
     // give the variant by data: the variant of the first rule whose condition
     // is true, and the one above when no rule applies.
     variant?: string;
-    variantRules: VariantRule[];
+    variantRules?: VariantRule[];
+
+    // the name of the widget preset the widget was made from (see
+    // WidgetPreset): only a name, shown in the widget tree
+    preset?: string;
     resizing: IResizing;
     style: Style;
 
@@ -3277,6 +3282,14 @@ export class Widget extends Component {
                 "boolean"
             ),
             {
+                name: "preset",
+                type: PropertyType.String,
+                propertyGridGroup: generalGroup,
+                readOnlyInPropertyGrid: true,
+                hideInPropertyGrid: (widget: Widget) => !widget.preset,
+                disabled: (widget: Widget) => !isEezGuiProject(widget)
+            },
+            {
                 name: "variant",
                 displayName: "Variant",
                 type: PropertyType.Enum,
@@ -3295,7 +3308,8 @@ export class Widget extends Component {
                 displayName: "Variant rules",
                 type: PropertyType.Array,
                 typeClass: VariantRule,
-                defaultValue: [],
+                // a widget without rules has no list (and saves none)
+                isOptional: true,
                 propertyGridGroup: styleGroup,
                 partOfNavigation: false,
                 enumerable: false,
@@ -3616,6 +3630,16 @@ export class Widget extends Component {
                                 })
                             );
                         }
+                    }
+
+                    if (isEezGuiProject(objects[0]) && objects.length === 1) {
+                        additionalMenuItems.push(
+                            new MenuItem({
+                                label: "Save as Preset...",
+                                click: () =>
+                                    (objects[0] as Widget).saveAsPreset()
+                            })
+                        );
                     }
 
                     additionalMenuItems.push(
@@ -4029,6 +4053,7 @@ export class Widget extends Component {
             visible: observable,
             variant: observable,
             variantRules: observable,
+            preset: observable,
             resizing: observable,
             style: observable,
             visibleInLayout: observable,
@@ -4079,6 +4104,107 @@ export class Widget extends Component {
     // ("fitToContent" of Text, DisplayData and a row or column).
     get variantExpression(): string | undefined {
         return getVariantRulesExpression(this, this.variantRules);
+    }
+
+    // The property values a preset made from this widget has: all but what
+    // belongs to the place of the widget (its position, its children, its
+    // ids).
+    get presetValues() {
+        const strip = (value: any): any => {
+            if (Array.isArray(value)) {
+                return value.map(strip);
+            }
+            if (value && typeof value == "object") {
+                const result: any = {};
+                for (const key of Object.keys(value)) {
+                    if (key != "objID" && key != "wireID") {
+                        result[key] = strip(value[key]);
+                    }
+                }
+                return result;
+            }
+            return value;
+        };
+
+        const values = strip(objectToJS(this));
+        for (const key of [
+            "type",
+            "left",
+            "top",
+            "preset",
+            "layoutProperties",
+            "locked",
+            "hiddenInEditor"
+        ]) {
+            delete values[key];
+        }
+        if (Array.isArray(values.widgets)) {
+            values.widgets = [];
+        }
+        return values;
+    }
+
+    // "Save as Preset": a widget preset of the project with the property
+    // values of this widget (see WidgetPreset). A preset of the project with
+    // the same name is replaced.
+    async saveAsPreset() {
+        const projectStore = getProjectStore(this);
+        const widgetType = getClass(this).name;
+
+        let result;
+        try {
+            result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "Save as Preset",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [validators.required]
+                        },
+                        {
+                            name: "icon",
+                            displayName: "Icon (Material icon name)",
+                            type: "string"
+                        }
+                    ]
+                },
+                values: {
+                    name: this.preset || getComponentName(widgetType),
+                    icon: ""
+                },
+                dialogContext: projectStore.project
+            });
+        } catch (err) {
+            return;
+        }
+
+        const name = result.values.name.trim();
+        const general = projectStore.project.settings.general;
+        if (!general.widgetPresets) {
+            projectStore.updateObject(general, { widgetPresets: [] });
+        }
+        const widgetPresets = general.widgetPresets!;
+        const values = {
+            name,
+            widgetType,
+            icon: result.values.icon.trim() || undefined,
+            properties: JSON.stringify(this.presetValues, undefined, 2)
+        };
+
+        const existing = widgetPresets.find(preset => preset.name == name);
+        if (existing) {
+            projectStore.updateObject(existing, values);
+        } else {
+            projectStore.addObject(
+                widgetPresets,
+                createObject<any>(
+                    projectStore,
+                    values,
+                    ProjectEditor.WidgetPresetClass
+                )
+            );
+        }
     }
 
     getLayoutFlags() {
