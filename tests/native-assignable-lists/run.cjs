@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '../..');
 const out = process.argv[2] ? path.resolve(process.argv[2]) : fs.mkdtempSync(path.join(os.tmpdir(), 'eez-expression-tests-'));
 fs.mkdirSync(out, { recursive: true });
 for (const args of [
-    [path.join(root, 'node_modules/typescript/bin/tsc'), '--project', path.join(root, 'tsconfig.json'), '--outDir', path.join(out, 'compiled')],
+    [path.join(root, 'node_modules/typescript/bin/tsc'), '--project', path.join(root, 'tsconfig.json'), '--preserveSymlinks', 'true', '--outDir', path.join(out, 'compiled')],
     ['--test', path.join(__dirname, 'compiler.test.cjs')]
 ]) {
     const result = spawnSync(process.execPath, args, {

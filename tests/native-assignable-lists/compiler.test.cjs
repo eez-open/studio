@@ -4,6 +4,29 @@ const fs = require('node:fs');
 const path = require('node:path');
 const h = require('./harness.cjs');
 const compile = expression => h.buildAssignableListExpression(h.assets, undefined, h.component, expression);
+
+for (const family of ['isFirmware', 'isDashboard', 'isLVGL']) {
+    test('supports full Flow runtime: ' + family, () => {
+        const traits = { hasFlowSupport: true, isFirmware: false, isDashboard: false, isLVGL: false, isEezFlowLite: false, [family]: true };
+        assert.equal(h.supportsAssignableLists(traits), true);
+    });
+}
+for (const [name, overrides] of [
+    ['EEZ GUI Lite inheriting firmware traits', { isFirmware: true, isEezFlowLite: true }],
+    ['project without Flow', { hasFlowSupport: false }],
+    ['unsupported runtime family', { isLVGL: false }]
+]) {
+    test('rejects unsupported runtime before compiling: ' + name, () => {
+        const previous = h.store.projectTypeTraits;
+        h.store.projectTypeTraits = { ...previous, ...overrides };
+        try {
+            assert.equal(h.supportsAssignableLists(h.store.projectTypeTraits), false);
+            assert.throws(() => compile('[Count]'), error => String(error) === h.ASSIGNABLE_LIST_RUNTIME_ERROR);
+        } finally {
+            h.store.projectTypeTraits = previous;
+        }
+    });
+}
 test('different list items keep independent destination types', () => {
     assert.deepEqual(h.parseAssignableListExpression(h.component, '[Count, Text]').map(n => n.valueType), ['integer', 'string']);
     const words = compile('[Count, Text]');

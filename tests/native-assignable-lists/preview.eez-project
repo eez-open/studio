@@ -1,0 +1,347 @@
+{
+  "themesVersion": 1,
+  "objID": "c6bc48dc-58c8-40d7-8c92-f14513bbd512",
+  "settings": {
+    "objID": "e007d988-9fba-797d-72e9-efc33ca6d05c",
+    "general": {
+      "objID": "1c073281-0096-4766-a983-9049a0d8c4ce",
+      "projectVersion": "v3",
+      "projectType": "lvgl",
+      "lvglVersion": "9.5.0",
+      "extensions": [],
+      "imports": [],
+      "flowSupport": true,
+      "displayWidth": 320,
+      "displayHeight": 240,
+      "displayBorderRadius": 0,
+      "colorBpp": "16",
+      "bitmapColorFormat": "BGR",
+      "resourceFiles": [],
+      "hiddenWidgetLines": "dimmed",
+      "dimmedLinesOpacity": "20",
+      "embedBitmaps": true,
+      "embedFonts": true,
+      "cacheFonts": false
+    },
+    "build": {
+      "configurations": [
+        {
+          "name": "Default"
+        }
+      ],
+      "files": [],
+      "destinationFolder": "generated",
+      "lvglInclude": "lvgl.h",
+      "generateSourceCodeForEezFramework": true,
+      "compressFlowDefinition": true,
+      "executionQueueSize": 1000,
+      "expressionEvaluatorStackSize": 20
+    }
+  },
+  "variables": {
+    "objID": "cf6cce53-3cd1-49b1-9c67-50770b815a9e",
+    "globalVariables": [
+      {
+        "objID": "1f766fc3-eb90-4b3c-8cf6-9136d6bef186",
+        "name": "Flag",
+        "type": "boolean",
+        "defaultValue": "true",
+        "native": false,
+        "persistent": false
+      },
+      {
+        "objID": "9de1115c-0351-4997-bc42-18099f65d86b",
+        "name": "Count",
+        "type": "integer",
+        "defaultValue": "10",
+        "native": false,
+        "persistent": false
+      },
+      {
+        "objID": "3cbd8c75-b470-4983-a785-e99b88397365",
+        "name": "OtherCount",
+        "type": "integer",
+        "defaultValue": "20",
+        "native": false,
+        "persistent": false
+      },
+      {
+        "objID": "5d6d9d49-19b9-4bc8-961a-51c60e8be871",
+        "name": "Text",
+        "type": "string",
+        "defaultValue": "\"alpha\"",
+        "native": false,
+        "persistent": false
+      },
+      {
+        "objID": "fc2fa713-0ce7-4757-857a-cd94457d8123",
+        "name": "OtherText",
+        "type": "string",
+        "defaultValue": "\"beta\"",
+        "native": false,
+        "persistent": false
+      },
+      {
+        "objID": "2f0f6515-d7e5-4059-9d6b-2e7385dc5561",
+        "name": "Numbers",
+        "type": "array:integer",
+        "defaultValue": "[41,42]",
+        "native": false,
+        "persistent": false
+      }
+    ],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [
+    {
+      "objID": "f8a2ed27-fb3b-4df1-b14d-9b9403e8d596",
+      "name": "ReferenceAction",
+      "implementationType": "native",
+      "userProperties": [
+        {
+          "objID": "2bb6eb45-821e-4f53-9144-3475fadc2a34",
+          "id": "2bb6eb45-821e-4f53-9144-3475fadc2a34",
+          "name": "single",
+          "type": "any",
+          "assignable": true,
+          "assignableList": false
+        },
+        {
+          "objID": "e751ca4e-35c8-499d-8428-1d79448781d7",
+          "id": "e751ca4e-35c8-499d-8428-1d79448781d7",
+          "name": "targets",
+          "type": "array:any",
+          "assignable": false,
+          "assignableList": true
+        },
+        {
+          "objID": "a2595bd0-68cd-481f-a923-c3e891a2db21",
+          "id": "a2595bd0-68cd-481f-a923-c3e891a2db21",
+          "name": "ordinary",
+          "type": "array:any",
+          "assignable": false,
+          "assignableList": false
+        }
+      ],
+      "localVariables": [],
+      "components": [
+        {
+          "objID": "0e1eb845-a47d-4c83-a8c3-51cdda2ca0cb",
+          "type": "StartActionComponent",
+          "left": 0,
+          "top": 0,
+          "width": 140,
+          "height": 50,
+          "inputs": [],
+          "outputs": []
+        },
+        {
+          "objID": "f83e48b2-652c-4ea0-a758-0c8d030b9782",
+          "type": "SetVariableActionComponent",
+          "left": 200,
+          "top": 0,
+          "width": 140,
+          "height": 50,
+          "entries": [
+            {
+              "objID": "67e20c76-30a7-4a8e-9005-8a8e7db6436e",
+              "variable": "single",
+              "value": "101"
+            },
+            {
+              "objID": "a6370108-faa7-4440-ba2e-17397ce73beb",
+              "variable": "targets[0]",
+              "value": "202"
+            },
+            {
+              "objID": "163dbcd2-5c95-4012-9684-49bd6fe35061",
+              "variable": "targets[1]",
+              "value": "\"changed\""
+            },
+            {
+              "objID": "10a342ac-e3d4-4aac-aab3-681863c87cd3",
+              "variable": "targets[2]",
+              "value": "303"
+            }
+          ]
+        }
+      ],
+      "connectionLines": [
+        {
+          "objID": "cf2279ed-06cc-438c-bdc2-8296f4cf9d4d",
+          "source": "0e1eb845-a47d-4c83-a8c3-51cdda2ca0cb",
+          "output": "@seqout",
+          "target": "f83e48b2-652c-4ea0-a758-0c8d030b9782",
+          "input": "@seqin",
+          "disabled": false
+        }
+      ]
+    }
+  ],
+  "userPages": [
+    {
+      "objID": "f01e3ff2-02b7-4701-8ac5-bfd3388ec477",
+      "name": "Main",
+      "left": 0,
+      "top": 0,
+      "width": 320,
+      "height": 240,
+      "createAtStart": true,
+      "deleteOnScreenUnload": false,
+      "components": [
+        {
+          "objID": "74d6106a-5c6c-4b05-94c6-761383f6587b",
+          "type": "LVGLScreenWidget",
+          "identifier": "main",
+          "left": 0,
+          "top": 0,
+          "width": 320,
+          "height": 240,
+          "leftUnit": "px",
+          "topUnit": "px",
+          "widthUnit": "px",
+          "heightUnit": "px",
+          "style": {
+            "objID": "b52034ed-595f-46ee-b308-2b53feb89d4e",
+            "useStyle": "",
+            "conditionalStyles": [],
+            "childStyles": []
+          },
+          "timeline": [],
+          "eventHandlers": [],
+          "children": [
+            {
+              "objID": "2c97b868-f374-46d4-ac1b-14d820cebe5b",
+              "type": "LVGLLabelWidget",
+              "identifier": "title",
+              "left": 16,
+              "top": 14,
+              "width": 290,
+              "height": 27,
+              "leftUnit": "px",
+              "topUnit": "px",
+              "widthUnit": "px",
+              "heightUnit": "px",
+              "style": {
+                "objID": "71c7e00a-219a-463c-861c-bdb22e26c272",
+                "useStyle": "",
+                "conditionalStyles": [],
+                "childStyles": []
+              },
+              "timeline": [],
+              "eventHandlers": [],
+              "children": [],
+              "widgetFlags": "",
+              "hiddenFlagType": "literal",
+              "clickableFlagType": "literal",
+              "checkedStateType": "literal",
+              "disabledStateType": "literal",
+              "states": "",
+              "groupIndex": 0,
+              "localStyles": {
+                "objID": "cb1e3043-d1b1-46d6-ac2e-4e77f75ef2cd",
+                "definition": {
+                  "MAIN": {
+                    "DEFAULT": {
+                      "text_color": "#DCE7EF",
+                      "pad_top": 0,
+                      "pad_left": 0,
+                      "pad_right": 0,
+                      "pad_bottom": 0,
+                      "text_align": "LEFT"
+                    }
+                  }
+                }
+              },
+              "text": "Native references WASM preview",
+              "textType": "literal",
+              "longMode": "CLIP",
+              "recolor": false,
+              "useStaticText": false,
+              "previewValue": ""
+            }
+          ],
+          "widgetFlags": "",
+          "hiddenFlagType": "literal",
+          "clickableFlagType": "literal",
+          "checkedStateType": "literal",
+          "disabledStateType": "literal",
+          "states": "",
+          "groupIndex": 0,
+          "localStyles": {
+            "objID": "51b84e23-3343-4872-9cf6-768f321599b2",
+            "definition": {
+              "MAIN": {
+                "DEFAULT": {
+                  "bg_color": "#102130",
+                  "bg_opa": 255,
+                  "pad_left": 0,
+                  "pad_top": 0,
+                  "border_width": 0
+                }
+              }
+            }
+          }
+        },
+        {
+          "objID": "5df99d7b-8fb8-4faf-b5a2-f0a794a30a0d",
+          "type": "StartActionComponent",
+          "left": 0,
+          "top": 0,
+          "width": 140,
+          "height": 50,
+          "inputs": [],
+          "outputs": []
+        },
+        {
+          "objID": "fe3dbd52-e64a-443f-befc-a244ae3aedbf",
+          "type": "CallActionActionComponent",
+          "left": 200,
+          "top": 100,
+          "width": 180,
+          "height": 70,
+          "inputs": [],
+          "outputs": [],
+          "action": "ReferenceAction",
+          "userPropertyValues": {
+            "objID": "1981ab97-111b-4607-8937-a48bca5f8245",
+            "values": {
+              "2bb6eb45-821e-4f53-9144-3475fadc2a34": "Count",
+              "e751ca4e-35c8-499d-8428-1d79448781d7": "[Flag ? Count : OtherCount, Flag ? Text : OtherText, Numbers[1]]",
+              "a2595bd0-68cd-481f-a923-c3e891a2db21": "[Count, Numbers[1]]"
+            }
+          }
+        }
+      ],
+      "connectionLines": [
+        {
+          "objID": "6d32c08f-38fe-4812-84bd-8afc1c02316c",
+          "source": "5df99d7b-8fb8-4faf-b5a2-f0a794a30a0d",
+          "output": "@seqout",
+          "target": "fe3dbd52-e64a-443f-befc-a244ae3aedbf",
+          "input": "@seqin",
+          "disabled": false
+        }
+      ]
+    }
+  ],
+  "userWidgets": [],
+  "lvglStyles": {
+    "styles": [],
+    "defaultStyles": {}
+  },
+  "lvglGroups": {
+    "groups": []
+  },
+  "fonts": [],
+  "bitmaps": [],
+  "colors": [],
+  "themes": [
+    {
+      "objID": "ed882da1-8496-e314-059f-7473f6a898ba",
+      "name": "Default",
+      "colors": []
+    }
+  ]
+}

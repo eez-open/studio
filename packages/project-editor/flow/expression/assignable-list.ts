@@ -4,6 +4,10 @@ import { expressionParser } from "./parser";
 import { checkAssignableExpressionNode } from "./check";
 import { findValueTypeInExpressionNode } from "./type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import {
+    ASSIGNABLE_LIST_RUNTIME_ERROR,
+    supportsAssignableLists
+} from "project-editor/flow/assignable-list-support";
 
 // A container of independent assignable expressions, not an ordinary array
 // expression. Keep in sync with eez/core/assets.h in eez-framework.
@@ -27,6 +31,13 @@ export function parseAssignableListExpression(
     component: Component,
     expression: string
 ): ExpressionNode[] {
+    if (
+        !supportsAssignableLists(
+            ProjectEditor.getProjectStore(component).projectTypeTraits
+        )
+    ) {
+        throw ASSIGNABLE_LIST_RUNTIME_ERROR;
+    }
     const root = expressionParser.parse(expression);
     if (root.type !== "ArrayExpression") {
         throw "An assignable list must be an array literal";

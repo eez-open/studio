@@ -57,6 +57,10 @@ import {
 import { uniqueForVariableAndUserProperty } from "project-editor/features/variable/variable";
 import { guid } from "eez-studio-shared/guid";
 import { parseAssignableListExpression } from "project-editor/flow/expression/assignable-list";
+import {
+    ASSIGNABLE_LIST_RUNTIME_ERROR,
+    supportsAssignableLists
+} from "project-editor/flow/assignable-list-support";
 
 function isNativeUserProperty(userProperty: UserProperty): boolean {
     const parent = getParent(userProperty);
@@ -128,8 +132,12 @@ export class UserProperty extends EezObject {
                 name: "assignableList",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
-                disabled: (userProperty: UserProperty) => !isNativeUserProperty(userProperty),
-                formText: "A literal list of references for a native action. References are valid only during the synchronous call."
+                disabled: (userProperty: UserProperty) =>
+                    !isNativeUserProperty(userProperty) ||
+                    !supportsAssignableLists(
+                        ProjectEditor.getProjectStore(userProperty).projectTypeTraits
+                    ),
+                formText: "A literal list of references for a native action using the full EEZ Flow runtime. Not supported by EEZ Flow Lite. References are valid only during the synchronous call."
             },
             {
                 name: "displayName",
@@ -223,7 +231,18 @@ export class UserProperty extends EezObject {
 
         check: (userProperty: UserProperty, messages: IMessage[]) => {
             const projectStore = ProjectEditor.getProjectStore(userProperty);
-            if (userProperty.assignableList && (
+            if (
+                userProperty.assignableList &&
+                !supportsAssignableLists(projectStore.projectTypeTraits)
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        ASSIGNABLE_LIST_RUNTIME_ERROR,
+                        userProperty
+                    )
+                );
+            } else if (userProperty.assignableList && (
                 userProperty.assignable || userProperty.type !== "array:any" ||
                 !isNativeUserProperty(userProperty)
             )) {

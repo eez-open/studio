@@ -6,7 +6,10 @@ values of `A` and `B`.
 
 A native action can opt a user property into **Assignable list**. Set its type to
 `array:any` and leave **Assignable** disabled. This option is restricted to native
-actions. At the call site, enter an array literal of assignable expressions:
+actions on the full EEZ Flow engine: EEZ-GUI, Dashboard and LVGL with Flow.
+EEZ GUI Lite and projects without Flow are rejected by validation and the
+compiler; the option is disabled in their property grid. At the call site, enter
+an array literal of assignable expressions:
 
 ```
 [Setpoint, Enabled, Values[SelectedIndex], Condition ? First : Second]
@@ -58,6 +61,11 @@ an ordinary expression. Ordinary array instructions and formats are unchanged.
 Projects using this option require the companion framework change implementing
 `evalAssignableListExpression`. Updating only the editor is insufficient. Existing
 projects with the option disabled produce their existing instruction format.
+
+Integration order is framework, then the WASM builds and C++ amalgamation, then
+Studio's bundled JS/WASM pairs and `resources/eez-framework-amalgamation`.
+The bundled outputs are included in this Studio change: building Studio does
+not fetch updated binaries from the companion repositories.
 
 ## Studio Run/Debug
 

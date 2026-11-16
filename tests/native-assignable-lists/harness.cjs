@@ -13,7 +13,7 @@ const globals = names.map((name, i) => ({ name, fullName: name, type: types[i] }
 const flow = { userPropertiesAndLocalVariables: [{ name: 'Local', type: 'integer' }] };
 const component = { inputs: [], outputs: [], buildInputs: [], buildOutputs: [] };
 const store = {
-    projectTypeTraits: { isLVGL: true },
+    projectTypeTraits: { isLVGL: true, isDashboard: false, isFirmware: false, isEezFlowLite: false, hasFlowSupport: true },
     typesStore: { createOpenType: () => 'any', getType: type => ({ kind: type.startsWith('array:') ? 'array' : 'basic', valueType: type }) }
 };
 const project = { allGlobalVariables: globals, variables: { enumsMap: new Map(), structsMap: new Map() }, importAsList: [], _store: store };
@@ -56,6 +56,7 @@ const assets = {
     },
     getTypeIndex: type => { if (!(type in typeIndexes)) throw new Error('Unexpected fixture type ' + type); return typeIndexes[type]; }
 };
-module.exports = { component, assets, constants, typeIndexes,
+module.exports = { component, assets, constants, typeIndexes, store,
+    ...require(path.join(build, 'project-editor/flow/assignable-list-support.js')),
     ...require(path.join(build, 'project-editor/flow/expression/assignable-list.js')),
     ...require(path.join(build, 'project-editor/flow/expression/build.js')) };
