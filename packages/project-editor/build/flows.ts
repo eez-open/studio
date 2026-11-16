@@ -28,6 +28,7 @@ import { visitObjects } from "project-editor/core/search";
 import { CommentActionComponent } from "project-editor/flow/components/actions";
 import {
     buildAssignableExpression,
+    buildAssignableListExpression,
     buildExpression,
     operationIndexes,
     templateLiteralToExpression
@@ -283,6 +284,10 @@ function buildComponent(
                                 propertyInfo.expressionType,
                                 expression
                             )
+                        );
+                    } else if (propertyInfo.assignableList) {
+                        buildAssignableListExpression(
+                            assets, dataBuffer, component, expression
                         );
                     } else if (flowProperty == "assignable") {
                         buildAssignableExpression(

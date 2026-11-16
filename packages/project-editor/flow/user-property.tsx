@@ -56,6 +56,13 @@ import {
 } from "project-editor/flow/expression";
 import { uniqueForVariableAndUserProperty } from "project-editor/features/variable/variable";
 import { guid } from "eez-studio-shared/guid";
+import { parseAssignableListExpression } from "project-editor/flow/expression/assignable-list";
+
+function isNativeUserProperty(userProperty: UserProperty): boolean {
+    const parent = getParent(userProperty);
+    const owner = parent && getParent(parent);
+    return (owner as { implementationType?: string } | undefined)?.implementationType === "native";
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,6 +71,7 @@ export class UserProperty extends EezObject {
     name: string;
     type: ValueType;
     assignable: boolean;
+    assignableList: boolean;
     displayName?: string;
     description?: string;
 
@@ -91,6 +99,7 @@ export class UserProperty extends EezObject {
             name: observable,
             type: observable,
             assignable: observable,
+            assignableList: observable,
             displayName: observable,
             description: observable
         });
@@ -114,6 +123,13 @@ export class UserProperty extends EezObject {
                 name: "assignable",
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true
+            },
+            {
+                name: "assignableList",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                disabled: (userProperty: UserProperty) => !isNativeUserProperty(userProperty),
+                formText: "A literal list of references for a native action. References are valid only during the synchronous call."
             },
             {
                 name: "displayName",
@@ -207,6 +223,13 @@ export class UserProperty extends EezObject {
 
         check: (userProperty: UserProperty, messages: IMessage[]) => {
             const projectStore = ProjectEditor.getProjectStore(userProperty);
+            if (userProperty.assignableList && (
+                userProperty.assignable || userProperty.type !== "array:any" ||
+                !isNativeUserProperty(userProperty)
+            )) {
+                messages.push(new Message(MessageType.ERROR,
+                    "Assignable lists require type array:any and a native action; Assignable must be disabled.", userProperty));
+            }
             if (userProperty.type) {
                 if (!isValidType(projectStore.project, userProperty.type)) {
                     messages.push(
@@ -279,6 +302,7 @@ function getPropertyInfoForUserProperty(
               userProperty.type
           );
 
+    propertyInfo.assignableList = userProperty.assignableList;
     const onSelect = propertyInfo.onSelect!;
 
     propertyInfo.onSelect = async (
@@ -375,8 +399,8 @@ export function getAdditionalFlowPropertiesForUserProperties(
         return [];
     }
 
-    return flow.userProperties.map(userProperty =>
-        userProperty.assignable
+    return flow.userProperties.map(userProperty => ({
+        ...(userProperty.assignable
             ? makeAssignableExpressionProperty(
                   {
                       name: `userPropertyValues.values.${userProperty.id}`,
@@ -390,8 +414,9 @@ export function getAdditionalFlowPropertiesForUserProperties(
                       type: PropertyType.MultilineText
                   },
                   userProperty.type
-              )
-    );
+              )),
+        assignableList: userProperty.assignableList
+    }));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -560,7 +585,15 @@ export class UserPropertyValues extends EezObject {
                 const value = userPropertyValues.values[userProperty.id];
 
                 if (value) {
-                    if (userProperty.assignable) {
+                    if (userProperty.assignableList) {
+                        try {
+                            parseAssignableListExpression(component, value);
+                        } catch (err) {
+                            messages.push(new Message(MessageType.ERROR,
+                                `${userProperty.displayName || userProperty.name}: invalid assignable list (${err})`,
+                                makeValueObjectForUserProperty(userPropertyValues, userProperty)));
+                        }
+                    } else if (userProperty.assignable) {
                         try {
                             checkAssignableExpression(component, value);
                         } catch (err) {

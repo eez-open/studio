@@ -453,7 +453,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
     checkNode(rootNode);
 }
 
-function checkAssignableExpressionNode(
+export function checkAssignableExpressionNode(
     component: Component,
     rootNode: ExpressionNode
 ) {
