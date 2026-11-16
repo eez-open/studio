@@ -348,6 +348,10 @@ type BB3ModuleField = "input" | "output" | "input-output" | undefined;
 
 
 function isNativeVariableDisabled(variable: Variable) {
+    return isNativeVariableTypeDisabled(variable, variable.type);
+}
+
+function isNativeVariableTypeDisabled(variable: Variable, type: ValueType) {
     const project = ProjectEditor.getProject(variable);
     if (!project.projectTypeTraits) {
         return false;
@@ -356,7 +360,7 @@ function isNativeVariableDisabled(variable: Variable) {
         !isGlobalVariable(variable) ||
         !hasFlowSupport(variable) ||
         !project.projectTypeTraits.isVariableTypeSupportedAsNative(
-            variable.type
+            type
         ) ||
         !!project.settings.general.masterProject
     );
@@ -747,7 +751,9 @@ export class Variable extends EezObject {
         beforeLoadHook: (object: Variable, objectJS: any) => {
             migrateType(objectJS);
 
-            if (isNativeVariableDisabled(object)) {
+            // beforeLoadHook runs before object.type is populated. Validate the
+            // migrated serialized type, rather than treating it as undefined.
+            if (isNativeVariableTypeDisabled(object, objectJS.type)) {
                 objectJS.native = false;
             }
         },
