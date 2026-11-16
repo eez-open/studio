@@ -53,8 +53,6 @@ export class OpenProjectsManager {
             openProjects: observable.shallow,
             projects: computed,
             styles: computed,
-            mapPathToOpenProject: computed,
-            mapProjectToOpenProject: computed,
             masterProjects: computed,
             importDirectiveProjects: computed
         });
@@ -101,20 +99,20 @@ export class OpenProjectsManager {
         return styles;
     }
 
-    get mapPathToOpenProject(): Map<string, OpenProject> {
-        const map = new Map<string, OpenProject>();
-        for (const openProject of this.openProjects) {
-            map.set(openProject.filePath, openProject);
-        }
-        return map;
+    // Not computed values (maps): these are looked up mostly outside of
+    // reactions, and MobX keeps the last value of a computed read outside of a
+    // reaction, i.e. a map with the replaced copy of a reloaded master project.
+
+    findOpenProjectByFilePath(absoluteFilePath: string) {
+        return this.openProjects.find(
+            openProject => openProject.filePath == absoluteFilePath
+        );
     }
 
-    get mapProjectToOpenProject(): Map<Project, OpenProject> {
-        const map = new Map<Project, OpenProject>();
-        for (const openProject of this.openProjects) {
-            map.set(openProject.project, openProject);
-        }
-        return map;
+    findOpenProject(project: Project) {
+        return this.openProjects.find(
+            openProject => openProject.project == project
+        );
     }
 
     get masterProjects(): Map<Project, Project> {
@@ -153,13 +151,13 @@ export class OpenProjectsManager {
             relativeFilePath
         );
 
-        return this.mapPathToOpenProject.get(
+        return this.findOpenProjectByFilePath(
             normalizeFilePath(absoluteFilePath)
         )?.project;
     }
 
     getProjectFilePath(project: Project) {
-        const filePath = this.mapProjectToOpenProject.get(project)?.filePath;
+        const filePath = this.findOpenProject(project)?.filePath;
         // a project that isn't loaded from a file (e.g. a revision in the
         // history viewer)
         if (filePath == undefined) {
@@ -253,7 +251,7 @@ export class OpenProjectsManager {
         let project;
         let watcher: FSWatcher | undefined;
 
-        openProject = this.mapPathToOpenProject.get(absoluteFilePath);
+        openProject = this.findOpenProjectByFilePath(absoluteFilePath);
         if (openProject && !openProject.dirty) {
             project = openProject.project;
             watcher = openProject.watcher;

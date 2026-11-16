@@ -688,8 +688,7 @@ export class ProjectStore {
         const filePath =
             !project || project == this.project
                 ? this.filePath
-                : this.openProjectsManager.mapProjectToOpenProject.get(project)
-                      ?.filePath;
+                : this.openProjectsManager.findOpenProject(project)?.filePath;
 
         if (!filePath) {
             return relativeFilePath;
