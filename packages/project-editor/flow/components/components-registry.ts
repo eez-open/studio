@@ -144,7 +144,8 @@ export function getAllComponentClasses(
                 name: objectClassInfo.name,
                 objectClass: objectClassInfo.objectClass,
                 displayName: preset.name,
-                componentPaletteGroupName: "!6Presets",
+                // (the first group of the palette)
+                componentPaletteGroupName: "!0Presets",
                 props: { ...preset.values, preset: preset.name },
                 materialIcon: preset.icon || undefined
             });
@@ -195,6 +196,7 @@ export function getComponentGroupName(
 }
 
 // Groups sort order:
+//  !0 -> "Presets" (the widget presets of an EEZ-GUI project)
 //  !1 -> "Common Widgets" and odther LVGL widget groups
 //  !2 -> "LVGL Actions"
 //  !3 -> "Common Actions"

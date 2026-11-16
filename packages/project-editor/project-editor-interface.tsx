@@ -20,7 +20,8 @@ import type {
     ImportDirective,
     BuildFile,
     WidgetPreset,
-    getWidgetPresets
+    getWidgetPresets,
+    getPresetWidgetValues
 } from "project-editor/project/project";
 import type { Page, PageLayout } from "project-editor/features/page/page";
 import type {
@@ -226,6 +227,7 @@ export interface IProjectEditor {
     getWidget: typeof getWidget;
     WidgetPresetClass: typeof WidgetPreset;
     getWidgetPresets: typeof getWidgetPresets;
+    getPresetWidgetValues: typeof getPresetWidgetValues;
     getWidgetParent: typeof getWidgetParent;
     getBitmapData: typeof getBitmapData;
     migrateProjectType: typeof migrateProjectType;

@@ -259,6 +259,8 @@ export interface PropertyInfo {
         propertyInfo: PropertyInfo
     ) => string;
     partOfNavigation?: boolean;
+    // the project checks don't look into this object or array
+    skipChecks?: boolean;
     fileFilters?: any;
 
     flowProperty?:

@@ -939,6 +939,9 @@ var checkTransformer: (object: IEezObject) => IMessage[] = createTransformer(
         } else {
             // check all child array and object properties
             for (const propertyInfo of getArrayAndObjectProperties(object)) {
+                if (propertyInfo.skipChecks) {
+                    continue;
+                }
                 const childObject = (object as any)[propertyInfo.name];
                 if (childObject) {
                     messages = messages.concat(checkTransformer(childObject));

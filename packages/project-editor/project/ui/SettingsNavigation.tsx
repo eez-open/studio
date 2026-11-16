@@ -24,7 +24,8 @@ import {
     BuildFile,
     General,
     ImportDirective,
-    ProjectType
+    ProjectType,
+    WidgetPreset
 } from "project-editor/project/project";
 import { ProjectContext } from "project-editor/project/context";
 import { Panel } from "project-editor/ui-components/Panel";
@@ -471,6 +472,21 @@ export const SettingsContent = observer(
                         <div className="d-flex flex-wrap">
                             {projectFeatures}
                         </div>
+                    </div>
+                );
+            } else if (this.object instanceof WidgetPreset) {
+                // the properties of the preset, and those of its widget
+                return (
+                    <div className="EezStudio_SettingsEditor">
+                        <PropertyGrid objects={[this.object]} />
+                        {this.object.widget && (
+                            <>
+                                <h3>Widget properties</h3>
+                                <PropertyGrid
+                                    objects={[this.object.widget]}
+                                />
+                            </>
+                        )}
                     </div>
                 );
             } else {

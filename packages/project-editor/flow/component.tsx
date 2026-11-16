@@ -228,7 +228,9 @@ const resizingProperty: PropertyInfo = {
     propertyGridRowComponent: ResizingProperty,
     skipSearch: true,
     hideInPropertyGrid: (widget: Widget) =>
-        isLVGLProject(widget) || isWidgetUnderDockingManager(widget),
+        isLVGLProject(widget) ||
+        isWidgetUnderDockingManager(widget) ||
+        isPresetWidget(widget),
     layoutSpecific: true
 };
 
@@ -1830,6 +1832,12 @@ function getComponentLabel(component: Component) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// The widget of a widget preset (see WidgetPreset): it is on no page, so it
+// has no position.
+function isPresetWidget(widget: Component) {
+    return getParent(widget) instanceof ProjectEditor.WidgetPresetClass;
+}
+
 function isWidgetUnderDockingManager(widget: Component) {
     const parent = getWidgetParent(widget);
     return (
@@ -2097,6 +2105,7 @@ export class Component extends EezObject {
                 disabled: isActionComponent,
                 hideInPropertyGrid: (component: Component) =>
                     isWidgetUnderDockingManager(component) ||
+                    isPresetWidget(component) ||
                     isSetByLayout(component, "left"),
                 hideInDocumentation: "action",
                 layoutSpecific: true
@@ -2108,6 +2117,7 @@ export class Component extends EezObject {
                 disabled: isActionComponent,
                 hideInPropertyGrid: (component: Component) =>
                     isWidgetUnderDockingManager(component) ||
+                    isPresetWidget(component) ||
                     isSetByLayout(component, "top"),
                 hideInDocumentation: "action",
                 layoutSpecific: true
@@ -2153,7 +2163,9 @@ export class Component extends EezObject {
                 propertyGridGroup: geometryGroup,
                 computed: true,
                 disabled: isActionComponent,
-                hideInPropertyGrid: isWidgetUnderDockingManager,
+                hideInPropertyGrid: (component: Component) =>
+                    isWidgetUnderDockingManager(component) ||
+                    isPresetWidget(component),
                 hideInDocumentation: "action"
             },
             {
@@ -3360,7 +3372,9 @@ export class Widget extends Component {
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
                 disabled: component => isLVGLProject(component),
-                hideInPropertyGrid: isWidgetUnderDockingManager
+                hideInPropertyGrid: (widget: Widget) =>
+                    isWidgetUnderDockingManager(widget) ||
+                    isPresetWidget(widget)
             },
             {
                 name: "allowOverlapping",
@@ -3368,7 +3382,8 @@ export class Widget extends Component {
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
                 hideInPropertyGrid: (widget: Widget) =>
-                    !isOverlappingChildrenSupported(widget)
+                    !isOverlappingChildrenSupported(widget) ||
+                    isPresetWidget(widget)
             },
             {
                 name: "locked",
@@ -4180,30 +4195,34 @@ export class Widget extends Component {
         }
 
         const name = result.values.name.trim();
-        const general = projectStore.project.settings.general;
-        if (!general.widgetPresets) {
-            projectStore.updateObject(general, { widgetPresets: [] });
+        const eezGui = projectStore.project.settings.eezGui;
+        if (!eezGui) {
+            return;
         }
-        const widgetPresets = general.widgetPresets!;
-        const values = {
-            name,
-            widgetType,
-            icon: result.values.icon.trim() || undefined,
-            properties: JSON.stringify(this.presetValues, undefined, 2)
-        };
-
+        if (!eezGui.widgetPresets) {
+            projectStore.updateObject(eezGui, { widgetPresets: [] });
+        }
+        const widgetPresets = eezGui.widgetPresets!;
         const existing = widgetPresets.find(preset => preset.name == name);
-        if (existing) {
-            projectStore.updateObject(existing, values);
-        } else {
-            projectStore.addObject(
-                widgetPresets,
-                createObject<any>(
+        const widgetPreset = createObject<any>(
+            projectStore,
+            {
+                name,
+                description: existing?.description,
+                icon: result.values.icon.trim() || undefined,
+                widget: ProjectEditor.getPresetWidgetValues(
                     projectStore,
-                    values,
-                    ProjectEditor.WidgetPresetClass
+                    widgetType,
+                    this.presetValues
                 )
-            );
+            },
+            ProjectEditor.WidgetPresetClass
+        );
+
+        if (existing) {
+            replaceObject(existing, widgetPreset);
+        } else {
+            projectStore.addObject(widgetPresets, widgetPreset);
         }
     }
 

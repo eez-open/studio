@@ -24,7 +24,8 @@ import {
     BuildFile,
     getPage,
     WidgetPreset,
-    getWidgetPresets
+    getWidgetPresets,
+    getPresetWidgetValues
 } from "project-editor/project/project";
 
 import {
@@ -266,6 +267,7 @@ export function createProjectEditor(
         getWidget,
         WidgetPresetClass: WidgetPreset,
         getWidgetPresets,
+        getPresetWidgetValues,
         getWidgetParent,
         getBitmapData,
         migrateProjectType,

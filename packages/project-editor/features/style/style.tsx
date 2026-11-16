@@ -216,19 +216,19 @@ export function getStyleVariants(object: IEezObject): StyleVariant[] {
         return [];
     }
 
-    const own = project.settings?.general?.styleVariants;
+    const own = project.settings?.eezGui?.styleVariants;
     if (own && own.length > 0) {
         return own;
     }
 
     const masterProject = project.masterProject;
     if (masterProject) {
-        return masterProject.settings?.general?.styleVariants ?? [];
+        return masterProject.settings?.eezGui?.styleVariants ?? [];
     }
 
     for (const importDirective of project.settings?.general?.imports ?? []) {
         const imported =
-            importDirective.project?.settings?.general?.styleVariants;
+            importDirective.project?.settings?.eezGui?.styleVariants;
         if (imported && imported.length > 0) {
             return imported;
         }
