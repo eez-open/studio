@@ -63,11 +63,6 @@ import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { buildWidget } from "project-editor/build/widgets";
 import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/component-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    checkOverlappingChildren,
-    isOverlappingChildrenSupported,
-    OVERLAPPING_CHILDREN_FLAG
-} from "project-editor/flow/components/widgets/overlapping-widgets";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
@@ -182,7 +177,6 @@ export class Page extends Flow {
 
     scaleToFit: boolean;
 
-    allowOverlappingChildren?: boolean;
 
     isUsedAsUserWidget: boolean;
 
@@ -232,7 +226,6 @@ export class Page extends Flow {
             width: observable,
             height: observable,
             scaleToFit: observable,
-            allowOverlappingChildren: observable,
             isUsedAsUserWidget: observable,
             _lvglRuntime: observable,
             _lvglObj: observable,
@@ -340,13 +333,6 @@ export class Page extends Flow {
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
                 disabled: isLVGLProject
-            },
-            {
-                name: "allowOverlappingChildren",
-                type: PropertyType.Boolean,
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: (page: Page) =>
-                    !isOverlappingChildrenSupported(page)
             },
             {
                 name: "style",
@@ -616,15 +602,6 @@ export class Page extends Flow {
             if (page.style && !findStyle(projectStore.project, page.style)) {
                 messages.push(propertyNotFoundMessage(page, "style"));
             }
-
-            checkOverlappingChildren(
-                page,
-                page.components.filter(
-                    component => component instanceof Widget
-                ) as Widget[],
-                !!page.allowOverlappingChildren,
-                messages
-            );
 
             if (
                 projectStore.projectTypeTraits.hasDisplaySizeProperty && !page.isUsedAsUserWidget && !projectStore.projectTypeTraits.isFirmware
@@ -1002,10 +979,6 @@ export class Page extends Flow {
 
         if (this.scaleToFit) {
             flags |= PAGE_SCALE_TO_FIT;
-        }
-
-        if (this.allowOverlappingChildren) {
-            flags |= OVERLAPPING_CHILDREN_FLAG;
         }
 
         dataBuffer.writeUint16(flags);

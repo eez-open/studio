@@ -120,11 +120,6 @@ import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { showDialog } from "eez-studio-ui/dialog";
 import { EditorFlowContext } from "project-editor/flow/editor/context";
-import {
-    checkOverlappingChildren,
-    isOverlappingChildrenSupported,
-    OVERLAPPING_CHILDREN_FLAG
-} from "project-editor/flow/components/widgets/overlapping-widgets";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { ProjectContext } from "project-editor/project/context";
 import {
@@ -333,7 +328,6 @@ export class ContainerWidget extends Widget {
     shadow?: boolean;
     layout: "static" | "horizontal" | "vertical" | "docking-manager";
     dockingLayout: any;
-    allowOverlappingChildren?: boolean;
 
     // a row or column (EEZ-GUI, see isRowOrColumn)
     gap?: number;
@@ -523,15 +517,6 @@ export class ContainerWidget extends Widget {
                     return widget.layout != "docking-manager";
                 }
             },
-            {
-                name: "allowOverlappingChildren",
-                type: PropertyType.Boolean,
-                propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isOverlappingChildrenSupported(widget),
-                disabled: (widget: ContainerWidget) =>
-                    widget.layout != "static"
-            },
             makeStylePropertyInfo("style", "Default style", {
                 hideInDocumentation: "none"
             })
@@ -632,15 +617,6 @@ export class ContainerWidget extends Widget {
                     )
                 );
             }
-
-            if (object.layout == "static") {
-                checkOverlappingChildren(
-                    object,
-                    object.widgets,
-                    !!object.allowOverlappingChildren,
-                    messages
-                );
-            }
         }
     });
 
@@ -654,7 +630,6 @@ export class ContainerWidget extends Widget {
             shadow: observable,
             layout: observable,
             dockingLayout: observable,
-            allowOverlappingChildren: observable,
             gap: observable,
             justifyContent: observable,
             alignItems: observable,
@@ -1045,10 +1020,6 @@ export class ContainerWidget extends Widget {
 
         if (overlay && this.shadow) {
             flags |= SHADOW_FLAG;
-        }
-
-        if (this.allowOverlappingChildren && this.layout == "static") {
-            flags |= OVERLAPPING_CHILDREN_FLAG;
         }
 
         // a row or column: the lines between the children
