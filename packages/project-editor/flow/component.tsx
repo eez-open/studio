@@ -3147,7 +3147,10 @@ export class Widget extends Component {
                     { id: WIDGET_VARIANT_NONE, label: "None" }
                 ],
                 propertyGridGroup: styleGroup,
-                disabled: (widget: Widget) => !isEezGuiProject(widget)
+                disabled: (widget: Widget) =>
+                    !isEezGuiProject(widget) ||
+                    // a Spacer has no style
+                    widget instanceof ProjectEditor.SpacerWidgetClass
             },
             {
                 name: "variantRules",
@@ -3161,7 +3164,8 @@ export class Widget extends Component {
                 enumerable: false,
                 disabled: (widget: Widget) =>
                     !isEezGuiProject(widget) ||
-                    widget instanceof ProjectEditor.UserWidgetWidgetClass
+                    widget instanceof ProjectEditor.UserWidgetWidgetClass ||
+                    widget instanceof ProjectEditor.SpacerWidgetClass
             },
             // The expression built from the rules (see variantExpression):
             // not shown, but built (the flow build skips the other hidden
@@ -3198,7 +3202,9 @@ export class Widget extends Component {
                 propertyGridRowComponent: StylePropertyUI,
                 computed: true,
                 skipSearch: true,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: (widget: Widget) =>
+                    isLVGLProject(widget) ||
+                    widget instanceof ProjectEditor.SpacerWidgetClass
             },
             {
                 name: "allowOutside",

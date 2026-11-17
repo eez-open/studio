@@ -107,6 +107,7 @@ import {
     WIDGET_TYPE_BUTTON,
     WIDGET_TYPE_TEXT,
     WIDGET_TYPE_RECTANGLE,
+    WIDGET_TYPE_SPACER,
     WIDGET_TYPE_BITMAP
 } from "project-editor/flow/components/component-types";
 import {
@@ -1457,6 +1458,68 @@ function isTransparentColorValue(value: any) {
 }
 
 registerClass("RectangleWidget", RectangleWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// An empty place: the space between the children of a row or a column, or the
+// child of a Select that shows nothing. It has no style of its own and draws
+// nothing: what is below it is seen. Its style object is always empty (the
+// code of the widgets expects every widget to have one), it is built as 0.
+export class SpacerWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
+
+        flowComponentId: WIDGET_TYPE_SPACER,
+
+        properties: [
+            makeStylePropertyInfo("style", undefined, {
+                styleWithoutFont: true
+            })
+        ],
+
+        beforeLoadHook: (
+            object: IEezObject,
+            jsObject: any,
+            project: Project
+        ) => {
+            jsObject.style = jsObject.style?.objID
+                ? { objID: jsObject.style.objID }
+                : {};
+        },
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 16,
+            height: 16
+        },
+
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 6v12M20 6v12M8 12h8M8 12l2.5 -2.5M8 12l2.5 2.5M16 12l-2.5 -2.5M16 12l-2.5 2.5"></path>
+            </svg>
+        ),
+
+        check: (object: SpacerWidget, messages: IMessage[]) => {
+            if (object.data) {
+                messages.push(propertySetButNotUsedMessage(object, "data"));
+            }
+        }
+    });
+}
+
+registerClass("SpacerWidget", SpacerWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 

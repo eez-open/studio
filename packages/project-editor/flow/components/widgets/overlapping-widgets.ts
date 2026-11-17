@@ -31,7 +31,8 @@ function isIgnored(widget: Widget) {
         widget.allowOverlapping ||
         isOverlay(widget) ||
         widget instanceof ProjectEditor.BitmapWidgetClass ||
-        widget instanceof ProjectEditor.RectangleWidgetClass
+        widget instanceof ProjectEditor.RectangleWidgetClass ||
+        widget instanceof ProjectEditor.SpacerWidgetClass
     );
 }
 

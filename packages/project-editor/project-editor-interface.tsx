@@ -95,6 +95,7 @@ import type {
     BarGraphWidget,
     BitmapWidget,
     RectangleWidget,
+    SpacerWidget,
     CheckboxWidget,
     RadioWidget
 } from "project-editor/flow/components/widgets/eez-gui";
@@ -180,6 +181,7 @@ export interface IProjectEditor {
     BarGraphWidgetClass: typeof BarGraphWidget;
     BitmapWidgetClass: typeof BitmapWidget;
     RectangleWidgetClass: typeof RectangleWidget;
+    SpacerWidgetClass: typeof SpacerWidget;
     CheckboxWidgetClass: typeof CheckboxWidget;
     RadioWidgetClass: typeof RadioWidget;
     OutputActionComponentClass: typeof OutputActionComponent;

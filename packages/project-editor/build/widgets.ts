@@ -52,8 +52,12 @@ export function buildWidget(
     // height
     dataBuffer.writeInt16(object.height || 0);
 
-    // style
-    dataBuffer.writeInt16(assets.getStyleIndex(object, "style"));
+    // style (a Spacer has none)
+    dataBuffer.writeInt16(
+        object instanceof ProjectEditor.SpacerWidgetClass
+            ? 0
+            : assets.getStyleIndex(object, "style")
+    );
 
     // flags
     let flags = 0;

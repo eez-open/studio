@@ -88,6 +88,7 @@ import {
     BarGraphWidget,
     BitmapWidget,
     RectangleWidget,
+    SpacerWidget,
     CheckboxWidget,
     RadioWidget
 } from "project-editor/flow/components/widgets/eez-gui";
@@ -223,6 +224,7 @@ export function createProjectEditor(
         BarGraphWidgetClass: BarGraphWidget,
         BitmapWidgetClass: BitmapWidget,
         RectangleWidgetClass: RectangleWidget,
+        SpacerWidgetClass: SpacerWidget,
         CheckboxWidgetClass: CheckboxWidget,
         RadioWidgetClass: RadioWidget,
         OutputActionComponentClass: OutputActionComponent,
