@@ -438,7 +438,6 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
         flowIndex,
         path: getObjectPathAsString(flow),
         readablePath: getHumanReadableObjectPath(flow),
-        pageLayout: assets.pageLayout?.name,
         components: [],
         componentIndexes: {},
         componentInputs: [],
@@ -545,11 +544,9 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
     if (assets.projectStore.projectTypeTraits.hasFlowSupport) {
         dataBuffer.writeObjectOffset(() => {
             // flows
-            dataBuffer.writeArray(assets.flows, (flow, i) => {
+            dataBuffer.writeArray(assets.flows, flow => {
                 if (flow) {
-                    assets.buildInPageLayout(assets.getFlowPageLayout(i), () =>
-                        buildFlow(assets, dataBuffer, flow)
-                    );
+                    buildFlow(assets, dataBuffer, flow);
                 }
             });
 

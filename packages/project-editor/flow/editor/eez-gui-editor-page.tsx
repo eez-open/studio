@@ -21,7 +21,6 @@ import type { Page } from "project-editor/features/page/page";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import type { Widget } from "project-editor/flow/component";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
-import { getEditorPageLayout } from "project-editor/features/page/page-layouts";
 import { getProjectWithThemes } from "project-editor/features/style/theme";
 import type { IEezObject } from "project-editor/core/object";
 import type { Rect } from "eez-studio-shared/geometry";
@@ -61,7 +60,7 @@ export const EezGuiEditorPage = observer(
         editorBuild = computed((): EditorBuild => {
             const { page, flowContext } = this.props;
             const widgetOffsets = new Map<number, Widget | Page>();
-            const assets = buildEditorAssets(page, getEditorPageLayout(page), {
+            const assets = buildEditorAssets(page, {
                 getSelectChildIndex: (select: Widget) =>
                     (select as any).getSelectedIndex(flowContext),
                 pageBackgroundColor: this.previewBackgroundColor,
@@ -107,8 +106,7 @@ export const EezGuiEditorPage = observer(
             }
         }
 
-        // where the page is (in the page layout of the editor), in the editor
-        // and on the display
+        // where the page is, in the editor and on the display
         get pageRect() {
             return this.props.page.pageRect;
         }

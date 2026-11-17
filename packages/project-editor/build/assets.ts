@@ -25,16 +25,7 @@ import {
     getStyleVariantId,
     WIDGET_VARIANT_NONE
 } from "project-editor/features/style/style";
-import { Page, PageLayout } from "project-editor/features/page/page";
-import {
-    findPageLayoutPage,
-    getLayoutPropertyValue,
-    getLayoutsPage,
-    getPageLayoutPageName,
-    getPageLayouts,
-    getPageOfPageLayout,
-    isWidgetVisibleInLayout
-} from "project-editor/features/page/page-layouts";
+import { Page } from "project-editor/features/page/page";
 import { Font } from "project-editor/features/font/font";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Action } from "project-editor/features/action/action";
@@ -95,7 +86,6 @@ import {
     NamingConvention,
     TAB
 } from "project-editor/build/helper";
-import { getAssetFullName } from "project-editor/project/assets";
 import {
     FIRST_DASHBOARD_ACTION_COMPONENT_TYPE,
     FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE,
@@ -118,13 +108,12 @@ export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 export const PATH_SEPARATOR = "//";
 
 // The editor build: the page editor draws an EEZ-GUI page with the framework
-// WASM (see build/editor-build.ts). The assets hold the edited page (page 1, in
-// the page layout of the editor) and the user widgets it uses, no actions, and
+// WASM (see build/editor-build.ts). The assets hold the edited page (page 1)
+// and the user widgets it uses, no actions, and
 // all the styles, fonts and bitmaps in a fixed order. Widget properties are what
 // the editor shows. Nothing is written to the Output panel.
 export interface EditorBuild {
     page: Page;
-    pageLayout: PageLayout | undefined;
     userWidgetPages: Page[];
     // the preview background of a user widget page opened in its editor (a
     // theme color name or a color value): the page is drawn with a copy of its
@@ -176,9 +165,7 @@ export class Assets {
     nativeGlobalVariables: Variable[];
 
     actions: Action[];
-    // the page with layouts is built once for each page layout
     pages: (Page | undefined)[];
-    pageLayouts: (PageLayout | undefined)[];
     styles: Style[];
     lvglStyles: LVGLStyle[];
     fonts: Font[];
@@ -187,9 +174,8 @@ export class Assets {
 
     flows: (Flow | undefined)[];
 
-    // flow of the page with layouts has the flow state for each page layout
     flowStates = new Map<
-        Flow | PageLayout,
+        Flow,
         {
             index: number;
             componentIndexes: Map<Component, number>;
@@ -262,77 +248,13 @@ export class Assets {
 
     lvglBuild: LVGLBuild;
 
-    // data buffer which is currently used for building
-    dataBuffer: DataBuffer | DummyDataBuffer;
+    // the data buffer of the build (not the one of a dry run)
+    dataBuffer: DataBuffer | undefined;
 
     get projectStore() {
         return this.editorBuild
             ? getSilentProjectStore(this.rootProject._store)
             : this.rootProject._store;
-    }
-
-    // Layout of the page (and its flow) which is currently built. It is kept in
-    // the data buffer context so it is also available when the objects which
-    // are written later (see DataBuffer.writeObjectOffset) are built.
-    get pageLayout(): PageLayout | undefined {
-        return this.dataBuffer?.context;
-    }
-
-    buildInPageLayout(
-        pageLayout: PageLayout | undefined,
-        callback: () => void
-    ) {
-        const savedPageLayout = this.dataBuffer.context;
-        this.dataBuffer.context = pageLayout;
-        try {
-            callback();
-        } finally {
-            this.dataBuffer.context = savedPageLayout;
-        }
-    }
-
-    // page layout of the flow at flowIndex in the flows
-    getFlowPageLayout(flowIndex: number) {
-        return flowIndex < this.pages.length
-            ? this.pageLayouts[flowIndex]
-            : undefined;
-    }
-
-    getPageName(pageIndex: number) {
-        const page = this.pages[pageIndex];
-        if (!page) {
-            return "";
-        }
-        const pageLayout = this.pageLayouts[pageIndex];
-        return pageLayout
-            ? getPageLayoutPageName(page, pageLayout)
-            : page.name;
-    }
-
-    // page layout, of the page which is currently built, the object belongs to
-    getObjectPageLayout(object: EezObject) {
-        const pageLayout = this.pageLayout;
-        if (pageLayout && getLayoutsPage(object) == getPageOfPageLayout(pageLayout)) {
-            return pageLayout;
-        }
-        return undefined;
-    }
-
-    // value of the property in the page layout which is currently built
-    getPropertyValue(object: EezObject, propertyName: string) {
-        if (object instanceof Component) {
-            const pageLayout = this.getObjectPageLayout(object);
-            if (pageLayout) {
-                return getLayoutPropertyValue(object, propertyName, pageLayout);
-            }
-        }
-        return (object as any)[propertyName];
-    }
-
-    // widgets which are not visible in the page layout are not built
-    isWidgetVisibleInPageLayout(widget: Widget) {
-        const pageLayout = this.getObjectPageLayout(widget);
-        return !pageLayout || isWidgetVisibleInLayout(widget, pageLayout);
     }
 
     // When running FIRMWARE project with master project in the Studio simulator,
@@ -465,43 +387,16 @@ export class Assets {
         // pages
         //
         this.pages = [];
-        this.pageLayouts = [];
-
-        const addPage = (page: Page, pageLayout: PageLayout | undefined) => {
-            this.pages.push(page);
-            this.pageLayouts[this.pages.length - 1] = pageLayout;
-        };
-
-        // for the page with ID, the page for the first page layout gets
-        // the ID and the pages for the other page layouts are added after
-        // the pages with ID
-        const otherPageLayouts: PageLayout[] = [];
 
         this.getAssets<Page>(
             project => project.pages,
             page => assetIncludePredicate(page) && this.getAssetId(page) != undefined
-        ).forEach(page => {
-            const pageLayouts = getPageLayouts(page);
-            this.pages[page.id! - 1] = page;
-            this.pageLayouts[page.id! - 1] = pageLayouts[0];
-            otherPageLayouts.push(...pageLayouts.slice(1));
-        });
-
-        otherPageLayouts.forEach(pageLayout =>
-            addPage(getPageOfPageLayout(pageLayout), pageLayout)
-        );
+        ).forEach(page => (this.pages[page.id! - 1] = page));
 
         this.getAssets<Page>(
             project => project.pages,
             page => assetIncludePredicate(page) && this.getAssetId(page) == undefined
-        ).forEach(page => {
-            const pageLayouts = getPageLayouts(page);
-            if (pageLayouts.length == 0) {
-                addPage(page, undefined);
-            } else {
-                pageLayouts.forEach(pageLayout => addPage(page, pageLayout));
-            }
-        });
+        ).forEach(page => this.pages.push(page));
 
         let missingPageIDs = [];
         for (let i = 0; i < this.pages.length; i++) {
@@ -524,10 +419,6 @@ export class Assets {
                 this.editorBuild.page,
                 ...this.editorBuild.userWidgetPages
             ];
-            this.pageLayouts = [
-                this.editorBuild.pageLayout,
-                ...this.editorBuild.userWidgetPages.map(() => undefined)
-            ];
         }
 
         //
@@ -549,15 +440,7 @@ export class Assets {
                   )
               ];
 
-        this.dataBuffer = new DummyDataBuffer(this.utf8Support);
-
-        this.flows.forEach(
-            (flow, flowIndex) =>
-                flow &&
-                this.buildInPageLayout(this.getFlowPageLayout(flowIndex), () =>
-                    this.getFlowState(flow)
-                )
-        );
+        this.flows.forEach(flow => flow && this.getFlowState(flow));
 
         //
 
@@ -772,7 +655,7 @@ export class Assets {
         this.colors = [];
 
         //
-        const dummyDataBuffer = this.dataBuffer as DataBuffer;
+        const dummyDataBuffer = new DummyDataBuffer(this.utf8Support);
         buildGuiDocumentData(this, dummyDataBuffer);
         buildGuiStylesData(this, dummyDataBuffer);
         buildFlowData(this, dummyDataBuffer);
@@ -889,23 +772,6 @@ export class Assets {
     }
 
     getPageIndex(object: any, propertyName: string) {
-        // page built for the page layout can be referenced by its name,
-        // page with layouts by its name is the page built for the first layout
-        const pageLayoutPage = findPageLayoutPage(
-            getProject(object),
-            object[propertyName]
-        );
-        if (pageLayoutPage) {
-            const pageIndex = this.pages.findIndex(
-                (page, i) =>
-                    page == pageLayoutPage.page &&
-                    this.pageLayouts[i] == pageLayoutPage.pageLayout
-            );
-            if (pageIndex != -1) {
-                return this.masterProject ? -(pageIndex + 1) : pageIndex + 1;
-            }
-        }
-
         return this.getAssetIndex(object, propertyName, findPage, this.pages);
     }
 
@@ -996,8 +862,9 @@ export class Assets {
                         if (this.getAssetId(style) != undefined) {
                             return style.id;
                         }
-                        // parent of the widget style in the page layout is
-                        // the widget style, which has no name
+                        // the parent of a style made from a widget style
+                        // (a state or variant style) is the widget style,
+                        // which has no name
                         return this.doGetStyleIndex(
                             project,
                             parentStyle.name ?? parentStyle
@@ -1062,10 +929,7 @@ export class Assets {
     getStyleIndex(object: any, propertyName: string): number {
         const project = getProject(object);
 
-        let style: string | Style | undefined = this.getPropertyValue(
-            object,
-            propertyName
-        );
+        let style: string | Style | undefined = object[propertyName];
         if (style === undefined) {
             style = findStyle(project, "default");
             if (!style) {
@@ -1106,7 +970,7 @@ export class Assets {
     getFontIndex(object: any, propertyName: string) {
         return this.getFontIndexByName(
             getProject(object),
-            this.getPropertyValue(object, propertyName)
+            object[propertyName]
         );
     }
 
@@ -1148,10 +1012,7 @@ export class Assets {
     }
 
     getBitmapIndex(object: any, propertyName: string) {
-        let bitmapName: string | undefined = this.getPropertyValue(
-            object,
-            propertyName
-        );
+        let bitmapName: string | undefined = object[propertyName];
 
         const project = getProject(object);
 
@@ -1401,23 +1262,8 @@ export class Assets {
         });
     }
 
-    // flow of the page with layouts has the flow state for each page layout
-    getFlowStateKey(flow: Flow): Flow | PageLayout {
-        if (flow instanceof Page) {
-            const pageLayouts = getPageLayouts(flow);
-            if (pageLayouts.length > 0) {
-                const pageLayout = this.pageLayout;
-                return pageLayout && pageLayouts.indexOf(pageLayout) != -1
-                    ? pageLayout
-                    : pageLayouts[0];
-            }
-        }
-        return flow;
-    }
-
     getFlowState(flow: Flow) {
-        const flowStateKey = this.getFlowStateKey(flow);
-        let flowState = this.flowStates.get(flowStateKey);
+        let flowState = this.flowStates.get(flow);
         if (flowState == undefined) {
             flowState = {
                 index: this.flowStates.size,
@@ -1443,7 +1289,7 @@ export class Assets {
                 >(),
                 flowWidgetFromActionIndex: new Map<number, Widget>()
             };
-            this.flowStates.set(flowStateKey, flowState);
+            this.flowStates.set(flow, flowState);
         }
         return flowState;
     }
@@ -1607,7 +1453,7 @@ export class Assets {
             !(component instanceof ProjectEditor.UserWidgetWidgetClass)
         ) {
             const flowState = this.flowStates.get(
-                this.getFlowStateKey(ProjectEditor.getFlow(component))
+                ProjectEditor.getFlow(component)
             );
             const componentPath =
                 getObjectPathAsString(component) + PATH_SEPARATOR;
@@ -1755,16 +1601,11 @@ export class Assets {
 
         this.map.constants = this.constants;
 
-        this.flows.forEach((flow, i) => {
+        this.flows.forEach(flow => {
             if (!flow) {
                 return;
             }
-
-            let flowState!: ReturnType<typeof this.getFlowState>;
-            this.buildInPageLayout(
-                this.getFlowPageLayout(i),
-                () => (flowState = this.getFlowState(flow))
-            );
+            const flowState = this.getFlowState(flow);
             const flowIndex = flowState.index;
 
             flowState.flowWidgetDataIndexes.forEach(index => {
@@ -1811,11 +1652,7 @@ export class Assets {
         }
 
         this.map.flows.forEach((flow, i) => {
-            // pages built for the page layouts have the same path,
-            // the first one is used
-            if (this.map.flowIndexes[flow.path] == undefined) {
-                this.map.flowIndexes[flow.path] = i;
-            }
+            this.map.flowIndexes[flow.path] = i;
             flow.components.forEach(
                 (component, i) => (flow.componentIndexes[component.path] = i)
             );
@@ -2017,7 +1854,7 @@ export function buildGuiAssetsDataSync(
         ProjectEditor.writeBB3ModuleMetadata(
             bb3ModuleMetadata,
             dataBuffer,
-            assets.pages.map((page, i) => (page ? assets.getPageName(i) : ""))
+            assets.pages.map(page => (page ? page.name : ""))
         );
     }
 
@@ -2476,13 +2313,10 @@ export function buildGuiPagesEnum(assets: Assets) {
         if (!page) {
             continue;
         }
-        const pageLayout = assets.pageLayouts[i];
         pages.push(
             `${TAB}${getName(
                 "PAGE_ID_",
-                pageLayout
-                    ? getAssetFullName(page, "_") + pageLayout.name
-                    : page,
+                page,
                 NamingConvention.UnderscoreUpperCase
             )} = ${i + 1}`
         );
@@ -2494,18 +2328,18 @@ export function buildGuiPagesEnum(assets: Assets) {
 }
 
 export function buildGuiDocumentData(assets: Assets, dataBuffer: DataBuffer) {
-    const buildPage = (page: Page | undefined, i: number) => {
-        if (page) {
-            assets.buildInPageLayout(assets.pageLayouts[i], () =>
-                buildWidget(page, assets, dataBuffer)
-            );
-        }
-    };
-
     if (dataBuffer) {
-        dataBuffer.writeArray(assets.pages, buildPage);
+        dataBuffer.writeArray(assets.pages, page => {
+            if (page) {
+                buildWidget(page, assets, dataBuffer);
+            }
+        });
     } else {
-        assets.pages.forEach(buildPage);
+        assets.pages.forEach(page => {
+            if (page) {
+                buildWidget(page, assets, dataBuffer);
+            }
+        });
     }
 }
 

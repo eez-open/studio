@@ -41,11 +41,7 @@ import {
     checkProperty
 } from "project-editor/flow/component";
 
-import { Page, PageLayout } from "project-editor/features/page/page";
-import {
-    isPageLayoutUpdate,
-    updatePageLayoutValues
-} from "project-editor/features/page/page-layouts";
+import { Page } from "project-editor/features/page/page";
 import { Widget } from "project-editor/flow/component";
 import { Glyph } from "project-editor/features/font/font";
 import { Flow, FlowFragment } from "project-editor/flow/flow";
@@ -150,7 +146,7 @@ import {
     EnumMember
 } from "project-editor/features/variable/variable";
 
-import { Style, PageLayoutStyle } from "project-editor/features/style/style";
+import { Style } from "project-editor/features/style/style";
 import { LiteStyle } from "project-editor/eez-gui-lite/style";
 import {
     ContainerLiteWidget,
@@ -208,7 +204,6 @@ export function createProjectEditor(
         FlowClass: Flow,
         FlowFragmentClass: FlowFragment,
         PageClass: Page,
-        PageLayoutClass: PageLayout,
         ActionClass: Action,
         ComponentClass: Component,
         ActionComponentClass: ActionComponent,
@@ -238,7 +233,6 @@ export function createProjectEditor(
         ScpiCommandClass: ScpiCommand,
         ScpiSubsystemClass: ScpiSubsystem,
         StyleClass: Style,
-        PageLayoutStyleClass: PageLayoutStyle,
         LiteStyleClass: LiteStyle,
         BitmapClass: Bitmap,
         FontClass: Font,
@@ -306,9 +300,7 @@ export function createProjectEditor(
         BuildFileClass: BuildFile,
         FlowEditorClass: FlowEditor,
         newComponentMenuItem,
-        writeBB3ModuleMetadata,
-        isPageLayoutUpdate,
-        updatePageLayoutValues
+        writeBB3ModuleMetadata
     };
 
     return projectEditor;

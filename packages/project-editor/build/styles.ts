@@ -251,8 +251,7 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         // backgroundImage
         let backgroundImage: number = 0;
         if (style.backgroundImageProperty) {
-            // inherited value, the style of the widget in the page layout
-            // inherits it from the widget style
+            // the inherited value
             backgroundImage = assets.getBitmapIndex(
                 style,
                 "backgroundImageProperty"

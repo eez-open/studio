@@ -65,7 +65,6 @@ import {
     findPage
 } from "project-editor/project/project";
 import { Assets, DataBuffer } from "project-editor/build/assets";
-import { findPageLayoutPage } from "project-editor/features/page/page-layouts";
 import {
     buildAssignableExpression,
     buildExpression,
@@ -3116,12 +3115,8 @@ export class ShowPageActionComponent extends ActionComponent {
             if (!object.page) {
                 messages.push(propertyNotSetMessage(object, "page"));
             } else {
-                const project = getProject(object);
-                // it can be the page built for the page layout
-                if (
-                    !findPage(project, object.page) &&
-                    !findPageLayoutPage(project, object.page)
-                ) {
+                let page = findPage(getProject(object), object.page);
+                if (!page) {
                     messages.push(propertyNotFoundMessage(object, "page"));
                 }
             }

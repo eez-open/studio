@@ -2,7 +2,7 @@
 // EEZ-GUI pages with the framework WASM (see EditorBuild in assets.ts).
 
 import { visitObjects } from "project-editor/core/search";
-import type { Page, PageLayout } from "project-editor/features/page/page";
+import type { Page } from "project-editor/features/page/page";
 import type { Widget } from "project-editor/flow/component";
 import { evalConstantExpression } from "project-editor/flow/expression";
 import { findPage, getProject } from "project-editor/project/project";
@@ -153,7 +153,6 @@ function getUserWidgetPages(page: Page) {
 // and keeps the computed values it reads cached between the runs.
 export function buildEditorAssets(
     page: Page,
-    pageLayout: PageLayout | undefined,
     options: EditorBuildOptions = {}
 ) {
     // the project open in the editor (the page can be in its master project)
@@ -161,7 +160,6 @@ export function buildEditorAssets(
 
     const editorBuild: EditorBuild = {
         page,
-        pageLayout,
         userWidgetPages: getUserWidgetPages(page),
         pageBackgroundColor: options.pageBackgroundColor,
         widgetOffsets: options.widgetOffsets,

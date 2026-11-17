@@ -9,22 +9,15 @@ export class DataBuffer {
 
     currentOffset: number = 0;
 
-    // Build state (for example, the page layout which is built) that was set
-    // when the object was scheduled to be written later, it is restored when
-    // the object is actually written.
-    context: any = undefined;
-
     writeLaterObjectList: {
         currentOffset: number;
         callback: () => void;
         padding: number;
-        context: any;
     }[] = [];
 
     futureArrayList: {
         currentOffset: number;
         callback: () => void;
-        context: any;
     }[] = [];
 
     // size: the most the buffer can hold; buffer: a zeroed buffer to write
@@ -176,8 +169,7 @@ export class DataBuffer {
         this.writeUint32(0);
         this.futureArrayList.push({
             currentOffset,
-            callback,
-            context: this.context
+            callback
         });
     }
 
@@ -204,12 +196,7 @@ export class DataBuffer {
         }
         const currentOffset = this.currentOffset;
         this.writeUint32(0);
-        this.writeLaterObjectList.push({
-            currentOffset,
-            callback,
-            padding,
-            context: this.context
-        });
+        this.writeLaterObjectList.push({ currentOffset, callback, padding });
     }
 
     // the objects written once and pointed to from several places
@@ -284,7 +271,6 @@ export class DataBuffer {
 
             const currentOffset = this.currentOffset;
 
-            this.context = writeLater.context;
             writeLater.callback();
 
             if (writeLater.padding == 8) {
@@ -300,7 +286,6 @@ export class DataBuffer {
         }
 
         this.writeLaterObjectList = [];
-        this.context = undefined;
     }
 
     finalize() {
@@ -312,10 +297,8 @@ export class DataBuffer {
 
         for (let i = 0; i < this.futureArrayList.length; i++) {
             this.currentOffset = this.futureArrayList[i].currentOffset;
-            this.context = this.futureArrayList[i].context;
             this.futureArrayList[i].callback();
         }
-        this.context = undefined;
 
         this.currentOffset = currentOffset;
 
@@ -342,21 +325,15 @@ export class DummyDataBuffer {
 
     currentOffset = 0;
 
-    // objects are written immediately, so the context doesn't have to be
-    // restored (see DataBuffer.context)
-    context: any = undefined;
-
     writeLaterObjectList: {
         currentOffset: number;
         callback: () => void;
         padding: number;
-        context: any;
     }[] = [];
 
     futureArrayList: {
         currentOffset: number;
         callback: () => void;
-        context: any;
     }[] = [];
 
     constructor(public utf8Support: boolean) {}

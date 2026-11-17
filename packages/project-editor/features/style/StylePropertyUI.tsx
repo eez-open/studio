@@ -17,12 +17,6 @@ import { ProjectContext } from "project-editor/project/context";
 import { computed, makeObservable, runInAction } from "mobx";
 import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 import { isPropertyInError } from "project-editor/ui-components/PropertyGrid/utils";
-import { getEditorLayoutPropertyValue } from "project-editor/features/page/page-layouts";
-
-// style in the page layout selected in the editor, see PageLayoutStyle
-function getStyleObject(object: IEezObject, styleProperty: PropertyInfo) {
-    return getEditorLayoutPropertyValue(object, styleProperty.name);
-}
 
 export const StylePropertyUI = observer(
     class StylePropertyUI extends React.Component<PropertyProps> {
@@ -86,11 +80,11 @@ export const StylePropertyUI = observer(
                     <div>
                         {this.selectedStyleProperty && (
                             <PropertyGrid
-                                objects={this.props.objects.map(object =>
-                                    getStyleObject(
-                                        object,
-                                        this.selectedStyleProperty
-                                    )
+                                objects={this.props.objects.map(
+                                    object =>
+                                        (object as any)[
+                                            this.selectedStyleProperty.name
+                                        ]
                                 )}
                             />
                         )}
@@ -112,8 +106,8 @@ export const StylesDefinitionTree = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         getStyleObjects(styleProperty: PropertyInfo): IEezObject[] {
-            return this.props.objects.map(object =>
-                getStyleObject(object, styleProperty)
+            return this.props.objects.map(
+                object => (object as any)[styleProperty.name]
             );
         }
 

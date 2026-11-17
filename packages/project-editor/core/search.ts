@@ -24,10 +24,6 @@ import type {
     ImportDirective
 } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    replaceObjectReferenceInPageLayouts,
-    withoutPageLayoutUpdate
-} from "project-editor/features/page/page-layouts";
 
 import { expressionParser } from "project-editor/flow/expression/parser";
 import { findValueTypeInExpressionNode } from "project-editor/flow/expression/type";
@@ -1097,24 +1093,6 @@ export function isReferenced(object: IEezObject) {
 }
 
 export function replaceObjectReference(
-    object: IEezObject,
-    newValue: string,
-    includeAdditionObjects?: IEezObject[]
-) {
-    // references are replaced in the widget properties and not in the page
-    // layout selected in the editor
-    withoutPageLayoutUpdate(() =>
-        doReplaceObjectReference(object, newValue, includeAdditionObjects)
-    );
-
-    replaceObjectReferenceInPageLayouts(
-        getRootObject(object),
-        object,
-        newValue
-    );
-}
-
-function doReplaceObjectReference(
     object: IEezObject,
     newValue: string,
     includeAdditionObjects?: IEezObject[]
