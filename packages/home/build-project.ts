@@ -13,7 +13,6 @@ export interface RenderPageOptions {
     pageName: string;
     outFile: string;
     themeIndex?: number;
-    pageLayoutName?: string;
     // the child every Select shows (default: the first)
     selectChildIndex?: number;
     // the preview background of a user widget page (a theme color name or a
@@ -29,9 +28,6 @@ export interface RenderPageOptions {
 
 async function renderPage(projectStore: ProjectStore, options: RenderPageOptions) {
     const { findPage } = await import("project-editor/project/project");
-    const { getPageLayouts } = await import(
-        "project-editor/features/page/page-layouts"
-    );
     const { buildEditorAssets } = await import(
         "project-editor/build/editor-build"
     );
@@ -48,13 +44,8 @@ async function renderPage(projectStore: ProjectStore, options: RenderPageOptions
         return;
     }
 
-    const pageLayout = options.pageLayoutName
-        ? getPageLayouts(page).find(
-              pageLayout => pageLayout.name == options.pageLayoutName
-          )
-        : undefined;
-    const width = pageLayout ? pageLayout.width : page.width;
-    const height = pageLayout ? pageLayout.height : page.height;
+    const width = page.width;
+    const height = page.height;
 
     // the display of the page editor (getFlowGuiDisplaySize)
     const { getFlowGuiDisplaySize } = await import(
@@ -86,7 +77,7 @@ async function renderPage(projectStore: ProjectStore, options: RenderPageOptions
         trigger.get();
 
         let t = performance.now();
-        const assets = buildEditorAssets(page, pageLayout, {
+        const assets = buildEditorAssets(page, {
             getSelectChildIndex: () => options.selectChildIndex ?? 0,
             pageBackgroundColor: options.background,
             getVariantPreview: options.variantPreviews

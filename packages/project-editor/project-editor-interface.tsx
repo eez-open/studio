@@ -23,11 +23,7 @@ import type {
     getWidgetPresets,
     getPresetWidgetValues
 } from "project-editor/project/project";
-import type { Page, PageLayout } from "project-editor/features/page/page";
-import type {
-    isPageLayoutUpdate,
-    updatePageLayoutValues
-} from "project-editor/features/page/page-layouts";
+import type { Page } from "project-editor/features/page/page";
 import type {
     ActionComponent,
     Component,
@@ -99,6 +95,7 @@ import type {
     BarGraphWidget,
     BitmapWidget,
     RectangleWidget,
+    SpacerWidget,
     CheckboxWidget,
     RadioWidget
 } from "project-editor/flow/components/widgets/eez-gui";
@@ -133,10 +130,7 @@ import type {
     EnumMember
 } from "project-editor/features/variable/variable";
 
-import type {
-    Style,
-    PageLayoutStyle
-} from "project-editor/features/style/style";
+import type { Style } from "project-editor/features/style/style";
 import type { evalProperty } from "project-editor/flow/helper";
 import type { migrateLvglVersion } from "project-editor/lvgl/migrate";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
@@ -168,7 +162,6 @@ export interface IProjectEditor {
     FlowClass: typeof Flow;
     FlowFragmentClass: typeof FlowFragment;
     PageClass: typeof Page;
-    PageLayoutClass: typeof PageLayout;
     ActionClass: typeof Action;
     ComponentClass: typeof Component;
     ActionComponentClass: typeof ActionComponent;
@@ -188,6 +181,7 @@ export interface IProjectEditor {
     BarGraphWidgetClass: typeof BarGraphWidget;
     BitmapWidgetClass: typeof BitmapWidget;
     RectangleWidgetClass: typeof RectangleWidget;
+    SpacerWidgetClass: typeof SpacerWidget;
     CheckboxWidgetClass: typeof CheckboxWidget;
     RadioWidgetClass: typeof RadioWidget;
     OutputActionComponentClass: typeof OutputActionComponent;
@@ -198,7 +192,6 @@ export interface IProjectEditor {
     ScpiCommandClass: typeof ScpiCommand;
     ScpiSubsystemClass: typeof ScpiSubsystem;
     StyleClass: typeof Style;
-    PageLayoutStyleClass: typeof PageLayoutStyle;
     LiteStyleClass: typeof LiteStyle;
     BitmapClass: typeof Bitmap;
     FontClass: typeof Font;
@@ -267,8 +260,6 @@ export interface IProjectEditor {
     FlowEditorClass: typeof FlowEditor;
     newComponentMenuItem: typeof newComponentMenuItem;
     writeBB3ModuleMetadata: typeof writeBB3ModuleMetadata;
-    isPageLayoutUpdate: typeof isPageLayoutUpdate;
-    updatePageLayoutValues: typeof updatePageLayoutValues;
 }
 
 export const ProjectEditor: IProjectEditor = {} as any;

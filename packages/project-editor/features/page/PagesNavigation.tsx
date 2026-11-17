@@ -15,7 +15,6 @@ import { ProjectContext } from "project-editor/project/context";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
-import { isWidgetShownInEditorLayout } from "project-editor/features/page/page-layouts";
 import type { Widget } from "project-editor/flow/component";
 import classNames from "classnames";
 import { IconAction } from "eez-studio-ui/action";
@@ -291,20 +290,12 @@ export const PageStructure = observer(
 
             const widget = item.object as Widget;
 
-            // also dimmed if some parent widget is not visible in the layout
-            const isVisibleInLayout = isWidgetShownInEditorLayout(widget);
-
             return (
                 <span
                     className={classNames("EezStudio_WidgetTreeTrow", {
                         withIcon: widget.locked || widget.hiddenInEditor,
-                        dimmed: widget.hiddenInEditor || !isVisibleInLayout
+                        dimmed: widget.hiddenInEditor
                     })}
-                    title={
-                        isVisibleInLayout
-                            ? undefined
-                            : "Not visible in the selected page layout"
-                    }
                 >
                     <span>{this.treeAdapter.itemToString(item)}</span>
                     <Toolbar>

@@ -25,6 +25,63 @@ export const STYLE_FLAGS_VERT_ALIGN_CENTER = 2 << 3;
 export const STYLE_FLAGS_BLINK = 1 << 6;
 export const STYLE_FLAGS_ELLIPSIS = 1 << 7;
 
+// The state and variant styles made for a style are kept with it and used
+// again by the next build while their properties (the delta, an object of
+// Style.stateDeltas or Style.variantDeltas) are the same. The page editor
+// builds the assets of the page after every change: with the same objects
+// their computed values (the inherited properties) stay cached between the
+// builds, with new objects all of them are computed again. They are dropped
+// with the style.
+const madeStyles = new WeakMap<
+    Style,
+    Map<string, { delta: object; style: Style }>
+>();
+
+function getMadeStyle(
+    style: Style,
+    key: string,
+    delta: object,
+    make: () => Style
+) {
+    let made = madeStyles.get(style);
+    if (!made) {
+        made = new Map();
+        madeStyles.set(style, made);
+    }
+    let entry = made.get(key);
+    if (!entry || entry.delta != delta) {
+        entry = { delta, style: createTemporaryObject(make) };
+        made.set(key, entry);
+    }
+    return entry.style;
+}
+
+function getStateStyle(
+    style: Style,
+    state: (typeof STYLE_STATES)[number],
+    delta: { [propertyName: string]: any }
+) {
+    return getMadeStyle(
+        style,
+        "state:" + state,
+        delta,
+        () => new StateStyle(style, state, delta)
+    );
+}
+
+function getVariantStyle(
+    style: Style,
+    variantName: string,
+    entry: NonNullable<Style["variantDeltas"]>[string]
+) {
+    return getMadeStyle(
+        style,
+        "variant:" + variantName,
+        entry,
+        () => new VariantStyle(style, variantName, entry.delta, entry.states)
+    );
+}
+
 // The styles of the states of the styles of the assets (see Style.stateDeltas):
 // a StateStyle for each state with properties, added to the assets (the list
 // grows while it is walked, the state styles have no states). The indexes are
@@ -49,9 +106,7 @@ function addStateStyles(assets: Assets) {
             }
             return assets.doGetStyleIndex(
                 ProjectEditor.getProject(style),
-                createTemporaryObject(
-                    () => new StateStyle(style, state, delta)
-                )
+                getStateStyle(style, state, delta)
             );
         });
 
@@ -99,15 +154,7 @@ function addVariantStyles(assets: Assets) {
             }
             indexes[styleVariant.id] = assets.doGetStyleIndex(
                 ProjectEditor.getProject(style),
-                createTemporaryObject(
-                    () =>
-                        new VariantStyle(
-                            style,
-                            styleVariant.name,
-                            entry.delta,
-                            entry.states
-                        )
-                )
+                getVariantStyle(style, styleVariant.name, entry)
             );
             hasVariantStyle = true;
         }
@@ -251,8 +298,7 @@ export function buildGuiStylesData(assets: Assets, dataBuffer: DataBuffer) {
         // backgroundImage
         let backgroundImage: number = 0;
         if (style.backgroundImageProperty) {
-            // inherited value, the style of the widget in the page layout
-            // inherits it from the widget style
+            // the inherited value
             backgroundImage = assets.getBitmapIndex(
                 style,
                 "backgroundImageProperty"

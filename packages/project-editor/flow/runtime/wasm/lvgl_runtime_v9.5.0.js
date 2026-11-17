@@ -71,7 +71,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: D:/source/repos/CODEX/WindowsToolchain/ide/artifacts/eez-references/pr-wasm-libs/lvgl-runtime/v9.5.0/../common/pre.js
+// include: D:/source/repos/CODEX/eez-pr-sync-8be491a4/wasm/lvgl-runtime/v9.5.0/../common/pre.js
 module["exports"] = function (postWorkerToRendererMessage) {
     var Module = {};
 
@@ -101,7 +101,7 @@ module["exports"] = function (postWorkerToRendererMessage) {
 
 function runWasmModule(Module) {
 
-// end include: D:/source/repos/CODEX/WindowsToolchain/ide/artifacts/eez-references/pr-wasm-libs/lvgl-runtime/v9.5.0/../common/pre.js
+// end include: D:/source/repos/CODEX/eez-pr-sync-8be491a4/wasm/lvgl-runtime/v9.5.0/../common/pre.js
 
 
 var arguments_ = [];
@@ -5470,31 +5470,31 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1219640: ($0) => { startToDebuggerMessage($0); },  
- 1219672: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1219747: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1219822: ($0) => { finishToDebuggerMessage($0); },  
- 1219855: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1219885: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1219915: ($0) => { lvglScreenTick($0); },  
- 1219939: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1219979: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1220033: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1220087: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1220140: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1220193: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1220246: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
- 1220298: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1220345: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1220378: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1220414: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1220459: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1220565: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1220601: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1220638: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1220678: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1220735: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1220794: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1215480: ($0) => { startToDebuggerMessage($0); },  
+ 1215512: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1215587: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1215662: ($0) => { finishToDebuggerMessage($0); },  
+ 1215695: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1215725: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1215755: ($0) => { lvglScreenTick($0); },  
+ 1215779: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1215819: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1215873: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1215927: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1215980: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1216033: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1216086: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1216138: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1216185: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1216218: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1216254: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1216299: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1216405: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1216441: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1216478: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1216518: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1216575: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1216634: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -12009,7 +12009,7 @@ run();
 
 // end include: postamble.js
 
-// include: D:/source/repos/CODEX/WindowsToolchain/ide/artifacts/eez-references/pr-wasm-libs/lvgl-runtime/v9.5.0/../common/post.js
+// include: D:/source/repos/CODEX/eez-pr-sync-8be491a4/wasm/lvgl-runtime/v9.5.0/../common/post.js
 }
-// end include: D:/source/repos/CODEX/WindowsToolchain/ide/artifacts/eez-references/pr-wasm-libs/lvgl-runtime/v9.5.0/../common/post.js
+// end include: D:/source/repos/CODEX/eez-pr-sync-8be491a4/wasm/lvgl-runtime/v9.5.0/../common/post.js
 

@@ -37,8 +37,7 @@ import {
     IPropertyGridGroupDefinition,
     isPropertyOptional,
     setKey,
-    WidgetEvents,
-    getObjectPropertyDisplayName
+    WidgetEvents
 } from "project-editor/core/object";
 import {
     getChildOfObject,
@@ -64,7 +63,6 @@ import {
     isNotLVGLProject,
     isNotProjectWithFlowSupport
 } from "project-editor/project/project-type-traits";
-import { isOverlappingChildrenSupported } from "project-editor/flow/components/widgets/overlapping-widgets";
 import { objectToJS } from "project-editor/store";
 import { getClass } from "project-editor/core/object";
 import { IContextMenuContext, getProjectStore } from "project-editor/store";
@@ -85,27 +83,8 @@ import { getEditorWidgetBox } from "project-editor/flow/editor/eez-gui-editor-bo
 
 import type {
     ICustomWidgetCreateParams,
-    Page,
-    PageLayout
+    Page
 } from "project-editor/features/page/page";
-import {
-    canBeHiddenInLayout,
-    deleteLayoutValues,
-    getEditorLayoutPropertyValue,
-    getEditorPageLayout,
-    getEnclosedWidgetLayoutValues,
-    getEnclosingWidgetLayoutProperties,
-    getLayoutPropertyValue,
-    getLayoutsPage,
-    getPageLayouts,
-    getWidgetStyleInEditorLayout,
-    getWidgetStyleInLayout,
-    isWidgetShownInLayout,
-    newPageLayoutMessage,
-    omitLayoutValues,
-    pickLayoutValues,
-    WidgetLayoutProperties
-} from "project-editor/features/page/page-layouts";
 import {
     getAdditionalStyleFlowProperties,
     getStyleVariants,
@@ -201,11 +180,7 @@ import {
     wireSourceChanged
 } from "project-editor/store/serialization";
 import { StylePropertyUI } from "project-editor/features/style/StylePropertyUI";
-import {
-    findAllReferencedObjects,
-    findVariable,
-    ProjectType
-} from "project-editor/project/project";
+import { findVariable, ProjectType } from "project-editor/project/project";
 import type { Action } from "project-editor/features/action/action";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -230,8 +205,7 @@ const resizingProperty: PropertyInfo = {
     hideInPropertyGrid: (widget: Widget) =>
         isLVGLProject(widget) ||
         isWidgetUnderDockingManager(widget) ||
-        isPresetWidget(widget),
-    layoutSpecific: true
+        isPresetWidget(widget)
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -289,9 +263,7 @@ export function makeStylePropertyInfo(
             propertyGridCollapsable: true,
             propertyGridCollapsableDefaultPropertyName: "useStyle",
             enumerable: false,
-            hideInPropertyGrid: true,
-            // default style can be changed in the page layout
-            layoutSpecific: name == "style"
+            hideInPropertyGrid: true
         },
         props
     );
@@ -372,7 +344,7 @@ export function getOptionalStyleIndex(
     widget: Widget,
     propertyName: string
 ) {
-    const style = assets.getPropertyValue(widget, propertyName);
+    const style = (widget as any)[propertyName];
     return style instanceof Style && !isStyleEmpty(style)
         ? assets.getStyleIndex(widget, propertyName)
         : 0;
@@ -1874,123 +1846,6 @@ function isWidgetUnderDockingManager(widget: Component) {
     );
 }
 
-function checkWidgetIsInsideParent(
-    rect: Rect,
-    parentSize: { width: number; height: number },
-    inLayout: string,
-    widget: Widget,
-    messages: IMessage[]
-) {
-    const text = `Widget is outside of its parent${inLayout}`;
-
-    const newMessage = (propertyName: string) => {
-        const object = getChildOfObject(widget, propertyName);
-        return inLayout
-            ? newPageLayoutMessage(MessageType.WARNING, text, object)
-            : new Message(MessageType.WARNING, text, object);
-    };
-
-    if (rect.left < 0) {
-        messages.push(newMessage("left"));
-    }
-
-    if (rect.top < 0) {
-        messages.push(newMessage("top"));
-    }
-
-    if (rect.left + rect.width > parentSize.width) {
-        messages.push(newMessage("width"));
-    }
-
-    if (rect.top + rect.height > parentSize.height) {
-        messages.push(newMessage("height"));
-    }
-}
-
-// checks the values changed in the page layout
-function checkWidgetLayoutProperties(
-    widget: Widget,
-    pageLayout: PageLayout,
-    messages: IMessage[]
-) {
-    const layoutValues = widget.layoutProperties?.[pageLayout.name];
-    if (!layoutValues) {
-        return;
-    }
-
-    const inLayout = ` in the "${pageLayout.name}" layout`;
-
-    for (const propertyName of Object.keys(layoutValues)) {
-        const propertyInfo = findPropertyByNameInObject(widget, propertyName);
-        if (!propertyInfo?.layoutSpecific) {
-            continue;
-        }
-
-        if (propertyInfo.type == PropertyType.Object) {
-            const style = getWidgetStyleInLayout(
-                widget,
-                propertyName,
-                pageLayout
-            );
-
-            const check = getClassInfo(style).check;
-            if (check) {
-                // report only the problems that are not reported for the
-                // widget style
-                const styleMessages: IMessage[] = [];
-                check(style, styleMessages);
-
-                const widgetStyleMessages: IMessage[] = [];
-                check((widget as any)[propertyName], widgetStyleMessages);
-
-                for (const message of styleMessages) {
-                    if (
-                        !widgetStyleMessages.find(
-                            widgetStyleMessage =>
-                                widgetStyleMessage.text == message.text
-                        )
-                    ) {
-                        messages.push(
-                            newPageLayoutMessage(
-                                message.type,
-                                `${getObjectPropertyDisplayName(
-                                    widget,
-                                    propertyInfo
-                                )}: ${message.text}${inLayout}`,
-                                widget
-                            )
-                        );
-                    }
-                }
-            }
-        } else if (
-            propertyInfo.type == PropertyType.ObjectReference &&
-            propertyInfo.referencedObjectCollectionPath
-        ) {
-            const value = layoutValues[propertyName];
-
-            const objects = findAllReferencedObjects(
-                ProjectEditor.getProject(widget),
-                propertyInfo.referencedObjectCollectionPath,
-                value
-            );
-
-            if (!objects || objects.length == 0) {
-                messages.push(
-                    newPageLayoutMessage(
-                        MessageType.ERROR,
-                        `"${getObjectPropertyDisplayName(
-                            widget,
-                            propertyInfo
-                        )}": "${value}" not found${inLayout}.`,
-                        getChildOfObject(widget, propertyName)
-                    )
-                );
-            }
-        }
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export type AutoSize = "width" | "height" | "both" | "none";
@@ -2135,8 +1990,7 @@ export class Component extends EezObject {
                     isWidgetUnderDockingManager(component) ||
                     isPresetWidget(component) ||
                     isSetByLayout(component, "left"),
-                hideInDocumentation: "action",
-                layoutSpecific: true
+                hideInDocumentation: "action"
             },
             {
                 name: "top",
@@ -2147,8 +2001,7 @@ export class Component extends EezObject {
                     isWidgetUnderDockingManager(component) ||
                     isPresetWidget(component) ||
                     isSetByLayout(component, "top"),
-                hideInDocumentation: "action",
-                layoutSpecific: true
+                hideInDocumentation: "action"
             },
             {
                 name: "width",
@@ -2158,8 +2011,7 @@ export class Component extends EezObject {
                     isActionComponent(component) ||
                     isSetByLayout(component, "width"),
                 hideInPropertyGrid: isWidgetUnderDockingManager,
-                hideInDocumentation: "action",
-                layoutSpecific: true
+                hideInDocumentation: "action"
             },
             {
                 name: "height",
@@ -2169,8 +2021,7 @@ export class Component extends EezObject {
                     isActionComponent(component) ||
                     isSetByLayout(component, "height"),
                 hideInPropertyGrid: isWidgetUnderDockingManager,
-                hideInDocumentation: "action",
-                layoutSpecific: true
+                hideInDocumentation: "action"
             },
             {
                 name: "layoutBox",
@@ -2365,12 +2216,11 @@ export class Component extends EezObject {
                 value.top ?? object.rect.top
             );
 
-            // compare with the values in the page layout selected in the editor
-            if (left !== getEditorLayoutPropertyValue(object, "left")) {
+            if (left !== object.left) {
                 props.left = left;
             }
 
-            if (top !== getEditorLayoutPropertyValue(object, "top")) {
+            if (top !== object.top) {
                 props.top = top;
             }
 
@@ -2378,15 +2228,13 @@ export class Component extends EezObject {
             const height = value.height ?? object.rect.height;
 
             if (!(object.autoSize == "width" || object.autoSize == "both")) {
-                if (width !== getEditorLayoutPropertyValue(object, "width")) {
+                if (width !== object.width) {
                     props.width = width;
                 }
             }
 
             if (!(object.autoSize == "height" || object.autoSize == "both")) {
-                if (
-                    height !== getEditorLayoutPropertyValue(object, "height")
-                ) {
+                if (height !== object.height) {
                     props.height = height;
                 }
             }
@@ -2637,30 +2485,16 @@ export class Component extends EezObject {
         }
     };
 
-    // position and size in the page layout selected in the editor
-
-    get relativePosition(): { left: number; top: number } {
-        return {
-            left: getEditorLayoutPropertyValue(this, "left"),
-            top: getEditorLayoutPropertyValue(this, "top")
-        };
+    get relativePosition() {
+        return { left: this.left, top: this.top };
     }
 
-    get componentWidth(): number {
-        return getEditorLayoutPropertyValue(this, "width") ?? 0;
+    get componentWidth() {
+        return this.width ?? 0;
     }
 
-    get componentHeight(): number {
-        return getEditorLayoutPropertyValue(this, "height") ?? 0;
-    }
-
-    getRectInPageLayout(pageLayout: PageLayout | undefined): Rect {
-        return {
-            left: getLayoutPropertyValue(this, "left", pageLayout),
-            top: getLayoutPropertyValue(this, "top", pageLayout),
-            width: getLayoutPropertyValue(this, "width", pageLayout) ?? 0,
-            height: getLayoutPropertyValue(this, "height", pageLayout) ?? 0
-        };
+    get componentHeight() {
+        return this.height ?? 0;
     }
 
     fromRelativePosition(left: number, top: number) {
@@ -2691,16 +2525,8 @@ export class Component extends EezObject {
 
     set geometry(value: ComponentGeometry) {
         this._geometry = value;
-
-        // Only the auto sized width/height is measured in the editor, otherwise
-        // geometry has the size from the page layout selected in the editor,
-        // which must not be written over the widget's own size.
-        if (this.autoSize == "width" || this.autoSize == "both") {
-            this.width = this._geometry.width;
-        }
-        if (this.autoSize == "height" || this.autoSize == "both") {
-            this.height = this._geometry.height;
-        }
+        this.width = this._geometry.width;
+        this.height = this._geometry.height;
     }
 
     get rect(): Rect {
@@ -3244,12 +3070,7 @@ export class Widget extends Component {
     resizing: IResizing;
     style: Style;
 
-    // false if widget doesn't exist in the page layout
-    visibleInLayout?: boolean;
-    layoutProperties?: WidgetLayoutProperties;
-
     allowOutside: boolean;
-    allowOverlapping: boolean;
 
     locked: boolean;
     hiddenInEditor: boolean;
@@ -3293,23 +3114,6 @@ export class Widget extends Component {
                 hideInPropertyGrid: (widget: Widget) =>
                     !getLayoutParent(widget)
             },
-            {
-                name: "visibleInLayout",
-                type: PropertyType.Boolean,
-                propertyGridGroup: geometryGroup,
-                checkboxStyleSwitch: true,
-                defaultValue: true,
-                layoutSpecific: true,
-                hideInPropertyGrid: (widget: Widget) =>
-                    !getEditorPageLayout(widget) ||
-                    !canBeHiddenInLayout(widget)
-            },
-            {
-                name: "layoutProperties",
-                type: PropertyType.Any,
-                skipSearch: true,
-                hideInPropertyGrid: true
-            },
             makeDataPropertyInfo("data", {
                 disabled: isLVGLProject,
                 hideInDocumentation: "all"
@@ -3341,7 +3145,10 @@ export class Widget extends Component {
                     { id: WIDGET_VARIANT_NONE, label: "None" }
                 ],
                 propertyGridGroup: styleGroup,
-                disabled: (widget: Widget) => !isEezGuiProject(widget)
+                disabled: (widget: Widget) =>
+                    !isEezGuiProject(widget) ||
+                    // a Spacer has no style
+                    widget instanceof ProjectEditor.SpacerWidgetClass
             },
             {
                 name: "variantRules",
@@ -3355,7 +3162,8 @@ export class Widget extends Component {
                 enumerable: false,
                 disabled: (widget: Widget) =>
                     !isEezGuiProject(widget) ||
-                    widget instanceof ProjectEditor.UserWidgetWidgetClass
+                    widget instanceof ProjectEditor.UserWidgetWidgetClass ||
+                    widget instanceof ProjectEditor.SpacerWidgetClass
             },
             // The expression built from the rules (see variantExpression):
             // not shown, but built (the flow build skips the other hidden
@@ -3392,7 +3200,9 @@ export class Widget extends Component {
                 propertyGridRowComponent: StylePropertyUI,
                 computed: true,
                 skipSearch: true,
-                hideInPropertyGrid: isLVGLProject
+                hideInPropertyGrid: (widget: Widget) =>
+                    isLVGLProject(widget) ||
+                    widget instanceof ProjectEditor.SpacerWidgetClass
             },
             {
                 name: "allowOutside",
@@ -3402,15 +3212,6 @@ export class Widget extends Component {
                 disabled: component => isLVGLProject(component),
                 hideInPropertyGrid: (widget: Widget) =>
                     isWidgetUnderDockingManager(widget) ||
-                    isPresetWidget(widget)
-            },
-            {
-                name: "allowOverlapping",
-                displayName: `Hide "Widget overlaps" warning`,
-                type: PropertyType.Boolean,
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: (widget: Widget) =>
-                    !isOverlappingChildrenSupported(widget) ||
                     isPresetWidget(widget)
             },
             {
@@ -3750,14 +3551,8 @@ export class Widget extends Component {
                                         ]
                                     },
                                     values: {
-                                        width: getEditorLayoutPropertyValue(
-                                            widget,
-                                            "width"
-                                        ),
-                                        height: getEditorLayoutPropertyValue(
-                                            widget,
-                                            "height"
-                                        )
+                                        width: widget.width,
+                                        height: widget.height
                                     }
                                 });
 
@@ -3769,20 +3564,8 @@ export class Widget extends Component {
                                     true
                                 );
 
-                                // in the page layout selected in the editor
-                                const value = (
-                                    widget: Widget,
-                                    propertyName: string
-                                ) =>
-                                    getEditorLayoutPropertyValue(
-                                        widget,
-                                        propertyName
-                                    ) as number;
-
-                                const scaleHorz =
-                                    newWidth / value(widget, "width");
-                                const scaleVert =
-                                    newHeight / value(widget, "height");
+                                const scaleHorz = newWidth / widget.width;
+                                const scaleVert = newHeight / widget.height;
 
                                 function resizeWidget(widget: Widget) {
                                     if (
@@ -3797,21 +3580,17 @@ export class Widget extends Component {
                                     ) {
                                         for (const childWidget of widget.widgets) {
                                             const left = Math.floor(
-                                                value(childWidget, "left") *
-                                                    scaleHorz
+                                                childWidget.left * scaleHorz
                                             );
                                             const top = Math.floor(
-                                                value(childWidget, "top") *
-                                                    scaleVert
+                                                childWidget.top * scaleVert
                                             );
 
                                             const width = Math.floor(
-                                                value(childWidget, "width") *
-                                                    scaleHorz
+                                                childWidget.width * scaleHorz
                                             );
                                             const height = Math.floor(
-                                                value(childWidget, "height") *
-                                                    scaleVert
+                                                childWidget.height * scaleVert
                                             );
 
                                             updateObject(childWidget, {
@@ -3880,10 +3659,6 @@ export class Widget extends Component {
         },
 
         check: (object: Component, messages: IMessage[]) => {
-            const layoutsPage =
-                object instanceof Widget ? getLayoutsPage(object) : undefined;
-            const pageLayouts = layoutsPage ? getPageLayouts(layoutsPage) : [];
-
             // a row or column places and sizes its children
             if (
                 object instanceof Widget &&
@@ -3902,40 +3677,58 @@ export class Widget extends Component {
                                 isEezGuiProject(parent)))
                     )
                 ) {
-                    if (pageLayouts.length == 0) {
-                        checkWidgetIsInsideParent(
-                            {
-                                left: object.left,
-                                top: object.top,
-                                width: object.width,
-                                height: object.height
-                            },
-                            parent.rect,
-                            "",
-                            object,
-                            messages
-                        );
-                    } else {
-                        for (const pageLayout of pageLayouts) {
-                            if (isWidgetShownInLayout(object, pageLayout)) {
-                                checkWidgetIsInsideParent(
-                                    object.getRectInPageLayout(pageLayout),
-                                    parent instanceof Widget
-                                        ? parent.getRectInPageLayout(pageLayout)
-                                        : pageLayout,
-                                    ` in the "${pageLayout.name}" layout`,
-                                    object,
-                                    messages
-                                );
-                            }
-                        }
-                    }
-                }
-            }
+                    // The size the parent has in the project, not where the
+                    // page editor shows it (Component.rect): a parent in a
+                    // row or column is laid out only while its page is open
+                    // in the editor, and the check must not depend on that.
+                    const parentWidth = parent.width;
+                    const parentHeight = parent.height;
 
-            if (object instanceof Widget) {
-                for (const pageLayout of pageLayouts) {
-                    checkWidgetLayoutProperties(object, pageLayout, messages);
+                    if (object.left < 0) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                "Widget is outside of its parent",
+                                getChildOfObject(object, "left")
+                            )
+                        );
+                    }
+
+                    if (object.top < 0) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                "Widget is outside of its parent",
+                                getChildOfObject(object, "top")
+                            )
+                        );
+                    }
+
+                    if (
+                        object.left + object.width >
+                        parentWidth
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                "Widget is outside of its parent",
+                                getChildOfObject(object, "width")
+                            )
+                        );
+                    }
+
+                    if (
+                        object.top + object.height >
+                        parentHeight
+                    ) {
+                        messages.push(
+                            new Message(
+                                MessageType.WARNING,
+                                "Widget is outside of its parent",
+                                getChildOfObject(object, "height")
+                            )
+                        );
+                    }
                 }
             }
 
@@ -4083,7 +3876,6 @@ export class Widget extends Component {
 
         makeObservable(this, {
             styleObject: computed,
-            layoutStyle: computed,
             tabTitle: observable
         });
     }
@@ -4099,10 +3891,7 @@ export class Widget extends Component {
             preset: observable,
             resizing: observable,
             style: observable,
-            visibleInLayout: observable,
-            layoutProperties: observable,
             allowOutside: observable,
-            allowOverlapping: observable,
             locked: observable,
             hiddenInEditor: observable,
             timeline: observable,
@@ -4175,7 +3964,6 @@ export class Widget extends Component {
             "left",
             "top",
             "preset",
-            "layoutProperties",
             "locked",
             "hiddenInEditor"
         ]) {
@@ -4298,12 +4086,6 @@ export class Widget extends Component {
         return this.style;
     }
 
-    // default style in the page layout selected in the editor,
-    // use it instead of the style when the widget is drawn in the editor
-    get layoutStyle(): Style {
-        return getWidgetStyleInEditorLayout(this, "style");
-    }
-
     get styles() {
         return [this.style];
     }
@@ -4391,21 +4173,6 @@ export class Widget extends Component {
         selectWidget.width = this.width;
         selectWidget.height = this.height;
 
-        // in each page layout, select gets the position, size and visibility
-        // of this widget and this widget stays at the position 0, 0
-        selectWidget.layoutProperties = pickLayoutValues(this, [
-            "left",
-            "top",
-            "width",
-            "height",
-            "visibleInLayout"
-        ]);
-        const layoutProperties = omitLayoutValues(this, [
-            "left",
-            "top",
-            "visibleInLayout"
-        ]);
-
         selectWidget.widgets.push(this);
 
         projectStore.undoManager.setCombineCommands(true);
@@ -4414,8 +4181,7 @@ export class Widget extends Component {
 
         projectStore.updateObject(this, {
             left: 0,
-            top: 0,
-            layoutProperties
+            top: 0
         });
 
         projectStore.undoManager.setCombineCommands(false);
@@ -4447,9 +4213,6 @@ export class Widget extends Component {
             delete widgetJsObject.left_;
             widgetJsObject.top = fromWidgets[i].top - y1;
             delete widgetJsObject.top_;
-
-            // widgets are moved to the user widget, which has no layouts
-            deleteLayoutValues(widgetJsObject);
 
             widgets.push(widgetJsObject);
         }
@@ -4489,25 +4252,15 @@ export class Widget extends Component {
     static repositionWidgets(
         projectStore: ProjectStore,
         widgets: Widget[],
-        boundingRect: Rect,
-        layoutRects?: Map<PageLayout, Rect>
+        boundingRect: Rect
     ) {
         for (let i = 0; i < widgets.length; i++) {
             let widget = widgets[i];
 
-            projectStore.updateObject(
-                widget,
-                layoutRects
-                    ? getEnclosedWidgetLayoutValues(
-                          widget,
-                          boundingRect,
-                          layoutRects
-                      )
-                    : {
-                          left: widgets[i].left - boundingRect.left,
-                          top: widgets[i].top - boundingRect.top
-                      }
-            );
+            projectStore.updateObject(widget, {
+                left: widgets[i].left - boundingRect.left,
+                top: widgets[i].top - boundingRect.top
+            });
         }
     }
 
@@ -4545,12 +4298,6 @@ export class Widget extends Component {
         containerWidget.width = boundingRect.width;
         containerWidget.height = boundingRect.height;
 
-        const layouts = getEnclosingWidgetLayoutProperties(
-            fromWidgets,
-            boundingRect
-        );
-        containerWidget.layoutProperties = layouts?.layoutProperties;
-
         fromWidgets.forEach(widget => {
             containerWidget.widgets.push(widget);
         });
@@ -4563,12 +4310,7 @@ export class Widget extends Component {
             containerWidget.widgets
         );
 
-        Widget.repositionWidgets(
-            projectStore,
-            fromWidgets,
-            boundingRect,
-            layouts?.layoutRects
-        );
+        Widget.repositionWidgets(projectStore, fromWidgets, boundingRect);
 
         projectStore.undoManager.setCombineCommands(false);
 
@@ -4595,11 +4337,6 @@ export class Widget extends Component {
         );
 
         boundingRect = Widget.getBoundingRect(fromWidgets);
-
-        const layouts = getEnclosingWidgetLayoutProperties(
-            fromWidgets,
-            boundingRect
-        );
 
         fromWidgets.forEach(widget => {
             containerWidget.widgets.push(widget);
@@ -4633,16 +4370,6 @@ export class Widget extends Component {
         containerWidget.left = 0;
         containerWidget.top = 0;
 
-        // in each page layout, list item has the size of the list and
-        // it is always at the position 0, 0
-        listWidget.layoutProperties = layouts?.layoutProperties;
-        containerWidget.layoutProperties = layouts?.layoutProperties;
-        containerWidget.layoutProperties = omitLayoutValues(containerWidget, [
-            "left",
-            "top",
-            "visibleInLayout"
-        ]);
-
         projectStore.undoManager.setCombineCommands(true);
 
         const result = replaceObjects(
@@ -4652,12 +4379,7 @@ export class Widget extends Component {
         );
 
         if (boundingRect) {
-            Widget.repositionWidgets(
-                projectStore,
-                fromWidgets,
-                boundingRect,
-                layouts?.layoutRects
-            );
+            Widget.repositionWidgets(projectStore, fromWidgets, boundingRect);
         }
 
         projectStore.undoManager.setCombineCommands(false);
@@ -4696,11 +4418,6 @@ export class Widget extends Component {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            const layouts = getEnclosingWidgetLayoutProperties(
-                fromWidgets as Widget[],
-                createWidgetsResult
-            );
-
             projectStore.addObject(
                 projectStore.project.userWidgets,
                 createObject<Page>(
@@ -4728,7 +4445,6 @@ export class Widget extends Component {
                         top: createWidgetsResult.top,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        layoutProperties: layouts?.layoutProperties,
                         userWidgetPageName: userWidgetName
                     },
                     ProjectEditor.UserWidgetWidgetClass
@@ -4763,11 +4479,6 @@ export class Widget extends Component {
 
             const createWidgetsResult = Widget.createWidgets(fromWidgets);
 
-            const layouts = getEnclosingWidgetLayoutProperties(
-                fromWidgets as Widget[],
-                createWidgetsResult
-            );
-
             return replaceObjects(
                 fromWidgets,
                 createObject<UserWidgetWidget>(
@@ -4778,7 +4489,6 @@ export class Widget extends Component {
                         top: createWidgetsResult.top,
                         width: createWidgetsResult.width,
                         height: createWidgetsResult.height,
-                        layoutProperties: layouts?.layoutProperties,
                         userWidgetPageName
                     },
                     ProjectEditor.UserWidgetWidgetClass

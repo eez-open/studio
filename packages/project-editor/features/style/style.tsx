@@ -72,7 +72,6 @@ import {
 } from "project-editor/flow/component";
 import { checkExpression } from "project-editor/flow/expression";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
-import type { PageLayout } from "project-editor/features/page/page";
 import { ColorFormat } from "./color-format";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1390,6 +1389,7 @@ export class Style extends EezObject {
             stateKey: keepAliveComputed(),
             variantDeltas: keepAliveComputed(),
             variantKey: keepAliveComputed(),
+            compareKey: keepAliveComputed(),
 
             cssDeclarations: computed,
             cssPreview: computed,
@@ -2361,7 +2361,7 @@ export class Style extends EezObject {
     }
 
     // The project style whose state styles this style has: this one, or the
-    // one a widget style (or its style in a page layout) uses.
+    // one a widget style uses.
     get stateBaseStyle(): Style | undefined {
         const visited = new Set<Style>();
         for (
@@ -2573,54 +2573,55 @@ export class Style extends EezObject {
         return true;
     }
 
+    // The properties compareTo compares, as one string: two styles with the
+    // same key look the same. Without the states (see compareTo).
+    get compareKey(): string {
+        return [
+            this.fontName,
+            this.fontFamilyProperty,
+            this.fontSizeProperty,
+            this.fontWeightProperty,
+            this.fontStyleProperty,
+            this.alignHorizontalProperty,
+            this.alignVerticalProperty,
+            this.directionProperty,
+            this.colorProperty,
+            this.backgroundColorProperty,
+            this.backgroundImageProperty,
+            this.activeColorProperty,
+            this.activeBackgroundColorProperty,
+            this.focusColorProperty,
+            this.focusBackgroundColorProperty,
+            this.borderSizeProperty,
+            this.borderRadiusProperty,
+            this.borderColorsProperty,
+            this.borderStyleProperty,
+            this.paddingProperty,
+            this.opacityProperty,
+            this.boxShadowProperty,
+            this.blinkProperty,
+            this.letterSpacingProperty,
+            this.lineHeightProperty,
+            this.ellipsisProperty,
+            this.focusRingWidthProperty,
+            this.focusRingOffsetProperty,
+            this.focusRingColorProperty,
+            this.shadowOffsetXProperty,
+            this.shadowOffsetYProperty,
+            this.shadowBlurProperty,
+            this.shadowSpreadProperty,
+            this.shadowColorProperty,
+            this.variantKey
+        ]
+            .map(value => (value === undefined ? "" : typeof value + ":" + value))
+            .join("\u0001");
+    }
+
     compareTo(otherStyle: Style): boolean {
         return (
-            this.fontName === otherStyle.fontName &&
-            this.fontFamilyProperty === otherStyle.fontFamilyProperty &&
-            this.fontSizeProperty === otherStyle.fontSizeProperty &&
-            this.fontWeightProperty === otherStyle.fontWeightProperty &&
-            this.fontStyleProperty === otherStyle.fontStyleProperty &&
-            this.alignHorizontalProperty ===
-                otherStyle.alignHorizontalProperty &&
-            this.alignVerticalProperty === otherStyle.alignVerticalProperty &&
-            this.directionProperty === otherStyle.directionProperty &&
-            this.colorProperty === otherStyle.colorProperty &&
-            this.backgroundColorProperty ===
-                otherStyle.backgroundColorProperty &&
-            this.backgroundImageProperty ===
-                otherStyle.backgroundImageProperty &&
-            this.activeColorProperty === otherStyle.activeColorProperty &&
-            this.activeBackgroundColorProperty ===
-                otherStyle.activeBackgroundColorProperty &&
-            this.focusColorProperty === otherStyle.focusColorProperty &&
-            this.focusBackgroundColorProperty ===
-                otherStyle.focusBackgroundColorProperty &&
-            this.borderSizeProperty === otherStyle.borderSizeProperty &&
-            this.borderRadiusProperty === otherStyle.borderRadiusProperty &&
-            this.borderColorsProperty === otherStyle.borderColorsProperty &&
-            this.borderStyleProperty === otherStyle.borderStyleProperty &&
-            this.paddingProperty === otherStyle.paddingProperty &&
-            this.opacityProperty === otherStyle.opacityProperty &&
-            this.boxShadowProperty === otherStyle.boxShadowProperty &&
-            this.blinkProperty === otherStyle.blinkProperty &&
-            this.letterSpacingProperty === otherStyle.letterSpacingProperty &&
-            this.lineHeightProperty === otherStyle.lineHeightProperty &&
-            this.ellipsisProperty === otherStyle.ellipsisProperty &&
-            this.focusRingWidthProperty ===
-                otherStyle.focusRingWidthProperty &&
-            this.focusRingOffsetProperty ===
-                otherStyle.focusRingOffsetProperty &&
-            this.focusRingColorProperty ===
-                otherStyle.focusRingColorProperty &&
-            this.shadowOffsetXProperty === otherStyle.shadowOffsetXProperty &&
-            this.shadowOffsetYProperty === otherStyle.shadowOffsetYProperty &&
-            this.shadowBlurProperty === otherStyle.shadowBlurProperty &&
-            this.shadowSpreadProperty === otherStyle.shadowSpreadProperty &&
-            this.shadowColorProperty === otherStyle.shadowColorProperty &&
+            this.compareKey === otherStyle.compareKey &&
             // the states of a state style are not used
-            (this.isStateStyle || this.stateKey === otherStyle.stateKey) &&
-            // a style with other variants is another style
-            this.variantKey === otherStyle.variantKey
+            (this.isStateStyle || this.stateKey === otherStyle.stateKey)
         );
     }
 
@@ -3000,19 +3001,19 @@ registerClass("Style", Style);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// widget style properties that can be changed in the page layout
-const pageLayoutStyleProperties = properties.filter(
+// the style properties a style made from another style can have of its own
+const ownStyleProperties = properties.filter(
     propertyInfo =>
         (propertyInfo.inheritable || propertyInfo == useStyleProperty) &&
         propertyInfo.type != PropertyType.Array &&
         propertyInfo.type != PropertyType.Object
 );
 
-function definePageLayoutStyleProperties(
+function defineOwnStyleProperties(
     style: Style,
     getValue: (propertyName: string) => any
 ) {
-    for (const propertyInfo of pageLayoutStyleProperties) {
+    for (const propertyInfo of ownStyleProperties) {
         Object.defineProperty(style, propertyInfo.name, {
             get: () => getValue(propertyInfo.name),
             enumerable: true,
@@ -3021,84 +3022,10 @@ function definePageLayoutStyleProperties(
     }
 }
 
-// Style of the widget in the page layout (see PageLayout). The values changed
-// in the page layout (stored in the Widget.layoutProperties) are the own values
-// of this style and all other values are inherited from the widget style.
-// This style is not part of the project, changes are stored by the
-// updatePageLayoutValues.
-export class PageLayoutStyle extends Style {
-    private baseStyleWithLayoutUseStyle: Style | undefined;
-
-    constructor(
-        public widget: Widget,
-        public stylePropertyName: string,
-        public pageLayout: PageLayout,
-        private isApplyToAllLayouts: () => boolean
-    ) {
-        super();
-
-        definePageLayoutStyleProperties(this, propertyName => {
-            const value = this.pageLayoutValues?.[propertyName];
-            if (value !== undefined) {
-                return value;
-            }
-
-            // when the changes are applied to all page layouts, the widget
-            // style is edited
-            if (this.isApplyToAllLayouts()) {
-                return (this.baseStyle as any)[propertyName];
-            }
-
-            // if not changed in the page layout, the style used by the widget
-            // style is used (see parentStyle)
-            if (propertyName == "useStyle") {
-                return this.baseStyle.useStyle;
-            }
-
-            return undefined;
-        });
-
-        setParent(this, widget);
-    }
-
-    get baseStyle(): Style {
-        return (this.widget as any)[this.stylePropertyName];
-    }
-
-    get pageLayoutValues(): { [propertyName: string]: any } | undefined {
-        return this.widget.layoutProperties?.[this.pageLayout.name]?.[
-            this.stylePropertyName
-        ];
-    }
-
-    override get parentStyle(): Style | undefined {
-        if (this.pageLayoutValues?.useStyle === undefined) {
-            return this.baseStyle;
-        }
-
-        // widget style inherits from the style selected in the page layout
-        if (!this.baseStyleWithLayoutUseStyle) {
-            const style = new Style();
-
-            definePageLayoutStyleProperties(style, propertyName =>
-                propertyName == "useStyle"
-                    ? this.pageLayoutValues?.useStyle
-                    : (this.baseStyle as any)[propertyName]
-            );
-
-            setParent(style, this.widget);
-
-            this.baseStyleWithLayoutUseStyle = style;
-        }
-
-        return this.baseStyleWithLayoutUseStyle;
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // the style properties a state child style can change
-const stateStyleProperties = pageLayoutStyleProperties.filter(
+const stateStyleProperties = ownStyleProperties.filter(
     propertyInfo => propertyInfo != useStyleProperty
 );
 
@@ -3114,7 +3041,7 @@ export class StateStyle extends Style {
 
         this.isStateStyle = true;
 
-        definePageLayoutStyleProperties(this, propertyName =>
+        defineOwnStyleProperties(this, propertyName =>
             propertyName == "useStyle" ? undefined : delta[propertyName]
         );
 
@@ -3142,7 +3069,7 @@ export class VariantStyle extends Style {
         this._isVariantStyle = true;
         this._variantStateDeltas = states;
 
-        definePageLayoutStyleProperties(this, propertyName =>
+        defineOwnStyleProperties(this, propertyName =>
             propertyName == "useStyle" ? undefined : delta[propertyName]
         );
 

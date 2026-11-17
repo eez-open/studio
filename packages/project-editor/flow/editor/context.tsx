@@ -21,22 +21,6 @@ import type { ConnectionLine } from "project-editor/flow/connection-line";
 
 import { FlowDocument } from "project-editor/flow/editor/flow-document";
 import { Transform } from "project-editor/flow/editor/transform";
-import { ProjectEditor } from "project-editor/project-editor-interface";
-import { getEditorLayoutPropertyValue } from "project-editor/features/page/page-layouts";
-
-////////////////////////////////////////////////////////////////////////////////
-
-// size of the component parent in the page layout selected in the editor
-function getParentSize(component: Component) {
-    const parent = getWidgetParent(component);
-    if (parent instanceof ProjectEditor.PageClass) {
-        return parent.rect;
-    }
-    return {
-        width: getEditorLayoutPropertyValue(parent, "width") as number,
-        height: getEditorLayoutPropertyValue(parent, "height") as number
-    };
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -266,7 +250,7 @@ class ViewState implements IViewState {
                 } else if (where === "end-x") {
                     setRect(component, {
                         left:
-                            getParentSize(component).width -
+                            getWidgetParent(component).width -
                             boundingRect.width +
                             component.rect.left -
                             boundingRect.left
@@ -278,7 +262,7 @@ class ViewState implements IViewState {
                 } else if (where === "end-y") {
                     setRect(component, {
                         top:
-                            getParentSize(component).height -
+                            getWidgetParent(component).height -
                             boundingRect.height +
                             component.rect.top -
                             boundingRect.top

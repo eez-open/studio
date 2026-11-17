@@ -80,16 +80,6 @@ import {
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import type { Rect } from "eez-studio-shared/geometry";
 import { isTimelineEditorActive } from "project-editor/flow/timeline";
-import type { PageLayout } from "project-editor/features/page/page";
-import {
-    getEditorLayoutPropertyValue,
-    getLayoutPropertyValue,
-    getLayoutsPage,
-    getPageLayouts,
-    getWidgetStyleInLayout,
-    isLayoutPropertyChanged,
-    isWidgetShownInLayout
-} from "project-editor/features/page/page-layouts";
 import {
     WIDGET_TYPE_DISPLAY_DATA,
     WIDGET_TYPE_MULTILINE_TEXT,
@@ -117,6 +107,7 @@ import {
     WIDGET_TYPE_BUTTON,
     WIDGET_TYPE_TEXT,
     WIDGET_TYPE_RECTANGLE,
+    WIDGET_TYPE_SPACER,
     WIDGET_TYPE_BITMAP
 } from "project-editor/flow/components/component-types";
 import {
@@ -426,7 +417,6 @@ export class TextWidget extends Widget {
                     }
                 ],
                 propertyGridGroup: specificGroup,
-                layoutSpecific: true,
                 hideInPropertyGrid: hideInTextWidget("number", "displayOption")
             },
             {
@@ -436,9 +426,8 @@ export class TextWidget extends Widget {
                 referencedObjectCollectionPath: "fonts",
                 propertyGridGroup: specificGroup,
                 hideInPropertyGrid: (widget: TextWidget) =>
-                    getEditorLayoutPropertyValue(widget, "displayOption") !=
-                    DisplayOption.IntegerUnitAndFraction,
-                layoutSpecific: true
+                    widget.displayOption !=
+                    DisplayOption.IntegerUnitAndFraction
             },
             makeDataPropertyInfo("refreshRate", {
                 disabled: hasNotFlowSupport,
@@ -469,10 +458,8 @@ export class TextWidget extends Widget {
                 {
                     disabled: (widget: TextWidget) =>
                         hasNotFlowSupport(widget) ||
-                        getEditorLayoutPropertyValue(
-                            widget,
-                            "displayOption"
-                        ) == DisplayOption.IntegerUnitAndFraction,
+                        widget.displayOption ==
+                            DisplayOption.IntegerUnitAndFraction,
                     hideInPropertyGrid: hideInTextWidget("label", "label")
                 },
                 "string"
@@ -513,27 +500,24 @@ export class TextWidget extends Widget {
                 value.top ?? widget.rect.top
             );
 
-            // compare with the values in the page layout selected in the editor
-            if (left !== getEditorLayoutPropertyValue(widget, "left")) {
+            if (left !== widget.left) {
                 props.left = left;
             }
 
-            if (top !== getEditorLayoutPropertyValue(widget, "top")) {
+            if (top !== widget.top) {
                 props.top = top;
             }
 
             if (!widget.isFitToContentWidth) {
                 const width = value.width ?? widget.rect.width;
-                if (width !== getEditorLayoutPropertyValue(widget, "width")) {
+                if (width !== widget.width) {
                     props.width = width;
                 }
             }
 
             if (!widget.isFitToContentHeight) {
                 const height = value.height ?? widget.rect.height;
-                if (
-                    height !== getEditorLayoutPropertyValue(widget, "height")
-                ) {
+                if (height !== widget.height) {
                     props.height = height;
                 }
             }
@@ -559,15 +543,13 @@ export class TextWidget extends Widget {
             const isFitHeight = (fitToContent: TextWidgetFitToContent) =>
                 fitToContent == "height" || fitToContent == "both";
 
-            // content size and size in the page layout selected in the editor
             const contentSize = widget.contentSize;
 
             if (
                 (isFitWidth(widget.fitToContent) ||
                     isFitWidth(values.fitToContent)) &&
                 values.width == undefined &&
-                getEditorLayoutPropertyValue(widget, "width") !=
-                    contentSize.width
+                widget.width != contentSize.width
             ) {
                 values.width = contentSize.width;
             }
@@ -576,8 +558,7 @@ export class TextWidget extends Widget {
                 (isFitHeight(widget.fitToContent) ||
                     isFitHeight(values.fitToContent)) &&
                 values.height == undefined &&
-                getEditorLayoutPropertyValue(widget, "height") !=
-                    contentSize.height
+                widget.height != contentSize.height
             ) {
                 values.height = contentSize.height;
             }
@@ -699,29 +680,7 @@ export class TextWidget extends Widget {
                 }
             }
 
-            // The widget's own unit and fraction font is used if the display
-            // option is "Integer, unit and fraction". With the page layouts,
-            // it is used in the page layouts in which it is not changed.
-            const layoutsPage = getLayoutsPage(widget);
-            if (
-                layoutsPage
-                    ? getPageLayouts(layoutsPage).some(
-                          pageLayout =>
-                              isWidgetShownInLayout(widget, pageLayout) &&
-                              getLayoutPropertyValue(
-                                  widget,
-                                  "displayOption",
-                                  pageLayout
-                              ) === DisplayOption.IntegerUnitAndFraction &&
-                              !isLayoutPropertyChanged(
-                                  widget,
-                                  "unitAndFractionFont",
-                                  pageLayout
-                              )
-                      )
-                    : widget.displayOption ===
-                      DisplayOption.IntegerUnitAndFraction
-            ) {
+            if (widget.displayOption === DisplayOption.IntegerUnitAndFraction) {
                 checkObjectReference(widget, "unitAndFractionFont", messages);
             }
         }
@@ -777,11 +736,7 @@ export class TextWidget extends Widget {
     applyDisplayOption(text: string) {
         text = text.toString();
 
-        // display option in the page layout selected in the editor
-        const displayOption = getEditorLayoutPropertyValue(
-            this,
-            "displayOption"
-        );
+        const displayOption = this.displayOption;
 
         if (displayOption === DisplayOption.Integer) {
             let i = findStartOfFraction(text);
@@ -883,9 +838,8 @@ export class TextWidget extends Widget {
         return "<no text>";
     }
 
-    // in the page layout selected in the editor
     get contentSize() {
-        return this.getContentSize(this.layoutStyle);
+        return this.getContentSize(this.style);
     }
 
     // must be kept in sync with TextWidget_autoSize in eez-framework
@@ -934,24 +888,6 @@ export class TextWidget extends Widget {
             return this.contentSize.height;
         }
         return super.componentHeight;
-    }
-
-    override getRectInPageLayout(pageLayout: PageLayout | undefined): Rect {
-        const rect = super.getRectInPageLayout(pageLayout);
-
-        if (this.isFitToContentWidth || this.isFitToContentHeight) {
-            const contentSize = this.getContentSize(
-                getWidgetStyleInLayout(this, "style", pageLayout)
-            );
-            if (this.isFitToContentWidth) {
-                rect.width = contentSize.width;
-            }
-            if (this.isFitToContentHeight) {
-                rect.height = contentSize.height;
-            }
-        }
-
-        return rect;
     }
 
     override getResizeHandlers(): IResizeHandler[] | undefined | false {
@@ -1004,11 +940,11 @@ export class TextWidget extends Widget {
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         super.styleHook(style, flowContext);
 
-        if (this.layoutStyle.alignHorizontalProperty == "left") {
+        if (this.style.alignHorizontalProperty == "left") {
             style.textAlign = "left";
-        } else if (this.layoutStyle.alignHorizontalProperty == "center") {
+        } else if (this.style.alignHorizontalProperty == "center") {
             style.textAlign = "center";
-        } else if (this.layoutStyle.alignHorizontalProperty == "right") {
+        } else if (this.style.alignHorizontalProperty == "right") {
             style.textAlign = "right";
         }
     }
@@ -1038,8 +974,8 @@ export class TextWidget extends Widget {
         }
         dataBuffer.writeUint8(flags);
 
-        // displayOption, in the page layout which is built
-        const displayOption = assets.getPropertyValue(this, "displayOption");
+        // displayOption
+        const displayOption = this.displayOption;
         dataBuffer.writeUint8(displayOption || 0);
 
         // enabled
@@ -1057,7 +993,7 @@ export class TextWidget extends Widget {
         // unitAndFractionFont
         dataBuffer.writeInt16(
             displayOption == DisplayOption.IntegerUnitAndFraction &&
-                assets.getPropertyValue(this, "unitAndFractionFont")
+                this.unitAndFractionFont
                 ? assets.getFontIndex(this, "unitAndFractionFont")
                 : 0
         );
@@ -1525,6 +1461,68 @@ registerClass("RectangleWidget", RectangleWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// An empty place: the space between the children of a row or a column, or the
+// child of a Select that shows nothing. It has no style of its own and draws
+// nothing: what is below it is seen. Its style object is always empty (the
+// code of the widgets expects every widget to have one), it is built as 0.
+export class SpacerWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
+
+        flowComponentId: WIDGET_TYPE_SPACER,
+
+        properties: [
+            makeStylePropertyInfo("style", undefined, {
+                styleWithoutFont: true
+            })
+        ],
+
+        beforeLoadHook: (
+            object: IEezObject,
+            jsObject: any,
+            project: Project
+        ) => {
+            jsObject.style = jsObject.style?.objID
+                ? { objID: jsObject.style.objID }
+                : {};
+        },
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 16,
+            height: 16
+        },
+
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 6v12M20 6v12M8 12h8M8 12l2.5 -2.5M8 12l2.5 2.5M16 12l-2.5 -2.5M16 12l-2.5 2.5"></path>
+            </svg>
+        ),
+
+        check: (object: SpacerWidget, messages: IMessage[]) => {
+            if (object.data) {
+                messages.push(propertySetButNotUsedMessage(object, "data"));
+            }
+        }
+    });
+}
+
+registerClass("SpacerWidget", SpacerWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const BitmapWidgetPropertyGridUI = observer(
     class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
         get bitmapWidget() {
@@ -1982,14 +1980,12 @@ export class BarGraphWidget extends Widget {
                     {
                         id: "bottom-top"
                     }
-                ],
-                layoutSpecific: true
+                ]
             },
             {
                 name: "displayValue",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup,
-                layoutSpecific: true
+                propertyGridGroup: specificGroup
             },
             makeDataPropertyInfo("data"),
             makeDataPropertyInfo("line1Data", { displayName: "Threshold1" }),
@@ -2119,9 +2115,9 @@ export class BarGraphWidget extends Widget {
                 : 0
         );
 
-        // orientation, in the page layout which is built
+        // orientation
         let orientation: number;
-        switch (assets.getPropertyValue(this, "orientation")) {
+        switch (this.orientation) {
             case "left-right":
                 orientation = BAR_GRAPH_ORIENTATION_LEFT_RIGHT;
                 break;
@@ -2135,8 +2131,8 @@ export class BarGraphWidget extends Widget {
                 orientation = BAR_GRAPH_ORIENTATION_BOTTOM_TOP;
         }
 
-        // displayValue, in the page layout which is built
-        if (!assets.getPropertyValue(this, "displayValue")) {
+        // displayValue
+        if (!this.displayValue) {
             orientation |= BAR_GRAPH_DO_NOT_DISPLAY_VALUE;
         }
 
@@ -4763,7 +4759,7 @@ export class QRCodeWidget extends Widget {
         super.styleHook(style, flowContext);
 
         style.backgroundColor = ProjectEditor.getProject(this).toColorBpp(
-            this.layoutStyle.backgroundColorProperty
+            this.style.backgroundColorProperty
         );
     }
 
@@ -4801,8 +4797,8 @@ export class QRCodeWidget extends Widget {
         const svg = QRCodeWidget.toSvgString(
             qr0,
             1,
-            flowContext.projectStore.project.toColorBpp(this.layoutStyle.backgroundColorProperty),
-            flowContext.projectStore.project.toColorBpp(this.layoutStyle.colorProperty)
+            flowContext.projectStore.project.toColorBpp(this.style.backgroundColorProperty),
+            flowContext.projectStore.project.toColorBpp(this.style.colorProperty)
         );
 
         return (

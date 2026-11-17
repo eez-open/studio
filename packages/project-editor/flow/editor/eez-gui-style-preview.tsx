@@ -139,7 +139,7 @@ const EezGuiPreview = observer(
 
             try {
                 // what the widgets don't draw is transparent
-                const assets = buildEditorAssets(this.previewPage, undefined, {
+                const assets = buildEditorAssets(this.previewPage, {
                     pageBackgroundColor: "transparent"
                 });
 
