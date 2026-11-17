@@ -187,8 +187,11 @@ function buildComponent(
     const componentIndex = assets.getComponentIndex(component);
     assets.map.flows[flowIndex].components[componentIndex] = {
         componentIndex,
-        path: getObjectPathAsString(component),
-        readablePath: getHumanReadableObjectPath(component),
+        // the paths are for the debugger, the editor build has no use of them
+        path: assets.editorBuild ? "" : getObjectPathAsString(component),
+        readablePath: assets.editorBuild
+            ? ""
+            : getHumanReadableObjectPath(component),
         inputIndexes: {},
         outputs: [],
         outputIndexes: {},
@@ -436,8 +439,10 @@ function buildFlow(assets: Assets, dataBuffer: DataBuffer, flow: Flow) {
 
     assets.map.flows[flowIndex] = {
         flowIndex,
-        path: getObjectPathAsString(flow),
-        readablePath: getHumanReadableObjectPath(flow),
+        path: assets.editorBuild ? "" : getObjectPathAsString(flow),
+        readablePath: assets.editorBuild
+            ? ""
+            : getHumanReadableObjectPath(flow),
         components: [],
         componentIndexes: {},
         componentInputs: [],

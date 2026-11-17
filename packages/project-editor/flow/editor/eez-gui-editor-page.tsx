@@ -13,7 +13,8 @@ import {
     computed,
     IReactionDisposer,
     observable,
-    runInAction
+    runInAction,
+    untracked
 } from "mobx";
 import { observer } from "mobx-react";
 
@@ -25,6 +26,8 @@ import { getProjectWithThemes } from "project-editor/features/style/theme";
 import type { IEezObject } from "project-editor/core/object";
 import type { Rect } from "eez-studio-shared/geometry";
 import { buildEditorAssets } from "project-editor/build/editor-build";
+import { visitObjects } from "project-editor/core/search";
+import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getFlowGuiDisplaySize } from "project-editor/build/assets";
 import { EezGuiEditorWasm } from "project-editor/flow/editor/eez-gui-editor-wasm";
 import {
@@ -49,6 +52,7 @@ export const EezGuiEditorPage = observer(
         // a new WASM instance (after an abort) draws the page again
         wasmGeneration = observable.box(0);
         disposeAutorun: IReactionDisposer | undefined;
+        disposeBuildAutorun: IReactionDisposer | undefined;
         unmounted = false;
         // the build loaded into editorWasm
         loadedBuild: EditorBuild | undefined;
@@ -57,12 +61,62 @@ export const EezGuiEditorPage = observer(
         // read has changed (not when a container is scrolled in the editor).
         // widgetOffsets: the widgets at the offsets in the assets data, and
         // the other way around.
-        editorBuild = computed((): EditorBuild => {
+        //
+        // It is built by a reaction of its own, after the next paint, and
+        // kept here for draw(). As a computed value read by draw() it was
+        // built inside of the change itself (MobX computes a stale value to
+        // see if the reaction must run), so a click that changed the build
+        // waited for it before the selection was shown.
+        editorBuild = observable.box<EditorBuild | undefined>(undefined, {
+            deep: false
+        });
+
+        // The child every Select of the page shows: the one with the
+        // selection. It is the only thing of the selection the build reads,
+        // and it is the same after most changes of the selection, so the
+        // build depends on this value and not on the selection: a click on
+        // another widget doesn't build the page again (some hundred ms).
+        selectChildIndexes = computed(
+            (): Map<Widget, number> => {
+                const { page, flowContext } = this.props;
+                const indexes = new Map<Widget, number>();
+                for (const object of visitObjects(page.components)) {
+                    if (object instanceof ProjectEditor.SelectWidgetClass) {
+                        indexes.set(
+                            object,
+                            object.getSelectedIndex(flowContext)
+                        );
+                    }
+                }
+                return indexes;
+            },
+            {
+                equals: (a, b) => {
+                    if (a.size != b.size) {
+                        return false;
+                    }
+                    for (const [select, index] of a) {
+                        if (b.get(select) !== index) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+        );
+
+        buildPage(): EditorBuild {
             const { page, flowContext } = this.props;
             const widgetOffsets = new Map<number, Widget | Page>();
+            const selectChildIndexes = this.selectChildIndexes.get();
             const assets = buildEditorAssets(page, {
+                // a Select of a user widget page is not in the map: the
+                // selection is never inside of it
                 getSelectChildIndex: (select: Widget) =>
-                    (select as any).getSelectedIndex(flowContext),
+                    selectChildIndexes.get(select) ??
+                    untracked(() =>
+                        (select as any).getSelectedIndex(flowContext)
+                    ),
                 pageBackgroundColor: this.previewBackgroundColor,
                 widgetOffsets
             });
@@ -73,7 +127,7 @@ export const EezGuiEditorPage = observer(
                 }
             }
             return { assets, widgetOffsets, offsetOfWidget };
-        });
+        }
 
         async createWasm() {
             const editorWasm = await EezGuiEditorWasm.create();
@@ -93,7 +147,27 @@ export const EezGuiEditorPage = observer(
                 return;
             }
 
-            // runs again when something the page build read has changed;
+            // runs again when something the page build read has changed,
+            // after the browser has painted what the change itself shows
+            // (the selection)
+            this.disposeBuildAutorun = autorun(
+                () => {
+                    let build: EditorBuild | undefined;
+                    try {
+                        build = this.buildPage();
+                    } catch (err) {
+                        console.error("EEZ-GUI page editor build:", err);
+                        return;
+                    }
+                    runInAction(() => this.editorBuild.set(build));
+                },
+                {
+                    scheduler: run =>
+                        requestAnimationFrame(() => setTimeout(run, 0))
+                }
+            );
+
+            // runs again after a build and when a container is scrolled;
             // throttled while the user drags or resizes
             this.disposeAutorun = autorun(() => this.draw(), { delay: 30 });
         }
@@ -103,6 +177,10 @@ export const EezGuiEditorPage = observer(
             if (this.disposeAutorun) {
                 this.disposeAutorun();
                 this.disposeAutorun = undefined;
+            }
+            if (this.disposeBuildAutorun) {
+                this.disposeBuildAutorun();
+                this.disposeBuildAutorun = undefined;
             }
         }
 
@@ -148,6 +226,9 @@ export const EezGuiEditorPage = observer(
 
             try {
                 const build = this.editorBuild.get();
+                if (!build) {
+                    return;
+                }
                 const { widgetOffsets, offsetOfWidget } = build;
 
                 if (build !== this.loadedBuild) {

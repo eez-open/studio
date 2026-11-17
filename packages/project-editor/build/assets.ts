@@ -357,7 +357,10 @@ export class Assets {
         buildConfiguration: BuildConfiguration | undefined,
         public option: "check" | "buildAssets" | "buildFiles",
         public includedMasterProjectAssets = new Set<EezObject>(),
-        public editorBuild?: EditorBuild
+        public editorBuild?: EditorBuild,
+        // the assets of the previous editor build of the same page (see
+        // adoptSeed)
+        seed?: Assets
     ) {
         this.map.displayWidth = rootProject.settings.general.displayWidth;
         this.map.displayHeight = rootProject.settings.general.displayHeight;
@@ -655,10 +658,152 @@ export class Assets {
         this.colors = [];
 
         //
+        this.initialLists = {
+            styles: [...this.styles],
+            fonts: [...this.fonts],
+            bitmaps: [...this.bitmaps],
+            flows: [...this.flows]
+        };
+
+        if (seed && this.adoptSeed(seed)) {
+            return;
+        }
+
+        // The dry run: everything is built once without writing, so that the
+        // lists (styles, fonts, bitmaps, colors, constants) and the indexes
+        // of the flows are complete before the first of them is written.
+        // The real build writes nested objects late, after the lists.
         const dummyDataBuffer = new DummyDataBuffer(this.utf8Support);
         buildGuiDocumentData(this, dummyDataBuffer);
         buildGuiStylesData(this, dummyDataBuffer);
         buildFlowData(this, dummyDataBuffer);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // The editor build of a page runs after every change, and most changes
+    // add nothing to the lists. So instead of the dry run it takes the lists
+    // and the flow indexes of the previous build of the page (the seed), and
+    // after the build it is checked (isSeedComplete): if the build added
+    // something, or didn't use an index of a flow (a widget is gone), the
+    // result is dropped and the page is built again with the dry run.
+    //
+    // Only the lists are taken, not what was looked up in them: the index of
+    // a style is found again (a changed style is then a new one in the list).
+    // An entry of a list that is no longer used does no harm.
+
+    initialLists: {
+        styles: Style[];
+        fonts: Font[];
+        bitmaps: Bitmap[];
+        flows: (Flow | undefined)[];
+    };
+
+    seeded = false;
+    seedSizes: number[] = [];
+    // the flow indexes the build asked for
+    usedFlowEntries = new Set<any>();
+
+    getListSizes() {
+        const sizes = [
+            this.styles.length,
+            this.fonts.length,
+            this.bitmaps.length,
+            this.colors.length,
+            this.jsonValues.length,
+            this.constants.length,
+            this.flowStates.size
+        ];
+        for (const flowState of this.flowStates.values()) {
+            sizes.push(
+                flowState.componentIndexes.size,
+                flowState.componentInputIndexes.size,
+                flowState.flowWidgetDataIndexes.size,
+                flowState.flowWidgetActionIndexes.size
+            );
+        }
+        return sizes;
+    }
+
+    adoptSeed(seed: Assets) {
+        const same = (a: any[], b: any[]) =>
+            a.length == b.length && a.every((item, i) => item === b[i]);
+
+        // the project has the same styles, fonts, bitmaps and flows
+        if (
+            !same(this.initialLists.styles, seed.initialLists.styles) ||
+            !same(this.initialLists.fonts, seed.initialLists.fonts) ||
+            !same(this.initialLists.bitmaps, seed.initialLists.bitmaps) ||
+            !same(this.initialLists.flows, seed.initialLists.flows) ||
+            this.includedMasterProjectAssets != seed.includedMasterProjectAssets
+        ) {
+            return false;
+        }
+
+        this.styles = [...seed.styles];
+        this.fonts = [...seed.fonts];
+        this.bitmaps = [...seed.bitmaps];
+        this.colors = [...seed.colors];
+        this.jsonValues = [...seed.jsonValues];
+        this.constants = [...seed.constants];
+        this.constantsMap = new Map(seed.constantsMap);
+        this.editorPageStylePosition = seed.editorPageStylePosition;
+        this.editorPageStyleObject = seed.editorPageStyleObject;
+
+        this.flowStates = new Map();
+        for (const [flow, flowState] of seed.flowStates) {
+            this.flowStates.set(flow, {
+                index: flowState.index,
+                componentIndexes: new Map(flowState.componentIndexes),
+                componentInputIndexes: new Map(flowState.componentInputIndexes),
+                commponentInputs: [...flowState.commponentInputs],
+                flowWidgetDataIndexes: new Map(flowState.flowWidgetDataIndexes),
+                flowWidgetDataIndexToComponentPropertyValue: new Map(
+                    flowState.flowWidgetDataIndexToComponentPropertyValue
+                ),
+                flowWidgetFromDataIndex: new Map(
+                    flowState.flowWidgetFromDataIndex
+                ),
+                flowWidgetActionIndexes: new Map(
+                    flowState.flowWidgetActionIndexes
+                ),
+                flowWidgetActionIndexToComponentOutput: new Map(
+                    flowState.flowWidgetActionIndexToComponentOutput
+                ),
+                flowWidgetFromActionIndex: new Map(
+                    flowState.flowWidgetFromActionIndex
+                )
+            });
+        }
+
+        this.seeded = true;
+        this.seedSizes = this.getListSizes();
+        return true;
+    }
+
+    // after the build: nothing was added to the lists of the seed and every
+    // flow index of the seed was used
+    isSeedComplete() {
+        if (this.missingMasterProjectAssets.size > 0) {
+            return false;
+        }
+
+        const sizes = this.getListSizes();
+        if (
+            sizes.length != this.seedSizes.length ||
+            sizes.some((size, i) => size != this.seedSizes[i])
+        ) {
+            return false;
+        }
+
+        let numFlowEntries = 0;
+        for (const flowState of this.flowStates.values()) {
+            numFlowEntries +=
+                flowState.componentIndexes.size +
+                flowState.componentInputIndexes.size +
+                flowState.flowWidgetDataIndexes.size +
+                flowState.flowWidgetActionIndexes.size;
+        }
+        return this.usedFlowEntries.size == numFlowEntries;
     }
 
     get utf8Support() {
@@ -815,6 +960,72 @@ export class Assets {
         return [variant, fixedVariant];
     }
 
+    // The flow and the path of an object, kept for the build: both walk up
+    // to the root of the project, and the build asks for them several times
+    // for every component.
+    flowsOfObjects = new Map<EezObject, Flow>();
+    pathsOfObjects = new Map<EezObject, string>();
+
+    flowOf(object: EezObject): Flow {
+        let flow = this.flowsOfObjects.get(object);
+        if (flow == undefined) {
+            flow = ProjectEditor.getFlow(object);
+            this.flowsOfObjects.set(object, flow);
+        }
+        return flow;
+    }
+
+    pathOf(object: EezObject): string {
+        let path = this.pathsOfObjects.get(object);
+        if (path == undefined) {
+            path = getObjectPathAsString(object);
+            this.pathsOfObjects.set(object, path);
+        }
+        return path;
+    }
+
+    // The first style of this.styles that is equal to the style (see
+    // Style.compareTo), found by the key of the style: the styles of the list
+    // are put into two maps as the list grows, with and without their states
+    // (a state style is compared without them).
+    styleKeysOf: Style[] | undefined;
+    styleKeysCount = 0;
+    styleKeys = new Map<string, number>();
+    styleKeysWithStates = new Map<string, number>();
+
+    findEqualStyle(style: Style): number | undefined {
+        if (
+            this.styleKeysOf != this.styles ||
+            this.styleKeysCount > this.styles.length
+        ) {
+            this.styleKeysOf = this.styles;
+            this.styleKeysCount = 0;
+            this.styleKeys.clear();
+            this.styleKeysWithStates.clear();
+        }
+        for (; this.styleKeysCount < this.styles.length; this.styleKeysCount++) {
+            const s = this.styles[this.styleKeysCount];
+            if (s) {
+                const key = s.compareKey;
+                if (!this.styleKeys.has(key)) {
+                    this.styleKeys.set(key, this.styleKeysCount);
+                }
+                const keyWithStates = key + "\u0002" + s.stateKey;
+                if (!this.styleKeysWithStates.has(keyWithStates)) {
+                    this.styleKeysWithStates.set(
+                        keyWithStates,
+                        this.styleKeysCount
+                    );
+                }
+            }
+        }
+        return style.isStateStyle
+            ? this.styleKeys.get(style.compareKey)
+            : this.styleKeysWithStates.get(
+                  style.compareKey + "\u0002" + style.stateKey
+              );
+    }
+
     doGetStyleIndex(
         project: Project,
         styleNameOrObject: string | Style
@@ -872,11 +1083,9 @@ export class Assets {
                     }
                 }
 
-                for (let i = 0; i < this.styles.length; i++) {
-                    const s = this.styles[i];
-                    if (s && style.compareTo(s)) {
-                        return this.masterProject ? -(i + 1) : i + 1;
-                    }
+                const i = this.findEqualStyle(style);
+                if (i != undefined) {
+                    return this.masterProject ? -(i + 1) : i + 1;
                 }
 
                 const isMasterProjectStyle =
@@ -951,16 +1160,29 @@ export class Assets {
     // the copy of the page style with the preview background (see EditorBuild),
     // the position in this.styles
     editorPageStylePosition: number | undefined;
+    editorPageStyleObject: Style | undefined;
+    editorPageStyleChecked = false;
 
     getEditorPageStyleIndex(project: Project, style: string | Style) {
-        if (this.editorPageStylePosition == undefined) {
+        if (
+            this.editorPageStylePosition == undefined ||
+            !this.editorPageStyleChecked
+        ) {
+            this.editorPageStyleChecked = true;
             const styleObject =
                 typeof style == "string" ? findStyle(project, style) : style;
             if (!styleObject) {
                 return this.doGetStyleIndex(project, style);
             }
-            this.styles.push(styleObject);
-            this.editorPageStylePosition = this.styles.length - 1;
+            // (the position of a seed is kept while the page has the style)
+            if (
+                this.editorPageStylePosition == undefined ||
+                this.editorPageStyleObject != styleObject
+            ) {
+                this.styles.push(styleObject);
+                this.editorPageStylePosition = this.styles.length - 1;
+                this.editorPageStyleObject = styleObject;
+            }
         }
         return this.masterProject
             ? -(this.editorPageStylePosition + 1)
@@ -1129,12 +1351,26 @@ export class Assets {
     }
 
     // a color as a style property has it: a theme color name or a color value
+    // the color values of the style colors parsed in this build (most styles
+    // use the same few colors)
+    styleColorValues = new Map<string, string>();
+
     getColorIndexFromStyleColor(color: string) {
         if (color != "transparent") {
-            const colorFormat = ColorFormat.parse(color, this.projectStore.masterProject ? this.projectStore.masterProject : this.projectStore.project);
-            if (!colorFormat.isUsingThemeColor) {
-                color = colorFormat.getHexString();
+            let value = this.styleColorValues.get(color);
+            if (value == undefined) {
+                const colorFormat = ColorFormat.parse(
+                    color,
+                    this.projectStore.masterProject
+                        ? this.projectStore.masterProject
+                        : this.projectStore.project
+                );
+                value = colorFormat.isUsingThemeColor
+                    ? color
+                    : colorFormat.getHexString();
+                this.styleColorValues.set(color, value);
             }
+            color = value;
         }
         return this.getColorIndexFromColorValue(color);
     }
@@ -1339,19 +1575,21 @@ export class Assets {
     }
 
     getComponentIndex(component: Component) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         let index = flowState.componentIndexes.get(component);
         if (index == undefined) {
             index = flowState.componentIndexes.size;
             flowState.componentIndexes.set(component, index);
         }
+        this.usedFlowEntries.add(component);
         return index;
     }
 
     getComponentInputIndex(component: Component, inputName: string) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
+            this.pathOf(component) + PATH_SEPARATOR + inputName;
+        this.usedFlowEntries.add("input:" + path);
         let index = flowState.componentInputIndexes.get(path);
         if (index == undefined) {
             index = flowState.componentInputIndexes.size;
@@ -1364,13 +1602,14 @@ export class Assets {
     }
 
     findComponentInputIndex(component: Component, inputName: string) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
+            this.pathOf(component) + PATH_SEPARATOR + inputName;
         const inputIndex = flowState.componentInputIndexes.get(path);
         if (inputIndex == undefined) {
             return -1;
         }
+        this.usedFlowEntries.add("input:" + path);
         return inputIndex;
     }
 
@@ -1396,9 +1635,10 @@ export class Assets {
             }
         }
 
-        const flowState = this.getFlowState(ProjectEditor.getFlow(widget));
+        const flowState = this.getFlowState(this.flowOf(widget));
         const path =
-            getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;
+            this.pathOf(widget) + PATH_SEPARATOR + propertyName;
+        this.usedFlowEntries.add("data:" + path);
         let index = flowState.flowWidgetDataIndexes.get(path);
         if (index == undefined) {
             index = flowState.flowWidgetDataIndexes.size;
@@ -1453,10 +1693,10 @@ export class Assets {
             !(component instanceof ProjectEditor.UserWidgetWidgetClass)
         ) {
             const flowState = this.flowStates.get(
-                ProjectEditor.getFlow(component)
+                this.flowOf(component)
             );
             const componentPath =
-                getObjectPathAsString(component) + PATH_SEPARATOR;
+                this.pathOf(component) + PATH_SEPARATOR;
             properties = properties.filter(propertyInfo =>
                 flowState?.flowWidgetDataIndexes.has(
                     componentPath + propertyInfo.name
@@ -1542,9 +1782,10 @@ export class Assets {
             }
         }
 
-        const flowState = this.getFlowState(ProjectEditor.getFlow(widget));
+        const flowState = this.getFlowState(this.flowOf(widget));
         const path =
-            getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;
+            this.pathOf(widget) + PATH_SEPARATOR + propertyName;
+        this.usedFlowEntries.add("action:" + path);
         let index = flowState.flowWidgetActionIndexes.get(path);
         if (index == undefined) {
             index = flowState.flowWidgetActionIndexes.size;
@@ -1560,9 +1801,9 @@ export class Assets {
         componentIndex: number,
         propertyValueIndex: number
     ) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + propertyName;
+            this.pathOf(component) + PATH_SEPARATOR + propertyName;
         let index = flowState.flowWidgetDataIndexes.get(path);
         if (index != undefined) {
             flowState.flowWidgetDataIndexToComponentPropertyValue.set(index, {
@@ -1578,9 +1819,9 @@ export class Assets {
         componentIndex: number,
         componentOutputIndex: number
     ) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + outputName;
+            this.pathOf(component) + PATH_SEPARATOR + outputName;
         let index = flowState.flowWidgetActionIndexes.get(path);
         if (index != undefined) {
             flowState.flowWidgetActionIndexToComponentOutput.set(index, {
@@ -1660,7 +1901,7 @@ export class Assets {
 
         this.projectStore.project.actions.forEach(action => {
             this.map.actionFlowIndexes[action.name] =
-                this.map.flowIndexes[getObjectPathAsString(action)];
+                this.map.flowIndexes[this.pathOf(action)];
         });
 
         this.map.types = this.projectStore.typesStore.types;

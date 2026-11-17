@@ -1389,6 +1389,7 @@ export class Style extends EezObject {
             stateKey: keepAliveComputed(),
             variantDeltas: keepAliveComputed(),
             variantKey: keepAliveComputed(),
+            compareKey: keepAliveComputed(),
 
             cssDeclarations: computed,
             cssPreview: computed,
@@ -2572,54 +2573,55 @@ export class Style extends EezObject {
         return true;
     }
 
+    // The properties compareTo compares, as one string: two styles with the
+    // same key look the same. Without the states (see compareTo).
+    get compareKey(): string {
+        return [
+            this.fontName,
+            this.fontFamilyProperty,
+            this.fontSizeProperty,
+            this.fontWeightProperty,
+            this.fontStyleProperty,
+            this.alignHorizontalProperty,
+            this.alignVerticalProperty,
+            this.directionProperty,
+            this.colorProperty,
+            this.backgroundColorProperty,
+            this.backgroundImageProperty,
+            this.activeColorProperty,
+            this.activeBackgroundColorProperty,
+            this.focusColorProperty,
+            this.focusBackgroundColorProperty,
+            this.borderSizeProperty,
+            this.borderRadiusProperty,
+            this.borderColorsProperty,
+            this.borderStyleProperty,
+            this.paddingProperty,
+            this.opacityProperty,
+            this.boxShadowProperty,
+            this.blinkProperty,
+            this.letterSpacingProperty,
+            this.lineHeightProperty,
+            this.ellipsisProperty,
+            this.focusRingWidthProperty,
+            this.focusRingOffsetProperty,
+            this.focusRingColorProperty,
+            this.shadowOffsetXProperty,
+            this.shadowOffsetYProperty,
+            this.shadowBlurProperty,
+            this.shadowSpreadProperty,
+            this.shadowColorProperty,
+            this.variantKey
+        ]
+            .map(value => (value === undefined ? "" : typeof value + ":" + value))
+            .join("\u0001");
+    }
+
     compareTo(otherStyle: Style): boolean {
         return (
-            this.fontName === otherStyle.fontName &&
-            this.fontFamilyProperty === otherStyle.fontFamilyProperty &&
-            this.fontSizeProperty === otherStyle.fontSizeProperty &&
-            this.fontWeightProperty === otherStyle.fontWeightProperty &&
-            this.fontStyleProperty === otherStyle.fontStyleProperty &&
-            this.alignHorizontalProperty ===
-                otherStyle.alignHorizontalProperty &&
-            this.alignVerticalProperty === otherStyle.alignVerticalProperty &&
-            this.directionProperty === otherStyle.directionProperty &&
-            this.colorProperty === otherStyle.colorProperty &&
-            this.backgroundColorProperty ===
-                otherStyle.backgroundColorProperty &&
-            this.backgroundImageProperty ===
-                otherStyle.backgroundImageProperty &&
-            this.activeColorProperty === otherStyle.activeColorProperty &&
-            this.activeBackgroundColorProperty ===
-                otherStyle.activeBackgroundColorProperty &&
-            this.focusColorProperty === otherStyle.focusColorProperty &&
-            this.focusBackgroundColorProperty ===
-                otherStyle.focusBackgroundColorProperty &&
-            this.borderSizeProperty === otherStyle.borderSizeProperty &&
-            this.borderRadiusProperty === otherStyle.borderRadiusProperty &&
-            this.borderColorsProperty === otherStyle.borderColorsProperty &&
-            this.borderStyleProperty === otherStyle.borderStyleProperty &&
-            this.paddingProperty === otherStyle.paddingProperty &&
-            this.opacityProperty === otherStyle.opacityProperty &&
-            this.boxShadowProperty === otherStyle.boxShadowProperty &&
-            this.blinkProperty === otherStyle.blinkProperty &&
-            this.letterSpacingProperty === otherStyle.letterSpacingProperty &&
-            this.lineHeightProperty === otherStyle.lineHeightProperty &&
-            this.ellipsisProperty === otherStyle.ellipsisProperty &&
-            this.focusRingWidthProperty ===
-                otherStyle.focusRingWidthProperty &&
-            this.focusRingOffsetProperty ===
-                otherStyle.focusRingOffsetProperty &&
-            this.focusRingColorProperty ===
-                otherStyle.focusRingColorProperty &&
-            this.shadowOffsetXProperty === otherStyle.shadowOffsetXProperty &&
-            this.shadowOffsetYProperty === otherStyle.shadowOffsetYProperty &&
-            this.shadowBlurProperty === otherStyle.shadowBlurProperty &&
-            this.shadowSpreadProperty === otherStyle.shadowSpreadProperty &&
-            this.shadowColorProperty === otherStyle.shadowColorProperty &&
+            this.compareKey === otherStyle.compareKey &&
             // the states of a state style are not used
-            (this.isStateStyle || this.stateKey === otherStyle.stateKey) &&
-            // a style with other variants is another style
-            this.variantKey === otherStyle.variantKey
+            (this.isStateStyle || this.stateKey === otherStyle.stateKey)
         );
     }
 

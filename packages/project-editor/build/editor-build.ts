@@ -148,6 +148,13 @@ function getUserWidgetPages(page: Page) {
     return pages;
 }
 
+// the assets of the last editor build of a page
+const seeds = new WeakMap<Page, Assets>();
+
+// number of editor builds made in one pass and in all, and a switch to build
+// always as the first time (for tests)
+export const editorBuildCounts = { seeded: 0, all: 0, useSeeds: true };
+
 // Uncompressed assets (~EEZ) with the page as page 1. Synchronous: run it inside
 // a MobX reaction, which then runs again when something the page uses changes,
 // and keeps the computed values it reads cached between the runs.
@@ -179,32 +186,76 @@ export function buildEditorAssets(
             )
     };
 
-    let assets = new Assets(
-        project,
-        undefined,
-        "buildAssets",
-        new Set(),
-        editorBuild
-    );
+    // With the lists of the previous build of the page (see Assets.adoptSeed)
+    // one pass builds it; if the lists turn out not to be the ones of this
+    // build, it is built again as the first time.
+    let assets: Assets | undefined;
+    let built: ReturnType<typeof buildGuiAssetsDataSync> | undefined;
 
-    // master project pages and global variables the page uses (as buildAssets)
-    while (assets.missingMasterProjectAssets.size > 0) {
+    const seed = editorBuildCounts.useSeeds ? seeds.get(page) : undefined;
+    if (seed) {
+        try {
+            const seeded = new Assets(
+                project,
+                undefined,
+                "buildAssets",
+                seed.includedMasterProjectAssets,
+                editorBuild,
+                seed
+            );
+            if (seeded.seeded) {
+                built = buildGuiAssetsDataSync(
+                    seeded,
+                    getEditorGuiBitmaps(seeded)
+                );
+                if (seeded.isSeedComplete()) {
+                    assets = seeded;
+                }
+            }
+        } catch (err) {
+            // the lists of the seed don't fit this build
+        }
+        if (!assets) {
+            built = undefined;
+            options.widgetOffsets?.clear();
+        }
+    }
+
+    if (!assets) {
         assets = new Assets(
             project,
             undefined,
             "buildAssets",
-            new Set([
-                ...assets.includedMasterProjectAssets,
-                ...assets.missingMasterProjectAssets
-            ]),
+            new Set(),
             editorBuild
         );
+
+        // master project pages and global variables the page uses (as
+        // buildAssets)
+        while (assets.missingMasterProjectAssets.size > 0) {
+            assets = new Assets(
+                project,
+                undefined,
+                "buildAssets",
+                new Set([
+                    ...assets.includedMasterProjectAssets,
+                    ...assets.missingMasterProjectAssets
+                ]),
+                editorBuild
+            );
+        }
     }
 
-    const { uncompressedData, uncompressedSize } = buildGuiAssetsDataSync(
-        assets,
-        getEditorGuiBitmaps(assets)
-    );
+    if (!built) {
+        built = buildGuiAssetsDataSync(assets, getEditorGuiBitmaps(assets));
+    }
+    seeds.set(page, assets);
+    editorBuildCounts.all++;
+    if (assets.seeded) {
+        editorBuildCounts.seeded++;
+    }
+
+    const { uncompressedData, uncompressedSize } = built;
 
     // the offsets of the widgets in the returned data, which has the header
     // before the data the widgets were written into
