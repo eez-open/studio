@@ -80,6 +80,18 @@ export const ConnectFailedHistoryItemComponent = observer(
 );
 
 export class ConnectFailedHistoryItem extends HistoryItem {
+    getClipboardText() {
+        const { connectionParameters, error } = this.messageObject;
+        return (
+            "CONNECT" +
+            (connectionParameters
+                ? " to " + getConnectionParametersInfo(connectionParameters)
+                : "") +
+            " failed" +
+            (error ? ": " + error : "")
+        );
+    }
+
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <ConnectFailedHistoryItemComponent

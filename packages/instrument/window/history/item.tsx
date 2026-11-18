@@ -1,5 +1,6 @@
 import React from "react";
 import { observable, makeObservable, runInAction, computed } from "mobx";
+import type { NativeImage } from "electron";
 
 import { formatDuration } from "eez-studio-shared/util";
 import {
@@ -50,6 +51,11 @@ export interface IHistoryItem {
     ): React.ReactNode;
     canBePartOfMultiChart: boolean;
     setData(data: any): void;
+    // plain text representation of the item, used when it is copied to the
+    // clipboard, undefined if item can't be represented as text
+    getClipboardText(): string | undefined;
+    // used when item is copied to the clipboard as an image
+    getClipboardImage(): NativeImage | undefined;
     dispose(): void;
 }
 
@@ -183,6 +189,14 @@ export class HistoryItem implements IHistoryItem {
         viewType: "chat" | "thumbs"
     ): React.ReactNode {
         return null;
+    }
+
+    getClipboardText(): string | undefined {
+        return undefined;
+    }
+
+    getClipboardImage(): NativeImage | undefined {
+        return undefined;
     }
 
     getSourceDescriptionElement(appStore: IAppStore) {

@@ -76,6 +76,16 @@ export const ConnectedHistoryItemComponent = observer(
 );
 
 export class ConnectedHistoryItem extends HistoryItem {
+    getClipboardText() {
+        const connectionParameters = this.messageObject.connectionParameters;
+        return (
+            "CONNECTED" +
+            (connectionParameters
+                ? " to " + getConnectionParametersInfo(connectionParameters)
+                : "")
+        );
+    }
+
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <ConnectedHistoryItemComponent
