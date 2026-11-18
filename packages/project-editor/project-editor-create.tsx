@@ -78,6 +78,7 @@ import {
     ContainerWidget,
     UserWidgetWidget,
     ListWidget,
+    GridWidget,
     SelectWidget
 } from "project-editor/flow/components/widgets";
 import "project-editor/flow/components/widgets/dashboard";
@@ -218,6 +219,7 @@ export function createProjectEditor(
         ContainerLiteWidgetClass: ContainerLiteWidget,
         SelectLiteWidgetClass: SelectLiteWidget,
         ListWidgetClass: ListWidget,
+        GridWidgetClass: GridWidget,
         TextWidgetClass: TextWidget,
         MultilineTextWidgetClass: MultilineTextWidget,
         ButtonWidgetClass: ButtonWidget,

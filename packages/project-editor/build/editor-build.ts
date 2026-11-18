@@ -25,6 +25,83 @@ export interface EditorBuildOptions {
     widgetOffsets?: Map<number, Widget | Page>;
     // see EditorBuild.getVariantPreview
     getVariantPreview?: (widget: Widget) => string | undefined;
+    // the number of items a List or Grid shows (default: the items that fit
+    // in its design size, see getEditorListItemCount)
+    getListItemCount?: (widget: Widget) => number;
+}
+
+const WIDGET_FLAG_GROW = 1 << 6;
+const PIN_TO_LEFT = 1;
+const PIN_TO_RIGHT = 2;
+const PIN_TO_TOP = 4;
+const PIN_TO_BOTTOM = 8;
+
+// The size of a List or Grid item when the list has the given size (as
+// getListItemSize in eez-framework gui/scrolling.cpp).
+function getListItemSize(
+    list: Widget,
+    horizontal: boolean,
+    itemSize: number,
+    gap: number,
+    size: number
+) {
+    const designSize = horizontal ? list.width : list.height;
+    if (size == designSize || designSize <= 0) {
+        return itemSize;
+    }
+
+    if (itemSize == designSize) {
+        return size;
+    }
+
+    const pinToEdge = list.resizing?.pinToEdge ?? 0;
+    const stretches =
+        (list.getLayoutFlags() & WIDGET_FLAG_GROW) != 0 ||
+        (horizontal
+            ? (pinToEdge & PIN_TO_LEFT) != 0 && (pinToEdge & PIN_TO_RIGHT) != 0
+            : (pinToEdge & PIN_TO_TOP) != 0 && (pinToEdge & PIN_TO_BOTTOM) != 0);
+    if (stretches) {
+        return itemSize;
+    }
+
+    // rounded down: the items that fit in the design still fit
+    const pitch = Math.floor(((itemSize + gap) * size) / designSize);
+    return Math.max(pitch - gap, 1);
+}
+
+// The page editor shows as many items of a List or Grid as fit completely in
+// it (at least one), when it has the given size (the design size if not
+// given), as eez-framework ListWidgetState and GridWidgetState lay them out.
+export function getEditorListItemCount(
+    widget: Widget,
+    width: number = widget.width,
+    height: number = widget.height
+) {
+    const itemWidget: Widget | undefined = (widget as any).itemWidget;
+    if (!itemWidget) {
+        return 1;
+    }
+
+    if (widget instanceof ProjectEditor.ListWidgetClass) {
+        const horizontal = widget.listType == "horizontal";
+        const gap = widget.gap || 0;
+        const extent = horizontal ? width : height;
+        const pitch =
+            getListItemSize(
+                widget,
+                horizontal,
+                horizontal ? itemWidget.width : itemWidget.height,
+                gap,
+                extent
+            ) + gap;
+        return Math.max(pitch > 0 ? Math.floor((extent + gap) / pitch) : 0, 1);
+    }
+
+    const itemW = getListItemSize(widget, true, itemWidget.width, 0, width);
+    const itemH = getListItemSize(widget, false, itemWidget.height, 0, height);
+    const fitW = itemW > 0 ? Math.floor(width / itemW) : 0;
+    const fitH = itemH > 0 ? Math.floor(height / itemH) : 0;
+    return Math.max(fitW, 1) * Math.max(fitH, 1);
 }
 
 // widgets whose "data" (or "text") is shown as text
@@ -82,8 +159,14 @@ function getWidgetPropertyExpression(
             return (options.getSelectChildIndex?.(widget) ?? 0).toString();
         }
 
-        if (widget instanceof ProjectEditor.ListWidgetClass) {
-            return "1";
+        if (
+            widget instanceof ProjectEditor.ListWidgetClass ||
+            widget instanceof ProjectEditor.GridWidgetClass
+        ) {
+            return (
+                options.getListItemCount?.(widget) ??
+                getEditorListItemCount(widget)
+            ).toString();
         }
     }
 

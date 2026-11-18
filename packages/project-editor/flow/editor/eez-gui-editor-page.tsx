@@ -25,16 +25,32 @@ import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { getProjectWithThemes } from "project-editor/features/style/theme";
 import type { IEezObject } from "project-editor/core/object";
 import type { Rect } from "eez-studio-shared/geometry";
-import { buildEditorAssets } from "project-editor/build/editor-build";
+import {
+    buildEditorAssets,
+    getEditorListItemCount
+} from "project-editor/build/editor-build";
 import { visitObjects } from "project-editor/core/search";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { getFlowGuiDisplaySize } from "project-editor/build/assets";
 import { EezGuiEditorWasm } from "project-editor/flow/editor/eez-gui-editor-wasm";
 import {
     getEditorScrollPositions,
+    getEditorWidgetBox,
     setDrawnScrollPosition,
     setEditorWidgetBoxes
 } from "project-editor/flow/editor/eez-gui-editor-boxes";
+
+function isSameMap<K, V>(a: Map<K, V>, b: Map<K, V>) {
+    if (a.size != b.size) {
+        return false;
+    }
+    for (const [key, value] of a) {
+        if (b.get(key) !== value) {
+            return false;
+        }
+    }
+    return true;
+}
 
 type EditorBuild = {
     assets: ReturnType<typeof buildEditorAssets>;
@@ -90,25 +106,44 @@ export const EezGuiEditorPage = observer(
                 }
                 return indexes;
             },
-            {
-                equals: (a, b) => {
-                    if (a.size != b.size) {
-                        return false;
+            { equals: isSameMap }
+        );
+
+        // The number of items every List and Grid of the page shows: as many
+        // as fit in it. The size is the one the framework drew it with (a
+        // list in a row or column can grow), the design size before the first
+        // draw. The build depends on the counts and not on the boxes, so it
+        // is built again only when a count has changed.
+        listItemCounts = computed(
+            (): Map<Widget, number> => {
+                const { page } = this.props;
+                const counts = new Map<Widget, number>();
+                for (const object of visitObjects(page.components)) {
+                    if (
+                        object instanceof ProjectEditor.ListWidgetClass ||
+                        object instanceof ProjectEditor.GridWidgetClass
+                    ) {
+                        const box = getEditorWidgetBox(object);
+                        counts.set(
+                            object,
+                            getEditorListItemCount(
+                                object,
+                                box?.width,
+                                box?.height
+                            )
+                        );
                     }
-                    for (const [select, index] of a) {
-                        if (b.get(select) !== index) {
-                            return false;
-                        }
-                    }
-                    return true;
                 }
-            }
+                return counts;
+            },
+            { equals: isSameMap }
         );
 
         buildPage(): EditorBuild {
             const { page, flowContext } = this.props;
             const widgetOffsets = new Map<number, Widget | Page>();
             const selectChildIndexes = this.selectChildIndexes.get();
+            const listItemCounts = this.listItemCounts.get();
             const assets = buildEditorAssets(page, {
                 // a Select of a user widget page is not in the map: the
                 // selection is never inside of it
@@ -117,6 +152,11 @@ export const EezGuiEditorPage = observer(
                     untracked(() =>
                         (select as any).getSelectedIndex(flowContext)
                     ),
+                // a List or Grid of a user widget page shows the items that
+                // fit in its design size
+                getListItemCount: (widget: Widget) =>
+                    listItemCounts.get(widget) ??
+                    getEditorListItemCount(widget),
                 pageBackgroundColor: this.previewBackgroundColor,
                 widgetOffsets
             });
