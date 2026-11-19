@@ -678,7 +678,7 @@ const DatabaseListItem = observer(
                         }}
                     >
                         {database.isActive ? "[ACTIVE] " : ""}
-                        {path.parse(database.filePath).name}
+                        {database.filePath ? path.parse(database.filePath).name : ""}
                     </td>
                 </tr>
             );
@@ -704,7 +704,7 @@ const SelectedDatabaseDetails = observer(
                                 className="btn btn-primary btn-sm"
                                 onClick={settingsController.setAsActiveDatabase}
                             >
-                                Set as Active
+                                {t("Set as Active")}
                             </button>
                         </div>
                     )}
@@ -714,7 +714,7 @@ const SelectedDatabaseDetails = observer(
                             htmlFor="EezStudio_ProjectEditorScrapbook_ItemDetails_Description"
                             className="form-label"
                         >
-                            Description:
+                            {t("Description:")}
                         </label>
                         <textarea
                             className="form-control"
@@ -730,7 +730,7 @@ const SelectedDatabaseDetails = observer(
                     </div>
 
                     <div>
-                        <label className="form-label">Path:</label>
+                        <label className="form-label">{t("Path:")}</label>
                         <div>{selectedDatabase.filePath}</div>
 
                         <button
@@ -741,7 +741,7 @@ const SelectedDatabaseDetails = observer(
                             }
                             style={{ marginTop: "5px" }}
                         >
-                            Show in Folder
+                            {t("Show in Folder")}
                         </button>
 
                         <button
@@ -752,7 +752,7 @@ const SelectedDatabaseDetails = observer(
                             }
                             style={{ marginTop: "5px", marginLeft: "5px" }}
                         >
-                            Copy Path to Clipboard
+                            {t("Copy Path to Clipboard")}
                         </button>
                     </div>
 
@@ -763,11 +763,11 @@ const SelectedDatabaseDetails = observer(
                         })}
                     >
                         <div>
-                            Database size is{" "}
+                            {t("Database size is")}{" "}
                             {formatBytes(selectedDatabase.databaseSize)}.
                         </div>
                         <div>
-                            Database compacted{" "}
+                            {t("Database compacted")}{" "}
                             {formatDateRelative(
                                 selectedDatabase.timeOfLastDatabaseCompactOperation
                             )}
@@ -782,7 +782,7 @@ const SelectedDatabaseDetails = observer(
                                 className="btn btn-secondary btn-sm"
                                 onClick={settingsController.compactDatabase}
                             >
-                                Compact Database
+                                {t("Compact Database")}
                             </button>
                         </div>
                     </div>
@@ -959,7 +959,7 @@ const PythonSettings = observer(
                                 className="StaticPropertyValueWrap"
                             />
                             <BooleanProperty
-                                name={`Set custom path`}
+                                name={t(`Set custom path`)}
                                 value={settingsController.pythonUseCustomPath}
                                 onChange={action(
                                     value =>
@@ -1035,11 +1035,11 @@ const TemplateSettings = observer(
         render() {
             return (
                 <tr>
-                    <td>Project Templates</td>
+                    <td>{t("Project Templates")}</td>
                     <td>
                         <PropertyList>
                             <BooleanProperty
-                                name={`Use local templates folder`}
+                                name={t(`Use local templates folder`)}
                                 value={settingsController.useLocalTemplates}
                                 onChange={action(
                                     value =>
@@ -1199,7 +1199,7 @@ export const Settings = observer(
 
                         <SettingsSectionHeader title={t("Appearance")} />
                         <BooleanProperty
-                            name={`Dark theme`}
+                            name={t(`Dark theme`)}
                             value={settingsController.isDarkTheme}
                             onChange={settingsController.switchTheme}
                             checkboxStyleSwitch={true}
@@ -1212,7 +1212,7 @@ export const Settings = observer(
                                     className="btn btn-primary EezStudio_PulseTransition"
                                     onClick={settingsController.restart}
                                 >
-                                    Restart
+                                    {t("Restart")}
                                 </button>
                             </div>
                         </Header>
