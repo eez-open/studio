@@ -37,8 +37,11 @@ import {
     IPropertyGridGroupDefinition,
     isPropertyOptional,
     setKey,
-    WidgetEvents
+    WidgetEvents,
+    findPropertyByNameInClassInfo
 } from "project-editor/core/object";
+import { Property } from "project-editor/ui-components/PropertyGrid/Property";
+import { isPropertyInError } from "project-editor/ui-components/PropertyGrid/utils";
 import {
     getChildOfObject,
     isEezObjectArray,
@@ -203,10 +206,16 @@ const resizingProperty: PropertyInfo = {
     propertyGridRowComponent: ResizingProperty,
     skipSearch: true,
     hideInPropertyGrid: (widget: Widget) =>
+        hasCompactGeometry(widget) || isResizingHidden(widget)
+};
+
+function isResizingHidden(widget: Widget) {
+    return (
         isLVGLProject(widget) ||
         isWidgetUnderDockingManager(widget) ||
         isPresetWidget(widget)
-};
+    );
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1846,6 +1855,183 @@ function isWidgetUnderDockingManager(widget: Component) {
     );
 }
 
+function isPositionHidden(component: Component, propertyName: "left" | "top") {
+    return (
+        isWidgetUnderDockingManager(component) ||
+        isPresetWidget(component) ||
+        isSetByLayout(component, propertyName)
+    );
+}
+
+function isAbsolutePositionHidden(component: Component) {
+    return isWidgetUnderDockingManager(component) || isPresetWidget(component);
+}
+
+// In EEZ-GUI projects the position, the size, the absolute position, the
+// center buttons and the resizing of a widget are shown in one compact
+// property grid row (WidgetGeometryProperties) instead of a row for each.
+function hasCompactGeometry(component: Component) {
+    return component instanceof Widget && isEezGuiProject(component);
+}
+
+const WidgetGeometryProperties = observer(
+    class WidgetGeometryProperties extends React.Component<PropertyProps> {
+        get widgets() {
+            return this.props.objects as Widget[];
+        }
+
+        isHidden(isHiddenFor: (widget: Widget) => boolean) {
+            return this.widgets.some(widget => isHiddenFor(widget));
+        }
+
+        renderField(
+            label: string,
+            title: string,
+            propertyName: string,
+            hidden: boolean
+        ) {
+            if (hidden) {
+                // keep the other fields in their grid cells
+                return (
+                    <>
+                        <div />
+                        <div />
+                    </>
+                );
+            }
+
+            const propertyInfo = findPropertyByNameInClassInfo(
+                Component.classInfo,
+                propertyName
+            )!;
+
+            // e.g. "Widget is outside of its parent"
+            const inError =
+                this.widgets.length == 1 &&
+                isPropertyInError(this.widgets[0], propertyInfo);
+
+            return (
+                <>
+                    <div
+                        className={classNames(
+                            "EezStudio_WidgetGeometryProperty_Label",
+                            {
+                                secondColumn:
+                                    propertyName == "top" ||
+                                    propertyName == "height",
+                                inError
+                            }
+                        )}
+                        title={title}
+                    >
+                        {label}
+                    </div>
+                    <div
+                        className={classNames(
+                            "EezStudio_WidgetGeometryProperty_Value",
+                            { inError }
+                        )}
+                    >
+                        <Property
+                            propertyInfo={propertyInfo}
+                            objects={this.props.objects}
+                            readOnly={this.props.readOnly}
+                            updateObject={this.props.updateObject}
+                        />
+                    </div>
+                </>
+            );
+        }
+
+        render() {
+            const positionHidden = this.isHidden(
+                widget =>
+                    isPositionHidden(widget, "left") ||
+                    isPositionHidden(widget, "top")
+            );
+            const widthHidden = this.isHidden(
+                widget =>
+                    isWidgetUnderDockingManager(widget) ||
+                    isSetByLayout(widget, "width")
+            );
+            const heightHidden = this.isHidden(
+                widget =>
+                    isWidgetUnderDockingManager(widget) ||
+                    isSetByLayout(widget, "height")
+            );
+
+            let absolutePosition: string | undefined;
+            if (!this.isHidden(isAbsolutePositionHidden)) {
+                const values = new Set(
+                    this.widgets.map(widget => widget.absolutePosition)
+                );
+                if (values.size == 1) {
+                    absolutePosition = values.values().next().value;
+                }
+            }
+
+            const showCenterButtons =
+                this.widgets.length == 1 &&
+                !isWidgetUnderDockingManager(this.widgets[0]) &&
+                !isPresetWidget(this.widgets[0]);
+
+            const showResizing = !this.isHidden(isResizingHidden);
+
+            return (
+                <div className="EezStudio_WidgetGeometryProperty">
+                    <div className="EezStudio_WidgetGeometryProperty_Fields">
+                        {!positionHidden && (
+                            <>
+                                {this.renderField("X", "Left", "left", false)}
+                                {this.renderField("Y", "Top", "top", false)}
+                            </>
+                        )}
+                        {(!widthHidden || !heightHidden) && (
+                            <>
+                                {this.renderField(
+                                    "W",
+                                    "Width",
+                                    "width",
+                                    widthHidden
+                                )}
+                                {this.renderField(
+                                    "H",
+                                    "Height",
+                                    "height",
+                                    heightHidden
+                                )}
+                            </>
+                        )}
+                        {(absolutePosition != undefined ||
+                            showCenterButtons) && (
+                            <div className="EezStudio_WidgetGeometryProperty_Info">
+                                {absolutePosition != undefined && (
+                                    <span title="Absolute position (X, Y) on the page">
+                                        Absolute: {absolutePosition}
+                                    </span>
+                                )}
+                                {showCenterButtons && (
+                                    <CenterWidgetUI {...this.props} />
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    {showResizing && (
+                        <div className="EezStudio_WidgetGeometryProperty_Resizing">
+                            <ResizingProperty
+                                propertyInfo={resizingProperty}
+                                objects={this.props.objects}
+                                readOnly={this.props.readOnly}
+                                updateObject={this.props.updateObject}
+                            />
+                        </div>
+                    )}
+                </div>
+            );
+        }
+    }
+);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export type AutoSize = "width" | "height" | "both" | "none";
@@ -1972,8 +2158,11 @@ export class Component extends EezObject {
                 type: PropertyType.Any,
                 propertyGridGroup: geometryGroup,
                 computed: true,
+                propertyGridRowComponent: WidgetGeometryProperties,
                 skipSearch: true,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: (component: Component) =>
+                    !hasCompactGeometry(component),
+                hideInDocumentation: "all"
             },
             {
                 name: "type",
@@ -1987,9 +2176,8 @@ export class Component extends EezObject {
                 propertyGridGroup: geometryGroup,
                 disabled: isActionComponent,
                 hideInPropertyGrid: (component: Component) =>
-                    isWidgetUnderDockingManager(component) ||
-                    isPresetWidget(component) ||
-                    isSetByLayout(component, "left"),
+                    hasCompactGeometry(component) ||
+                    isPositionHidden(component, "left"),
                 hideInDocumentation: "action"
             },
             {
@@ -1998,9 +2186,8 @@ export class Component extends EezObject {
                 propertyGridGroup: geometryGroup,
                 disabled: isActionComponent,
                 hideInPropertyGrid: (component: Component) =>
-                    isWidgetUnderDockingManager(component) ||
-                    isPresetWidget(component) ||
-                    isSetByLayout(component, "top"),
+                    hasCompactGeometry(component) ||
+                    isPositionHidden(component, "top"),
                 hideInDocumentation: "action"
             },
             {
@@ -2010,7 +2197,9 @@ export class Component extends EezObject {
                 disabled: (component: Component) =>
                     isActionComponent(component) ||
                     isSetByLayout(component, "width"),
-                hideInPropertyGrid: isWidgetUnderDockingManager,
+                hideInPropertyGrid: (component: Component) =>
+                    hasCompactGeometry(component) ||
+                    isWidgetUnderDockingManager(component),
                 hideInDocumentation: "action"
             },
             {
@@ -2020,7 +2209,9 @@ export class Component extends EezObject {
                 disabled: (component: Component) =>
                     isActionComponent(component) ||
                     isSetByLayout(component, "height"),
-                hideInPropertyGrid: isWidgetUnderDockingManager,
+                hideInPropertyGrid: (component: Component) =>
+                    hasCompactGeometry(component) ||
+                    isWidgetUnderDockingManager(component),
                 hideInDocumentation: "action"
             },
             {
@@ -2043,8 +2234,8 @@ export class Component extends EezObject {
                 computed: true,
                 disabled: isActionComponent,
                 hideInPropertyGrid: (component: Component) =>
-                    isWidgetUnderDockingManager(component) ||
-                    isPresetWidget(component),
+                    hasCompactGeometry(component) ||
+                    isAbsolutePositionHidden(component),
                 hideInDocumentation: "action"
             },
             {
@@ -2086,7 +2277,10 @@ export class Component extends EezObject {
                 propertyGridRowComponent: CenterWidgetUI,
                 skipSearch: true,
                 hideInPropertyGrid: (widget: Widget) => {
-                    if (isWidgetUnderDockingManager(widget)) {
+                    if (
+                        hasCompactGeometry(widget) ||
+                        isWidgetUnderDockingManager(widget)
+                    ) {
                         return true;
                     }
                     const projectStore = ProjectEditor.getProjectStore(widget);

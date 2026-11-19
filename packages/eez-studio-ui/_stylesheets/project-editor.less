@@ -3128,6 +3128,74 @@
     margin-bottom: 4px;
 }
 
+.EezStudio_WidgetGeometryProperty {
+    width: 100%;
+    margin-bottom: 4px;
+
+    // the resizing diagrams are next to the fields if there is enough
+    // room, otherwise below them
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 6px 16px;
+
+    .EezStudio_WidgetGeometryProperty_Fields {
+        flex: 1 1 180px;
+        min-width: 0;
+
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+        row-gap: 2px;
+        column-gap: 4px;
+        align-items: center;
+    }
+
+    .EezStudio_WidgetGeometryProperty_Label {
+        transform: translateY(1px);
+
+        &.secondColumn {
+            margin-left: 8px;
+        }
+
+        &.inError {
+            color: @inErrorTextColor;
+        }
+    }
+
+    .EezStudio_WidgetGeometryProperty_Value {
+        min-width: 0;
+
+        &.inError input {
+            color: @inErrorTextColor;
+            background-color: @inErrorBackgroundColor;
+        }
+    }
+
+    .EezStudio_WidgetGeometryProperty_Info {
+        // escaped, otherwise less divides 1 by -1
+        grid-column: ~"1 / -1";
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 24px;
+        white-space: nowrap;
+
+        & > span {
+            opacity: 0.66;
+            font-size: 90%;
+        }
+
+        & > .EezStudio_AlignAndDistributeIcons {
+            margin-left: auto;
+        }
+    }
+
+    .EezStudio_WidgetGeometryProperty_Resizing {
+        flex: 0 0 auto;
+        line-height: 0;
+    }
+}
+
 .EezStudio_LVGProperty {
     width: 100%;
     display: flex;
