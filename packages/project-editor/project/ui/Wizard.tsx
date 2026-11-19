@@ -2165,8 +2165,8 @@ function ProjectTypeInfo(props: {
         <div className="EezStudio_NewProjectWizard_ProjectType_Details_InfoList">
             {infoList.map((infoName: string, i: number) => (
                 <span key={infoName}>
-                    <span className="lighter">{infoName}: </span>
-                    <span className="bolder">{props.infoList[infoName]}</span>
+                    <span className="lighter">{t(infoName)}: </span>
+                    <span className="bolder">{t(props.infoList[infoName] || "")}</span>
                     {i < infoList.length - 1 && (
                         <span className="lighter"> | </span>
                     )}
@@ -2231,14 +2231,14 @@ const ProjectProperties = observer(
                     <PlatformDescription wizardModel={wizardModel} />
 
                     <div className="EezStudio_NewProjectWizard_ProjectProperties_Section">
-                        <h6>Project Settings</h6>
+                        <h6>{t("Project Settings")}</h6>
                         <div>
                             <div className="mb-3">
                                 <label
                                     htmlFor="new-project-wizard-name-input"
                                     className="form-label"
                                 >
-                                    Name
+                                    {t("Name")}
                                 </label>
                                 <NameInput
                                     id="new-project-wizard-name-input"
@@ -2326,7 +2326,7 @@ const ProjectProperties = observer(
                                     htmlFor="new-project-wizard-location-input"
                                     className="col-form-label"
                                 >
-                                    Location
+                                    {t("Location")}
                                 </label>
                                 <DirectoryBrowserInput
                                     value={wizardModel.location || ""}
@@ -2363,7 +2363,7 @@ const ProjectProperties = observer(
                                         className="form-check-label"
                                         htmlFor="new-project-wizard-create-directory-checkbox"
                                     >
-                                        Create directory
+                                        {t("Create directory")}
                                     </label>
                                 </div>
                             )}
@@ -2566,7 +2566,7 @@ const ProjectProperties = observer(
                                             wizardModel.createProjectInProgress
                                         }
                                     >
-                                        Create Project
+                                        {t("Create Project")}
                                     </button>
                                 ) : (
                                     <>

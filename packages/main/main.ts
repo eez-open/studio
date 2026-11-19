@@ -23,8 +23,35 @@ configure({ enforceActions: "observed" });
 
 const contextMenu = require("electron-context-menu");
 
+const { t } = require("eez-studio-shared/i18n");
+
 contextMenu({
-    showSaveImageAs: true
+    showSaveImageAs: true,
+    // Getters so the labels follow the current UI language; the package
+    // resolves them each time the menu is shown.
+    labels: {
+        get copy() {
+            return t("Copy");
+        },
+        get cut() {
+            return t("Cut");
+        },
+        get paste() {
+            return t("Paste");
+        },
+        get selectAll() {
+            return t("Select All");
+        },
+        get inspect() {
+            return t("Inspect Element");
+        },
+        get saveImage() {
+            return t("Save Image");
+        },
+        get saveImageAs() {
+            return t("Save Image As...");
+        }
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////
