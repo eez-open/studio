@@ -1048,6 +1048,8 @@
     "Section": "分区",
     "Select": "选择",
     "Select All": "全选",
+    "Use style": "使用样式",
+    "Base style": "基础样式",
     "Inspect Element": "检查元素",
     "Save Image": "保存图片",
     "Save Image As...": "图片另存为...",
