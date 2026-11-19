@@ -8,6 +8,7 @@ import {
 } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import * as notification from "eez-studio-ui/notification";
+import { t } from "eez-studio-shared/i18n";
 
 import {
     IObjectVariableValue,
@@ -555,7 +556,7 @@ class EventHandler extends EezObject {
             );
 
             if (eventEnumItems.length == 0) {
-                notification.info("All event handlers are already defined");
+                notification.info(t("All event handlers are already defined"));
                 return;
             }
 

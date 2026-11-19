@@ -25,6 +25,7 @@ import {
     readJsObjectFromFile
 } from "eez-studio-shared/util-electron";
 import { guid } from "eez-studio-shared/guid";
+import { t } from "eez-studio-shared/i18n";
 import { stringCompare } from "eez-studio-shared/string";
 import { markdownToSafeHtml } from "eez-studio-shared/safe-markdown";
 
@@ -636,7 +637,7 @@ export class WizardModel {
         if (this.exampleProjectTypes.get("_newExamples")!.length > 0) {
             rootNode.children.push({
                 id: "_newExamples",
-                label: "New Examples",
+                label: t("New Examples"),
                 children: [],
                 selected: this.folder == "_newExamples",
                 expanded: true
@@ -645,7 +646,7 @@ export class WizardModel {
 
         rootNode.children.push({
             id: "_allExamples",
-            label: "All Examples",
+            label: t("All Examples"),
             children: [],
             selected: this.folder == "_allExamples",
             expanded: true
@@ -739,9 +740,9 @@ export class WizardModel {
                 id: "dashboard",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.DASHBOARD],
                 image: DASHBOARD_PROJECT_ICON(128),
-                projectName: "Dashboard",
+                projectName: t("Dashboard"),
                 description:
-                    "Start your new Dashboard project development here.",
+                    t("Start your new Dashboard project development here."),
                 projectFileUrl: getTemplatePathOrUrl(
                     "templates/dashboard.eez-project"
                 )
@@ -750,8 +751,8 @@ export class WizardModel {
                 id: "firmware",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.FIRMWARE],
                 image: EEZ_GUI_PROJECT_ICON(128),
-                projectName: "EEZ-GUI",
-                description: "Start your new EEZ-GUI project development here.",
+                projectName: t("EEZ-GUI"),
+                description: t("Start your new EEZ-GUI project development here."),
                 projectFileUrl: getTemplatePathOrUrl(
                     "templates/firmware.eez-project"
                 )
@@ -760,8 +761,8 @@ export class WizardModel {
                 id: "LVGL",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.LVGL],
                 image: LVGL_PROJECT_ICON(128),
-                projectName: "LVGL",
-                description: "Start your new LVGL project development here.",
+                projectName: t("LVGL"),
+                description: t("Start your new LVGL project development here."),
                 projectFileUrl: {
                     "8.4.0": getTemplatePathOrUrl(
                         "templates/v0.23.0/LVGL-8.3.eez-project"
@@ -784,9 +785,9 @@ export class WizardModel {
                 id: "LVGL with EEZ Flow",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.LVGL],
                 image: LVGL_WITH_FLOW_PROJECT_ICON(128),
-                projectName: "LVGL with EEZ Flow",
+                projectName: t("LVGL with EEZ Flow"),
                 description:
-                    "Start your new LVGL with EEZ Flow project development here.",
+                    t("Start your new LVGL with EEZ Flow project development here."),
                 projectFileUrl: {
                     "8.4.0": getTemplatePathOrUrl(
                         "templates/v0.23.0/LVGL with EEZ Flow-8.3.eez-project"
@@ -809,8 +810,8 @@ export class WizardModel {
                 id: "IEXT",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.IEXT],
                 image: IEXT_PROJECT_ICON(128),
-                projectName: "IEXT",
-                description: "Start your new IEXT project development here.",
+                projectName: t("IEXT"),
+                description: t("Start your new IEXT project development here."),
                 projectFileUrl: {
                     SCPI: getTemplatePathOrUrl("templates/IEXT.eez-project"),
                     PROPRIETARY: getTemplatePathOrUrl(
@@ -822,8 +823,8 @@ export class WizardModel {
                 id: "EEZ-GUI Lite",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.EEZ_GUI_LITE],
                 image: EEZ_GUI_LITE_PROJECT_ICON(128),
-                projectName: "EEZ-GUI Lite",
-                description: "Start your new EEZ-GUI Lite project development here.",
+                projectName: t("EEZ-GUI Lite"),
+                description: t("Start your new EEZ-GUI Lite project development here."),
                 projectFileUrl: getTemplatePathOrUrl(
                     "templates/eez-gui-lite.eez-project"
                 )
@@ -837,9 +838,9 @@ export class WizardModel {
                 id: "applet",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.APPLET],
                 image: APPLET_ICON(128),
-                projectName: "BB3 Applet",
+                projectName: t("BB3 Applet"),
                 description:
-                    "Start your new BB3 Applet project development here.",
+                    t("Start your new BB3 Applet project development here."),
                 projectFileUrl: getTemplatePathOrUrl(
                     "templates/applet.eez-project"
                 )
@@ -848,9 +849,9 @@ export class WizardModel {
                 id: "resource",
                 projectType: PROJECT_TYPE_NAMES[ProjectType.RESOURCE],
                 image: MICROPYTHON_ICON(128),
-                projectName: "BB3 MicroPython Script",
+                projectName: t("BB3 MicroPython Script"),
                 description:
-                    "Start your new BB3 MicroPython project development here.",
+                    t("Start your new BB3 MicroPython project development here."),
                 projectFileUrl: getTemplatePathOrUrl(
                     "templates/resource.eez-project"
                 )
@@ -899,7 +900,7 @@ export class WizardModel {
                     id: "_allTemplates",
                     label: (
                         <Count
-                            label="All Templates"
+                            label={t("All Templates")}
                             count={this.allTemplateProjectTypes.length}
                             attention={false}
                         ></Count>
@@ -916,7 +917,7 @@ export class WizardModel {
                     id: "_standard",
                     label: (
                         <Count
-                            label="Builtin Templates"
+                            label={t("Builtin Templates")}
                             count={this.standardProjectTypes.length}
                             attention={false}
                         ></Count>
@@ -933,7 +934,7 @@ export class WizardModel {
                     id: "_bb3",
                     label: (
                         <Count
-                            label="BB3 Script Templates"
+                            label={t("BB3 Script Templates")}
                             count={this.bb3ProjectTypes.length}
                             attention={false}
                         ></Count>
@@ -950,7 +951,7 @@ export class WizardModel {
                     id: "_templates",
                     label: (
                         <Count
-                            label="From envox.eu/gitea"
+                            label={t("From envox.eu/gitea")}
                             count={this.templateProjectTypes.length}
                             attention={false}
                         ></Count>
@@ -1080,7 +1081,7 @@ export class WizardModel {
         if (this.section == "templates") {
             const urlDef = this.selectedProjectType?.projectFileUrl;
             if (!urlDef) {
-                throw "Can't load EEZ-PROJECT file: no URL specified";
+                throw t("Can't load EEZ-PROJECT file: no URL specified");
             }
 
             if (typeof urlDef == "string") {
@@ -1111,7 +1112,7 @@ export class WizardModel {
             req.addEventListener("load", async () => {
                 if (req.readyState == 4) {
                     if (req.status != 200 || !req.response) {
-                        reject("Download failed!");
+                        reject(t("Download failed!"));
                         return;
                     }
                     try {
@@ -1123,7 +1124,7 @@ export class WizardModel {
             });
 
             req.addEventListener("error", error => {
-                reject("Network error");
+                reject(t("Network error"));
             });
 
             req.send();
@@ -1159,12 +1160,12 @@ export class WizardModel {
     validateName() {
         const name = this.name?.trim();
         if (!name) {
-            this.nameError = "This field is required.";
+            this.nameError = t("This field is required.");
             return;
         }
 
         if (!name.match(/[a-zA-Z_\-][a-zA-Z_\-0-9]*/)) {
-            this.nameError = "Invalid project name";
+            this.nameError = t("Invalid project name");
         }
 
         this.nameError = undefined;
@@ -1174,7 +1175,7 @@ export class WizardModel {
     validateLocation() {
         const location = this.location?.trim();
         if (!location) {
-            this.locationError = "This field is required.";
+            this.locationError = t("This field is required.");
             return;
         }
 
@@ -1192,7 +1193,7 @@ export class WizardModel {
                 this.section == "templates"
             ) {
                 this.locationError =
-                    "Project with the same name already exists at this location.";
+                    t("Project with the same name already exists at this location.");
                 return;
             }
         }
@@ -1211,12 +1212,12 @@ export class WizardModel {
 
         const bb3ProjectFile = this.bb3ProjectFile?.trim();
         if (!bb3ProjectFile) {
-            this.bb3ProjectFileError = "This field is required.";
+            this.bb3ProjectFileError = t("This field is required.");
             return;
         }
 
         if (!fs.existsSync(bb3ProjectFile)) {
-            this.bb3ProjectFileError = "File does not exists.";
+            this.bb3ProjectFileError = t("File does not exists.");
             return;
         }
 
@@ -1236,7 +1237,7 @@ export class WizardModel {
             req.addEventListener("load", async () => {
                 if (req.readyState == 4) {
                     if (req.status != 200 || !req.response) {
-                        reject("Download failed!");
+                        reject(t("Download failed!"));
                         return;
                     }
                     try {
@@ -1256,7 +1257,7 @@ export class WizardModel {
             });
 
             req.addEventListener("error", error => {
-                reject("Network error");
+                reject(t("Network error"));
             });
 
             req.send();
@@ -1345,7 +1346,7 @@ export class WizardModel {
                     const { simpleGit } = await import("simple-git");
 
                     runInAction(
-                        () => (this.progress = "Cloning repository ...")
+                        () => (this.progress = t("Cloning repository ..."))
                     );
 
                     const onGitProgress = ({
@@ -1444,7 +1445,7 @@ export class WizardModel {
                         this.gitInit &&
                         !this.isSelectedExampleWithGitRepository
                     ) {
-                        runInAction(() => (this.progress = "Git init ..."));
+                        runInAction(() => (this.progress = t("Git init ...")));
                         if (manifestJson["submodules"] != undefined) {
                             const submodules: {
                                 name: string;
@@ -2078,7 +2079,7 @@ const ProjectTypeComponent = observer(
                                             event.preventDefault();
                                             openLink(projectType.repository!);
                                         }}
-                                        title="Project Git Repository"
+                                        title={t("Project Git Repository")}
                                     >
                                         INFO
                                     </a>
@@ -2264,7 +2265,7 @@ const ProjectProperties = observer(
                                             className="form-label"
                                             htmlFor="new-project-wizard-lvgl-version"
                                         >
-                                            LVGL version
+                                            {t("LVGL version")}
                                         </label>
                                         <select
                                             id="new-project-wizard-lvgl-version"
@@ -2375,8 +2376,8 @@ const ProjectProperties = observer(
                                     {wizardModel.selectedTemplateProject ||
                                     (wizardModel.isSelectedExampleWithGitRepository &&
                                         wizardModel.gitClone)
-                                        ? "Project folder path"
-                                        : "Project file path"}
+                                        ? t("Project folder path")
+                                        : t("Project file path")}
                                 </label>
                                 <div
                                     id="new-project-wizard-project-path-static"
@@ -2571,8 +2572,8 @@ const ProjectProperties = observer(
                                     <>
                                         <ButtonAction
                                             className="btn-primary"
-                                            text="Edit Project"
-                                            title="Edit Project"
+                                            text={t("Edit Project")}
+                                            title={t("Edit Project")}
                                             icon="material:edit"
                                             onClick={this.onCreateProject}
                                             enabled={
@@ -2583,8 +2584,8 @@ const ProjectProperties = observer(
                                             ?.projectType != "IEXT" && (
                                             <ButtonAction
                                                 className="btn-secondary"
-                                                text="Run Project"
-                                                title="Run Project"
+                                                text={t("Run Project")}
+                                                title={t("Run Project")}
                                                 icon="material:play_arrow"
                                                 onClick={this.onRunProject}
                                                 enabled={
@@ -2736,7 +2737,7 @@ export function showNewProjectWizard() {
         {
             jsPanel: {
                 id: "new-project-wizard",
-                title: "New Project",
+                title: t("New Project"),
                 width: 1280,
                 height: 800
             }
@@ -2814,8 +2815,8 @@ class FileBrowserInput extends React.Component<{
         const result = await dialog.showOpenDialog(getCurrentWindow(), {
             properties: ["openFile"],
             filters: [
-                { name: "EEZ Project", extensions: ["eez-project"] },
-                { name: "All Files", extensions: ["*"] }
+                { name: t("EEZ Project"), extensions: ["eez-project"] },
+                { name: t("All Files"), extensions: ["*"] }
             ]
         });
 
@@ -2855,10 +2856,10 @@ function openLink(url: string) {
 
 export async function confirmOverwrite(description: string) {
     const yesButton = {
-        label: "Yes",
+        label: t("Yes"),
         result: true
     };
-    const noButton = { label: "No", result: false };
+    const noButton = { label: t("No"), result: false };
 
     const os = require("os");
 
@@ -2874,7 +2875,7 @@ export async function confirmOverwrite(description: string) {
     let opts: Electron.MessageBoxOptions = {
         type: "warning",
         title: "EEZ Studio",
-        message: "Overwite?",
+        message: t("Overwite?"),
         detail: description,
         noLink: true,
         buttons: buttons.map(b => b.label),

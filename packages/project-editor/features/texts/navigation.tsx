@@ -10,6 +10,7 @@ import { ListNavigation } from "project-editor/ui-components/ListNavigation";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { TextAction } from "eez-studio-ui/action";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
+import { t } from "eez-studio-shared/i18n";
 
 import { ProjectContext } from "project-editor/project/context";
 import {
@@ -160,7 +161,7 @@ export const TextsTab = observer(
                                 }
 
                                 await writeTextFile(filePath, res);
-                                notification.info("File saved!");
+                                notification.info(t("File saved!"));
                             } catch (err: any) {
                                 notification.error(err.toString());
                             }
