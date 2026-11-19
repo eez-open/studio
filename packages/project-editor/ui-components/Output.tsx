@@ -5,6 +5,7 @@ import { Menu, MenuItem } from "@electron/remote";
 import { Icon } from "eez-studio-ui/icon";
 
 import { humanize } from "eez-studio-shared/string";
+import { t } from "eez-studio-shared/i18n";
 
 import {
     IPanel,
@@ -236,7 +237,7 @@ export const Messages = observer(
             if (clickedMessage) {
                 menu.append(
                     new MenuItem({
-                        label: "Copy",
+                        label: t("Copy"),
                         click: () => {
                             copyToClipboard(collectMessagesText(this.props.section.messages.messages, clickedMessage));
 
@@ -247,7 +248,7 @@ export const Messages = observer(
 
             menu.append(
                 new MenuItem({
-                    label: "Copy All",
+                    label: t("Copy All"),
                     click: () => {
                         copyToClipboard(collectMessagesText(this.props.section.messages.messages));
                     }

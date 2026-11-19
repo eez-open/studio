@@ -598,7 +598,7 @@ export class TreeObjectAdapter {
         ) {
             menuItems.push(
                 new MenuItem({
-                    label: `Add ${getAddItemName(parentObject)}...`,
+                    label: t(`Add ${getAddItemName(parentObject)}...`),
                     click: async () => {
                         const aNewObject = await addItem(parentObject!);
                         if (aNewObject) {
@@ -790,7 +790,7 @@ export class TreeObjectAdapter {
                 }
                 menuItems.unshift(
                     new MenuItem({
-                        label: "Edit Properties...",
+                        label: t("Edit Properties..."),
                         click: () => {
                             ProjectEditor.showPropertiesDialog(
                                 getProjectStore(propertiesObjects[0]),

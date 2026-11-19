@@ -1,4 +1,5 @@
 import { humanize } from "eez-studio-shared/string";
+import { t } from "eez-studio-shared/i18n";
 import * as notification from "eez-studio-ui/notification";
 
 import {
@@ -759,17 +760,17 @@ export function getAddItemName(object: IEezObject) {
 
     const project = getProject(parent);
     if (parent == project.userWidgets) {
-        return "User Widget";
+        return t("User Widget");
     }
     if (parent == project.actions) {
-        return "User Action";
+        return t("User Action");
     }
     if (getParent(parent) == project.lvglStyles || getParent(parent) instanceof ProjectEditor.LVGLStyleClass) {
-        return "Style";
+        return t("Style");
     }
 
     if (getParent(parent) == project.lvglGroups) {
-        return "Group";
+        return t("Group");
     }
 
     return humanize(getClass(parent).name);

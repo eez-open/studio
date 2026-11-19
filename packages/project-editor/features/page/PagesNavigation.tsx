@@ -341,8 +341,8 @@ export const PageStructure = observer(
                             icon={widget.locked ? LOCK_ICON : UNLOCK_ICON}
                             title={
                                 widget.locked
-                                    ? "Unlock this widget"
-                                    : "Lock this widget"
+                                    ? t("Unlock this widget")
+                                    : t("Lock this widget")
                             }
                             iconSize={14}
                             onClick={action(() =>
@@ -360,7 +360,7 @@ export const PageStructure = observer(
                                     ? EYE_CLOSE_ICON
                                     : EYE_OPEN_ICON
                             }
-                            title={widget.hiddenInEditor ? "Show" : "Hide"}
+                            title={widget.hiddenInEditor ? t("Show") : t("Hide")}
                             iconSize={14}
                             onClick={action(() => {
                                 const hiddenInEditor = !widget.hiddenInEditor;

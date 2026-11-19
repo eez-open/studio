@@ -32,6 +32,10 @@ export class FlexLayoutContainer extends React.Component<{
     ) => void;
     font?: IFontValues;
 }> {
+    // flexlayout-react's own UI strings (close/maximize/popout tooltips and the
+    // tab context menu) go through this mapper so they follow the UI language.
+    i18nMapper = (id: FlexLayout.I18nLabel, param?: string) => t(id);
+
     onRenderTab = (
         node: FlexLayout.TabNode,
         renderValues: FlexLayout.ITabRenderValues
@@ -60,6 +64,7 @@ export class FlexLayoutContainer extends React.Component<{
                 onAuxMouseClick={this.props.onAuxMouseClick}
                 onContextMenu={this.props.onContextMenu}
                 onModelChange={this.props.onModelChange}
+                i18nMapper={this.i18nMapper}
             />
         );
 

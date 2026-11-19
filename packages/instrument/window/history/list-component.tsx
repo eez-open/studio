@@ -15,6 +15,7 @@ import type {
 import type { IHistoryItem } from "instrument/window/history/item";
 import { historySessions, SESSION_FREE_ID } from "./session/store";
 import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
+import { t } from "eez-studio-shared/i18n";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -289,7 +290,7 @@ export const HistoryItems = observer(
                             if (this.props.isDeletedItemsHistory) {
                                 menu.append(
                                     new MenuItem({
-                                        label: "Restore",
+                                        label: t("Restore"),
                                         click: () => {
                                             this.props.appStore.deletedItemsHistory.restoreSelectedHistoryItems();
                                         }
@@ -297,7 +298,7 @@ export const HistoryItems = observer(
                                 );
                                 menu.append(
                                     new MenuItem({
-                                        label: "Purge",
+                                        label: t("Purge"),
                                         click: () => {
                                             this.props.appStore.deletedItemsHistory.deleteSelectedHistoryItems();
                                         }
@@ -320,7 +321,7 @@ export const HistoryItems = observer(
                                 ) {
                                     menu.append(
                                         new MenuItem({
-                                            label: "Show in History",
+                                            label: t("Show in History"),
                                             click: this.props.showInHistory
                                         })
                                     );
@@ -328,7 +329,7 @@ export const HistoryItems = observer(
 
                                 menu.append(
                                     new MenuItem({
-                                        label: "Delete",
+                                        label: t("Delete"),
                                         click: () => {
                                             this.props.deleteSelectedHistoryItems();
                                         }

@@ -11,6 +11,7 @@ import { Icon } from "eez-studio-ui/icon";
 import { Loader } from "eez-studio-ui/loader";
 import { Button } from "eez-studio-ui/button";
 import { IExtension } from "eez-studio-shared/extensions/extension";
+import { t } from "eez-studio-shared/i18n";
 import * as notification from "eez-studio-ui/notification";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 
@@ -386,7 +387,8 @@ const Content = observer(
                 );
 
                 renderValues.content =
-                    section.name + (numMessages > 0 ? ` (${numMessages})` : "");
+                    t(section.name) +
+                    (numMessages > 0 ? ` (${numMessages})` : "");
             } else if (
                 node.getId() == LayoutModels.SEARCH_TAB_ID ||
                 node.getId() == LayoutModels.REFERENCES_TAB_ID
@@ -402,7 +404,7 @@ const Content = observer(
                 ) : null;
 
                 renderValues.content =
-                    section.name +
+                    t(section.name) +
                     (section.messages.searchResults.length > 0
                         ? ` (${section.messages.searchResults.length})`
                         : "");
@@ -473,7 +475,7 @@ const Content = observer(
                     const menu = new Menu();
                     menu.append(
                         new MenuItem({
-                            label: "Keep Tab Open",
+                            label: t("Keep Tab Open"),
                             click: () => {
                                 runInAction(() => (editor.permanent = true));
 
