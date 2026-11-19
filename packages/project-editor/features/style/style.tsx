@@ -73,6 +73,7 @@ import {
 import { checkExpression } from "project-editor/flow/expression";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ColorFormat } from "./color-format";
+import { StyleSectionUI, STYLE_SECTIONS } from "./StyleSectionsUI";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -615,6 +616,7 @@ export const conditionalStylesProperty: PropertyInfo = {
 
 const fontProperty: PropertyInfo = {
     name: "font",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "fonts",
     defaultValue: undefined,
@@ -716,6 +718,7 @@ const fontStyleProperty: PropertyInfo = {
 
 const alignHorizontalProperty: PropertyInfo = {
     name: "alignHorizontal",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Enum,
     enumItems: [
         {
@@ -734,6 +737,7 @@ const alignHorizontalProperty: PropertyInfo = {
 
 const alignVerticalProperty: PropertyInfo = {
     name: "alignVertical",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Enum,
     enumItems: [
         {
@@ -776,6 +780,7 @@ const directionProperty: PropertyInfo = {
 
 const colorProperty: PropertyInfo = {
     name: "color",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
     defaultValue: "#ffffff",
@@ -786,6 +791,7 @@ const colorProperty: PropertyInfo = {
 
 const backgroundColorProperty: PropertyInfo = {
     name: "backgroundColor",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
     defaultValue: "#000000",
@@ -796,6 +802,7 @@ const backgroundColorProperty: PropertyInfo = {
 
 const backgroundImageProperty: PropertyInfo = {
     name: "backgroundImage",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "bitmaps",
     inheritable: true,
@@ -850,6 +857,7 @@ const focusBackgroundColorProperty: PropertyInfo = {
 
 const borderSizeProperty: PropertyInfo = {
     name: "borderSize",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.String,
     defaultValue: "0",
     inheritable: true,
@@ -859,6 +867,7 @@ const borderSizeProperty: PropertyInfo = {
 
 const borderRadiusProperty: PropertyInfo = {
     name: "borderRadius",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.String,
     defaultValue: "0",
     inheritable: true,
@@ -868,6 +877,7 @@ const borderRadiusProperty: PropertyInfo = {
 
 const borderColorProperty: PropertyInfo = {
     name: "borderColor",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
     defaultValue: "#000000",
@@ -920,6 +930,7 @@ const borderStyleProperty: PropertyInfo = {
 
 const paddingProperty: PropertyInfo = {
     name: "padding",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.String,
     defaultValue: "0",
     cssAttributeName: "padding",
@@ -929,6 +940,7 @@ const paddingProperty: PropertyInfo = {
 
 const opacityProperty: PropertyInfo = {
     name: "opacity",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Number,
     defaultValue: "255",
     cssAttributeName: "opacity",
@@ -948,6 +960,7 @@ const boxShadowProperty: PropertyInfo = {
 
 const blinkProperty: PropertyInfo = {
     name: "blink",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: true,
@@ -965,6 +978,24 @@ function isNotEezGuiStyle(object: IEezObject) {
 function isNotOldStateColorStyle(object: IEezObject) {
     return isEezGuiProject(object);
 }
+
+// In EEZ-GUI projects the properties of a style are shown in the sections
+// (STYLE_SECTIONS), not each in its own property grid row.
+function isInStyleSection(object: IEezObject) {
+    return isEezGuiProject(object);
+}
+
+const styleSectionProperties: PropertyInfo[] = Object.keys(STYLE_SECTIONS).map(
+    name => ({
+        name,
+        type: PropertyType.Any,
+        computed: true,
+        skipSearch: true,
+        propertyGridRowComponent: StyleSectionUI,
+        hideInPropertyGrid: isNotEezGuiStyle,
+        hideInDocumentation: "all"
+    })
+);
 
 // the states of a widget with their own style, in the order of
 // Style::stateStyles in the framework (StyleState)
@@ -1007,6 +1038,7 @@ const variantProperty: PropertyInfo = {
 
 const letterSpacingProperty: PropertyInfo = {
     name: "letterSpacing",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Letter spacing",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1016,6 +1048,7 @@ const letterSpacingProperty: PropertyInfo = {
 
 const lineHeightProperty: PropertyInfo = {
     name: "lineHeight",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Line height",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1025,6 +1058,7 @@ const lineHeightProperty: PropertyInfo = {
 
 const ellipsisProperty: PropertyInfo = {
     name: "ellipsis",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: true,
@@ -1034,6 +1068,7 @@ const ellipsisProperty: PropertyInfo = {
 
 const focusRingWidthProperty: PropertyInfo = {
     name: "focusRingWidth",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Focus ring width",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1043,6 +1078,7 @@ const focusRingWidthProperty: PropertyInfo = {
 
 const focusRingOffsetProperty: PropertyInfo = {
     name: "focusRingOffset",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Focus ring offset",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1052,6 +1088,7 @@ const focusRingOffsetProperty: PropertyInfo = {
 
 const focusRingColorProperty: PropertyInfo = {
     name: "focusRingColor",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Focus ring color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
@@ -1063,6 +1100,7 @@ const focusRingColorProperty: PropertyInfo = {
 
 const shadowOffsetXProperty: PropertyInfo = {
     name: "shadowOffsetX",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow offset X",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1072,6 +1110,7 @@ const shadowOffsetXProperty: PropertyInfo = {
 
 const shadowOffsetYProperty: PropertyInfo = {
     name: "shadowOffsetY",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow offset Y",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1081,6 +1120,7 @@ const shadowOffsetYProperty: PropertyInfo = {
 
 const shadowBlurProperty: PropertyInfo = {
     name: "shadowBlur",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow blur",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1090,6 +1130,7 @@ const shadowBlurProperty: PropertyInfo = {
 
 const shadowSpreadProperty: PropertyInfo = {
     name: "shadowSpread",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow spread",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1099,6 +1140,7 @@ const shadowSpreadProperty: PropertyInfo = {
 
 const shadowColorProperty: PropertyInfo = {
     name: "shadowColor",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
@@ -1188,6 +1230,7 @@ const properties = [
     stateProperty,
     variantProperty,
     useStyleProperty,
+    ...styleSectionProperties,
     conditionalStylesProperty,
     fontProperty,
     fontFamilyProperty,

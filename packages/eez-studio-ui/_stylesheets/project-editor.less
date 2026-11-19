@@ -3196,6 +3196,100 @@
     }
 }
 
+// the sections of the style properties in EEZ-GUI projects (StyleSectionsUI)
+.EezStudio_StyleSection {
+    width: 100%;
+    margin-top: 6px;
+
+    .EezStudio_StyleSection_Title {
+        font-size: 80%;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        opacity: 0.6;
+        border-bottom: 1px solid @borderColor;
+        padding-bottom: 2px;
+        margin-bottom: 4px;
+    }
+
+    .EezStudio_StyleSection_Row {
+        margin-bottom: 2px;
+    }
+
+    .EezStudio_StyleSection_RowLine {
+        display: flex;
+        align-items: center;
+    }
+
+    // as the property names of the property grid rows
+    .EezStudio_StyleSection_RowLabel {
+        width: 33%;
+        flex-shrink: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .EezStudio_StyleSection_Fields {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .EezStudio_StyleSection_Field {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        &.inError {
+            background-color: @inErrorBackgroundColor;
+        }
+    }
+
+    .EezStudio_StyleSection_FieldLabel {
+        white-space: nowrap;
+        opacity: 0.66;
+    }
+
+    .EezStudio_StyleSection_FieldValue {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .EezStudio_StyleSection_AlignButtons > .btn,
+    .EezStudio_StyleSection_SidesToggle {
+        padding: 2px 5px;
+        line-height: 0;
+    }
+
+    .EezStudio_StyleSection_SidesToggle {
+        flex-shrink: 0;
+    }
+
+    // the value of each side (or corner), under the value of all the sides
+    .EezStudio_StyleSection_Sides {
+        margin: 2px 0 4px 33%;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 2px 8px;
+
+        &.colors {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    .EezStudio_StyleSection_Side {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+    }
+}
+
 .EezStudio_LVGProperty {
     width: 100%;
     display: flex;

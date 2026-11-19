@@ -197,6 +197,11 @@ export interface PropertyInfo {
     hideInPropertyGrid?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
+    // The property has no row of its own in the property grid because the row
+    // component of another property shows it (e.g. the sections of a style).
+    // Unlike hideInPropertyGrid it is still a shown property: its
+    // modifications and its errors count.
+    shownInOtherPropertyGridRow?: (object: IEezObject) => boolean;
     readOnlyInPropertyGrid?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
