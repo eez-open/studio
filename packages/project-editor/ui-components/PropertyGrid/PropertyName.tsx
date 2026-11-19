@@ -3,6 +3,7 @@ import { observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { Icon } from "eez-studio-ui/icon";
+import { t } from "eez-studio-shared/i18n";
 
 import {
     PropertyProps,
@@ -37,10 +38,10 @@ export const PropertyName = observer(
         render() {
             const { objects, propertyInfo } = this.props;
 
-            let propertyName = getObjectPropertyDisplayName(
-                objects[0],
-                propertyInfo
+            let propertyName = t(
+                getObjectPropertyDisplayName(objects[0], propertyInfo)
             );
+            
 
             if (propertyInfo.propertyGridCollapsable) {
                 const enabled =

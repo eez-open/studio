@@ -11,6 +11,7 @@ import { observer } from "mobx-react";
 import { map } from "lodash-es";
 
 import { humanize } from "eez-studio-shared/string";
+import { t } from "eez-studio-shared/i18n";
 import { UNITS } from "eez-studio-shared/units";
 import { guid } from "eez-studio-shared/guid";
 
@@ -474,10 +475,11 @@ export const GenericDialog = observer(
                             );
                         })
                         .map(fieldProperties => {
-                            const name =
+                            const name = t(
                                 fieldProperties.displayName != undefined
                                     ? fieldProperties.displayName
-                                    : humanize(fieldProperties.name);
+                                    : humanize(fieldProperties.name)
+                            );
                             const value =
                                 this.fieldValues[fieldProperties.name] ?? "";
                             const onChange = this.onChange.bind(
@@ -529,8 +531,8 @@ export const GenericDialog = observer(
                                         >
                                             {typeof enumItem === "string" ||
                                             typeof enumItem === "number"
-                                                ? humanize(enumItem)
-                                                : enumItem.label}
+                                                ? t(humanize(enumItem))
+                                                : t(enumItem.label)}
                                         </Radio>
                                     );
                                 });
@@ -590,8 +592,8 @@ export const GenericDialog = observer(
                                         <option key={id} value={id}>
                                             {typeof enumItem === "string" ||
                                             typeof enumItem === "number"
-                                                ? humanize(enumItem)
-                                                : enumItem.label}
+                                                ? t(humanize(enumItem))
+                                                : t(enumItem.label)}
                                         </option>
                                     );
                                 });
@@ -668,7 +670,9 @@ export const GenericDialog = observer(
                                             <td />
                                             <td>
                                                 <div className="form-text">
-                                                    {fieldProperties.formText}
+                                                    {t(
+                                                        fieldProperties.formText
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -687,7 +691,7 @@ export const GenericDialog = observer(
                         key={fieldGroup.name}
                         className="EezStudio_PropertyList_Fieldset"
                     >
-                        <div className="EezStudio_PropertyList_Legend">{fieldGroup.name}</div>
+                        <div className="EezStudio_PropertyList_Legend">{t(fieldGroup.name)}</div>
                         {propertyList}
                     </div>
                 );
@@ -716,7 +720,11 @@ export const GenericDialog = observer(
                     <Dialog
                         modal={this.modal}
                         backdrop={this.props.backdrop}
-                        title={this.props.dialogDefinition.title}
+                        title={
+                            this.props.dialogDefinition.title
+                                ? t(this.props.dialogDefinition.title)
+                                : this.props.dialogDefinition.title
+                        }
                         size={this.props.dialogDefinition.size}
                         okButtonText={this.props.okButtonText}
                         cancelButtonText={this.props.cancelButtonText}
@@ -766,7 +774,7 @@ export const GenericDialog = observer(
                                             }}
                                             style={{ marginLeft: 20 }}
                                         >
-                                            Abort
+                                            {t("Abort")}
                                         </button>
                                     </>
                                 )}

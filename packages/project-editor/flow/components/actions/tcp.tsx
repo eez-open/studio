@@ -3,6 +3,7 @@ import { makeObservable, observable, runInAction } from "mobx";
 import * as net from "net";
 
 import * as notification from "eez-studio-ui/notification";
+import { t } from "eez-studio-shared/i18n";
 
 import {
     ActionComponent,
@@ -372,7 +373,7 @@ class EventHandler extends EezObject {
             );
 
             if (eventEnumItems.length == 0) {
-                notification.info("All event handlers are already defined");
+                notification.info(t("All event handlers are already defined"));
                 return;
             }
 

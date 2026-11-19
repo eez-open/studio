@@ -3,6 +3,7 @@ import path from "path";
 import { marked } from "marked";
 
 import { sourceRootDir } from "eez-studio-shared/util";
+import { t } from "eez-studio-shared/i18n";
 
 import * as notification from "eez-studio-ui/notification";
 
@@ -733,7 +734,7 @@ async function generateODTFile(
 }
 
 export async function generateODTFilesForAllComponents() {
-    const progressToastId = notification.info("Start...", {
+    const progressToastId = notification.info(t("Start..."), {
         autoClose: false
     });
 
@@ -798,7 +799,7 @@ export async function generateODTFilesForAllComponents() {
     }
 
     notification.update(progressToastId, {
-        render: "Done.",
+        render: t("Done."),
         type: notification.SUCCESS,
         autoClose: 3000
     });

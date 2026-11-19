@@ -13,6 +13,7 @@ import { ProjectContext } from "project-editor/project/context";
 import type { IEezObject } from "./object";
 
 import { isArray } from "eez-studio-shared/util";
+import { t } from "eez-studio-shared/i18n";
 
 export async function confirm(
     message: string,
@@ -21,11 +22,11 @@ export async function confirm(
 ) {
     const result = await dialog.showMessageBox(getCurrentWindow(), {
         type: "question",
-        title: "Project Editor - EEZ Studio",
-        message: message,
-        detail: detail,
+        title: t("Project Editor - EEZ Studio"),
+        message: t(message),
+        detail: detail != undefined ? t(detail) : undefined,
         noLink: true,
-        buttons: ["Yes", "No"],
+        buttons: [t("Yes"), t("No")],
         cancelId: 1
     });
     const buttonIndex = result.response;
@@ -37,11 +38,11 @@ export async function confirm(
 export function info(message: string, detail?: string) {
     return dialog.showMessageBox(getCurrentWindow(), {
         type: "info",
-        title: "Project Editor - EEZ Studio",
-        message: message,
-        detail: detail,
+        title: t("Project Editor - EEZ Studio"),
+        message: t(message),
+        detail: detail != undefined ? t(detail) : undefined,
         noLink: true,
-        buttons: ["OK"],
+        buttons: [t("OK")],
         cancelId: 1
     });
 }

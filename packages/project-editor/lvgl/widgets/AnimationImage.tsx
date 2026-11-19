@@ -1,6 +1,8 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
 
+import { t } from "eez-studio-shared/i18n";
+
 import {
     ClassInfo,
     EezObject,
@@ -44,7 +46,7 @@ class LVGLAnimationImage extends EezObject {
             collapsed
                 ? animationImage.image
                     ? animationImage.image
-                    : "Image not set"
+                    : t("Image not set")
                 : "",
 
         defaultValue: {},

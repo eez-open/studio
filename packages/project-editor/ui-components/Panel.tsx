@@ -1,6 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
 
+import { t } from "eez-studio-shared/i18n";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export const Panel = observer(
@@ -18,7 +20,7 @@ export const Panel = observer(
             if (typeof this.props.title == "string") {
                 title = (
                     <span className="EezStudio_ProjectEditorPanelTitleText">
-                        {this.props.title}
+                        {t(this.props.title)}
                     </span>
                 );
             } else {

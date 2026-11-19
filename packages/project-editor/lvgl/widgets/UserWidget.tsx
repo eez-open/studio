@@ -2,6 +2,8 @@ import React from "react";
 import { observer } from "mobx-react";
 import { observable, makeObservable, computed } from "mobx";
 
+import { t } from "eez-studio-shared/i18n";
+
 import {
     IMessage,
     MessageType,
@@ -84,7 +86,7 @@ const LVGLUserWidgetWidgetPropertyGridUI = observer(
                         size="small"
                         onClick={this.showUserWidgetPage}
                     >
-                        Show User Widget
+                        {t("Show User Widget")}
                     </Button>
                     <Button
                         color="secondary"
@@ -92,7 +94,7 @@ const LVGLUserWidgetWidgetPropertyGridUI = observer(
                         onClick={this.fitSize}
                         style={{ marginLeft: 10 }}
                     >
-                        Fit to User Widget Size
+                        {t("Fit to User Widget Size")}
                     </Button>
                 </div>
             );

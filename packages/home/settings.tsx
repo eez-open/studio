@@ -3,7 +3,7 @@ import { ipcRenderer, shell, clipboard } from "electron";
 import { dialog, getCurrentWindow } from "@electron/remote";
 import { confirm } from "eez-studio-ui/dialog-electron";
 import path from "path";
-import { UI_LANGUAGES, getUiLanguage, setUiLanguage } from "eez-studio-shared/i18n";
+import { UI_LANGUAGES, getUiLanguage, setUiLanguage, t } from "eez-studio-shared/i18n";
 import React from "react";
 import {
     observable,
@@ -950,7 +950,7 @@ const PythonSettings = observer(
                     <td>
                         <PropertyList>
                             <StaticProperty
-                                name="Default path"
+                                name={t("Default path")}
                                 value={
                                     this.pythonPathError
                                         ? "Python not found"
@@ -970,7 +970,7 @@ const PythonSettings = observer(
                             />
                             {settingsController.pythonUseCustomPath && (
                                 <AbsoluteFileInputProperty
-                                    name="Custom Python path"
+                                    name={t("Custom Python path")}
                                     value={settingsController.pythonCustomPath}
                                     onChange={action(value => {
                                         settingsController.pythonCustomPath =
@@ -1051,7 +1051,7 @@ const TemplateSettings = observer(
                             {settingsController.useLocalTemplates && (
                                 <>
                                     <AbsoluteDirectoryInputProperty
-                                        name="Local templates path"
+                                        name={t("Local templates path")}
                                         value={
                                             settingsController.localTemplatesPath
                                         }
@@ -1108,12 +1108,12 @@ export const Settings = observer(
             return (
                 <div className="EezStudio_HomeSettingsBody">
                     <PropertyList>
-                        <SettingsSectionHeader title="Databases" />
+                        <SettingsSectionHeader title={t("Databases")} />
                         <Databases />
 
-                        <SettingsSectionHeader title="Localization" />
+                        <SettingsSectionHeader title={t("Localization")} />
                         <SelectProperty
-                            name="Language"
+                            name={t("Language")}
                             value={settingsController.uiLanguage}
                             onChange={settingsController.onUiLanguageChange}
                         >
@@ -1124,7 +1124,7 @@ export const Settings = observer(
                             ))}
                         </SelectProperty>
                         <SelectProperty
-                            name="Locale"
+                            name={t("Locale")}
                             value={settingsController.locale}
                             onChange={settingsController.onLocaleChange}
                         >
@@ -1143,7 +1143,7 @@ export const Settings = observer(
                                 ))}
                         </SelectProperty>
                         <SelectProperty
-                            name="Date format"
+                            name={t("Date format")}
                             value={settingsController.dateFormat}
                             onChange={settingsController.onDateFormatChanged}
                         >
@@ -1157,7 +1157,7 @@ export const Settings = observer(
                             ))}
                         </SelectProperty>
                         <SelectProperty
-                            name="Time format"
+                            name={t("Time format")}
                             value={settingsController.timeFormat}
                             onChange={settingsController.onTimeFormatChanged}
                         >
@@ -1171,33 +1171,33 @@ export const Settings = observer(
                             ))}
                         </SelectProperty>
 
-                        <SettingsSectionHeader title="External Tools" />
+                        <SettingsSectionHeader title={t("External Tools")} />
                         <PythonSettings />
 
-                        <SettingsSectionHeader title="Project Editor" />
+                        <SettingsSectionHeader title={t("Project Editor")} />
                         <SelectProperty
-                            name="Project editor layout"
+                            name={t("Project editor layout")}
                             value={settingsController.projectEditorLayout}
                             onChange={settingsController.setProjectEditorLayout}
                         >
-                            <option value="classic">Classic</option>
+                            <option value="classic">{t("Classic")}</option>
                             <option value="project-explorer">
-                                Project Explorer
+                                {t("Project Explorer")}
                             </option>
                         </SelectProperty>
                         <SelectProperty
-                            name="Properties editor"
+                            name={t("Properties editor")}
                             value={settingsController.propertiesEditor}
                             onChange={settingsController.setPropertiesEditor}
                         >
                             <option value="panel">
-                                Panel (tab on the right side)
+                                {t("Panel (tab on the right side)")}
                             </option>
-                            <option value="dialog">Popup dialog</option>
+                            <option value="dialog">{t("Popup dialog")}</option>
                         </SelectProperty>
                         <TemplateSettings />
 
-                        <SettingsSectionHeader title="Appearance" />
+                        <SettingsSectionHeader title={t("Appearance")} />
                         <BooleanProperty
                             name={`Dark theme`}
                             value={settingsController.isDarkTheme}

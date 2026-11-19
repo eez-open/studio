@@ -11,6 +11,7 @@ import {
 import { ProjectContext } from "project-editor/project/context";
 import { CodeEditor } from "eez-studio-ui/code-editor";
 import * as notification from "eez-studio-ui/notification";
+import { t } from "eez-studio-shared/i18n";
 import { updateObject } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { showSelectInstrumentDialog } from "project-editor/flow/components/actions/instrument";
@@ -76,13 +77,13 @@ export class MicroPython extends EezObject {
 
         const parts = await partsPromise;
         if (!parts) {
-            notification.error("Build error...", {
+            notification.error(t("Build error..."), {
                 autoClose: false
             });
             return;
         }
 
-        const toastId = notification.info("Uploading ...", {
+        const toastId = notification.info(t("Uploading ..."), {
             autoClose: false
         });
 

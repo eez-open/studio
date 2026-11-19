@@ -4,6 +4,7 @@ import { action, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { closest } from "eez-studio-shared/dom";
+import { t } from "eez-studio-shared/i18n";
 
 import { EnumItem } from "project-editor/core/object";
 import { humanize } from "eez-studio-shared/string";
@@ -125,7 +126,7 @@ export const IconEnumDropdown = observer(
                     <ul>
                         {enumItems.map(item => {
                             const id = item.id.toString();
-                            const label = item.label || humanize(id);
+                            const label = t(item.label || humanize(id));
                             const isSelected =
                                 id === value?.toString();
                             const isHighlighted =
@@ -174,8 +175,12 @@ export const IconEnumDropdown = observer(
                         onClick={this.openDropdown}
                         title={
                             selectedItem
-                                ? selectedItem.label ||
-                                  humanize(selectedItem.id.toString())
+                                ? t(
+                                      selectedItem.label ||
+                                          humanize(
+                                              selectedItem.id.toString()
+                                          )
+                                  )
                                 : ""
                         }
                     >

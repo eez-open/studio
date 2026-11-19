@@ -11,6 +11,7 @@ import {
     Body
 } from "eez-studio-ui/header-with-body";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
+import { t } from "eez-studio-shared/i18n";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +58,7 @@ export class SideDockComponent2 extends React.Component<{
             <div
                 className={dockSwitcherClassName}
                 onClick={this.toggleIsOpen}
-                title={this.isOpen ? "Hide Side bar" : "Show Side bar"}
+                title={this.isOpen ? t("Hide Side bar") : t("Show Side bar")}
             />
         );
 
