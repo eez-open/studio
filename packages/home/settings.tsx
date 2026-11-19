@@ -3,6 +3,7 @@ import { ipcRenderer, shell, clipboard } from "electron";
 import { dialog, getCurrentWindow } from "@electron/remote";
 import { confirm } from "eez-studio-ui/dialog-electron";
 import path from "path";
+import { UI_LANGUAGES, getUiLanguage, setUiLanguage } from "eez-studio-shared/i18n";
 import React from "react";
 import {
     observable,
@@ -173,6 +174,7 @@ class SettingsController {
     selectedDatabase: InstrumentDatabase | undefined;
 
     locale: string = getLocale();
+    uiLanguage: string = getUiLanguage();
     dateFormat: string = getDateFormat();
     timeFormat: string = getTimeFormat();
     isDarkTheme: boolean = getIsDarkTheme();
@@ -211,12 +213,14 @@ class SettingsController {
         makeObservable(this, {
             selectedDatabase: observable,
             locale: observable,
+            uiLanguage: observable,
             dateFormat: observable,
             timeFormat: observable,
             isDarkTheme: observable,
             mru: observable,
             restartRequired: computed,
             onLocaleChange: action.bound,
+            onUiLanguageChange: action.bound,
             onDateFormatChanged: action.bound,
             onTimeFormatChanged: action.bound,
             switchTheme: action.bound,
@@ -285,6 +289,11 @@ class SettingsController {
     onLocaleChange(value: string) {
         this.locale = value;
         setLocale(value);
+    }
+
+    onUiLanguageChange(value: string) {
+        this.uiLanguage = value;
+        setUiLanguage(value);
     }
 
     onDateFormatChanged(value: string) {
@@ -1103,6 +1112,17 @@ export const Settings = observer(
                         <Databases />
 
                         <SettingsSectionHeader title="Localization" />
+                        <SelectProperty
+                            name="Language"
+                            value={settingsController.uiLanguage}
+                            onChange={settingsController.onUiLanguageChange}
+                        >
+                            {UI_LANGUAGES.map(uiLanguage => (
+                                <option key={uiLanguage.code} value={uiLanguage.code}>
+                                    {uiLanguage.name}
+                                </option>
+                            ))}
+                        </SelectProperty>
                         <SelectProperty
                             name="Locale"
                             value={settingsController.locale}

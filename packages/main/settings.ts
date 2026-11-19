@@ -53,6 +53,7 @@ class Settings {
     dbPaths: IDbPath[] = [];
 
     locale: string = "";
+    uiLanguage: string = "";
     dateFormat: string = "";
     timeFormat: string = "";
 
@@ -98,6 +99,7 @@ class Settings {
             activeDbPath: observable,
             dbPaths: observable,
             locale: observable,
+            uiLanguage: observable,
             dateFormat: observable,
             timeFormat: observable,
             isDarkTheme: observable,
@@ -125,6 +127,13 @@ class Settings {
             const mru = toJS(this.mru);
             BrowserWindow.getAllWindows().forEach(window =>
                 window.webContents.send("mru-changed", mru)
+            );
+        });
+
+        autorun(() => {
+            const uiLanguage = this.uiLanguage;
+            BrowserWindow.getAllWindows().forEach(window =>
+                window.webContents.send("uiLanguageChanged", uiLanguage)
             );
         });
 
@@ -183,6 +192,10 @@ class Settings {
 
         if (settingsJs.locale != undefined) {
             this.locale = settingsJs.locale;
+        }
+
+        if (settingsJs.uiLanguage != undefined) {
+            this.uiLanguage = settingsJs.uiLanguage;
         }
 
         if (settingsJs.dateFormat != undefined) {
@@ -439,6 +452,14 @@ export function setLocale(value: string) {
     runInAction(() => (settings.locale = value));
 }
 
+export function getUiLanguage() {
+    return settings.uiLanguage;
+}
+
+export function setUiLanguage(value: string) {
+    runInAction(() => (settings.uiLanguage = value));
+}
+
 export function getDateFormat() {
     return settings.dateFormat || DATE_FORMATS[0].format;
 }
@@ -461,6 +482,18 @@ ipcMain.on("getLocale", function (event: any) {
 
 ipcMain.on("setLocale", function (event: any, value: string) {
     setLocale(value);
+});
+
+ipcMain.on("getUiLanguage", function (event: any) {
+    event.returnValue = getUiLanguage();
+});
+
+ipcMain.on("setUiLanguage", function (event: any, value: string) {
+    setUiLanguage(value);
+});
+
+ipcMain.on("getSystemLocale", function (event: any) {
+    event.returnValue = app.getLocale();
 });
 
 ipcMain.on("getDateFormat", function (event: any) {
