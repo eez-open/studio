@@ -23,12 +23,16 @@ import {
 import { getValueType } from "project-editor/build/values";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
+    hasBB3ModuleFieldChannel,
     getBB3ModuleFieldMeasurementValue,
+    getBB3ModuleFieldTrackingRoleValue,
     getBB3ModuleFieldUnitValue
 } from "project-editor/features/variable/bb3-module-field-unit";
 import {
     SCPI_COMMAND_FLAG_QUERY,
     SCPI_COMMAND_FLAG_APPLY_ON_SYNC,
+    SCPI_COMMAND_FLAG_TRACKING_GROUP,
+    SCPI_COMMAND_FLAG_TRACKING_REFUSED,
     BB3_MODULE_FIELD_FLAG_PERSISTENT,
     BB3_MODULE_FIELD_FLAG_SAMPLED,
     SCPI_DEFAULT_TIMEOUT_MS,
@@ -285,14 +289,18 @@ export function writeBB3ModuleMetadata(
 
             // unit
             dataBuffer.writeUint16(getBB3ModuleFieldUnitValue(variable.bb3ModuleFieldUnit));
-            // measurement (BB3_MEASUREMENT_...) and its module channel
+            // measurement (BB3_MEASUREMENT_...)
             const measurement =
                 maxSampleRate > 0
                     ? getBB3ModuleFieldMeasurementValue(variable.bb3ModuleFieldMeasurement)
                     : 0;
             dataBuffer.writeUint8(measurement);
+            // channel: the module channel of a field with a measurement or
+            // a tracking role
             dataBuffer.writeUint8(
-                measurement != 0 ? variable.bb3ModuleFieldMeasurementChannel ?? 0 : 0
+                hasBB3ModuleFieldChannel(variable)
+                    ? variable.bb3ModuleFieldMeasurementChannel ?? 0
+                    : 0
             );
 
             // maxSampleRate
@@ -307,6 +315,18 @@ export function writeBB3ModuleMetadata(
                     ? variable.bb3ModuleFieldResolution
                     : 0;
             dataBuffer.writeFloat(resolution);
+
+            // trackingRole (BB3_TRACKING_ROLE_...)
+            dataBuffer.writeUint8(
+                variable.bb3ModuleField != "output"
+                    ? getBB3ModuleFieldTrackingRoleValue(
+                          variable.bb3ModuleFieldTrackingRole
+                      )
+                    : 0
+            );
+            // reserved
+            dataBuffer.writeUint8(0);
+            dataBuffer.writeUint16(0);
 
             offset += size;
         })
@@ -351,7 +371,13 @@ function writeScpiMetadata(metadata: BB3ModuleMetadata, dataBuffer: DataBuffer) 
         // flags
         dataBuffer.writeUint16(
             (command.isQuery ? SCPI_COMMAND_FLAG_QUERY : 0) |
-                (command.applyOnSync ? SCPI_COMMAND_FLAG_APPLY_ON_SYNC : 0)
+                (command.applyOnSync ? SCPI_COMMAND_FLAG_APPLY_ON_SYNC : 0) |
+                (!command.isQuery && command.tracking == "group"
+                    ? SCPI_COMMAND_FLAG_TRACKING_GROUP
+                    : 0) |
+                (!command.isQuery && command.tracking == "refused"
+                    ? SCPI_COMMAND_FLAG_TRACKING_REFUSED
+                    : 0)
         );
         // timeoutMs
         dataBuffer.writeUint16(command.timeoutMs || SCPI_DEFAULT_TIMEOUT_MS);
