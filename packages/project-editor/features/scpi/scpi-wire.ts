@@ -48,6 +48,10 @@ export const BB3_MODULE_FIELD_FLAG_PERSISTENT = 1 << 0;
 // the module streams the field samples (YT graphs, data logging), see
 // "Field sample streams" in eez-bb3plus-module-interface/docs/module_protocol.md
 export const BB3_MODULE_FIELD_FLAG_SAMPLED = 1 << 1;
+// BB3+ copies the field from the leader (or the follower) of a coupling to the
+// field with the same name in the other module of the pair
+export const BB3_MODULE_FIELD_FLAG_LINK_FROM_LEADER = 1 << 4;
+export const BB3_MODULE_FIELD_FLAG_LINK_FROM_FOLLOWER = 1 << 5;
 
 export const SCPI_ENUM_INDEX_NONE = 0xffff;
 

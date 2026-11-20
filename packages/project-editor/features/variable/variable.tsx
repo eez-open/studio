@@ -403,6 +403,11 @@ export class Variable extends EezObject {
     // ms, an output field that changes continuously (a measurement) is sent
     // to BB3+ at most this often, 0 or not set: whenever it changes
     bb3ModuleFieldUpdatePeriod: number | undefined;
+    // an input-output field that BB3+ copies, while the modules are the
+    // leader and the follower of a coupling (series, parallel), from the
+    // module with this role ("leader" or "follower") to the field with the
+    // same name in the other one (BB3_FIELD_FLAG_LINK_FROM_...)
+    bb3ModuleFieldLink: string | undefined;
 
     constructor() {
         super();
@@ -436,7 +441,8 @@ export class Variable extends EezObject {
             bb3ModuleFieldMeasurementChannel: observable,
             bb3ModuleFieldMin: observable,
             bb3ModuleFieldMax: observable,
-            bb3ModuleFieldUpdatePeriod: observable
+            bb3ModuleFieldUpdatePeriod: observable,
+            bb3ModuleFieldLink: observable
         });
     }
 
@@ -702,6 +708,19 @@ export class Variable extends EezObject {
                     !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
                     variable.bb3ModuleField == undefined ||
                     variable.bb3ModuleField == "input"
+            },
+            {
+                name: "bb3ModuleFieldLink",
+                displayName: "BB3 module field link (copied to the coupled module)",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "leader", label: "Written by the leader" },
+                    { id: "follower", label: "Written by the follower" }
+                ],
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    variable.bb3ModuleField != "input-output"
             }
         ],
         icon: VARIABLE_ICON,

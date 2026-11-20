@@ -35,6 +35,8 @@ import {
     SCPI_COMMAND_FLAG_TRACKING_REFUSED,
     BB3_MODULE_FIELD_FLAG_PERSISTENT,
     BB3_MODULE_FIELD_FLAG_SAMPLED,
+    BB3_MODULE_FIELD_FLAG_LINK_FROM_LEADER,
+    BB3_MODULE_FIELD_FLAG_LINK_FROM_FOLLOWER,
     SCPI_DEFAULT_TIMEOUT_MS,
     SCPI_PARAM_FLAG_CALIBRATION_PASSWORD,
     SCPI_PARAM_FLAG_LIST,
@@ -308,7 +310,13 @@ export function writeBB3ModuleMetadata(
             const maxSampleRate = getBB3ModuleFieldMaxSampleRate(variable);
             dataBuffer.writeUint8(
                 (variable.persistent ? BB3_MODULE_FIELD_FLAG_PERSISTENT : 0) |
-                    (maxSampleRate > 0 ? BB3_MODULE_FIELD_FLAG_SAMPLED : 0)
+                    (maxSampleRate > 0 ? BB3_MODULE_FIELD_FLAG_SAMPLED : 0) |
+                    (variable.bb3ModuleField == "input-output" && variable.bb3ModuleFieldLink == "leader"
+                        ? BB3_MODULE_FIELD_FLAG_LINK_FROM_LEADER
+                        : 0) |
+                    (variable.bb3ModuleField == "input-output" && variable.bb3ModuleFieldLink == "follower"
+                        ? BB3_MODULE_FIELD_FLAG_LINK_FROM_FOLLOWER
+                        : 0)
             );
 
             // offset
