@@ -77,6 +77,12 @@ export class BB3ModuleMetadata extends EezObject {
     // graphs (e.g. ch_yt_view_rate), BB3+ requests the sampled fields at
     // that period
     ytRateField: string | undefined;
+    // the coupling types (INSTrument:COUPle:TRACking) the module supports,
+    // BB3_COUPLING_FLAG_... in bb3-module.h
+    couplingCommonGround: boolean;
+    couplingSplitRails: boolean;
+    couplingParallel: boolean;
+    couplingSeries: boolean;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -116,6 +122,30 @@ export class BB3ModuleMetadata extends EezObject {
                     object.bb3ModuleFields
                         .filter(variable => variable.type == "float")
                         .map(variable => ({ id: variable.name }))
+            },
+            {
+                name: "couplingCommonGround",
+                displayName: "Coupling: common ground",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "couplingSplitRails",
+                displayName: "Coupling: split rails",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "couplingParallel",
+                displayName: "Coupling: parallel",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "couplingSeries",
+                displayName: "Coupling: series",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
             }
         ],
         defaultValue: {
@@ -182,7 +212,11 @@ export class BB3ModuleMetadata extends EezObject {
             moduleRevision: observable,
             firmwareVersion: observable,
             scpiMaxMessageSize: observable,
-            ytRateField: observable
+            ytRateField: observable,
+            couplingCommonGround: observable,
+            couplingSplitRails: observable,
+            couplingParallel: observable,
+            couplingSeries: observable
         });
     }
 
@@ -340,6 +374,18 @@ export function writeBB3ModuleMetadata(
 
         // ytRateField
         dataBuffer.writeStringPtr(metadata.ytRateField || "");
+
+        // couplingFlags (BB3_COUPLING_FLAG_...)
+        const BB3_COUPLING_FLAG_COMMON_GROUND = 1 << 0;
+        const BB3_COUPLING_FLAG_SPLIT_RAILS = 1 << 1;
+        const BB3_COUPLING_FLAG_PARALLEL = 1 << 2;
+        const BB3_COUPLING_FLAG_SERIES = 1 << 3;
+        dataBuffer.writeUint32(
+            (metadata.couplingCommonGround ? BB3_COUPLING_FLAG_COMMON_GROUND : 0) |
+                (metadata.couplingSplitRails ? BB3_COUPLING_FLAG_SPLIT_RAILS : 0) |
+                (metadata.couplingParallel ? BB3_COUPLING_FLAG_PARALLEL : 0) |
+                (metadata.couplingSeries ? BB3_COUPLING_FLAG_SERIES : 0)
+        );
     });
 }
 
