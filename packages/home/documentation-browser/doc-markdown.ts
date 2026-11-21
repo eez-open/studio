@@ -5,6 +5,8 @@ import { FSWatcher, watch } from "chokidar";
 
 import * as notification from "eez-studio-ui/notification";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { sourceRootDir } from "eez-studio-shared/util";
 
 import { ComponentInfo, ParentComponentInfo } from "./component-info";
@@ -426,7 +428,7 @@ async function generateMarkdownFiles(componentInfo: ComponentInfo) {
             "utf8"
         );
     } catch (e) {
-        notification.error("Error writing common markdown file");
+        notification.error(t("Error writing common markdown file"));
     }
 }
 
@@ -480,7 +482,7 @@ async function generateParentMarkdownFiles(
             "utf8"
         );
     } catch (e) {
-        notification.error("Error writing common markdown file");
+        notification.error(t("Error writing common markdown file"));
     }
 }
 
@@ -505,7 +507,7 @@ export async function generateMarkdownFilesForAllComponents() {
         await generateParentMarkdownFiles(entry[0], entry[1]);
     }
 
-    notification.info("Done.");
+    notification.info(t("Done."));
 
     setupMarkdownWatcher();
 }

@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { clipboard, nativeImage } from "electron";
 import { getCurrentWindow, dialog } from "@electron/remote";
 import React from "react";
@@ -7,6 +8,7 @@ import { makeObservable, observable, runInAction } from "mobx";
 import { pathToFileURL } from "url";
 
 import * as notification from "eez-studio-ui/notification";
+import { t } from "eez-studio-shared/i18n";
 
 import type { PropertyProps } from "project-editor/core/object";
 import { ProjectContext } from "project-editor/project/context";
@@ -74,7 +76,7 @@ export const ImageProperty = observer(
                                         )
                                     );
                                     notification.info(
-                                        "Image copied to clipboard"
+                                        t("Image copied to clipboard")
                                     );
                                 }}
                                 title="Copy image to clipboard"
@@ -111,7 +113,8 @@ export const ImageProperty = observer(
                                                     extensions: [
                                                         "png",
                                                         "jpg",
-                                                        "jpeg"
+                                                        "jpeg",
+                                                        "gif"
                                                     ]
                                                 },
                                                 {
@@ -135,6 +138,15 @@ export const ImageProperty = observer(
                                                       )
                                                 : false;
                                         if (embeddedImage) {
+                                            const ext = path
+                                                .extname(filePaths[0])
+                                                .toLowerCase();
+                                            const imageType =
+                                                ext == ".jpg" || ext == ".jpeg"
+                                                    ? "image/jpg"
+                                                    : ext == ".gif"
+                                                    ? "image/gif"
+                                                    : "image/png";
                                             fs.readFile(
                                                 this.context.getAbsoluteFilePath(
                                                     filePaths[0]
@@ -143,7 +155,7 @@ export const ImageProperty = observer(
                                                 (err: any, data: any) => {
                                                     if (!err) {
                                                         changeValue(
-                                                            "data:image/png;base64," +
+                                                            `data:${imageType};base64,` +
                                                                 data
                                                         );
                                                     }

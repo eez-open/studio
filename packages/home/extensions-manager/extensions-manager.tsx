@@ -17,6 +17,7 @@ var sha256 = require("sha256");
 
 import { compareVersions, studioVersion } from "eez-studio-shared/util";
 import { humanize } from "eez-studio-shared/string";
+import { t } from "eez-studio-shared/i18n";
 
 import {
     ExtensionType,
@@ -530,8 +531,8 @@ export const ExtensionInMasterView = observer(
                                     >
                                         <div>
                                             {this.extensionInstalled
-                                                ? "Installed"
-                                                : "Not installed"}
+                                                ? t("Installed")
+                                                : t("Not installed")}
                                         </div>
                                     </span>
                                 </h5>
@@ -653,7 +654,7 @@ export const ExtensionSections = observer(
                             href="#"
                             onClick={this.activateSection.bind(this, section)}
                         >
-                            {humanize(section)}
+                            {t(humanize(section))}
                         </a>
                     </li>
                 );
@@ -977,7 +978,7 @@ export const DetailsView = observer(
                 }
             }
 
-            const progressToastId = notification.info("Updating...", {
+            const progressToastId = notification.info(t("Updating..."), {
                 autoClose: false
             });
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -1002,7 +1003,7 @@ export const DetailsView = observer(
                 return;
             }
 
-            confirm("Are you sure?", undefined, async () => {
+            confirm(t("Are you sure?"), undefined, async () => {
                 try {
                     await uninstallExtension(extension.id);
                     notification.success(
@@ -1033,8 +1034,8 @@ export const DetailsView = observer(
 
             const result = await dialog.showSaveDialog(getCurrentWindow(), {
                 filters: [
-                    { name: "Extension files", extensions: ["zip"] },
-                    { name: "All Files", extensions: ["*"] }
+                    { name: t("Extension files"), extensions: ["zip"] },
+                    { name: t("All Files"), extensions: ["*"] }
                 ],
                 defaultPath: getValidFileNameFromFileName(
                     extension.name + ".zip"
@@ -1072,10 +1073,10 @@ export const DetailsView = observer(
                 properties: ["openFile"],
                 filters: [
                     {
-                        name: "Image files",
+                        name: t("Image files"),
                         extensions: ["png", "jpg", "jpeg"]
                     },
-                    { name: "All Files", extensions: ["*"] }
+                    { name: t("All Files"), extensions: ["*"] }
                 ]
             });
             const filePaths = result.filePaths;
@@ -1136,7 +1137,7 @@ export const DetailsView = observer(
                                         style={{ cursor: "pointer" }}
                                         onClick={this.handleChangeImage}
                                     >
-                                        Change image
+                                        {t("Change image")}
                                     </a>
                                 )}
                         </div>
@@ -1150,7 +1151,7 @@ export const DetailsView = observer(
                                         className="my-1 me-2"
                                         htmlFor="EezStudio_Extension_Details_VersionSelect"
                                     >
-                                        Versions:
+                                        {t("Versions:")}
                                     </label>
                                     <select
                                         id="EezStudio_Extension_Details_VersionSelect"
@@ -1188,40 +1189,44 @@ export const DetailsView = observer(
                             <Toolbar>
                                 {this.installEnabled && (
                                     <ButtonAction
-                                        text="Install"
-                                        title="Install extension"
+                                        text={t("Install")}
+                                        title={t("Install extension")}
                                         className="btn-success"
                                         onClick={this.handleInstall}
                                     />
                                 )}
                                 {this.updateEnabled && (
                                     <ButtonAction
-                                        text="Update"
-                                        title="Update extension to the latest version"
+                                        text={t("Update")}
+                                        title={t(
+                                            "Update extension to the latest version"
+                                        )}
                                         className="btn-success"
                                         onClick={this.handleInstall}
                                     />
                                 )}
                                 {this.replaceEnabled && (
                                     <ButtonAction
-                                        text="Replace"
-                                        title="Replace installed extension with selected version"
+                                        text={t("Replace")}
+                                        title={t(
+                                            "Replace installed extension with selected version"
+                                        )}
                                         className="btn-success"
                                         onClick={this.handleInstall}
                                     />
                                 )}
                                 {this.uninstallEnabled && (
                                     <ButtonAction
-                                        text="Uninstall"
-                                        title="Uninstall extension"
+                                        text={t("Uninstall")}
+                                        title={t("Uninstall extension")}
                                         className="btn-danger"
                                         onClick={this.handleUninstall}
                                     />
                                 )}
                                 {extension.isEditable && extension.isDirty && (
                                     <ButtonAction
-                                        text="Export"
-                                        title="Export extension"
+                                        text={t("Export")}
+                                        title={t("Export extension")}
                                         className="btn-secondary"
                                         onClick={this.handleExport}
                                     />
@@ -1254,8 +1259,8 @@ const ExtensionsManagerSubNavigation = observer(
             const result = await dialog.showOpenDialog(getCurrentWindow(), {
                 properties: ["openFile"],
                 filters: [
-                    { name: "Extensions", extensions: ["zip"] },
-                    { name: "All Files", extensions: ["*"] }
+                    { name: t("Extensions"), extensions: ["zip"] },
+                    { name: t("All Files"), extensions: ["*"] }
                 ]
             });
 
@@ -1267,7 +1272,9 @@ const ExtensionsManagerSubNavigation = observer(
                     const extension = await installExtension(filePath, {
                         notFound() {
                             info(
-                                "This is not a valid extension package file.",
+                                t(
+                                    "This is not a valid extension package file."
+                                ),
                                 undefined
                             );
                         },
@@ -1334,7 +1341,7 @@ const ExtensionsManagerSubNavigation = observer(
             if (result.filePaths && result.filePaths[0]) {
                 const folderPath = result.filePaths[0];
 
-                const progressToastId = notification.info("Updating...", {
+                const progressToastId = notification.info(t("Updating..."), {
                     autoClose: false
                 });
                 await new Promise(resolve => setTimeout(resolve, 500));
@@ -1400,7 +1407,7 @@ const ExtensionsManagerSubNavigation = observer(
                         )!.latestVersion
                 );
 
-            const progressToastId = notification.info("Updating...", {
+            const progressToastId = notification.info(t("Updating..."), {
                 autoClose: false
             });
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -1413,7 +1420,7 @@ const ExtensionsManagerSubNavigation = observer(
             }
 
             notification.update(progressToastId, {
-                render: "All extensions successfully updated!",
+                render: t("All extensions successfully updated!"),
                 type: notification.SUCCESS,
                 autoClose: 5000
             });
@@ -1445,7 +1452,7 @@ const ExtensionsManagerSubNavigation = observer(
                                     })}
                                 >
                                     <Count
-                                        label={"All"}
+                                        label={t("All")}
                                         count={
                                             extensionsManagerStore.all.length
                                         }
@@ -1471,7 +1478,7 @@ const ExtensionsManagerSubNavigation = observer(
                                         })}
                                     >
                                         <Count
-                                            label={"Installed"}
+                                            label={t("Installed")}
                                             count={
                                                 extensionsManagerStore.installed
                                                     .length
@@ -1499,7 +1506,7 @@ const ExtensionsManagerSubNavigation = observer(
                                         })}
                                     >
                                         <Count
-                                            label={"Not installed"}
+                                            label={t("Not installed")}
                                             count={
                                                 extensionsManagerStore
                                                     .notInstalled.length
@@ -1527,7 +1534,7 @@ const ExtensionsManagerSubNavigation = observer(
                                         })}
                                     >
                                         <Count
-                                            label={"New versions"}
+                                            label={t("New versions")}
                                             count={
                                                 extensionsManagerStore
                                                     .newVersions.length
@@ -1546,7 +1553,7 @@ const ExtensionsManagerSubNavigation = observer(
                     <div>
                         {
                             <ButtonAction
-                                text="Update All"
+                                text={t("Update All")}
                                 title=""
                                 className="btn-success"
                                 onClick={this.updateAll}
@@ -1564,25 +1571,27 @@ const ExtensionsManagerSubNavigation = observer(
                         }
                         <DropdownIconAction
                             icon="material:menu"
-                            title="Actions"
+                            title={t("Actions")}
                         >
                             <DropdownItem
-                                text="Update Catalog"
+                                text={t("Update Catalog")}
                                 onClick={this.updateCatalog}
                             />
                             {(extensionsManagerStore.section == "iext" ||
                                 extensionsManagerStore.section ==
                                     "measurement-functions") && (
                                 <DropdownItem
-                                    text="Install Extension"
-                                    title="Install extension from local file"
+                                    text={t("Install Extension")}
+                                    title={t("Install extension from local file")}
                                     onClick={this.installExtensionFromFile}
                                 />
                             )}
                             {extensionsManagerStore.section == "pext" && (
                                 <DropdownItem
-                                    text="Install Extension"
-                                    title="Install extension from local folder"
+                                    text={t("Install Extension")}
+                                    title={t(
+                                        "Install extension from local folder"
+                                    )}
                                     onClick={this.installExtensionFromFolder}
                                 />
                             )}
@@ -1616,7 +1625,7 @@ export const ExtensionsList = observer(
             if (extensionsManagerStore.extensionNodes.length === 0) {
                 return (
                     <div className="EezStudio_ExtensionsManager_NoExtensions">
-                        No extension found
+                        {t("No extension found")}
                     </div>
                 );
             }
@@ -1660,7 +1669,7 @@ export const ExtensionsManager = observer(
                             }
                         >
                             <Count
-                                label="Project Editor Extensions"
+                                label={t("Project Editor Extensions")}
                                 count={
                                     extensionsManagerStore.searchText
                                         ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
@@ -1692,7 +1701,7 @@ export const ExtensionsManager = observer(
                             }
                         >
                             <Count
-                                label="Instrument Extensions"
+                                label={t("Instrument Extensions")}
                                 count={
                                     extensionsManagerStore.searchText
                                         ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
@@ -1725,7 +1734,7 @@ export const ExtensionsManager = observer(
                             }
                         >
                             <Count
-                                label="Measurement Extensions"
+                                label={t("Measurement Extensions")}
                                 count={
                                     extensionsManagerStore.searchText
                                         ? extensionsManagerStore.extensionsVersionsCatalogBuilder.get(
@@ -1759,7 +1768,7 @@ export const ExtensionsManager = observer(
                             </>
                         ) : (
                             <div className="EezStudio_ExtensionsManager_NoExtensions">
-                                No extension found
+                                {t("No extension found")}
                             </div>
                         )}
                     </div>

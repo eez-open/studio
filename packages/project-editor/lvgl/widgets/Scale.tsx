@@ -2,6 +2,8 @@ import React from "react";
 import { observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
+import { t } from "eez-studio-shared/i18n";
+
 import {
     ClassInfo,
     EezObject,
@@ -44,7 +46,7 @@ const PropertiesSection = observer(
         render() {
             return (
                 <div style={{ marginTop: 10, fontWeight: "bold", textTransform: "uppercase", fontSize: 11 }}>
-                    {humanizePropertyName(this.props.objects[0], this.props.propertyInfo.name)}
+                    {t(humanizePropertyName(this.props.objects[0], this.props.propertyInfo.name))}
                 </div>
             );
         }
@@ -214,7 +216,7 @@ export class LVGLScaleSection extends EezObject {
             }
         ],
 
-        listLabel: (section: LVGLScaleSection, collapsed: boolean) => "Section",
+        listLabel: (section: LVGLScaleSection, collapsed: boolean) => t("Section"),
 
         defaultValue: {
             minValue: 0,

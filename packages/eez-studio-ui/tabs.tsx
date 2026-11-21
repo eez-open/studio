@@ -5,6 +5,8 @@ import classNames from "classnames";
 import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { Menu, MenuItem } from "@electron/remote";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +58,7 @@ export const TabView = observer(
             if (tab.openInWindow) {
                 menu.append(
                     new MenuItem({
-                        label: "Open in New Window",
+                        label: t("Open in New Window"),
                         click: () => tab.openInWindow!()
                     })
                 );
@@ -65,7 +67,7 @@ export const TabView = observer(
             if (tab.copyProjectPath) {
                 menu.append(
                     new MenuItem({
-                        label: "Copy Project Path",
+                        label: t("Copy Project Path"),
                         click: () => tab.copyProjectPath!()
                     })
                 );
@@ -74,7 +76,7 @@ export const TabView = observer(
             if (tab.close) {
                 menu.append(
                     new MenuItem({
-                        label: "Close",
+                        label: t("Close"),
                         click: () => tab.close!()
                     })
                 );

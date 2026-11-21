@@ -1,6 +1,8 @@
 import React from "react";
 import { makeObservable, observable } from "mobx";
 
+import { t } from "eez-studio-shared/i18n";
+
 import {
     ClassInfo,
     EezObject,
@@ -139,7 +141,7 @@ class LVGLMatrixButton extends EezObject {
         listLabel: (button: LVGLMatrixButton, collapsed: boolean) => {
             if (button.newLine) {
                 if (collapsed) {
-                    return "New line";
+                    return t("New line");
                 } else {
                     return "";
                 }

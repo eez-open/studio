@@ -16,6 +16,8 @@ import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { ListContainer, List, IListNode, ListItem } from "eez-studio-ui/list";
 import { Icon } from "eez-studio-ui/icon";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { InstrumentsStore } from "home/instruments";
 
 import { InstrumentObject, instruments } from "instrument/instrument-object";
@@ -377,7 +379,7 @@ const HistoryExportSettings = observer(
                 <div>
                     <div className="EezStudio_ExportDialog_ArchiveOlderThen d-flex align-items-center">
                         <label className="form-label">
-                            Years
+                            {t("Years")}
                             <input
                                 className="form-control"
                                 type="number"
@@ -391,7 +393,7 @@ const HistoryExportSettings = observer(
                             />
                         </label>
                         <label className="form-label">
-                            Months
+                            {t("Months")}
                             <input
                                 className="form-control"
                                 type="number"
@@ -405,7 +407,7 @@ const HistoryExportSettings = observer(
                             />
                         </label>
                         <label className="form-label">
-                            Days
+                            {t("Days")}
                             <input
                                 className="form-control"
                                 type="number"
@@ -434,7 +436,7 @@ const HistoryExportSettings = observer(
                                         event.target.checked;
                                 })}
                             />
-                            Delete history after export
+                            {t("Delete history after export")}
                         </label>
                     </div>
                 </div>
@@ -530,27 +532,27 @@ const ExportDialog = observer(
         onOK = action(() => {
             if (this.mode == "instruments") {
                 if (this.exportModel.selectedInstruments.size == 0) {
-                    this.error = "At least one instrument must be selected.";
+                    this.error = t("At least one instrument must be selected.");
                     return false;
                 }
             }
 
             if (this.mode == "sessions") {
                 if (this.exportModel.selectedSessions.size == 0) {
-                    this.error = "At least one session must be selected.";
+                    this.error = t("At least one session must be selected.");
                     return false;
                 }
             }
 
             if (this.mode == "shortcuts") {
                 if (this.exportModel.selectedShortcuts.size == 0) {
-                    this.error = "At least one shortcut must be selected.";
+                    this.error = t("At least one shortcut must be selected.");
                     return false;
                 }
             }
 
             if (this.description.trim() == "") {
-                this.error = "Description is required.";
+                this.error = t("Description is required.");
                 return false;
             }
 
@@ -564,10 +566,10 @@ const ExportDialog = observer(
                 const result = await dialog.showSaveDialog(getCurrentWindow(), {
                     filters: [
                         {
-                            name: "DB files",
+                            name: t("DB files"),
                             extensions: ["db"]
                         },
-                        { name: "All Files", extensions: ["*"] }
+                        { name: t("All Files"), extensions: ["*"] }
                     ],
                     defaultPath: defaultPath
                         ? defaultPath + path.sep + fileName
@@ -617,7 +619,7 @@ const ExportDialog = observer(
             return (
                 <Dialog
                     className="EezStudio_ExportDialog"
-                    title="Export"
+                    title={t("Export")}
                     onOk={this.onOK}
                     additionalFooterControl={
                         this.error ? (
@@ -638,7 +640,7 @@ const ExportDialog = observer(
                                     this.mode = "instruments";
                                 })}
                             >
-                                Export Instruments
+                                {t("Export Instruments")}
                             </a>
                         </li>
                         <li className="nav-item">
@@ -652,7 +654,7 @@ const ExportDialog = observer(
                                     this.mode = "sessions";
                                 })}
                             >
-                                Export Sessions
+                                {t("Export Sessions")}
                             </a>
                         </li>
                         <li className="nav-item">
@@ -666,7 +668,7 @@ const ExportDialog = observer(
                                     this.mode = "shortcuts";
                                 })}
                             >
-                                Export Shortcuts
+                                {t("Export Shortcuts")}
                             </a>
                         </li>
                         <li className="nav-item">
@@ -680,7 +682,7 @@ const ExportDialog = observer(
                                     this.mode = "archive";
                                 })}
                             >
-                                Archive History
+                                {t("Archive History")}
                             </a>
                         </li>
                     </ul>
@@ -709,7 +711,7 @@ const ExportDialog = observer(
                     {this.mode == "archive" && (
                         <div className="EezStudio_ExportDialog_ArchiveMode">
                             <div style={{ marginBottom: 10 }}>
-                                Archive history items older then:
+                                {t("Archive history items older then:")}
                             </div>
                             <HistoryExportSettings
                                 exportModel={this.exportModel}
@@ -722,7 +724,7 @@ const ExportDialog = observer(
                             htmlFor="EezStudio_ProjectEditorScrapbook_ItemDetails_Description"
                             className="form-label"
                         >
-                            Description:
+                            {t("Description:")}
                         </label>
                         <textarea
                             className="form-control"

@@ -3,6 +3,7 @@ import { observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
+import { t } from "eez-studio-shared/i18n";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import {
     registerClass,
@@ -183,7 +184,7 @@ export const GroupImplementationInfoPropertyUI = observer(
                             <IconAction
                                 icon="material:content_copy"
                                 iconSize={20}
-                                title="Copy to Clipboard"
+                                title={t("Copy to Clipboard")}
                                 onClick={() => {
                                     clipboard.writeText(code);
                                 }}

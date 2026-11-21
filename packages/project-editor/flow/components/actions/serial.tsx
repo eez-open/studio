@@ -8,6 +8,7 @@ import {
     showGenericDialog
 } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
+import { t } from "eez-studio-shared/i18n";
 
 import * as SerialPortsModule from "instrument/connection/interfaces/serial-ports";
 import type {
@@ -577,13 +578,15 @@ async function showConnectDialog(
                         inputGroupButton: (
                             <button
                                 className="btn btn-secondary"
-                                title="Refresh list of available serial ports"
+                                title={t(
+                                    "Refresh list of available serial ports"
+                                )}
                                 onClick={event => {
                                     event.preventDefault();
                                     onRefreshSerialPortPaths();
                                 }}
                             >
-                                Refresh
+                                {t("Refresh")}
                             </button>
                         ),
                         validators: [validators.required]

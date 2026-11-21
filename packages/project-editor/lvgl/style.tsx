@@ -4,6 +4,7 @@ import { computed, makeObservable, observable, toJS, untracked } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 
+import { t } from "eez-studio-shared/i18n";
 import { validators } from "eez-studio-shared/validation";
 
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
@@ -336,7 +337,7 @@ export class LVGLStyle extends EezObject {
                 );
                 menuItems.push(
                     new MenuItem({
-                        label: "Remove Redundant Modifications",
+                        label: t("Remove Redundant Modifications"),
                         click: () => {
                             thisObject.removeRedundantModifications();
                         }

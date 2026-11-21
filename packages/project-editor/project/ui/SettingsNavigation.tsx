@@ -1,4 +1,5 @@
 import { observer } from "mobx-react";
+import { t } from "eez-studio-shared/i18n";
 import React from "react";
 import { computed, makeObservable, observable } from "mobx";
 import * as FlexLayout from "flexlayout-react";
@@ -74,7 +75,7 @@ const ProjectFeature = observer(
 
         onRemove = () => {
             confirm(
-                "Are you sure you want to remove this feature?",
+                t("Are you sure you want to remove this feature?"),
                 undefined,
                 () => {
                     if (this.context.project) {
@@ -138,7 +139,7 @@ const ProjectFeature = observer(
                         <button
                             className="btn btn-secondary float-right"
                             disabled={true}
-                            title="This feature can't be removed"
+                            title={t("This feature can't be removed")}
                         >
                             Remove
                         </button>
@@ -148,7 +149,7 @@ const ProjectFeature = observer(
                         <button
                             className="btn btn-secondary float-right"
                             onClick={this.onRemove}
-                            title="Remove feature from the project"
+                            title={t("Remove feature from the project")}
                         >
                             Remove
                         </button>
@@ -159,7 +160,7 @@ const ProjectFeature = observer(
                     <button
                         className="btn btn-success float-right"
                         onClick={this.onAdd}
-                        title="Add feature to the project"
+                        title={t("Add feature to the project")}
                     >
                         Add
                     </button>
@@ -709,7 +710,7 @@ const DeleteButton = observer(
         render() {
             return (
                 <IconAction
-                    title="Delete Selected Item"
+                    title={t("Delete Selected Item")}
                     icon="material:delete"
                     iconSize={16}
                     onClick={this.onDelete}

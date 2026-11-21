@@ -2,6 +2,8 @@ import React from "react";
 import { observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { IMessage, MessageType, PropertyProps, PropertyType, makeDerivedClassInfo } from "project-editor/core/object";
 import { getChildOfObject, Message } from "project-editor/store";
 
@@ -25,7 +27,9 @@ const ShowNoteAboutUseAngle = observer(
         render() {
             return (
                 <div style={{ fontSize: 11 }}>
-                    Make the arc non-adjustable: set the opacity (in Miscellaneous style section) of the knob to 0 and make the arc non-clickable (uncheck "Clickable" flag).
+                    {t(
+                        `Make the arc non-adjustable: set the opacity (in Miscellaneous style section) of the knob to 0 and make the arc non-clickable (uncheck "Clickable" flag).`
+                    )}
                 </div>
             );
         }

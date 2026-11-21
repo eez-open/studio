@@ -1,4 +1,5 @@
 import { humanize } from "eez-studio-shared/string";
+import { t } from "eez-studio-shared/i18n";
 import { observer } from "mobx-react";
 import { computed, makeObservable, runInAction } from "mobx";
 import classNames from "classnames";
@@ -304,7 +305,7 @@ export const LVGLStylesDefinitionTree = observer(
 
             return {
                 id: "root",
-                label: "Root",
+                label: t("Root"),
                 children: parts
                     ? [
                           ...(totalModifications > 0 ? [{

@@ -11,6 +11,7 @@ import { Icon } from "eez-studio-ui/icon";
 import { Loader } from "eez-studio-ui/loader";
 import { Button } from "eez-studio-ui/button";
 import { IExtension } from "eez-studio-shared/extensions/extension";
+import { t } from "eez-studio-shared/i18n";
 import * as notification from "eez-studio-ui/notification";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 
@@ -50,6 +51,13 @@ import { settingsController } from "home/settings";
 import { PageStructure } from "project-editor/features/page/PagesNavigation";
 import { ProjectExplorer } from "project-editor/project/ui/ProjectExplorer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { ActivityBar, FloatingToolbar } from "./ActivityBar";
+import {
+    PagesWithStructureTab,
+    WidgetsWithStructureTab,
+    VariablesWithActionsTab,
+    ResourcesTab
+} from "./LeftPanelTabs";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -108,6 +116,22 @@ const Content = observer(
 
         factory = (node: FlexLayout.TabNode) => {
             var component = node.getComponent();
+
+            if (component === "pages-with-structure") {
+                return <PagesWithStructureTab />;
+            }
+
+            if (component === "widgets-with-structure") {
+                return <WidgetsWithStructureTab />;
+            }
+
+            if (component === "variables-with-actions") {
+                return <VariablesWithActionsTab />;
+            }
+
+            if (component === "resources") {
+                return <ResourcesTab />;
+            }
 
             if (component === "pages") {
                 return (
@@ -363,7 +387,8 @@ const Content = observer(
                 );
 
                 renderValues.content =
-                    section.name + (numMessages > 0 ? ` (${numMessages})` : "");
+                    t(section.name) +
+                    (numMessages > 0 ? ` (${numMessages})` : "");
             } else if (
                 node.getId() == LayoutModels.SEARCH_TAB_ID ||
                 node.getId() == LayoutModels.REFERENCES_TAB_ID
@@ -379,7 +404,7 @@ const Content = observer(
                 ) : null;
 
                 renderValues.content =
-                    section.name +
+                    t(section.name) +
                     (section.messages.searchResults.length > 0
                         ? ` (${section.messages.searchResults.length})`
                         : "");
@@ -450,7 +475,7 @@ const Content = observer(
                     const menu = new Menu();
                     menu.append(
                         new MenuItem({
-                            label: "Keep Tab Open",
+                            label: t("Keep Tab Open"),
                             click: () => {
                                 runInAction(() => (editor.permanent = true));
 
@@ -495,17 +520,27 @@ const Content = observer(
                 }
 
                 return (
-                    <PageEditor
-                        editor={
-                            new Editor(
-                                this.context,
-                                this.context.runtime.selectedPage,
-                                undefined,
-                                undefined,
-                                pageTabState
-                            )
-                        }
-                    ></PageEditor>
+                    <div
+                        style={{
+                            position: "relative",
+                            flexGrow: 1,
+                            display: "flex",
+                            flexDirection: "column"
+                        }}
+                    >
+                        <PageEditor
+                            editor={
+                                new Editor(
+                                    this.context,
+                                    this.context.runtime.selectedPage,
+                                    undefined,
+                                    undefined,
+                                    pageTabState
+                                )
+                            }
+                        />
+                        <FloatingToolbar />
+                    </div>
                 );
             }
 
@@ -552,6 +587,7 @@ const Content = observer(
                         flexDirection: "row"
                     }}
                 >
+                    <ActivityBar />
                     <div
                         style={{
                             position: "relative",
@@ -570,6 +606,7 @@ const Content = observer(
                                 size: "small"
                             }}
                         />
+                        <FloatingToolbar />
                     </div>
                 </div>
             );

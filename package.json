@@ -108,6 +108,7 @@
         "bootstrap": "5.3.3",
         "chokidar": "4.0.1",
         "classnames": "2.5.1",
+        "cmdk": "^1.1.1",
         "command-exists": "1.2.9",
         "css": "3.0.0",
         "csv-parse": "5.5.6",

@@ -3,6 +3,7 @@ import { action } from "mobx";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
 import { isDev } from "eez-studio-shared/util-electron";
+import { t } from "eez-studio-shared/i18n";
 import { Loader } from "eez-studio-ui/loader";
 import { Tree } from "eez-studio-ui/tree";
 import { SearchInput } from "eez-studio-ui/search-input";
@@ -67,7 +68,7 @@ export const DocumentationBrowser = observer(
                                     className="form-check-label"
                                     htmlFor="EezStudio_DocumentationBrowser_Toolbar_GroupByProjectType"
                                 >
-                                    Group by project type
+                                    {t("Group by project type")}
                                 </label>
                             </div>
                             <div className="form-check">
@@ -85,13 +86,13 @@ export const DocumentationBrowser = observer(
                                     className="form-check-label"
                                     htmlFor="EezStudio_DocumentationBrowser_Toolbar_ShowGroups"
                                 >
-                                    Group by component groups
+                                    {t("Group by component groups")}
                                 </label>
                             </div>
                         </div>
                         {isDev && (
                             <div className="EezStudio_DocumentationBrowser_Stat">
-                                <span>Actions</span>
+                                <span>{t("Actions")}</span>
                                 {model.actionDocCounters.total -
                                     model.actionDocCounters.completed -
                                     model.actionDocCounters.drafts >
@@ -116,7 +117,7 @@ export const DocumentationBrowser = observer(
                         )}
                         {isDev && (
                             <div className="EezStudio_DocumentationBrowser_Stat">
-                                <span>Widgets</span>
+                                <span>{t("Widgets")}</span>
                                 {model.widgetDocCounters.total -
                                     model.widgetDocCounters.completed -
                                     model.widgetDocCounters.drafts >
@@ -147,7 +148,7 @@ export const DocumentationBrowser = observer(
                                         generateMarkdownFilesForAllComponents()
                                     }
                                 >
-                                    Generate Markdown Files
+                                    {t("Generate Markdown Files")}
                                 </button>
                                 <button
                                     className="btn btn-success"
@@ -155,7 +156,7 @@ export const DocumentationBrowser = observer(
                                         generateHTMLFilesForAllComponents()
                                     }
                                 >
-                                    Generate HTML Files
+                                    {t("Generate HTML Files")}
                                 </button>
                                 <button
                                     className="btn btn-success"
@@ -163,7 +164,7 @@ export const DocumentationBrowser = observer(
                                         generateODTFilesForAllComponents()
                                     }
                                 >
-                                    Generate ODT Files
+                                    {t("Generate ODT Files")}
                                 </button>
                             </div>
                         )}

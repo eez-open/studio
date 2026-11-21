@@ -26,6 +26,7 @@ import {
     getFilePathFromHash
 } from "./state";
 import { formatDateCalendar } from "eez-studio-shared/util";
+import { t } from "eez-studio-shared/i18n";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -140,7 +141,7 @@ export const ChangesTab = observer(
             ) {
                 menu.append(
                     new MenuItem({
-                        label: "Deselect",
+                        label: t("Deselect"),
                         click: action(() => {
                             this.context.project.changes._state.revisionForCompareHash =
                                 undefined;
@@ -150,7 +151,7 @@ export const ChangesTab = observer(
             } else {
                 menu.append(
                     new MenuItem({
-                        label: "Select for Compare",
+                        label: t("Select for Compare"),
                         click: action(() => {
                             this.context.project.changes._state.revisionForCompareHash =
                                 node.data.hash;

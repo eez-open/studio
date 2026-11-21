@@ -5,8 +5,6 @@ import { action, observable, makeObservable, runInAction } from "mobx";
 
 import { closest } from "eez-studio-shared/dom";
 import {
-    isDark,
-    isLight,
     parseColorString,
     rgbToHexString,
     hsvToRgb,
@@ -1165,7 +1163,7 @@ export const ThemedColorInput = observer(
         declare context: React.ContextType<typeof ProjectContext>;
 
         buttonRef = React.createRef<HTMLButtonElement>();
-        buttonRefInSimpleMode = React.createRef<HTMLInputElement>();
+        buttonRefInSimpleMode = React.createRef<HTMLButtonElement>();
         dropDownRef = React.createRef<HTMLDivElement>();
         dropDownOpen: boolean | undefined = undefined;
         dropDownLeft = 0;
@@ -1425,65 +1423,59 @@ export const ThemedColorInput = observer(
                     : "0xffffffff";
             }
 
-            const inputColor = settingsController.isDarkTheme
-                ? isLight(colorStringToHex(color))
-                    ? "#000"
-                    : undefined
-                : isDark(colorStringToHex(color))
-                  ? "#fff"
-                  : undefined;
-
             const inputBackgroundColor = !value
                 ? "transparent"
                 : colorStringToHex(color);
 
-            return (
-                <div className="input-group">
-                    {this.props.simpleMode === true ? (
-                        <input
-                            ref={
-                                this.buttonRefInSimpleMode
-                            }
-                            className="form-control"
+            if (this.props.simpleMode === true) {
+                return (
+                    <div className="EezStudio_ColorInput">
+                        <button
+                            ref={this.buttonRefInSimpleMode}
+                            className="EezStudio_ColorInput_Swatch"
+                            type="button"
                             style={{
-                                color: inputColor,
-                                backgroundColor: inputBackgroundColor
+                                background: inputBackgroundColor || "transparent"
                             }}
+                            onClick={this.openDropdown}
+                        />
+                        <input
+                            className="form-control"
                             type="text"
-                            value={""}
+                            value={value}
                             readOnly={true}
                             onClick={this.openDropdown}
                         />
-                    ) : (
-                        <input
-                            ref={this.props.inputRef}
-                            className="form-control"
-                            style={{
-                                color: inputColor,
-                                backgroundColor: inputBackgroundColor
-                            }}
-                            type="text"
-                            value={value}
-                            onChange={this.onChange}
-                            readOnly={readOnly}
-                            onDrop={this.onDrop}
-                            onDragOver={this.onDragOver}
-                            onClick={this.props.onClick}
-                        />
-                    )}
-                    {!readOnly && (
-                        <>
-                            {this.props.simpleMode !== true && (
-                                <button
-                                    ref={this.buttonRef}
-                                    className="btn btn-secondary dropdown-toggle EezStudio_ThemedColorInput_DropdownButton"
-                                    type="button"
-                                    onClick={this.openDropdown}
-                                />
-                            )}
-                            {portal}
-                        </>
-                    )}
+                        {portal}
+                    </div>
+                );
+            }
+
+            // Figma-style color field: small swatch that opens the picker +
+            // a dark text field with the color value
+            return (
+                <div className="EezStudio_ColorInput">
+                    <button
+                        ref={this.buttonRef}
+                        className="EezStudio_ColorInput_Swatch"
+                        type="button"
+                        style={{
+                            background: inputBackgroundColor || "transparent"
+                        }}
+                        onClick={readOnly ? undefined : this.openDropdown}
+                    />
+                    <input
+                        ref={this.props.inputRef}
+                        className="form-control"
+                        type="text"
+                        value={value}
+                        onChange={this.onChange}
+                        readOnly={readOnly}
+                        onDrop={this.onDrop}
+                        onDragOver={this.onDragOver}
+                        onClick={this.props.onClick}
+                    />
+                    {!readOnly && portal}
                 </div>
             );
         }

@@ -42,6 +42,7 @@ import type { IEditorOptions } from "project-editor/flow/flow-interfaces";
 import type { Flow } from "project-editor/flow/flow";
 import type { FlowTabState } from "project-editor/flow/flow-tab-state";
 import type { Component } from "project-editor/flow/component";
+import { HoverOutline } from "project-editor/flow/editor/hover-outline";
 
 import { ProjectContext } from "project-editor/project/context";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -954,6 +955,8 @@ export const Canvas = observer(
                             mouseHandler={this.mouseHandler}
                         />
                     )}
+
+                    <HoverOutline context={this.props.flowContext} />
 
                     {this.mouseHandler &&
                         this.mouseHandler.render &&

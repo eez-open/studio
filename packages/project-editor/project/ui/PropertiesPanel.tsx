@@ -17,6 +17,7 @@ import { PropertyGrid } from "project-editor/ui-components/PropertyGrid";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { Settings } from "../project";
 import { Icon } from "eez-studio-ui/icon";
+import { t } from "eez-studio-shared/i18n";
 
 // objects of the current selection shown in the Properties panel
 export function getPropertiesPanelObjects(projectStore: ProjectStore) {
@@ -113,7 +114,7 @@ export const PropertiesPanel = observer(
             let icon = null;
 
             if (objects.length == 0) {
-                title = "Nothing selected";
+                title = t("Nothing selected");
             } else if (objects.length == 1) {
                 let object = objects[0];
                 if (object instanceof EezValueObject) {
@@ -123,7 +124,7 @@ export const PropertiesPanel = observer(
                 icon = getObjectIcon(object);
                 title = getPropertiesPanelLabel(object);
             } else {
-                title = "Multiple objects selected";
+                title = t("Multiple objects selected");
             }
 
             // if LVGL project show properties for both Page object and Screen widget object

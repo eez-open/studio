@@ -1026,15 +1026,38 @@ export const Property = observer(
                     </div>
                 );
             } else if (propertyInfo.type === PropertyType.Color) {
+                // Figma-style: swatch wrapping the native color input
+                // (kept invisible for the OS picker) + hex text field
                 return (
-                    <input
-                        ref={(ref: any) => (this.input = ref)}
-                        type="color"
-                        className="form-control"
-                        value={this._value || ""}
-                        onChange={this.onChange}
-                        readOnly={readOnly}
-                    />
+                    <div className="EezStudio_ColorInput">
+                        <label
+                            className="EezStudio_ColorInput_Swatch"
+                            style={{
+                                background: this._value || "transparent"
+                            }}
+                        >
+                            <input
+                                type="color"
+                                value={this._value || "#000000"}
+                                onChange={this.onChange}
+                                disabled={readOnly}
+                                style={{
+                                    opacity: 0,
+                                    position: "absolute",
+                                    width: 1,
+                                    height: 1
+                                }}
+                            />
+                        </label>
+                        <input
+                            ref={(ref: any) => (this.input = ref)}
+                            type="text"
+                            className="form-control"
+                            value={this._value || ""}
+                            onChange={this.onChange}
+                            readOnly={readOnly}
+                        />
+                    </div>
                 );
             } else if (propertyInfo.type === PropertyType.ThemedColor) {
                 return (

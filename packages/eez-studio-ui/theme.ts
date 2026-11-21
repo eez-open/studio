@@ -13,10 +13,10 @@ export interface ThemeInterface {
 }
 
 export const lightTheme: ThemeInterface = {
-    backgroundColor: "white",
-    borderColor: "#e0e0e0",
+    backgroundColor: "#f5f5f5",
+    borderColor: "#e6e6e6",
     panelHeaderColor: "#f0f0f0",
-    selectionBackgroundColor: "#337bb7",
+    selectionBackgroundColor: "#0d99ff",
     connectionLineColor: "#999",
     selectedConnectionLineColor: "red",
     seqConnectionLineColor: "#3FADB5",
@@ -25,10 +25,10 @@ export const lightTheme: ThemeInterface = {
 };
 
 export const darkTheme: ThemeInterface = {
-    backgroundColor: "#222222",
+    backgroundColor: "#1e1e1e",
     borderColor: "#444444",
-    panelHeaderColor: "#333333",
-    selectionBackgroundColor: "#337bb7",
+    panelHeaderColor: "#2c2c2c",
+    selectionBackgroundColor: "#0d99ff",
     connectionLineColor: "#999",
     selectedConnectionLineColor: "red",
     seqConnectionLineColor: "#3FADB5",

@@ -1,5 +1,5 @@
 import React from "react";
-import { action, computed, makeObservable } from "mobx";
+import { action, computed, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 
 import { IEezObject } from "project-editor/core/object";
@@ -10,8 +10,10 @@ import {
 import { IPanel } from "project-editor/store";
 
 import { Tree } from "project-editor/ui-components/Tree";
+import { Icon } from "eez-studio-ui/icon";
 
 import { ProjectContext } from "project-editor/project/context";
+import { t } from "eez-studio-shared/i18n";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
@@ -55,6 +57,15 @@ const EYE_CLOSE_ICON = (
 
 export const PageStructure = observer(
     class PageStructure extends React.Component implements IPanel {
+        showLinesMenu = false;
+
+        onDocumentPointerDownCloseLinesMenu = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (!target.closest(".EezStudio_Miniselect")) {
+                this.showLinesMenu = false;
+            }
+        };
+
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -62,6 +73,7 @@ export const PageStructure = observer(
             super(props);
 
             makeObservable(this, {
+                showLinesMenu: observable,
                 pageTabState: computed,
                 componentContainerDisplayItem: computed,
                 treeAdapter: computed,
@@ -72,10 +84,18 @@ export const PageStructure = observer(
 
         componentDidMount() {
             this.context.navigationStore.mountPanel(this);
+            document.addEventListener(
+                "pointerdown",
+                this.onDocumentPointerDownCloseLinesMenu
+            );
         }
 
         componentWillUnmount() {
             this.context.navigationStore.unmountPanel(this);
+            document.removeEventListener(
+                "pointerdown",
+                this.onDocumentPointerDownCloseLinesMenu
+            );
         }
 
         get pageTabState() {
@@ -104,7 +124,7 @@ export const PageStructure = observer(
             if (!this.componentContainerDisplayItem) {
                 return null;
             }
-            return new TreeAdapter(
+            const treeAdapter = new TreeAdapter(
                 this.componentContainerDisplayItem,
                 undefined,
                 (object: IEezObject) => {
@@ -123,6 +143,24 @@ export const PageStructure = observer(
                     ? true
                     : false
             );
+
+            // Figma-style: selecting a container also highlights its whole
+            // subtree in the tree.
+            const innerIsSelected = treeAdapter.isSelected.bind(treeAdapter);
+            treeAdapter.isSelected = (item: any) => {
+                if (innerIsSelected(item)) {
+                    return true;
+                }
+                for (const selected of this.componentContainerDisplayItem!
+                    .selectedItems) {
+                    if (treeAdapter.isAncestor(item, selected)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            return treeAdapter;
         }
 
         // interface IPanel implementation
@@ -303,8 +341,8 @@ export const PageStructure = observer(
                             icon={widget.locked ? LOCK_ICON : UNLOCK_ICON}
                             title={
                                 widget.locked
-                                    ? "Unlock this widget"
-                                    : "Lock this widget"
+                                    ? t("Unlock this widget")
+                                    : t("Lock this widget")
                             }
                             iconSize={14}
                             onClick={action(() =>
@@ -322,7 +360,7 @@ export const PageStructure = observer(
                                     ? EYE_CLOSE_ICON
                                     : EYE_OPEN_ICON
                             }
-                            title={widget.hiddenInEditor ? "Show" : "Hide"}
+                            title={widget.hiddenInEditor ? t("Show") : t("Hide")}
                             iconSize={14}
                             onClick={action(() => {
                                 const hiddenInEditor = !widget.hiddenInEditor;
@@ -373,28 +411,79 @@ export const PageStructure = observer(
                         <Toolbar style={{ minHeight: 38 }}>
                             {this.isAnyHidden ? (
                                 <label className="EezStudio_PageStructure_HiddenWidgetLines">
-                                    <span>Hidden widget lines</span>
-                                    <select
-                                        className="form-select"
-                                        value={
-                                            this.context.project.settings
-                                                .general.hiddenWidgetLines
-                                        }
-                                        onChange={action(event => {
-                                            this.context.project.settings.general.hiddenWidgetLines =
-                                                event.target.value as any;
-                                        })}
-                                        style={{ margin: "2px 10px 2px 5px" }}
-                                    >
-                                        <option value="visible">Visible</option>
-                                        <option value="dimmed">Dimmed</option>
-                                        <option value="hidden">Hidden</option>
-                                    </select>
+                                    <span>{t("Hidden widget lines")}</span>
+                                    <div className="EezStudio_Miniselect">
+                                        <button
+                                            type="button"
+                                            className="EezStudio_Miniselect_Value"
+                                            onClick={action(() => {
+                                                this.showLinesMenu =
+                                                    !this.showLinesMenu;
+                                            })}
+                                        >
+                                            {t(
+                                                {
+                                                    visible: "Visible",
+                                                    dimmed: "Dimmed",
+                                                    hidden: "Hidden"
+                                                }[
+                                                    this.context.project
+                                                        .settings.general
+                                                        .hiddenWidgetLines
+                                                ] || "Visible"
+                                            )}
+                                            <Icon
+                                                icon="material:arrow_drop_down"
+                                                size={16}
+                                            />
+                                        </button>
+                                        {this.showLinesMenu && (
+                                            <div className="EezStudio_Miniselect_Menu dropdown-menu show">
+                                                {["visible", "dimmed", "hidden"].map(
+                                                    option => (
+                                                        <button
+                                                            key={option}
+                                                            type="button"
+                                                            className={classNames(
+                                                                "dropdown-item",
+                                                                {
+                                                                    active:
+                                                                        this
+                                                                            .context
+                                                                            .project
+                                                                            .settings
+                                                                            .general
+                                                                            .hiddenWidgetLines ==
+                                                                        option
+                                                                }
+                                                            )}
+                                                            onClick={action(() => {
+                                                                this.context.project.settings.general.hiddenWidgetLines =
+                                                                    option as any;
+                                                                this.showLinesMenu = false;
+                                                            })}
+                                                        >
+                                                            {t(
+                                                                {
+                                                                    visible: "Visible",
+                                                                    dimmed: "Dimmed",
+                                                                    hidden: "Hidden"
+                                                                }[option] ||
+                                                                option
+                                                            )}
+                                                        </button>
+                                                    )
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </label>
                             ) : null}
                             <IconAction
                                 title={
-                                    this.isAnyLocked ? "Unlock All" : "Lock All"
+                                    this.isAnyLocked
+                                        ? t("Unlock All")
+                                        : t("Lock All")
                                 }
                                 icon={
                                     this.isAnyLocked ? UNLOCK_ICON : LOCK_ICON
@@ -408,7 +497,9 @@ export const PageStructure = observer(
                             />
                             <IconAction
                                 title={
-                                    this.isAnyHidden ? "Show All" : "Hide all"
+                                    this.isAnyHidden
+                                        ? t("Show All")
+                                        : t("Hide all")
                                 }
                                 icon={
                                     this.isAnyHidden
@@ -430,6 +521,7 @@ export const PageStructure = observer(
                             onFocus={this.onFocus}
                             tabIndex={0}
                             renderItem={this.renderItem}
+                            hoverOutline
                         />
                     </Body>
                 </VerticalHeaderWithBody>

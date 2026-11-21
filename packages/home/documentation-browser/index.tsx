@@ -2,6 +2,8 @@ import React from "react";
 
 import { showDialog } from "eez-studio-ui/dialog";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { getModel } from "./model";
 import { DocumentationBrowser } from "./components/DocumentationBrowser";
 
@@ -17,7 +19,7 @@ export function showDocumentationBrowser() {
     const [modalDialog] = showDialog(<DocumentationBrowser />, {
         jsPanel: {
             id: "documentation-browser",
-            title: "Components Documentation Browser",
+            title: t("Components Documentation Browser"),
             modeless: true,
             width: window.innerWidth - 100,
             height: window.innerHeight - 100

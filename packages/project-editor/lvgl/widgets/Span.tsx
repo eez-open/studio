@@ -1,6 +1,8 @@
 import React from "react";
 import { observable, makeObservable } from "mobx";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { ColorFormat } from "project-editor/features/style/color-format";
 
 import {
@@ -157,9 +159,9 @@ export class LVGLSpan extends EezObject {
         },        
         listLabel: (span: LVGLSpan, collapsed: boolean) => {
             if (span.text && span.textType == "literal") {
-                return `Span: ${span.text}`;
+                return `${t("Span")}: ${span.text}`;
             }
-            return "Span";
+            return t("Span");
         },
 
         defaultValue: {

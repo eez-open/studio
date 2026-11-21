@@ -19,6 +19,7 @@ import { Icon } from "eez-studio-ui/icon";
 import { instruments, InstrumentObject } from "instrument/instrument-object";
 
 import { stringCompare } from "eez-studio-shared/string";
+import { t } from "eez-studio-shared/i18n";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
 
 import type { ITabDefinition } from "home/tabs-store";
@@ -115,7 +116,7 @@ export class InstrumentsStore {
 
             menu.append(
                 new MenuItem({
-                    label: "Install Extension",
+                    label: t("Install Extension"),
                     click: () => {
                         const { installExtension } =
                             require("home/instruments/instrument-object-details") as typeof import("home/instruments/instrument-object-details");
@@ -135,7 +136,7 @@ export class InstrumentsStore {
 
         menu.append(
             new MenuItem({
-                label: "Open in Tab",
+                label: t("Open in Tab"),
                 click: () => {
                     instrument.openEditor("tab");
                 }
@@ -144,7 +145,7 @@ export class InstrumentsStore {
 
         menu.append(
             new MenuItem({
-                label: "Open in New Window",
+                label: t("Open in New Window"),
                 click: () => {
                     instrument.openEditor("window");
                 }
@@ -159,7 +160,7 @@ export class InstrumentsStore {
 
         menu.append(
             new MenuItem({
-                label: "Delete",
+                label: t("Delete"),
                 click: () => {
                     this.deleteInstruments([instrument]);
                 }
@@ -318,8 +319,8 @@ const Toolbar = observer(
             }[] = [
                 {
                     id: "instrument-add",
-                    label: "Add Instrument",
-                    title: "Add instrument",
+                    label: t("Add Instrument"),
+                    title: t("Add instrument"),
                     className: "btn-success",
                     style:
                         deletedInstruments.size == 0
@@ -344,8 +345,8 @@ const Toolbar = observer(
             if (deletedInstruments.size > 0) {
                 buttons.push({
                     id: "show-deleted-instruments",
-                    label: "Deleted Instruments",
-                    title: "Show deleted instruments",
+                    label: t("Deleted Instruments"),
+                    title: t("Show deleted instruments"),
                     className: "btn-secondary",
                     style: { marginRight: 20 },
                     onClick: () => {
@@ -358,13 +359,13 @@ const Toolbar = observer(
 
             buttons.push({
                 id: "export-instrument",
-                label: "Export",
+                label: t("Export"),
                 icon: (
                     <svg viewBox="0 0 24 24" fill="currentcolor">
                         <path d="M8.71 7.71 11 5.41V15a1 1 0 0 0 2 0V5.41l2.29 2.3a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42l-4-4a1 1 0 0 0-.33-.21 1 1 0 0 0-.76 0 1 1 0 0 0-.33.21l-4 4a1 1 0 1 0 1.42 1.42M21 14a1 1 0 0 0-1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 0-2 0v4a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-4a1 1 0 0 0-1-1" />
                     </svg>
                 ),
-                title: "Export to database",
+                title: t("Export to database"),
                 className: "btn-secondary",
                 onClick: () => {
                     showExportDialog(this.props.instrumentsStore);
@@ -373,13 +374,13 @@ const Toolbar = observer(
 
             buttons.push({
                 id: "import-instrument",
-                label: "Import",
+                label: t("Import"),
                 icon: (
                     <svg viewBox="0 0 24 24" fill="currentcolor">
                         <path d="M21 14a1 1 0 0 0-1 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-4a1 1 0 0 0-2 0v4a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-4a1 1 0 0 0-1-1m-9.71 1.71a1 1 0 0 0 .33.21.94.94 0 0 0 .76 0 1 1 0 0 0 .33-.21l4-4a1 1 0 0 0-1.42-1.42L13 12.59V3a1 1 0 0 0-2 0v9.59l-2.29-2.3a1 1 0 1 0-1.42 1.42Z" />
                     </svg>
                 ),
-                title: "Import from database",
+                title: t("Import from database"),
                 className: "btn-secondary",
                 onClick: async () => {
                     let defaultPath = window.localStorage.getItem(
@@ -391,8 +392,8 @@ const Toolbar = observer(
                         {
                             properties: ["openFile"],
                             filters: [
-                                { name: "DB files", extensions: ["db"] },
-                                { name: "All Files", extensions: ["*"] }
+                                { name: t("DB files"), extensions: ["db"] },
+                                { name: t("All Files"), extensions: ["*"] }
                             ],
                             defaultPath: defaultPath ?? undefined
                         }
@@ -494,7 +495,7 @@ const InstrumentPropertiesEnclosure = observer(
 
         return (
             <div className="EezStudio_HomeTab_Instruments_SelectedInstrument_Properties_Section">
-                <h6>Properties</h6>
+                <h6>{t("Properties")}</h6>
                 <div>
                     <div className="EezStudio_InstrumentPropertiesEnclosure">
                         <InstrumentProperties instrument={instrument} />
@@ -526,7 +527,7 @@ const InstrumentConnectionEnclosure = observer(
 
         return (
             <div className="EezStudio_HomeTab_Instruments_SelectedInstrument_Properties_Section">
-                <h6>Connection</h6>
+                <h6>{t("Connection")}</h6>
                 <div>
                     <div className="EezStudio_InstrumentConnectionEnclosure">
                         <InstrumentConnection instrument={instrument} />

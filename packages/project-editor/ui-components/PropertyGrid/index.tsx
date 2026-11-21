@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { scrollIntoViewIfNeeded } from "eez-studio-shared/dom";
+import { t } from "eez-studio-shared/i18n";
 
 import { Icon } from "eez-studio-ui/icon";
 
@@ -379,7 +380,7 @@ const PropertiesGroup = observer(
                             size={18}
                             className="triangle"
                         />
-                        {group.title}
+                        {t(group.title)}
                     </div>
                     <div className="EezStudio_PropertyGrid_Group_Body">
                         {this.props.children}
