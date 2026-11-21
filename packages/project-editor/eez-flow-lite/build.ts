@@ -23,6 +23,7 @@ import {
 import type { Project } from "project-editor/project/project";
 import { Flow } from "project-editor/flow/flow";
 import { Action } from "project-editor/features/action/action";
+import { ASSIGNABLE_LIST_RUNTIME_ERROR } from "project-editor/flow/assignable-list-support";
 
 import {
     buildExpression,
@@ -45,6 +46,12 @@ export class BuildEezFlowLite {
     watches: Watch[] = [];
 
     constructor(public project: Project) {}
+
+    private checkUserProperties(action: Action) {
+        if (action.userProperties.some(property => property.assignableList)) {
+            throw new Error(ASSIGNABLE_LIST_RUNTIME_ERROR);
+        }
+    }
 
     buildGlobalVariablesDecl(build: Build) {
         const flowGlobalVariables =
@@ -131,6 +138,7 @@ export class BuildEezFlowLite {
         if (userActions.length > 0) {
             build.line("// User actions");
             for (const action of userActions) {
+                this.checkUserProperties(action);
                 const args = action.userProperties.map(prop => `${this.getVarDecl(prop.name, prop.type, "native-action-parameter", 0)}`).join(", ");
                 build.line(
                     `void ${action.name}(${args ? args : "void"});`
@@ -148,6 +156,7 @@ export class BuildEezFlowLite {
         if (flowUserActions.length > 0) {
             build.line("// User actions");
             for (const action of flowUserActions) {
+                this.checkUserProperties(action);
                 const args = action.userProperties.map(prop => `${this.getVarDecl(prop.name, prop.type, "action-parameter", 0)}`).join(", ");
                 build.line(
                     `void ${action.name}(${args ? args : "void"});`
@@ -195,6 +204,7 @@ export class BuildEezFlowLite {
     }
 
     buildUserActionCall(build: Build, action: Action) {
+        this.checkUserProperties(action);
         build.line(`// Call action ${action.name}`);
         build.line(`${action.name}();`);
     }

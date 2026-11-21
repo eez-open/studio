@@ -71,7 +71,7 @@ var ENVIRONMENT_IS_SHELL = !ENVIRONMENT_IS_WEB && !ENVIRONMENT_IS_NODE && !ENVIR
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v8.4.0/../common/pre.js
+// include: D:/source/repos/CODEX/eez-pr-sync-8be491a4/wasm/lvgl-runtime/v8.4.0/../common/pre.js
 module["exports"] = function (postWorkerToRendererMessage) {
     var Module = {};
 
@@ -101,7 +101,7 @@ module["exports"] = function (postWorkerToRendererMessage) {
 
 function runWasmModule(Module) {
 
-// end include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v8.4.0/../common/pre.js
+// end include: D:/source/repos/CODEX/eez-pr-sync-8be491a4/wasm/lvgl-runtime/v8.4.0/../common/pre.js
 
 
 var arguments_ = [];
@@ -4285,7 +4285,7 @@ async function createWasm() {
       if (!getEnvStrings.strings) {
         // Default values.
         // Browser language detection #8751
-        var lang = ((typeof navigator == 'object' && navigator.language) || 'C').replace('-', '_') + '.UTF-8';
+        var lang = (globalThis.navigator?.language ?? 'C').replace('-', '_') + '.UTF-8';
         var env = {
           'USER': 'web_user',
           'LOGNAME': 'web_user',
@@ -5470,31 +5470,31 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  1186432: ($0) => { startToDebuggerMessage($0); },  
- 1186464: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1186539: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
- 1186614: ($0) => { finishToDebuggerMessage($0); },  
- 1186647: ($0, $1) => { lvglCreateScreen($0, $1); },  
- 1186677: ($0, $1) => { lvglDeleteScreen($0, $1); },  
- 1186707: ($0) => { lvglScreenTick($0); },  
- 1186731: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
- 1186771: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
- 1186825: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
- 1186879: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
- 1186932: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
- 1186985: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
- 1187038: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
- 1187090: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
- 1187137: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
- 1187170: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
- 1187206: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
- 1187251: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
- 1187357: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
- 1187393: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
- 1187430: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
- 1187470: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
- 1187527: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
- 1187586: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
+  1190504: ($0) => { startToDebuggerMessage($0); },  
+ 1190536: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1190611: ($0, $1, $2) => { writeDebuggerBuffer($0, new Uint8Array(Module.HEAPU8.buffer, $1, $2)); },  
+ 1190686: ($0) => { finishToDebuggerMessage($0); },  
+ 1190719: ($0, $1) => { lvglCreateScreen($0, $1); },  
+ 1190749: ($0, $1) => { lvglDeleteScreen($0, $1); },  
+ 1190779: ($0) => { lvglScreenTick($0); },  
+ 1190803: ($0, $1, $2, $3) => { lvglOnEventHandler($0, $1, $2, $3); },  
+ 1190843: ($0, $1) => { return getLvglScreenByName($0, UTF8ToString($1)); },  
+ 1190897: ($0, $1) => { return getLvglObjectByName($0, UTF8ToString($1)); },  
+ 1190951: ($0, $1) => { return getLvglGroupByName($0, UTF8ToString($1)); },  
+ 1191004: ($0, $1) => { return getLvglStyleByName($0, UTF8ToString($1)); },  
+ 1191057: ($0, $1) => { return getLvglImageByName($0, UTF8ToString($1)); },  
+ 1191110: ($0, $1) => { return getLvglFontByName($0, UTF8ToString($1)); },  
+ 1191162: ($0, $1) => { return getLvglObjectNameFromIndex($0, $1); },  
+ 1191209: ($0, $1, $2) => { lvglObjAddStyle($0, $1, $2); },  
+ 1191242: ($0, $1, $2) => { lvglObjRemoveStyle($0, $1, $2); },  
+ 1191278: ($0, $1) => { lvglSetColorTheme($0, UTF8ToString($1)); },  
+ 1191323: ($0, $1, $2, $3, $4, $5) => { return eez_mqtt_init($0, UTF8ToString($1), UTF8ToString($2), $3, UTF8ToString($4), UTF8ToString($5)); },  
+ 1191429: ($0, $1) => { return eez_mqtt_deinit($0, $1); },  
+ 1191465: ($0, $1) => { return eez_mqtt_connect($0, $1); },  
+ 1191502: ($0, $1) => { return eez_mqtt_disconnect($0, $1); },  
+ 1191542: ($0, $1, $2) => { return eez_mqtt_subscribe($0, $1, UTF8ToString($2)); },  
+ 1191599: ($0, $1, $2) => { return eez_mqtt_unsubscribe($0, $1, UTF8ToString($2)); },  
+ 1191658: ($0, $1, $2, $3) => { return eez_mqtt_publish($0, $1, UTF8ToString($2), UTF8ToString($3)); }
 };
 
 // Imports from the Wasm binary.
@@ -5678,7 +5678,6 @@ var _lv_textarea_create = Module['_lv_textarea_create'] = makeInvalidEarlyAccess
 var _stopScript = Module['_stopScript'] = makeInvalidEarlyAccess('_stopScript');
 var _onMessageFromDebugger = Module['_onMessageFromDebugger'] = makeInvalidEarlyAccess('_onMessageFromDebugger');
 var _lvglGetFlowState = Module['_lvglGetFlowState'] = makeInvalidEarlyAccess('_lvglGetFlowState');
-var _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = makeInvalidEarlyAccess('_setDebuggerMessageSubsciptionFilter');
 var _setObjectIndex = Module['_setObjectIndex'] = makeInvalidEarlyAccess('_setObjectIndex');
 var _getLvglObjectFromIndex = Module['_getLvglObjectFromIndex'] = makeInvalidEarlyAccess('_getLvglObjectFromIndex');
 var _lv_group_remove_all_objs = Module['_lv_group_remove_all_objs'] = makeInvalidEarlyAccess('_lv_group_remove_all_objs');
@@ -6216,8 +6215,6 @@ var _lv_style_set_grid_cell_row_span = Module['_lv_style_set_grid_cell_row_span'
 var _lv_style_set_grid_cell_x_align = Module['_lv_style_set_grid_cell_x_align'] = makeInvalidEarlyAccess('_lv_style_set_grid_cell_x_align');
 var _lv_style_set_grid_cell_y_align = Module['_lv_style_set_grid_cell_y_align'] = makeInvalidEarlyAccess('_lv_style_set_grid_cell_y_align');
 var _lv_bmp_init = Module['_lv_bmp_init'] = makeInvalidEarlyAccess('_lv_bmp_init');
-var _free = Module['_free'] = makeInvalidEarlyAccess('_free');
-var _strncmp = Module['_strncmp'] = makeInvalidEarlyAccess('_strncmp');
 var _lv_fs_stdio_init = Module['_lv_fs_stdio_init'] = makeInvalidEarlyAccess('_lv_fs_stdio_init');
 var _lv_gif_create = Module['_lv_gif_create'] = makeInvalidEarlyAccess('_lv_gif_create');
 var _lv_gif_set_src = Module['_lv_gif_set_src'] = makeInvalidEarlyAccess('_lv_gif_set_src');
@@ -6240,6 +6237,7 @@ var _lv_msg_init = Module['_lv_msg_init'] = makeInvalidEarlyAccess('_lv_msg_init
 var _lv_snprintf = Module['_lv_snprintf'] = makeInvalidEarlyAccess('_lv_snprintf');
 var _lv_fs_tell = Module['_lv_fs_tell'] = makeInvalidEarlyAccess('_lv_fs_tell');
 var _lv_fs_write = Module['_lv_fs_write'] = makeInvalidEarlyAccess('_lv_fs_write');
+var _strncmp = Module['_strncmp'] = makeInvalidEarlyAccess('_strncmp');
 var _lv_fragment_create = Module['_lv_fragment_create'] = makeInvalidEarlyAccess('_lv_fragment_create');
 var _lv_fragment_del = Module['_lv_fragment_del'] = makeInvalidEarlyAccess('_lv_fragment_del');
 var _lv_fragment_del_obj = Module['_lv_fragment_del_obj'] = makeInvalidEarlyAccess('_lv_fragment_del_obj');
@@ -6568,6 +6566,7 @@ var _lv_lru_remove = Module['_lv_lru_remove'] = makeInvalidEarlyAccess('_lv_lru_
 var _lv_sqrt = Module['_lv_sqrt'] = makeInvalidEarlyAccess('_lv_sqrt');
 var _lv_rand = Module['_lv_rand'] = makeInvalidEarlyAccess('_lv_rand');
 var _lv_mem_deinit = Module['_lv_mem_deinit'] = makeInvalidEarlyAccess('_lv_mem_deinit');
+var _free = Module['_free'] = makeInvalidEarlyAccess('_free');
 var _lv_mem_test = Module['_lv_mem_test'] = makeInvalidEarlyAccess('_lv_mem_test');
 var _lv_mem_monitor = Module['_lv_mem_monitor'] = makeInvalidEarlyAccess('_lv_mem_monitor');
 var _lv_vsnprintf = Module['_lv_vsnprintf'] = makeInvalidEarlyAccess('_lv_vsnprintf');
@@ -6723,6 +6722,50 @@ var _lv_textarea_text_is_selected = Module['_lv_textarea_text_is_selected'] = ma
 var _lv_textarea_get_text_selection = Module['_lv_textarea_get_text_selection'] = makeInvalidEarlyAccess('_lv_textarea_get_text_selection');
 var _lv_textarea_get_password_show_time = Module['_lv_textarea_get_password_show_time'] = makeInvalidEarlyAccess('_lv_textarea_get_password_show_time');
 var _onMqttEvent = Module['_onMqttEvent'] = makeInvalidEarlyAccess('_onMqttEvent');
+var _createUndefinedValue = Module['_createUndefinedValue'] = makeInvalidEarlyAccess('_createUndefinedValue');
+var _createNullValue = Module['_createNullValue'] = makeInvalidEarlyAccess('_createNullValue');
+var _createIntValue = Module['_createIntValue'] = makeInvalidEarlyAccess('_createIntValue');
+var _createDoubleValue = Module['_createDoubleValue'] = makeInvalidEarlyAccess('_createDoubleValue');
+var _createBooleanValue = Module['_createBooleanValue'] = makeInvalidEarlyAccess('_createBooleanValue');
+var _createStringValue = Module['_createStringValue'] = makeInvalidEarlyAccess('_createStringValue');
+var _createArrayValue = Module['_createArrayValue'] = makeInvalidEarlyAccess('_createArrayValue');
+var _createDateValue = Module['_createDateValue'] = makeInvalidEarlyAccess('_createDateValue');
+var _createBlobValue = Module['_createBlobValue'] = makeInvalidEarlyAccess('_createBlobValue');
+var _createErrorValue = Module['_createErrorValue'] = makeInvalidEarlyAccess('_createErrorValue');
+var _arrayValueSetElementValue = Module['_arrayValueSetElementValue'] = makeInvalidEarlyAccess('_arrayValueSetElementValue');
+var _valueFree = Module['_valueFree'] = makeInvalidEarlyAccess('_valueFree');
+var _getValueForInspection = Module['_getValueForInspection'] = makeInvalidEarlyAccess('_getValueForInspection');
+var _getGlobalVariable = Module['_getGlobalVariable'] = makeInvalidEarlyAccess('_getGlobalVariable');
+var _setGlobalVariable = Module['_setGlobalVariable'] = makeInvalidEarlyAccess('_setGlobalVariable');
+var _updateGlobalVariable = Module['_updateGlobalVariable'] = makeInvalidEarlyAccess('_updateGlobalVariable');
+var _getFlowIndex = Module['_getFlowIndex'] = makeInvalidEarlyAccess('_getFlowIndex');
+var _getComponentExecutionState = Module['_getComponentExecutionState'] = makeInvalidEarlyAccess('_getComponentExecutionState');
+var _getUint8Param = Module['_getUint8Param'] = makeInvalidEarlyAccess('_getUint8Param');
+var _getUint32Param = Module['_getUint32Param'] = makeInvalidEarlyAccess('_getUint32Param');
+var _getStringParam = Module['_getStringParam'] = makeInvalidEarlyAccess('_getStringParam');
+var _getExpressionListParam = Module['_getExpressionListParam'] = makeInvalidEarlyAccess('_getExpressionListParam');
+var _freeExpressionListParam = Module['_freeExpressionListParam'] = makeInvalidEarlyAccess('_freeExpressionListParam');
+var _getListParamSize = Module['_getListParamSize'] = makeInvalidEarlyAccess('_getListParamSize');
+var _evalListParamElementExpression = Module['_evalListParamElementExpression'] = makeInvalidEarlyAccess('_evalListParamElementExpression');
+var _getInputValue = Module['_getInputValue'] = makeInvalidEarlyAccess('_getInputValue');
+var _clearInputValue = Module['_clearInputValue'] = makeInvalidEarlyAccess('_clearInputValue');
+var _evalProperty = Module['_evalProperty'] = makeInvalidEarlyAccess('_evalProperty');
+var _assignProperty = Module['_assignProperty'] = makeInvalidEarlyAccess('_assignProperty');
+var _setPropertyField = Module['_setPropertyField'] = makeInvalidEarlyAccess('_setPropertyField');
+var _propagateValue = Module['_propagateValue'] = makeInvalidEarlyAccess('_propagateValue');
+var _propagateValueThroughSeqout = Module['_propagateValueThroughSeqout'] = makeInvalidEarlyAccess('_propagateValueThroughSeqout');
+var _startAsyncExecution = Module['_startAsyncExecution'] = makeInvalidEarlyAccess('_startAsyncExecution');
+var _endAsyncExecution = Module['_endAsyncExecution'] = makeInvalidEarlyAccess('_endAsyncExecution');
+var _executeCallAction = Module['_executeCallAction'] = makeInvalidEarlyAccess('_executeCallAction');
+var _onEvent = Module['_onEvent'] = makeInvalidEarlyAccess('_onEvent');
+var _logInfo = Module['_logInfo'] = makeInvalidEarlyAccess('_logInfo');
+var _throwError = Module['_throwError'] = makeInvalidEarlyAccess('_throwError');
+var _getFirstRootFlowState = Module['_getFirstRootFlowState'] = makeInvalidEarlyAccess('_getFirstRootFlowState');
+var _getFirstChildFlowState = Module['_getFirstChildFlowState'] = makeInvalidEarlyAccess('_getFirstChildFlowState');
+var _getNextSiblingFlowState = Module['_getNextSiblingFlowState'] = makeInvalidEarlyAccess('_getNextSiblingFlowState');
+var _getFlowStateFlowIndex = Module['_getFlowStateFlowIndex'] = makeInvalidEarlyAccess('_getFlowStateFlowIndex');
+var _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = makeInvalidEarlyAccess('_setDebuggerMessageSubsciptionFilter');
+var _flowCleanup = Module['_flowCleanup'] = makeInvalidEarlyAccess('_flowCleanup');
 var _eez_flow_init_themes = Module['_eez_flow_init_themes'] = makeInvalidEarlyAccess('_eez_flow_init_themes');
 var _flowPropagateValueLVGLEvent = Module['_flowPropagateValueLVGLEvent'] = makeInvalidEarlyAccess('_flowPropagateValueLVGLEvent');
 var __evalIntegerProperty = Module['__evalIntegerProperty'] = makeInvalidEarlyAccess('__evalIntegerProperty');
@@ -6734,10 +6777,10 @@ var __assignIntegerProperty = Module['__assignIntegerProperty'] = makeInvalidEar
 var __assignBooleanProperty = Module['__assignBooleanProperty'] = makeInvalidEarlyAccess('__assignBooleanProperty');
 var _compareRollerOptions = Module['_compareRollerOptions'] = makeInvalidEarlyAccess('_compareRollerOptions');
 var _fflush = makeInvalidEarlyAccess('_fflush');
-var _emscripten_stack_get_end = makeInvalidEarlyAccess('_emscripten_stack_get_end');
-var _emscripten_stack_get_base = makeInvalidEarlyAccess('_emscripten_stack_get_base');
 var _emscripten_builtin_memalign = makeInvalidEarlyAccess('_emscripten_builtin_memalign');
 var _strerror = makeInvalidEarlyAccess('_strerror');
+var _emscripten_stack_get_end = makeInvalidEarlyAccess('_emscripten_stack_get_end');
+var _emscripten_stack_get_base = makeInvalidEarlyAccess('_emscripten_stack_get_base');
 var _setThrew = makeInvalidEarlyAccess('_setThrew');
 var _emscripten_stack_init = makeInvalidEarlyAccess('_emscripten_stack_init');
 var _emscripten_stack_get_free = makeInvalidEarlyAccess('_emscripten_stack_get_free');
@@ -6930,7 +6973,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['stopScript'] != 'undefined', 'missing Wasm export: stopScript');
   assert(typeof wasmExports['onMessageFromDebugger'] != 'undefined', 'missing Wasm export: onMessageFromDebugger');
   assert(typeof wasmExports['lvglGetFlowState'] != 'undefined', 'missing Wasm export: lvglGetFlowState');
-  assert(typeof wasmExports['setDebuggerMessageSubsciptionFilter'] != 'undefined', 'missing Wasm export: setDebuggerMessageSubsciptionFilter');
   assert(typeof wasmExports['setObjectIndex'] != 'undefined', 'missing Wasm export: setObjectIndex');
   assert(typeof wasmExports['getLvglObjectFromIndex'] != 'undefined', 'missing Wasm export: getLvglObjectFromIndex');
   assert(typeof wasmExports['lv_group_remove_all_objs'] != 'undefined', 'missing Wasm export: lv_group_remove_all_objs');
@@ -7468,8 +7510,6 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_style_set_grid_cell_x_align'] != 'undefined', 'missing Wasm export: lv_style_set_grid_cell_x_align');
   assert(typeof wasmExports['lv_style_set_grid_cell_y_align'] != 'undefined', 'missing Wasm export: lv_style_set_grid_cell_y_align');
   assert(typeof wasmExports['lv_bmp_init'] != 'undefined', 'missing Wasm export: lv_bmp_init');
-  assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
-  assert(typeof wasmExports['strncmp'] != 'undefined', 'missing Wasm export: strncmp');
   assert(typeof wasmExports['lv_fs_stdio_init'] != 'undefined', 'missing Wasm export: lv_fs_stdio_init');
   assert(typeof wasmExports['lv_gif_create'] != 'undefined', 'missing Wasm export: lv_gif_create');
   assert(typeof wasmExports['lv_gif_set_src'] != 'undefined', 'missing Wasm export: lv_gif_set_src');
@@ -7492,6 +7532,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_snprintf'] != 'undefined', 'missing Wasm export: lv_snprintf');
   assert(typeof wasmExports['lv_fs_tell'] != 'undefined', 'missing Wasm export: lv_fs_tell');
   assert(typeof wasmExports['lv_fs_write'] != 'undefined', 'missing Wasm export: lv_fs_write');
+  assert(typeof wasmExports['strncmp'] != 'undefined', 'missing Wasm export: strncmp');
   assert(typeof wasmExports['lv_fragment_create'] != 'undefined', 'missing Wasm export: lv_fragment_create');
   assert(typeof wasmExports['lv_fragment_del'] != 'undefined', 'missing Wasm export: lv_fragment_del');
   assert(typeof wasmExports['lv_fragment_del_obj'] != 'undefined', 'missing Wasm export: lv_fragment_del_obj');
@@ -7820,6 +7861,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_sqrt'] != 'undefined', 'missing Wasm export: lv_sqrt');
   assert(typeof wasmExports['lv_rand'] != 'undefined', 'missing Wasm export: lv_rand');
   assert(typeof wasmExports['lv_mem_deinit'] != 'undefined', 'missing Wasm export: lv_mem_deinit');
+  assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
   assert(typeof wasmExports['lv_mem_test'] != 'undefined', 'missing Wasm export: lv_mem_test');
   assert(typeof wasmExports['lv_mem_monitor'] != 'undefined', 'missing Wasm export: lv_mem_monitor');
   assert(typeof wasmExports['lv_vsnprintf'] != 'undefined', 'missing Wasm export: lv_vsnprintf');
@@ -7975,6 +8017,50 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['lv_textarea_get_text_selection'] != 'undefined', 'missing Wasm export: lv_textarea_get_text_selection');
   assert(typeof wasmExports['lv_textarea_get_password_show_time'] != 'undefined', 'missing Wasm export: lv_textarea_get_password_show_time');
   assert(typeof wasmExports['onMqttEvent'] != 'undefined', 'missing Wasm export: onMqttEvent');
+  assert(typeof wasmExports['createUndefinedValue'] != 'undefined', 'missing Wasm export: createUndefinedValue');
+  assert(typeof wasmExports['createNullValue'] != 'undefined', 'missing Wasm export: createNullValue');
+  assert(typeof wasmExports['createIntValue'] != 'undefined', 'missing Wasm export: createIntValue');
+  assert(typeof wasmExports['createDoubleValue'] != 'undefined', 'missing Wasm export: createDoubleValue');
+  assert(typeof wasmExports['createBooleanValue'] != 'undefined', 'missing Wasm export: createBooleanValue');
+  assert(typeof wasmExports['createStringValue'] != 'undefined', 'missing Wasm export: createStringValue');
+  assert(typeof wasmExports['createArrayValue'] != 'undefined', 'missing Wasm export: createArrayValue');
+  assert(typeof wasmExports['createDateValue'] != 'undefined', 'missing Wasm export: createDateValue');
+  assert(typeof wasmExports['createBlobValue'] != 'undefined', 'missing Wasm export: createBlobValue');
+  assert(typeof wasmExports['createErrorValue'] != 'undefined', 'missing Wasm export: createErrorValue');
+  assert(typeof wasmExports['arrayValueSetElementValue'] != 'undefined', 'missing Wasm export: arrayValueSetElementValue');
+  assert(typeof wasmExports['valueFree'] != 'undefined', 'missing Wasm export: valueFree');
+  assert(typeof wasmExports['getValueForInspection'] != 'undefined', 'missing Wasm export: getValueForInspection');
+  assert(typeof wasmExports['getGlobalVariable'] != 'undefined', 'missing Wasm export: getGlobalVariable');
+  assert(typeof wasmExports['setGlobalVariable'] != 'undefined', 'missing Wasm export: setGlobalVariable');
+  assert(typeof wasmExports['updateGlobalVariable'] != 'undefined', 'missing Wasm export: updateGlobalVariable');
+  assert(typeof wasmExports['getFlowIndex'] != 'undefined', 'missing Wasm export: getFlowIndex');
+  assert(typeof wasmExports['getComponentExecutionState'] != 'undefined', 'missing Wasm export: getComponentExecutionState');
+  assert(typeof wasmExports['getUint8Param'] != 'undefined', 'missing Wasm export: getUint8Param');
+  assert(typeof wasmExports['getUint32Param'] != 'undefined', 'missing Wasm export: getUint32Param');
+  assert(typeof wasmExports['getStringParam'] != 'undefined', 'missing Wasm export: getStringParam');
+  assert(typeof wasmExports['getExpressionListParam'] != 'undefined', 'missing Wasm export: getExpressionListParam');
+  assert(typeof wasmExports['freeExpressionListParam'] != 'undefined', 'missing Wasm export: freeExpressionListParam');
+  assert(typeof wasmExports['getListParamSize'] != 'undefined', 'missing Wasm export: getListParamSize');
+  assert(typeof wasmExports['evalListParamElementExpression'] != 'undefined', 'missing Wasm export: evalListParamElementExpression');
+  assert(typeof wasmExports['getInputValue'] != 'undefined', 'missing Wasm export: getInputValue');
+  assert(typeof wasmExports['clearInputValue'] != 'undefined', 'missing Wasm export: clearInputValue');
+  assert(typeof wasmExports['evalProperty'] != 'undefined', 'missing Wasm export: evalProperty');
+  assert(typeof wasmExports['assignProperty'] != 'undefined', 'missing Wasm export: assignProperty');
+  assert(typeof wasmExports['setPropertyField'] != 'undefined', 'missing Wasm export: setPropertyField');
+  assert(typeof wasmExports['propagateValue'] != 'undefined', 'missing Wasm export: propagateValue');
+  assert(typeof wasmExports['propagateValueThroughSeqout'] != 'undefined', 'missing Wasm export: propagateValueThroughSeqout');
+  assert(typeof wasmExports['startAsyncExecution'] != 'undefined', 'missing Wasm export: startAsyncExecution');
+  assert(typeof wasmExports['endAsyncExecution'] != 'undefined', 'missing Wasm export: endAsyncExecution');
+  assert(typeof wasmExports['executeCallAction'] != 'undefined', 'missing Wasm export: executeCallAction');
+  assert(typeof wasmExports['onEvent'] != 'undefined', 'missing Wasm export: onEvent');
+  assert(typeof wasmExports['logInfo'] != 'undefined', 'missing Wasm export: logInfo');
+  assert(typeof wasmExports['throwError'] != 'undefined', 'missing Wasm export: throwError');
+  assert(typeof wasmExports['getFirstRootFlowState'] != 'undefined', 'missing Wasm export: getFirstRootFlowState');
+  assert(typeof wasmExports['getFirstChildFlowState'] != 'undefined', 'missing Wasm export: getFirstChildFlowState');
+  assert(typeof wasmExports['getNextSiblingFlowState'] != 'undefined', 'missing Wasm export: getNextSiblingFlowState');
+  assert(typeof wasmExports['getFlowStateFlowIndex'] != 'undefined', 'missing Wasm export: getFlowStateFlowIndex');
+  assert(typeof wasmExports['setDebuggerMessageSubsciptionFilter'] != 'undefined', 'missing Wasm export: setDebuggerMessageSubsciptionFilter');
+  assert(typeof wasmExports['flowCleanup'] != 'undefined', 'missing Wasm export: flowCleanup');
   assert(typeof wasmExports['eez_flow_init_themes'] != 'undefined', 'missing Wasm export: eez_flow_init_themes');
   assert(typeof wasmExports['flowPropagateValueLVGLEvent'] != 'undefined', 'missing Wasm export: flowPropagateValueLVGLEvent');
   assert(typeof wasmExports['_evalIntegerProperty'] != 'undefined', 'missing Wasm export: _evalIntegerProperty');
@@ -7986,10 +8072,10 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['_assignBooleanProperty'] != 'undefined', 'missing Wasm export: _assignBooleanProperty');
   assert(typeof wasmExports['compareRollerOptions'] != 'undefined', 'missing Wasm export: compareRollerOptions');
   assert(typeof wasmExports['fflush'] != 'undefined', 'missing Wasm export: fflush');
-  assert(typeof wasmExports['emscripten_stack_get_end'] != 'undefined', 'missing Wasm export: emscripten_stack_get_end');
-  assert(typeof wasmExports['emscripten_stack_get_base'] != 'undefined', 'missing Wasm export: emscripten_stack_get_base');
   assert(typeof wasmExports['emscripten_builtin_memalign'] != 'undefined', 'missing Wasm export: emscripten_builtin_memalign');
   assert(typeof wasmExports['strerror'] != 'undefined', 'missing Wasm export: strerror');
+  assert(typeof wasmExports['emscripten_stack_get_end'] != 'undefined', 'missing Wasm export: emscripten_stack_get_end');
+  assert(typeof wasmExports['emscripten_stack_get_base'] != 'undefined', 'missing Wasm export: emscripten_stack_get_base');
   assert(typeof wasmExports['setThrew'] != 'undefined', 'missing Wasm export: setThrew');
   assert(typeof wasmExports['emscripten_stack_init'] != 'undefined', 'missing Wasm export: emscripten_stack_init');
   assert(typeof wasmExports['emscripten_stack_get_free'] != 'undefined', 'missing Wasm export: emscripten_stack_get_free');
@@ -8178,7 +8264,6 @@ function assignWasmExports(wasmExports) {
   _stopScript = Module['_stopScript'] = createExportWrapper('stopScript', 0);
   _onMessageFromDebugger = Module['_onMessageFromDebugger'] = createExportWrapper('onMessageFromDebugger', 2);
   _lvglGetFlowState = Module['_lvglGetFlowState'] = createExportWrapper('lvglGetFlowState', 2);
-  _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = createExportWrapper('setDebuggerMessageSubsciptionFilter', 1);
   _setObjectIndex = Module['_setObjectIndex'] = createExportWrapper('setObjectIndex', 2);
   _getLvglObjectFromIndex = Module['_getLvglObjectFromIndex'] = createExportWrapper('getLvglObjectFromIndex', 1);
   _lv_group_remove_all_objs = Module['_lv_group_remove_all_objs'] = createExportWrapper('lv_group_remove_all_objs', 1);
@@ -8716,8 +8801,6 @@ function assignWasmExports(wasmExports) {
   _lv_style_set_grid_cell_x_align = Module['_lv_style_set_grid_cell_x_align'] = createExportWrapper('lv_style_set_grid_cell_x_align', 2);
   _lv_style_set_grid_cell_y_align = Module['_lv_style_set_grid_cell_y_align'] = createExportWrapper('lv_style_set_grid_cell_y_align', 2);
   _lv_bmp_init = Module['_lv_bmp_init'] = createExportWrapper('lv_bmp_init', 0);
-  _free = Module['_free'] = createExportWrapper('free', 1);
-  _strncmp = Module['_strncmp'] = createExportWrapper('strncmp', 3);
   _lv_fs_stdio_init = Module['_lv_fs_stdio_init'] = createExportWrapper('lv_fs_stdio_init', 0);
   _lv_gif_create = Module['_lv_gif_create'] = createExportWrapper('lv_gif_create', 1);
   _lv_gif_set_src = Module['_lv_gif_set_src'] = createExportWrapper('lv_gif_set_src', 2);
@@ -8740,6 +8823,7 @@ function assignWasmExports(wasmExports) {
   _lv_snprintf = Module['_lv_snprintf'] = createExportWrapper('lv_snprintf', 4);
   _lv_fs_tell = Module['_lv_fs_tell'] = createExportWrapper('lv_fs_tell', 2);
   _lv_fs_write = Module['_lv_fs_write'] = createExportWrapper('lv_fs_write', 4);
+  _strncmp = Module['_strncmp'] = createExportWrapper('strncmp', 3);
   _lv_fragment_create = Module['_lv_fragment_create'] = createExportWrapper('lv_fragment_create', 2);
   _lv_fragment_del = Module['_lv_fragment_del'] = createExportWrapper('lv_fragment_del', 1);
   _lv_fragment_del_obj = Module['_lv_fragment_del_obj'] = createExportWrapper('lv_fragment_del_obj', 1);
@@ -9068,6 +9152,7 @@ function assignWasmExports(wasmExports) {
   _lv_sqrt = Module['_lv_sqrt'] = createExportWrapper('lv_sqrt', 3);
   _lv_rand = Module['_lv_rand'] = createExportWrapper('lv_rand', 2);
   _lv_mem_deinit = Module['_lv_mem_deinit'] = createExportWrapper('lv_mem_deinit', 0);
+  _free = Module['_free'] = createExportWrapper('free', 1);
   _lv_mem_test = Module['_lv_mem_test'] = createExportWrapper('lv_mem_test', 0);
   _lv_mem_monitor = Module['_lv_mem_monitor'] = createExportWrapper('lv_mem_monitor', 1);
   _lv_vsnprintf = Module['_lv_vsnprintf'] = createExportWrapper('lv_vsnprintf', 4);
@@ -9223,6 +9308,50 @@ function assignWasmExports(wasmExports) {
   _lv_textarea_get_text_selection = Module['_lv_textarea_get_text_selection'] = createExportWrapper('lv_textarea_get_text_selection', 1);
   _lv_textarea_get_password_show_time = Module['_lv_textarea_get_password_show_time'] = createExportWrapper('lv_textarea_get_password_show_time', 1);
   _onMqttEvent = Module['_onMqttEvent'] = createExportWrapper('onMqttEvent', 4);
+  _createUndefinedValue = Module['_createUndefinedValue'] = createExportWrapper('createUndefinedValue', 0);
+  _createNullValue = Module['_createNullValue'] = createExportWrapper('createNullValue', 0);
+  _createIntValue = Module['_createIntValue'] = createExportWrapper('createIntValue', 1);
+  _createDoubleValue = Module['_createDoubleValue'] = createExportWrapper('createDoubleValue', 1);
+  _createBooleanValue = Module['_createBooleanValue'] = createExportWrapper('createBooleanValue', 1);
+  _createStringValue = Module['_createStringValue'] = createExportWrapper('createStringValue', 1);
+  _createArrayValue = Module['_createArrayValue'] = createExportWrapper('createArrayValue', 2);
+  _createDateValue = Module['_createDateValue'] = createExportWrapper('createDateValue', 1);
+  _createBlobValue = Module['_createBlobValue'] = createExportWrapper('createBlobValue', 2);
+  _createErrorValue = Module['_createErrorValue'] = createExportWrapper('createErrorValue', 0);
+  _arrayValueSetElementValue = Module['_arrayValueSetElementValue'] = createExportWrapper('arrayValueSetElementValue', 3);
+  _valueFree = Module['_valueFree'] = createExportWrapper('valueFree', 1);
+  _getValueForInspection = Module['_getValueForInspection'] = createExportWrapper('getValueForInspection', 1);
+  _getGlobalVariable = Module['_getGlobalVariable'] = createExportWrapper('getGlobalVariable', 1);
+  _setGlobalVariable = Module['_setGlobalVariable'] = createExportWrapper('setGlobalVariable', 2);
+  _updateGlobalVariable = Module['_updateGlobalVariable'] = createExportWrapper('updateGlobalVariable', 2);
+  _getFlowIndex = Module['_getFlowIndex'] = createExportWrapper('getFlowIndex', 1);
+  _getComponentExecutionState = Module['_getComponentExecutionState'] = createExportWrapper('getComponentExecutionState', 2);
+  _getUint8Param = Module['_getUint8Param'] = createExportWrapper('getUint8Param', 3);
+  _getUint32Param = Module['_getUint32Param'] = createExportWrapper('getUint32Param', 3);
+  _getStringParam = Module['_getStringParam'] = createExportWrapper('getStringParam', 3);
+  _getExpressionListParam = Module['_getExpressionListParam'] = createExportWrapper('getExpressionListParam', 3);
+  _freeExpressionListParam = Module['_freeExpressionListParam'] = createExportWrapper('freeExpressionListParam', 1);
+  _getListParamSize = Module['_getListParamSize'] = createExportWrapper('getListParamSize', 3);
+  _evalListParamElementExpression = Module['_evalListParamElementExpression'] = createExportWrapper('evalListParamElementExpression', 6);
+  _getInputValue = Module['_getInputValue'] = createExportWrapper('getInputValue', 2);
+  _clearInputValue = Module['_clearInputValue'] = createExportWrapper('clearInputValue', 2);
+  _evalProperty = Module['_evalProperty'] = createExportWrapper('evalProperty', 5);
+  _assignProperty = Module['_assignProperty'] = createExportWrapper('assignProperty', 5);
+  _setPropertyField = Module['_setPropertyField'] = createExportWrapper('setPropertyField', 5);
+  _propagateValue = Module['_propagateValue'] = createExportWrapper('propagateValue', 4);
+  _propagateValueThroughSeqout = Module['_propagateValueThroughSeqout'] = createExportWrapper('propagateValueThroughSeqout', 2);
+  _startAsyncExecution = Module['_startAsyncExecution'] = createExportWrapper('startAsyncExecution', 2);
+  _endAsyncExecution = Module['_endAsyncExecution'] = createExportWrapper('endAsyncExecution', 2);
+  _executeCallAction = Module['_executeCallAction'] = createExportWrapper('executeCallAction', 3);
+  _onEvent = Module['_onEvent'] = createExportWrapper('onEvent', 3);
+  _logInfo = Module['_logInfo'] = createExportWrapper('logInfo', 3);
+  _throwError = Module['_throwError'] = createExportWrapper('throwError', 3);
+  _getFirstRootFlowState = Module['_getFirstRootFlowState'] = createExportWrapper('getFirstRootFlowState', 0);
+  _getFirstChildFlowState = Module['_getFirstChildFlowState'] = createExportWrapper('getFirstChildFlowState', 1);
+  _getNextSiblingFlowState = Module['_getNextSiblingFlowState'] = createExportWrapper('getNextSiblingFlowState', 1);
+  _getFlowStateFlowIndex = Module['_getFlowStateFlowIndex'] = createExportWrapper('getFlowStateFlowIndex', 1);
+  _setDebuggerMessageSubsciptionFilter = Module['_setDebuggerMessageSubsciptionFilter'] = createExportWrapper('setDebuggerMessageSubsciptionFilter', 1);
+  _flowCleanup = Module['_flowCleanup'] = createExportWrapper('flowCleanup', 0);
   _eez_flow_init_themes = Module['_eez_flow_init_themes'] = createExportWrapper('eez_flow_init_themes', 5);
   _flowPropagateValueLVGLEvent = Module['_flowPropagateValueLVGLEvent'] = createExportWrapper('flowPropagateValueLVGLEvent', 4);
   __evalIntegerProperty = Module['__evalIntegerProperty'] = createExportWrapper('_evalIntegerProperty', 6);
@@ -9234,10 +9363,10 @@ function assignWasmExports(wasmExports) {
   __assignBooleanProperty = Module['__assignBooleanProperty'] = createExportWrapper('_assignBooleanProperty', 7);
   _compareRollerOptions = Module['_compareRollerOptions'] = createExportWrapper('compareRollerOptions', 4);
   _fflush = createExportWrapper('fflush', 1);
-  _emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'];
-  _emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'];
   _emscripten_builtin_memalign = createExportWrapper('emscripten_builtin_memalign', 2);
   _strerror = createExportWrapper('strerror', 1);
+  _emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'];
+  _emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'];
   _setThrew = createExportWrapper('setThrew', 2);
   _emscripten_stack_init = wasmExports['emscripten_stack_init'];
   _emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'];
@@ -9453,7 +9582,7 @@ run();
 
 // end include: postamble.js
 
-// include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v8.4.0/../common/post.js
+// include: D:/source/repos/CODEX/eez-pr-sync-8be491a4/wasm/lvgl-runtime/v8.4.0/../common/post.js
 }
-// end include: /home/mvladic/studio-wasm-libs/lvgl-runtime/v8.4.0/../common/post.js
+// end include: D:/source/repos/CODEX/eez-pr-sync-8be491a4/wasm/lvgl-runtime/v8.4.0/../common/post.js
 
