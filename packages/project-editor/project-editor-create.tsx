@@ -104,7 +104,8 @@ import {
     LVGLButtonMatrixWidget,
     LVGLLedWidget,
     LVGLTabviewWidget,
-    LVGLDropdownWidget
+    LVGLDropdownWidget,
+    LVGLCalendarWidget
 } from "project-editor/lvgl/widgets";
 
 // ACTIONS: udp
@@ -250,6 +251,7 @@ export function createProjectEditor(
         LVGLTabviewWidgetClass: LVGLTabviewWidget,
         LVGLTabWidgetClass: LVGLTabWidget,
         LVGLDropdownWidgetClass: LVGLDropdownWidget,
+        LVGLCalendarWidgetClass: LVGLCalendarWidget,
         LVGLRollerWidgetClass: LVGLRollerWidget,
         LVGLButtonMatrixWidgetClass: LVGLButtonMatrixWidget,
         LVGLLedWidgetClass: LVGLLedWidget,

@@ -196,11 +196,62 @@ export function getDropdown(widget: LVGLWidget) {
     return undefined;
 }
 
+// A Button, Label or Dropdown widget placed as a direct child of a Calendar
+// widget, at the right position for the calendar's header type, is
+// interpreted as a hook into one of the (otherwise inaccessible) objects
+// LVGL creates internally for the calendar's header, mirroring how a
+// Container placed as a direct child of a Dropdown hooks into its List (see
+// getDropdown above). Each widget file (Button.tsx, Label.tsx, Dropdown.tsx)
+// checks this together with its own position, since the widget type expected
+// at each position is fixed:
+//
+// Arrow header (lv_calendar_add_header_arrow), children of the header object:
+//   0 - Button ("Previous Button"), 1 - Label ("Text", the year/month
+//   label), 2 - Button ("Next Button")
+// Dropdown header (lv_calendar_add_header_dropdown), children of the header
+// object:
+//   0 - Dropdown ("Year Dropdown"), 1 - Dropdown ("Month Dropdown")
+//
+// A mismatched widget type at a valid position (e.g. a Label where a Button
+// is expected) is simply not recognized here, and behaves like any other
+// ordinary, unhooked child.
+export function getCalendarHeaderChild(widget: LVGLWidget) {
+    const parentChildren = getParent(widget) as LVGLWidget[];
+    const parentWidget = getParent(parentChildren);
+    if (!(parentWidget instanceof ProjectEditor.LVGLCalendarWidgetClass)) {
+        return undefined;
+    }
+
+    const index = parentChildren.indexOf(widget);
+
+    if (
+        parentWidget.header == "Arrow" &&
+        (index == 0 || index == 1 || index == 2)
+    ) {
+        return { calendar: parentWidget, index };
+    }
+
+    if (
+        parentWidget.header == "Dropdown" &&
+        (index == 0 || index == 1)
+    ) {
+        return { calendar: parentWidget, index };
+    }
+
+    return undefined;
+}
+
+export const CALENDAR_HEADER_CHILD_LABELS: { [header: string]: string[] } = {
+    Arrow: ["Previous Button", "Text", "Next Button"],
+    Dropdown: ["Year Dropdown", "Month Dropdown"]
+};
+
 export function isGeometryControlledByParent(widget: LVGLWidget) {
     if (
         getDropdown(widget) ||
         getTabview(widget) ||
-        widget instanceof ProjectEditor.LVGLTabWidgetClass
+        widget instanceof ProjectEditor.LVGLTabWidgetClass ||
+        getCalendarHeaderChild(widget)
     ) {
         return true;
     }

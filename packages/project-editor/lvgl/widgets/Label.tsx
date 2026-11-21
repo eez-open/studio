@@ -17,6 +17,10 @@ import type { LVGLCode } from "project-editor/lvgl/to-lvgl-code";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 
 import { LVGLWidget } from "./internal";
+import {
+    CALENDAR_HEADER_CHILD_LABELS,
+    getCalendarHeaderChild
+} from "../widget-common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -35,6 +39,15 @@ export class LVGLLabelWidget extends LVGLWidget {
         componentPaletteGroupName: "!1Basic",
 
         label: (widget: LVGLLabelWidget) => {
+            const calendarHeaderChild = getCalendarHeaderChild(widget);
+            if (
+                calendarHeaderChild &&
+                calendarHeaderChild.calendar.header == "Arrow" &&
+                calendarHeaderChild.index == 1
+            ) {
+                return CALENDAR_HEADER_CHILD_LABELS["Arrow"][1];
+            }
+
             let name = getComponentName(widget.type);
 
             if (widget.identifier) {
@@ -164,6 +177,22 @@ export class LVGLLabelWidget extends LVGLWidget {
     }
 
     override toLVGLCode(code: LVGLCode) {
+        const calendarHeaderChild = getCalendarHeaderChild(this);
+        if (
+            calendarHeaderChild &&
+            calendarHeaderChild.calendar.header == "Arrow" &&
+            calendarHeaderChild.index == 1
+        ) {
+            // The calendar's Arrow header is always created as the
+            // calendar's own child at index 0, and this Label hooks onto
+            // the year/month label LVGL creates internally there (which it
+            // also keeps fully updated itself), so only its style is
+            // relevant here - none of this widget's own text properties
+            // apply.
+            code.getGrandchildObject(0, 1);
+            return;
+        }
+
         code.createObject("lv_label_create");
 
         // longMode
