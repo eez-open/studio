@@ -39,5 +39,6 @@ export * from "./Tabview";
 export * from "./Tab";
 export * from "./Textarea";
 export * from "./TileView";
+export * from "./Tile";
 export * from "./UserWidget";
 export * from "./Window";
