@@ -1951,6 +1951,18 @@ export class BarGraphWidget extends Widget {
     min: string;
     max: string;
     refreshRate: string;
+    // The bar as a track with rounded corners (the radius of the style, inside
+    // its padding) when one of these is set: ticks with numbers beside the bar
+    // (the style is made when the scale is turned on), the width of a vertical
+    // or height of a horizontal bar (0: all the room), a triangle pointing at
+    // threshold 1 with a label beside it, the part between the bar and
+    // threshold 1 in the dimmed bar color.
+    scale?: boolean;
+    scaleStyle?: Style;
+    thickness?: number;
+    line1Marker?: boolean;
+    line1Label?: string;
+    zone?: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1999,11 +2011,52 @@ export class BarGraphWidget extends Widget {
             makeDataPropertyInfo("refreshRate", {
                 disabled: hasNotFlowSupport
             }),
+            {
+                name: "scale",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "thickness",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "line1Marker",
+                displayName: "Threshold1 marker",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
+            },
+            makeDataPropertyInfo(
+                "line1Label",
+                {
+                    displayName: "Threshold1 label",
+                    disabled: (widget: BarGraphWidget) =>
+                        hasNotFlowSupport(widget) || !widget.line1Marker
+                },
+                "string"
+            ),
+            {
+                name: "zone",
+                displayName: "Zone to threshold1",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
+            },
             makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("textStyle"),
             makeStylePropertyInfo("line1Style", "Threshold1 style"),
-            makeStylePropertyInfo("line2Style", "Threshold2 style")
+            makeStylePropertyInfo("line2Style", "Threshold2 style"),
+            makeStylePropertyInfo("scaleStyle", "Scale style", {
+                isOptional: true
+            })
         ],
+
+        updateObjectValueHook: (widget: BarGraphWidget, values: any) => {
+            addPartStyles(widget, values, [["scale", "scaleStyle"]]);
+        },
 
         beforeLoadHook: (
             object: IEezObject,
@@ -2081,7 +2134,13 @@ export class BarGraphWidget extends Widget {
             line2Style: observable,
             min: observable,
             max: observable,
-            refreshRate: observable
+            refreshRate: observable,
+            scale: observable,
+            scaleStyle: observable,
+            thickness: observable,
+            line1Marker: observable,
+            line1Label: observable,
+            zone: observable
         });
     }
 
@@ -2137,6 +2196,35 @@ export class BarGraphWidget extends Widget {
         }
 
         dataBuffer.writeUint8(orientation);
+
+        // flags
+        const BAR_GRAPH_FLAG_LINE1_MARKER = 1 << 0;
+        const BAR_GRAPH_FLAG_ZONE = 1 << 1;
+        let flags = 0;
+        if (this.line1Marker) {
+            flags |= BAR_GRAPH_FLAG_LINE1_MARKER;
+        }
+        if (this.zone) {
+            flags |= BAR_GRAPH_FLAG_ZONE;
+        }
+        dataBuffer.writeUint8(flags);
+
+        // scaleStyle (0: no scale)
+        dataBuffer.writeInt16(
+            this.scale ? getOptionalStyleIndex(assets, this, "scaleStyle") : 0
+        );
+
+        // thickness
+        dataBuffer.writeInt16(this.thickness ? Math.round(this.thickness) : 0);
+
+        // line1Label (flow expression, 0: none)
+        dataBuffer.writeInt16(
+            assets.projectStore.projectTypeTraits.hasFlowSupport &&
+                this.line1Marker &&
+                this.line1Label
+                ? assets.getWidgetDataItemIndex(this, "line1Label")
+                : 0
+        );
     }
 }
 
