@@ -3,6 +3,7 @@ import { intersection } from "lodash-es";
 import { MenuItem } from "@electron/remote";
 
 import { type Point, type Rect } from "eez-studio-shared/geometry";
+import { t } from "eez-studio-shared/i18n";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
 import type { EditorFlowContext } from "project-editor/flow/editor/context";
 import {
@@ -325,7 +326,7 @@ export class FlowDocument implements IDocument {
         if (isPage && objects.length == 0) {
             additionalMenuItems.push(
                 new MenuItem({
-                    label: "Center View",
+                    label: t("Center View"),
                     click: async () => {
                         this.flowContext.viewState.centerView();
                     }
@@ -334,7 +335,7 @@ export class FlowDocument implements IDocument {
 
             additionalMenuItems.push(
                 new MenuItem({
-                    label: "Center View on All Pages",
+                    label: t("Center View on All Pages"),
                     click: async () => {
                         this.flowContext.viewState.centerView();
 

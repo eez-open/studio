@@ -31,6 +31,7 @@ import { COMPONENT_TYPE_LVGL_ACTION_API } from "project-editor/flow/components/c
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { humanize } from "eez-studio-shared/string";
+import { t } from "eez-studio-shared/i18n";
 import {
     createObject,
     getAncestorOfType,
@@ -234,7 +235,7 @@ export function registerAction(actionDefinition: IActionDefinition) {
                 makeAssignableExpressionProperty(
                     {
                         name: actionProperty.name,
-                        displayName: `Store ${actionProperty.name} into`,
+                        displayName: () => t(`Store ${actionProperty.name} into`),
                         type: PropertyType.MultilineText
                     },
                     expressionType
@@ -417,14 +418,16 @@ export function registerAction(actionDefinition: IActionDefinition) {
     const actionClass = class extends LVGLActionType {
         static classInfo = makeDerivedClassInfo(LVGLActionType.classInfo, {
             properties,
-            label: () => actionDisplayName,
+            label: () => t(actionDisplayName),
             defaultValue,
             listLabel: (action: LVGLActionType, collapsed: boolean) => {
                 if (!collapsed) {
-                    return actionDisplayName;
+                    return t(actionDisplayName);
                 }
 
-                const propertyNames = actionDefinition.properties.map(actionProperty => humanize(actionProperty.name));
+                const propertyNames = actionDefinition.properties.map(actionProperty =>
+                    t(humanize(actionProperty.name))
+                );
                 const propertyValues = actionDefinition.properties.map(actionProperty => {
                     let value = (action as any)[actionProperty.name];
 
@@ -929,7 +932,7 @@ const NewLVGLActionDialog = observer(
                     open={this.open}
                     modal={true}
                     backdrop="static"
-                    title={"Add a New LVGL Action"}
+                    title={t("Add a New LVGL Action")}
                     okEnabled={this.onOkEnabled}
                     onOk={this.onOk}
                     onCancel={this.props.onCancel}
@@ -951,7 +954,7 @@ const NewLVGLActionDialog = observer(
                                 <List
                                     nodes={this.groupNodes}
                                     renderNode={(node: IListNode<string>) => {
-                                        return <ListItem label={node.label} />;
+                                        return <ListItem label={typeof node.label === "string" ? t(node.label) : node.label} />;
                                     }}
                                     selectNode={(node: IListNode<string>) => {
                                         newLVGLActionDialogState.selectedGroup =
@@ -965,7 +968,7 @@ const NewLVGLActionDialog = observer(
                                     renderNode={(
                                         node: IListNode<IActionDefinition>
                                     ) => {
-                                        return <ListItem label={node.label} />;
+                                        return <ListItem label={typeof node.label === "string" ? t(node.label) : node.label} />;
                                     }}
                                     selectNode={(
                                         node: IListNode<IActionDefinition>
@@ -1015,9 +1018,9 @@ export class LVGLActionType extends EezObject {
                 displayName: (object: LVGLActionType) => {
                     const actions = getParent(object) as LVGLActionType[];
                     if (actions.length < 2) {
-                        return "Action";
+                        return t("Action");
                     }
-                    return `Action #${actions.indexOf(object) + 1}`;
+                    return `${t("Action")} #${actions.indexOf(object) + 1}`;
                 },
                 type: PropertyType.Enum,
                 enumItems: [...actionClasses.keys()].map(id => ({

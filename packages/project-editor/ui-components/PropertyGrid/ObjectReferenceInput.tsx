@@ -4,6 +4,7 @@ import { action, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 
 import { closest } from "eez-studio-shared/dom";
+import { t } from "eez-studio-shared/i18n";
 
 import { SearchInput } from "eez-studio-ui/search-input";
 
@@ -298,7 +299,7 @@ export const ObjectReferenceInput = observer(
                             style={{ marginTop: 5, marginBottom: 10 }}
                         >
                             <div style={{ marginBottom: 5 }}>
-                                Dimension: {bitmap.imageElement.width} x{" "}
+                                {t("Dimension")}: {bitmap.imageElement.width} x{" "}
                                 {bitmap.imageElement.height} px
                             </div>
                             <div>

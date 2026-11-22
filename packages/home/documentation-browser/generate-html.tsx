@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import fs from "fs";
 
 import { copyDir } from "eez-studio-shared/util-electron";
+import { t } from "eez-studio-shared/i18n";
 
 import * as notification from "eez-studio-ui/notification";
 
@@ -64,7 +65,7 @@ ${div.innerHTML}
 }
 
 export async function generateHTMLFilesForAllComponents() {
-    const progressToastId = notification.info("Start...", {
+    const progressToastId = notification.info(t("Start..."), {
         autoClose: false
     });
 
@@ -95,7 +96,7 @@ export async function generateHTMLFilesForAllComponents() {
     }
 
     notification.update(progressToastId, {
-        render: `Copying images folder...`,
+        render: t("Copying images folder..."),
         type: notification.INFO
     });
 
@@ -105,7 +106,7 @@ export async function generateHTMLFilesForAllComponents() {
     );
 
     notification.update(progressToastId, {
-        render: "Done.",
+        render: t("Done."),
         type: notification.SUCCESS,
         autoClose: 3000
     });

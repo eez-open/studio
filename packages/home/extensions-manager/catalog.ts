@@ -9,6 +9,8 @@ import {
 
 import * as notification from "eez-studio-ui/notification";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { IExtension } from "eez-studio-shared/extensions/extension";
 
 export const DEFAULT_EXTENSIONS_CATALOG_VERSION_DOWNLOAD_URL =
@@ -107,7 +109,7 @@ class ExtensionsCatalog {
             }
         } catch (error) {
             console.error(error);
-            notification.error(`Failed to download extensions catalog version`);
+            notification.error(t("Failed to download extensions catalog version"));
         }
 
         return true;
@@ -149,7 +151,7 @@ class ExtensionsCatalog {
         req.open("GET", DEFAULT_EXTENSIONS_CATALOG_DOWNLOAD_URL);
 
         const progressToastId = notification.info(
-            "Downloading extensions catalog ...",
+            t("Downloading extensions catalog ..."),
             {
                 autoClose: false,
                 hideProgressBar: false
@@ -177,7 +179,7 @@ class ExtensionsCatalog {
 
             notification.update(progressToastId, {
                 type: notification.SUCCESS,
-                render: `The latest extensions catalog successfully downloaded.`,
+                render: t("The latest extensions catalog successfully downloaded."),
                 autoClose: 5000
             });
         });
@@ -186,7 +188,7 @@ class ExtensionsCatalog {
             console.error("ExtensionsCatalog download error", error);
             notification.update(progressToastId, {
                 type: notification.ERROR,
-                render: `Failed to download extensions catalog.`,
+                render: t("Failed to download extensions catalog."),
                 autoClose: 5000
             });
         });

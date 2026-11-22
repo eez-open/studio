@@ -1,5 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
+
+import { t } from "eez-studio-shared/i18n";
 import {
     action,
     computed,
@@ -45,6 +47,107 @@ import { showExportedItemsDialog } from "./ExportedItemsDialog";
 
 export const Toolbar = observer(
     class Toolbar extends React.Component {
+        // Figma-style tooltips: while the pointer is over the toolbar, the
+        // native title attribute is swapped for a custom pill rendered
+        // below the button.
+        tooltipPill: HTMLDivElement | undefined;
+        tooltipTarget: Element | undefined;
+
+        componentDidMount() {
+            const nav = ReactDOM.findDOMNode(this) as Element | null;
+            if (!nav) {
+                return;
+            }
+
+            this.hideTooltip = () => {
+                if (this.tooltipTarget) {
+                    const el = this.tooltipTarget as HTMLElement;
+                    if (el.dataset.ttTitle !== undefined) {
+                        el.setAttribute("title", el.dataset.ttTitle);
+                    }
+                    this.tooltipTarget = undefined;
+                }
+                if (this.tooltipPill) {
+                    this.tooltipPill.style.opacity = "0";
+                }
+            };
+
+            this.onTooltipOver = (event: MouseEvent) => {
+                const target = event.target as Element;
+                const el = target.closest<HTMLElement>("[title]");
+                if (!el || !nav.contains(el)) {
+                    return;
+                }
+                if (this.tooltipTarget === el) {
+                    return;
+                }
+                this.hideTooltip?.();
+
+                const title = el.getAttribute("title");
+                if (!title) {
+                    return;
+                }
+
+                el.dataset.ttTitle = title;
+                el.removeAttribute("title");
+                this.tooltipTarget = el;
+
+                if (!this.tooltipPill) {
+                    const pill = document.createElement("div");
+                    pill.className = "EezStudio_ToolbarTooltip";
+                    document.body.appendChild(pill);
+                    this.tooltipPill = pill;
+                }
+
+                const pill = this.tooltipPill!;
+                pill.textContent = title;
+                pill.style.opacity = "0";
+                pill.style.display = "block";
+
+                const rect = el.getBoundingClientRect();
+                requestAnimationFrame(() => {
+                    const pillRect = pill.getBoundingClientRect();
+                    let left = rect.left + rect.width / 2 - pillRect.width / 2;
+                    left = Math.max(
+                        8,
+                        Math.min(left, window.innerWidth - pillRect.width - 8)
+                    );
+                    pill.style.left = left + "px";
+                    pill.style.top = rect.bottom + 8 + "px";
+                    pill.style.opacity = "1";
+                });
+            };
+
+            this.onTooltipOut = (event: MouseEvent) => {
+                const target = event.target as Element;
+                if (this.tooltipTarget && target.contains(this.tooltipTarget)) {
+                    this.hideTooltip?.();
+                }
+            };
+
+            nav.addEventListener("mouseover", this.onTooltipOver!);
+            nav.addEventListener("mouseout", this.onTooltipOut!);
+            nav.addEventListener("mousedown", this.hideTooltip!);
+        }
+
+        componentWillUnmount() {
+            const nav = ReactDOM.findDOMNode(this) as Element | null;
+            if (nav) {
+                nav.removeEventListener("mouseover", this.onTooltipOver!);
+                nav.removeEventListener("mouseout", this.onTooltipOut!);
+                nav.removeEventListener("mousedown", this.hideTooltip!);
+            }
+            this.hideTooltip?.();
+            if (this.tooltipPill) {
+                this.tooltipPill.remove();
+                this.tooltipPill = undefined;
+            }
+        }
+
+        onTooltipOver: ((event: MouseEvent) => void) | undefined;
+        onTooltipOut: ((event: MouseEvent) => void) | undefined;
+        hideTooltip: (() => void) | undefined;
+
         static contextType = ProjectContext;
         declare context: React.ContextType<typeof ProjectContext>;
 
@@ -264,7 +367,7 @@ const EditorButtons = observer(
                     {!this.context.runtime && (
                         <div className="btn-group" role="group">
                             <IconAction
-                                title="Save"
+                                title={t("Save")}
                                 icon="material:save"
                                 onClick={() => this.context.save()}
                                 enabled={this.context.isModified}
@@ -278,7 +381,7 @@ const EditorButtons = observer(
                                 <IconAction
                                     title={
                                         this.context.undoManager.canUndo
-                                            ? `Undo "${this.context.undoManager.undoDescription}"`
+                                            ? t("Undo")
                                             : ""
                                     }
                                     icon="material:undo"
@@ -290,7 +393,7 @@ const EditorButtons = observer(
                                 <IconAction
                                     title={
                                         this.context.undoManager.canRedo
-                                            ? `Redo "${this.context.undoManager.redoDescription}"`
+                                            ? t("Redo")
                                             : ""
                                     }
                                     icon="material:redo"
@@ -304,7 +407,7 @@ const EditorButtons = observer(
                             <div className="btn-group" role="group">
                                 {false && (
                                     <IconAction
-                                        title="Cut"
+                                        title={t("Cut")}
                                         icon="material:content_cut"
                                         iconSize={22}
                                         onClick={this.context.cut}
@@ -312,14 +415,14 @@ const EditorButtons = observer(
                                     />
                                 )}
                                 <IconAction
-                                    title="Copy"
+                                    title={t("Copy")}
                                     icon="material:content_copy"
                                     iconSize={22}
                                     onClick={this.context.copy}
                                     enabled={this.context.canCopy}
                                 />
                                 <IconAction
-                                    title="Paste"
+                                    title={t("Paste")}
                                     icon="material:content_paste"
                                     iconSize={22}
                                     onClick={this.context.paste}
@@ -328,7 +431,7 @@ const EditorButtons = observer(
                             </div>
                             <div className="btn-group" role="group">
                                 <IconAction
-                                    title="Scrapbook"
+                                    title={t("Scrapbook")}
                                     icon={PROJECT_EDITOR_SCRAPBOOK}
                                     iconSize={24}
                                     onClick={() => showScrapbookManager()}
@@ -342,7 +445,7 @@ const EditorButtons = observer(
                         this.isBuildConfigurationSelectorVisible && (
                             <div className="btn-group">
                                 <select
-                                    title="Configuration"
+                                    title={t("Configuration")}
                                     id="btn-toolbar-configuration"
                                     className="form-select"
                                     value={
@@ -362,7 +465,7 @@ const EditorButtons = observer(
                         <div className="btn-group" role="group">
                             {!this.context.projectTypeTraits.isDashboard && (
                                 <IconAction
-                                    title="Check"
+                                    title={t("Check")}
                                     icon="material:check"
                                     onClick={() => this.context.check()}
                                     enabled={this.context.project._fullyLoaded}
@@ -373,7 +476,7 @@ const EditorButtons = observer(
                                 isScrapbookItemFilePath(this.context.filePath)
                             ) && (
                                 <IconAction
-                                    title="Build"
+                                    title={t("Build")}
                                     icon="material:build"
                                     onClick={() => this.context.build()}
                                     enabled={this.context.project._fullyLoaded}
@@ -387,7 +490,7 @@ const EditorButtons = observer(
                             ProjectType.FIRMWARE && (
                             <div className="btn-group" role="group">
                                 <IconAction
-                                    title="Exported Items"
+                                    title={t("Exported Items")}
                                     icon="material:publish"
                                     onClick={() =>
                                         showExportedItemsDialog(this.context)
@@ -401,7 +504,7 @@ const EditorButtons = observer(
                         this.context.project.micropython && (
                             <div className="btn-group" role="group">
                                 <IconAction
-                                    title="Run MicroPython Script"
+                                    title={t("Run MicroPython Script")}
                                     icon={RUN_ICON}
                                     iconSize={28}
                                     onClick={() =>
@@ -418,7 +521,7 @@ const EditorButtons = observer(
                                 <>
                                     <div className="btn-group" role="group">
                                         <IconAction
-                                            title="Show front face"
+                                            title={t("Show front face")}
                                             icon="material:flip_to_front"
                                             iconSize={20}
                                             onClick={() =>
@@ -429,7 +532,7 @@ const EditorButtons = observer(
                                             }
                                         />
                                         <IconAction
-                                            title="Show back face"
+                                            title={t("Show back face")}
                                             icon="material:flip_to_back"
                                             iconSize={20}
                                             onClick={() =>
@@ -444,7 +547,7 @@ const EditorButtons = observer(
                                     {!this.flowTabState?.flowState && (
                                         <div className="btn-group" role="group">
                                             <IconAction
-                                                title="Show timeline"
+                                                title={t("Show timeline")}
                                                 icon={
                                                     <svg viewBox="0 0 551 372">
                                                         <path d="M42.4631 336.4972H204.996v-42.4224h-65.4195v-60.132h65.4195v-42.4495H0l.0008 145.005zm-.0045-102.5747H99.046v60.132H42.4586zm233.9184-42.4632v42.4405h61.8929v60.132h-61.893v42.4405h61.352l42.4247.009h171.5298v-145.013zM442.0555 294.007h-61.893v-60.132h61.893zm67.1986 0h-24.74v-60.132h24.74z" />
@@ -467,7 +570,7 @@ const EditorButtons = observer(
                                     !this.pageTabState.frontFace)) && (
                                 <div className="btn-group" role="group">
                                     <IconAction
-                                        title="Show component descriptions"
+                                        title={t("Show component descriptions")}
                                         icon="material:comment"
                                         iconSize={20}
                                         onClick={action(
@@ -496,7 +599,7 @@ const EditorButtons = observer(
                     {this.featureItems && (
                         <div className="btn-group" role="group">
                             {this.featureItems.map(featureItem => {
-                                const title = objectToString(featureItem);
+                                const title = t(objectToString(featureItem));
 
                                 let icon = getObjectIcon(featureItem);
 
@@ -527,7 +630,7 @@ const EditorButtons = observer(
                                         title={title}
                                         icon={icon}
                                         onClick={onClick}
-                                        enabled={!isActive}
+                                        selected={isActive}
                                     />
                                 );
                             })}
@@ -608,7 +711,7 @@ const PreviewBackgroundColorButton = observer(
                 <div
                     className="btn-group EezStudio_ProjectEditor_PreviewBackgroundColor"
                     role="group"
-                    title="Preview background color (this editor session only)"
+                    title={t("Preview background color (this editor session only)")}
                 >
                     <div className="EezStudio_ProjectEditor_PreviewBackgroundColor_Swatch">
                         <ThemedColorInput
@@ -629,7 +732,7 @@ const PreviewBackgroundColorButton = observer(
 
                     {previewBackgroundColor && (
                         <IconAction
-                            title="Reset preview background color"
+                            title={t("Reset preview background color")}
                             icon="material:close"
                             iconSize={16}
                             onClick={this.onReset}
@@ -944,7 +1047,7 @@ const RunEditSwitchControls = observer(
                 <div className="EezStudio_ProjectEditor_ToolbarNav_RunEditSwitchControls">
                     <ButtonAction
                         text="Edit"
-                        title="Enter edit mode (Shift+F5)"
+                        title={t("Enter edit mode (Shift+F5)")}
                         icon="material:mode_edit"
                         iconSize={iconSize}
                         onClick={this.context.onSetEditorMode}
@@ -955,7 +1058,7 @@ const RunEditSwitchControls = observer(
 
                     <ButtonAction
                         text="Run"
-                        title="Enter run mode (F5)"
+                        title={t("Enter run mode (F5)")}
                         icon={RUN_ICON}
                         iconSize={iconSize}
                         onClick={this.context.onSetRuntimeMode}
@@ -968,7 +1071,7 @@ const RunEditSwitchControls = observer(
 
                     <ButtonAction
                         text="Debug"
-                        title="Enter debug mode (Ctrl+F5)"
+                        title={t("Enter debug mode (Ctrl+F5)")}
                         icon={
                             <svg viewBox="0 0 64 64" fill="currentColor">
                                 <g transform="translate(-1,-1)">
@@ -1007,7 +1110,7 @@ const RunEditSwitchControls = observer(
                     {this.showFullSimulatorButton && (
                         <ButtonAction
                             text="Full Sim"
-                            title="Run in Full Simulator (F7)"
+                            title={t("Run in Full Simulator (F7)")}
                             icon="material:computer"
                             iconSize={iconSize}
                             onClick={this.context.onSetFullSimulatorMode}

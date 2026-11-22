@@ -13,7 +13,6 @@ import {
     makeDerivedClassInfo,
     IPropertyGridGroupDefinition,
     PropertyProps,
-    findPropertyByNameInClassInfo,
     IEezObject,
     MessageType,
     getClassInfoLvglProperties,
@@ -56,7 +55,8 @@ import type {
 } from "project-editor/features/page/page";
 import { ComponentsContainerEnclosure } from "project-editor/flow/editor/render";
 import { geometryGroup } from "project-editor/ui-components/PropertyGrid/groups";
-import { Property } from "project-editor/ui-components/PropertyGrid/Property";
+import { GeometryFieldRow } from "project-editor/ui-components/GeometryFieldRow";
+import { t } from "eez-studio-shared/i18n";
 
 import { LVGLStylesDefinition } from "project-editor/lvgl/style-definition";
 import { LVGLStylesDefinitionProperty } from "project-editor/lvgl/LVGLStylesDefinitionProperty";
@@ -166,100 +166,49 @@ export const GeometryProperties = observer(
 
             return (
                 <div className="EezStudio_LVGLWidgetGeometryProperty">
-                    <div>X</div>
-                    <Property
-                        propertyInfo={
-                            findPropertyByNameInClassInfo(
-                                LVGLWidget.classInfo,
-                                "left"
-                            )!
-                        }
+                    <GeometryFieldRow
+                        label="X"
+                        propertyName="left"
+                        classInfo={LVGLWidget.classInfo}
                         objects={this.props.objects}
+                        updateObject={this.props.updateObject}
+                        unitPropertyName="leftUnit"
                         readOnly={this.props.readOnly}
-                        updateObject={this.props.updateObject}
+                        scrub
                     />
-                    <Property
-                        propertyInfo={
-                            findPropertyByNameInClassInfo(
-                                LVGLWidget.classInfo,
-                                "leftUnit"
-                            )!
-                        }
+                    <GeometryFieldRow
+                        label="Y"
+                        propertyName="top"
+                        classInfo={LVGLWidget.classInfo}
                         objects={this.props.objects}
+                        updateObject={this.props.updateObject}
+                        unitPropertyName="topUnit"
                         readOnly={this.props.readOnly}
-                        updateObject={this.props.updateObject}
+                        scrub
                     />
-
-                    <div>Y</div>
-                    <Property
-                        propertyInfo={
-                            findPropertyByNameInClassInfo(
-                                LVGLWidget.classInfo,
-                                "top"
-                            )!
-                        }
+                    <GeometryFieldRow
+                        label="W"
+                        title={t("Width")}
+                        propertyName="width"
+                        classInfo={LVGLWidget.classInfo}
                         objects={this.props.objects}
+                        updateObject={this.props.updateObject}
+                        unitPropertyName="widthUnit"
                         readOnly={this.props.readOnly}
-                        updateObject={this.props.updateObject}
+                        valueReadOnly={widthReadOnly}
+                        scrub
                     />
-                    <Property
-                        propertyInfo={
-                            findPropertyByNameInClassInfo(
-                                LVGLWidget.classInfo,
-                                "topUnit"
-                            )!
-                        }
+                    <GeometryFieldRow
+                        label="H"
+                        title={t("Height")}
+                        propertyName="height"
+                        classInfo={LVGLWidget.classInfo}
                         objects={this.props.objects}
+                        updateObject={this.props.updateObject}
+                        unitPropertyName="heightUnit"
                         readOnly={this.props.readOnly}
-                        updateObject={this.props.updateObject}
-                    />
-
-                    <div title="Width">W</div>
-                    <Property
-                        propertyInfo={
-                            findPropertyByNameInClassInfo(
-                                LVGLWidget.classInfo,
-                                "width"
-                            )!
-                        }
-                        objects={this.props.objects}
-                        readOnly={this.props.readOnly || widthReadOnly}
-                        updateObject={this.props.updateObject}
-                    />
-                    <Property
-                        propertyInfo={
-                            findPropertyByNameInClassInfo(
-                                LVGLWidget.classInfo,
-                                "widthUnit"
-                            )!
-                        }
-                        objects={this.props.objects}
-                        readOnly={this.props.readOnly}
-                        updateObject={this.props.updateObject}
-                    />
-
-                    <div title="Height">H</div>
-                    <Property
-                        propertyInfo={
-                            findPropertyByNameInClassInfo(
-                                LVGLWidget.classInfo,
-                                "height"
-                            )!
-                        }
-                        objects={this.props.objects}
-                        readOnly={this.props.readOnly || heightReadOnly}
-                        updateObject={this.props.updateObject}
-                    />
-                    <Property
-                        propertyInfo={
-                            findPropertyByNameInClassInfo(
-                                LVGLWidget.classInfo,
-                                "heightUnit"
-                            )!
-                        }
-                        objects={this.props.objects}
-                        readOnly={this.props.readOnly}
-                        updateObject={this.props.updateObject}
+                        valueReadOnly={heightReadOnly}
+                        scrub
                     />
                 </div>
             );

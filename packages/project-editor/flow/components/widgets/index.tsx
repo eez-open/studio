@@ -7,6 +7,7 @@ import { range } from "lodash-es";
 import * as FlexLayout from "flexlayout-react";
 
 import { Button } from "eez-studio-ui/button";
+import { t } from "eez-studio-shared/i18n";
 
 import {
     IEezObject,
@@ -213,7 +214,7 @@ const ContainerWidgetEditLayout = observer(
                 {
                     jsPanel: {
                         id: "container-widget-edit-layout",
-                        title: "Edit Layout",
+                        title: t("Edit Layout"),
                         width: page.width,
                         height: page.height,
                         onclosed: onDispose
@@ -233,7 +234,7 @@ const ContainerWidgetEditLayout = observer(
                         size="small"
                         onClick={this.editLayout}
                     >
-                        Edit Layout
+                        {t("Edit Layout")}
                     </Button>
                 </div>
             );

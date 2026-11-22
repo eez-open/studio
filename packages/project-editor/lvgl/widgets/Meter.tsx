@@ -15,6 +15,8 @@ import {
     registerClass
 } from "project-editor/core/object";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { findBitmap, getName, NamingConvention, ProjectType } from "project-editor/project/project";
 
 import { specificGroup } from "project-editor/ui-components/PropertyGrid/groups";
@@ -329,7 +331,7 @@ export class LVGLMeterIndicatorNeedleImg extends LVGLMeterIndicator {
         listLabel: (
             indicator: LVGLMeterIndicatorNeedleImg,
             collapsed: boolean
-        ) => "Needle image",
+        ) => t("Needle image"),
 
         defaultValue: {
             pivotX: 0,
@@ -459,7 +461,7 @@ export class LVGLMeterIndicatorNeedleLine extends LVGLMeterIndicator {
         listLabel: (
             indicator: LVGLMeterIndicatorNeedleLine,
             collapsed: boolean
-        ) => "Needle line",
+        ) => t("Needle line"),
 
         defaultValue: {
             width: 3,
@@ -644,7 +646,7 @@ export class LVGLMeterIndicatorScaleLines extends LVGLMeterIndicator {
         listLabel: (
             indicator: LVGLMeterIndicatorScaleLines,
             collapsed: boolean
-        ) => "Scale lines",
+        ) => t("Scale lines"),
 
         defaultValue: {
             colorStart: "#000000",
@@ -888,7 +890,7 @@ export class LVGLMeterIndicatorArc extends LVGLMeterIndicator {
         ],
 
         listLabel: (indicator: LVGLMeterIndicatorArc, collapsed: boolean) =>
-            "Arc",
+            t("Arc"),
 
         defaultValue: {
             width: 2,
@@ -1132,7 +1134,7 @@ class LVGLMeterScale extends EezObject {
             }
         ],
 
-        listLabel: (scale: LVGLMeterScale, collapsed: boolean) => "Scale",
+        listLabel: (scale: LVGLMeterScale, collapsed: boolean) => t("Scale"),
 
         defaultValue: {
             minorTickCount: 41,

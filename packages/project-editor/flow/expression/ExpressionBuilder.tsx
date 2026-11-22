@@ -71,6 +71,7 @@ import type * as CommandsBrowserModule from "instrument/window/terminal/commands
 
 import { TerminalState } from "instrument/window/terminal/terminalState";
 import { SearchInput } from "eez-studio-ui/search-input";
+import { t } from "eez-studio-shared/i18n";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -919,7 +920,7 @@ const SelectItemDialog = observer(
                 nonEmpty: children.length > 0,
                 node: this.searchTreeNode({
                     id: "all",
-                    label: "All",
+                    label: t("All"),
                     children,
                     selected: false,
                     expanded: true
@@ -1019,7 +1020,7 @@ const SelectItemDialog = observer(
                 nonEmpty: children.length > 0,
                 node: this.searchTreeNode({
                     id: "all",
-                    label: "All",
+                    label: t("All"),
                     children,
                     selected: false,
                     expanded: true
@@ -1080,7 +1081,7 @@ const SelectItemDialog = observer(
                 nonEmpty: children.length > 0,
                 node: this.searchTreeNode({
                     id: "all",
-                    label: "All",
+                    label: t("All"),
                     children,
                     selected: false,
                     expanded: true
@@ -1132,7 +1133,7 @@ const SelectItemDialog = observer(
                 nonEmpty: children.length > 0,
                 node: this.searchTreeNode({
                     id: "all",
-                    label: "All",
+                    label: t("All"),
                     children,
                     selected: false,
                     expanded: true
@@ -1150,7 +1151,7 @@ const SelectItemDialog = observer(
                 if (this.context.project.texts) {
                     children.push({
                         id: "text-resources",
-                        label: "Text resources",
+                        label: t("Text resources"),
                         children: map(
                             this.context.project.texts.resources,
                             text => {
@@ -1175,7 +1176,7 @@ const SelectItemDialog = observer(
                 nonEmpty: children.length > 0,
                 node: this.searchTreeNode({
                     id: "all",
-                    label: "All",
+                    label: t("All"),
                     children,
                     selected: false,
                     expanded: true

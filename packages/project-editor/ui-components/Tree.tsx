@@ -20,6 +20,7 @@ import {
     getProject
 } from "project-editor/project/helper";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { hoverOutlineState } from "project-editor/flow/editor/hover-outline";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,6 +77,8 @@ const TreeRow = observer(
         onToggleCollapse: (event: any) => void;
         onEditItem?: (itemId: string) => void;
         renderItem?: (itemId: string) => React.ReactNode;
+        selectedRun?: { start: boolean; end: boolean };
+        hoverOutline?: boolean;
     }> {
         ref = React.createRef<HTMLDivElement>();
 
@@ -138,6 +141,17 @@ const TreeRow = observer(
                 "tree-row-external-project-item": isExternalItem
             });
 
+            // contiguous selected rows are drawn as one merged block
+            // (Figma layer-row look)
+            if (this.props.selectedRun) {
+                if (this.props.selectedRun.start) {
+                    className += " selected-run-start";
+                }
+                if (this.props.selectedRun.end) {
+                    className += " selected-run-end";
+                }
+            }
+
             let triangle: JSX.Element | undefined;
             if (collapsable) {
                 triangle = (
@@ -172,6 +186,25 @@ const TreeRow = observer(
                     onDragStart={this.props.onDragStart}
                     onDrag={this.props.onDrag}
                     onDragEnd={this.props.onDragEnd}
+                    onMouseEnter={
+                        this.props.hoverOutline
+                            ? () =>
+                                  (hoverOutlineState.objectAdapter =
+                                      item)
+                            : undefined
+                    }
+                    onMouseLeave={
+                        this.props.hoverOutline
+                            ? () => {
+                                  if (
+                                      hoverOutlineState.objectAdapter ===
+                                      item
+                                  ) {
+                                      hoverOutlineState.objectAdapter = undefined;
+                                  }
+                              }
+                            : undefined
+                    }
                 >
                     {triangle}
 
@@ -223,6 +256,7 @@ const TreeRow = observer(
 ////////////////////////////////////////////////////////////////////////////////
 
 interface TreeProps {
+    hoverOutline?: boolean;
     treeAdapter: TreeAdapter;
     tabIndex?: number;
     onFocus?: () => void;
@@ -914,6 +948,23 @@ export const Tree = observer(
                     treeAdapter.draggableAdapter.isDragging
             });
 
+            const selectedRun = new Map<
+                any,
+                { start: boolean; end: boolean }
+            >();
+            for (let i = 0; i < this.allRows.length; i++) {
+                const row = this.allRows[i];
+                if (!treeAdapter.isSelected(row.item)) {
+                    continue;
+                }
+                const prev = this.allRows[i - 1];
+                const next = this.allRows[i + 1];
+                selectedRun.set(row, {
+                    start: !prev || !treeAdapter.isSelected(prev.item),
+                    end: !next || !treeAdapter.isSelected(next.item)
+                });
+            }
+
             return (
                 <div
                     className={className}
@@ -964,6 +1015,8 @@ export const Tree = observer(
                                 onToggleCollapse={this.onRowToggleCollapse}
                                 onEditItem={onEditItem}
                                 renderItem={renderItem}
+                                selectedRun={selectedRun.get(row)}
+                                hoverOutline={this.props.hoverOutline}
                             />
                         ))}
 

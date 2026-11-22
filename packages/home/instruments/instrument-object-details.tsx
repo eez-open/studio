@@ -13,6 +13,8 @@ import { Toolbar } from "eez-studio-ui/toolbar";
 import { ButtonAction } from "eez-studio-ui/action";
 import * as notification from "eez-studio-ui/notification";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { ConnectionProperties } from "instrument/window/connection-dialog";
 import { InstrumentObject } from "instrument/instrument-object";
 
@@ -52,8 +54,8 @@ export const InstrumentToolbar = observer(
                 <Toolbar>
                     {this.props.instrument.isUnknownExtension && (
                         <ButtonAction
-                            text="Install Extension"
-                            title="Install extension for this instrument"
+                            text={t("Install Extension")}
+                            title={t("Install extension for this instrument")}
                             className="btn btn-default btn-primary"
                             onClick={() =>
                                 installExtension(this.props.instrument)
@@ -62,23 +64,23 @@ export const InstrumentToolbar = observer(
                     )}
                     {!this.props.instrumentsStore.selectInstrument && (
                         <ButtonAction
-                            text="Open in Tab"
-                            title="Open instrument in new tab"
+                            text={t("Open in Tab")}
+                            title={t("Open instrument in new tab")}
                             className="btn btn-secondary"
                             onClick={this.onOpenInTab}
                         />
                     )}
                     {!this.props.instrumentsStore.selectInstrument && (
                         <ButtonAction
-                            text="Open in New Window"
-                            title="Open instrument in new window"
+                            text={t("Open in New Window")}
+                            title={t("Open instrument in new window")}
                             className="btn btn-secondary"
                             onClick={this.onOpenInWindow}
                         />
                     )}
                     <ButtonAction
-                        text="Delete"
-                        title="Delete instrument"
+                        text={t("Delete")}
+                        title={t("Delete instrument")}
                         className="btn btn-danger"
                         onClick={this.onDelete}
                     />
@@ -125,16 +127,19 @@ export const ConnectionParametersDetails = observer(
                 if (instrument.lastConnection.type === "ethernet") {
                     return (
                         <PropertyList>
-                            <StaticProperty name="Interface" value="Ethernet" />
                             <StaticProperty
-                                name="Server address"
+                                name={t("Interface")}
+                                value={t("Ethernet")}
+                            />
+                            <StaticProperty
+                                name={t("Server address")}
                                 value={
                                     instrument.lastConnection.ethernetParameters
                                         .address
                                 }
                             />
                             <StaticProperty
-                                name="Port"
+                                name={t("Port")}
                                 value={instrument.lastConnection.ethernetParameters.port.toString()}
                             />
                         </PropertyList>
@@ -142,35 +147,38 @@ export const ConnectionParametersDetails = observer(
                 } else if (instrument.lastConnection.type === "serial") {
                     return (
                         <PropertyList>
-                            <StaticProperty name="Interface" value="Serial" />
                             <StaticProperty
-                                name="Port"
+                                name={t("Interface")}
+                                value={t("Serial")}
+                            />
+                            <StaticProperty
+                                name={t("Port")}
                                 value={
                                     instrument.lastConnection.serialParameters
                                         .port
                                 }
                             />
                             <StaticProperty
-                                name="Baud rate"
+                                name={t("Baud rate")}
                                 value={instrument.lastConnection.serialParameters.baudRate.toString()}
                             />
                             <StaticProperty
-                                name="Data bits"
+                                name={t("Data bits")}
                                 value={instrument.lastConnection.serialParameters.dataBits.toString()}
                             />
                             <StaticProperty
-                                name="Stop bits"
+                                name={t("Stop bits")}
                                 value={instrument.lastConnection.serialParameters.stopBits.toString()}
                             />
                             <StaticProperty
-                                name="Parity"
+                                name={t("Parity")}
                                 value={
                                     instrument.lastConnection.serialParameters
                                         .parity
                                 }
                             />
                             <StaticProperty
-                                name="Flow control"
+                                name={t("Flow control")}
                                 value={
                                     instrument.lastConnection.serialParameters
                                         .flowControl
@@ -181,9 +189,12 @@ export const ConnectionParametersDetails = observer(
                 } else if (instrument.lastConnection.type === "usbtmc") {
                     return (
                         <PropertyList>
-                            <StaticProperty name="Interface" value="USBTMC" />
                             <StaticProperty
-                                name="Vendor ID"
+                                name={t("Interface")}
+                                value="USBTMC"
+                            />
+                            <StaticProperty
+                                name={t("Vendor ID")}
                                 value={
                                     "0x" +
                                     instrument.lastConnection.usbtmcParameters.idVendor.toString(
@@ -192,7 +203,7 @@ export const ConnectionParametersDetails = observer(
                                 }
                             />
                             <StaticProperty
-                                name="Product ID"
+                                name={t("Product ID")}
                                 value={
                                     "0x" +
                                     instrument.lastConnection.usbtmcParameters.idProduct.toString(
@@ -206,7 +217,7 @@ export const ConnectionParametersDetails = observer(
                     return (
                         <PropertyList>
                             <StaticProperty
-                                name="Interface"
+                                name={t("Interface")}
                                 value="WebSimulator"
                             />
                         </PropertyList>
@@ -214,9 +225,12 @@ export const ConnectionParametersDetails = observer(
                 } else if (instrument.lastConnection.type === "visa") {
                     return (
                         <PropertyList>
-                            <StaticProperty name="Interface" value="VISA" />
                             <StaticProperty
-                                name="Resource"
+                                name={t("Interface")}
+                                value="VISA"
+                            />
+                            <StaticProperty
+                                name={t("Resource")}
                                 value={
                                     instrument.lastConnection.visaParameters
                                         .resource
@@ -241,7 +255,7 @@ export async function installExtension(instrument: InstrumentObject) {
         extension => extension.id === instrument.extension!.id
     );
     if (extension) {
-        const progressToastId = notification.info("Installing...", {
+        const progressToastId = notification.info(t("Installing..."), {
             autoClose: false
         });
 
@@ -251,12 +265,12 @@ export async function installExtension(instrument: InstrumentObject) {
         await downloadAndInstallExtension(extension, progressToastId);
 
         notification.update(progressToastId, {
-            render: "Extensions successfully installed!",
+            render: t("Extensions successfully installed!"),
             type: notification.SUCCESS,
             autoClose: 500
         });
     } else {
-        notification.error("Instrument extension not found!");
+        notification.error(t("Instrument extension not found!"));
     }
 }
 
@@ -278,7 +292,7 @@ const Properties = observer(
             return (
                 <PropertyList>
                     <StaticProperty
-                        name="Instrument"
+                        name={t("Instrument")}
                         value={extension!.displayName || extension!.name}
                     />
                     <StaticProperty
@@ -286,7 +300,7 @@ const Properties = observer(
                         value={this.props.instrument.id}
                     />
                     <TextInputProperty
-                        name="Label"
+                        name={t("Label")}
                         value={this.props.instrument.label || ""}
                         onChange={value =>
                             this.props.instrument.setLabel(value)
@@ -297,7 +311,7 @@ const Properties = observer(
                         value={this.props.instrument.idn || ""}
                     />
                     <BooleanProperty
-                        name="Auto connect"
+                        name={t("Auto connect")}
                         value={this.props.instrument.autoConnect}
                         onChange={value =>
                             this.props.instrument.setAutoConnect(value)
@@ -380,7 +394,7 @@ const Connection = observer(
                                 connection!.connect();
                             }}
                         >
-                            Connect
+                            {t("Connect")}
                         </button>
                     );
                 } else {
@@ -400,7 +414,7 @@ const Connection = observer(
                                 className="btn btn-danger"
                                 onClick={() => connection!.disconnect()}
                             >
-                                Disconnect
+                                {t("Disconnect")}
                             </button>
                         );
                     } else {
@@ -409,7 +423,7 @@ const Connection = observer(
                                 className="btn btn-danger"
                                 onClick={() => connection!.disconnect()}
                             >
-                                Abort
+                                {t("Abort")}
                             </button>
                         );
                     }

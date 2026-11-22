@@ -4,6 +4,7 @@ import classNames from "classnames";
 import { Menu, MenuItem } from "@electron/remote";
 
 import { humanize } from "eez-studio-shared/string";
+import { t } from "eez-studio-shared/i18n";
 
 import { PropertyProps } from "project-editor/core/object";
 import { getPropertySourceInfo, objectToString } from "project-editor/store";
@@ -32,7 +33,7 @@ export const PropertyMenu = observer(
 
                 menuItems.unshift(
                     new MenuItem({
-                        label: "Reset",
+                        label: t("Reset"),
                         click: () => {
                             this.props.updateObject({
                                 [this.props.propertyInfo.name]: undefined

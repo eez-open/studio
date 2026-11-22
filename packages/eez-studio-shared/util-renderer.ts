@@ -1,6 +1,8 @@
 import { dialog, BrowserWindow, getCurrentWindow } from "@electron/remote";
 import { ipcRenderer } from "electron";
 
+import { t } from "eez-studio-shared/i18n";
+
 function mnemonicLabel(label: string): string {
     const os = require("os");
 
@@ -29,14 +31,14 @@ export async function confirmSave({
     }
 
     const saveButton = {
-        label: mnemonicLabel("&&Save"),
+        label: mnemonicLabel(t("&&Save")),
         result: ConfirmResult.SAVE
     };
     const dontSaveButton = {
-        label: mnemonicLabel("Do&&n't Save"),
+        label: mnemonicLabel(t("Do&&n't Save")),
         result: ConfirmResult.DONT_SAVE
     };
-    const cancelButton = { label: "Cancel", result: ConfirmResult.CANCEL };
+    const cancelButton = { label: t("Cancel"), result: ConfirmResult.CANCEL };
 
     const os = require("os");
 

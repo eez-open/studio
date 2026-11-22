@@ -7,6 +7,7 @@ import type * as TabulatorModule from "tabulator-tables";
 import type * as LuxonModule from "luxon";
 
 import * as notification from "eez-studio-ui/notification";
+import { t } from "eez-studio-shared/i18n";
 
 import {
     registerClass,
@@ -520,7 +521,7 @@ const CopyOptionsButton = observer(
             );
 
             notification.info(
-                "The options are copied as a JSON literal to the clipboard"
+                t("The options are copied as a JSON literal to the clipboard")
             );
         };
 

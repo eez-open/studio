@@ -2594,12 +2594,16 @@ export class Project extends EezObject {
                 !this.projectTypeTraits.isIEXT;
         }
 
+        // The project resources (styles, fonts, bitmaps, themes, LVGL groups)
+        // moved into the Resources tab of the left activity bar — actively
+        // remove them from the right border in case an older layout still
+        // carries them.
         enableTabOnBorder(
             this._store.layoutModels.rootEditor,
             LayoutModels.STYLES_TAB_ID,
             LayoutModels.STYLES_TAB,
             FlexLayout.DockLocation.RIGHT,
-            this.styles != undefined || this.lvglStyles != undefined
+            false
         );
 
         enableTabOnBorder(
@@ -2607,7 +2611,7 @@ export class Project extends EezObject {
             LayoutModels.LVGL_GROUPS_TAB_ID,
             LayoutModels.LVGL_GROUPS_TAB,
             FlexLayout.DockLocation.RIGHT,
-            this.lvglGroups != undefined
+            false
         );
 
         enableTabOnBorder(
@@ -2615,7 +2619,7 @@ export class Project extends EezObject {
             LayoutModels.FONTS_TAB_ID,
             LayoutModels.FONTS_TAB,
             FlexLayout.DockLocation.RIGHT,
-            this.fonts != undefined
+            false
         );
 
         enableTabOnBorder(
@@ -2623,7 +2627,7 @@ export class Project extends EezObject {
             LayoutModels.BITMAPS_TAB_ID,
             LayoutModels.BITMAPS_TAB,
             FlexLayout.DockLocation.RIGHT,
-            this.bitmaps != undefined
+            false
         );
 
         enableTabOnBorder(
@@ -2631,7 +2635,7 @@ export class Project extends EezObject {
             LayoutModels.THEMES_TAB_ID,
             LayoutModels.THEMES_TAB,
             FlexLayout.DockLocation.RIGHT,
-            true //!this.projectTypeTraits.isLVGL
+            false
         );
 
         enableTabOnBorder(

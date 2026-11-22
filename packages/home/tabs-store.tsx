@@ -16,6 +16,7 @@ import * as path from "path";
 
 import { dockerBuildState } from "project-editor/lvgl/docker-build/docker-build-state";
 
+import { t } from "eez-studio-shared/i18n";
 import { onSimpleMessage } from "eez-studio-shared/util-renderer";
 
 import {
@@ -89,7 +90,7 @@ export class HomeTab implements IHomeTab {
     modified: boolean = false;
 
     id = "home";
-    title = "Home";
+    title = t("Home");
     icon = "material:home";
     category: HomeTabCategory = "none";
 
@@ -126,7 +127,7 @@ class HistoryTab implements IHomeTab {
     modified: boolean = false;
 
     id = "history";
-    title = "History";
+    title = t("History");
     icon = "material:history";
     category: HomeTabCategory = "instrument";
 
@@ -223,7 +224,7 @@ class ShortcutsAndGroupsTab implements IHomeTab {
     modified: boolean = false;
 
     id = "shortcutsAndGroups";
-    title = "Shortcuts and Groups";
+    title = t("Shortcuts and Groups");
     icon = "material:playlist_play";
     category: HomeTabCategory = "instrument";
 
@@ -854,7 +855,7 @@ export class ProjectEditorTab implements IHomeTab {
             );
         }
 
-        return "Untitled project";
+        return t("Untitled project");
     }
 
     get tooltipTitle() {
@@ -1016,7 +1017,7 @@ export class ProjectEditorTab implements IHomeTab {
             this.addListeners();
         }
 
-        notification.info("Project reloaded");
+        notification.info(t("Project reloaded"));
     }
 
     loadDebugInfo(filePath: string) {

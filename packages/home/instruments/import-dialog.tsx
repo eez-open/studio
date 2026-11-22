@@ -7,6 +7,8 @@ import { instrumentDatabases } from "eez-studio-shared/db";
 
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 
+import { t } from "eez-studio-shared/i18n";
+
 import { InstrumentsStore } from "home/instruments";
 
 const ImportDialog = observer(
@@ -29,19 +31,19 @@ const ImportDialog = observer(
                     db.prepare("SELECT description FROM settings").get() as any
                 ).description;
             } catch (e) {
-                description = "Failed to read description";
+                description = t("Failed to read description");
                 className = "text-danger";
             }
 
             return (
                 <Dialog
                     className="EezStudio_ImportDialog"
-                    title="Import"
+                    title={t("Import")}
                     onOk={this.onOK}
                 >
-                    <div>From file:</div>
+                    <div>{t("From file:")}</div>
                     <div>{this.props.filePath}</div>
-                    <div>Description:</div>
+                    <div>{t("Description:")}</div>
                     <div className={className}>{description}</div>
                 </Dialog>
             );

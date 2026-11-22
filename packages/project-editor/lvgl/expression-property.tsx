@@ -1,6 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react";
 
+import { t } from "eez-studio-shared/i18n";
+
 import {
     EezObject,
     findPropertyByNameInClassInfo,
@@ -111,7 +113,7 @@ const LVGLProperty = observer(
                                   propertyInfo,
                                   {
                                       assignableExpression: false,
-                                      title: "Expression Builder"
+                                      title: t("Expression Builder")
                                   },
                                   params
                               )

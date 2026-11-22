@@ -2,6 +2,8 @@ import React from "react";
 
 import * as FlexLayout from "flexlayout-react";
 
+import { t } from "eez-studio-shared/i18n";
+
 // flexlayout-react >= 0.8 removed the iconFactory and font props from Layout,
 // both are emulated here so that all users of FlexLayoutContainer keep the
 // old API: iconFactory via onRenderTab (renderValues.leading), font via the
@@ -30,10 +32,20 @@ export class FlexLayoutContainer extends React.Component<{
     ) => void;
     font?: IFontValues;
 }> {
+    // flexlayout-react's own UI strings (close/maximize/popout tooltips and the
+    // tab context menu) go through this mapper so they follow the UI language.
+    i18nMapper = (id: FlexLayout.I18nLabel, param?: string) => t(id);
+
     onRenderTab = (
         node: FlexLayout.TabNode,
         renderValues: FlexLayout.ITabRenderValues
     ) => {
+        // translate the default tab label (the tab node name). The name is a
+        // persistence key, only the rendered label is translated. A custom
+        // onRenderTab below may still override renderValues.content.
+        if (typeof renderValues.content === "string") {
+            renderValues.content = t(renderValues.content);
+        }
         if (this.props.iconFactory) {
             renderValues.leading = this.props.iconFactory(node);
         }
@@ -52,6 +64,7 @@ export class FlexLayoutContainer extends React.Component<{
                 onAuxMouseClick={this.props.onAuxMouseClick}
                 onContextMenu={this.props.onContextMenu}
                 onModelChange={this.props.onModelChange}
+                i18nMapper={this.i18nMapper}
             />
         );
 

@@ -16,6 +16,7 @@ import { dialog, getCurrentWindow } from "@electron/remote";
 
 import * as notification from "eez-studio-ui/notification";
 import { Button } from "eez-studio-ui/button";
+import { t } from "eez-studio-shared/i18n";
 
 import {
     ClassInfo,
@@ -88,7 +89,7 @@ const ExportBitmapFilePropertyGridUI = observer(
                 );
                 try {
                     await fs.promises.writeFile(filePath, bin);
-                    notification.info(`Bitmap file exported.`);
+                    notification.info(t(`Bitmap file exported.`));
                 } catch (error: any) {
                     notification.error(error.toString());
                 }
