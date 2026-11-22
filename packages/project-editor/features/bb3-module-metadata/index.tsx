@@ -258,7 +258,10 @@ registerClass("BB3ModuleMetadata", BB3ModuleMetadata);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const BB3_MODULE_METADATA_SPECIFICATION_VERSION_1 = 1;
+// The layout of the metadata and of the assets. BB3+ uses the assets of a module
+// only if it is the number BB3+ knows (MODULE_METADATA_VERSION in
+// bb3/module/module-metadata.h): add one when the layout changes.
+export const BB3_MODULE_METADATA_VERSION = 1;
 
 // size of the field value on the wire and in the BB3+ copy, 0 for a type
 // that is not supported (the project check reports it)
@@ -276,7 +279,7 @@ export function writeBB3ModuleMetadata(
 ) {
     dataBuffer.writeObjectOffset(() => {
         // version
-        dataBuffer.writeUint16(BB3_MODULE_METADATA_SPECIFICATION_VERSION_1);
+        dataBuffer.writeUint16(BB3_MODULE_METADATA_VERSION);
         // moduleType
         dataBuffer.writeUint16(metadata.moduleTypeNum);
         // moduleRevision
