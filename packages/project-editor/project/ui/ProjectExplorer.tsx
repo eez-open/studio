@@ -54,7 +54,7 @@ interface IProjectExplorerSection {
 // related groups, listed together in the groups dropdown
 type ProjectExplorerMenuId = "variables" | "resources" | "other";
 
-interface IProjectExplorerGroup {
+export interface IProjectExplorerGroup {
     // id of the tab which shows the same items in the "Classic" layout
     tabId: string;
     // Variables tab is split into multiple groups
@@ -441,6 +441,32 @@ const ALL_GROUP: IProjectExplorerGroup = {
     isAvailable: () => true,
     render: () => <AllGroups />
 };
+
+// groups available in the project, the "All" group is the first one
+export function getProjectExplorerGroups(projectStore: ProjectStore) {
+    return [
+        ALL_GROUP,
+        ...PROJECT_EXPLORER_GROUPS.filter(group =>
+            group.isAvailable(projectStore)
+        )
+    ];
+}
+
+export function isProjectExplorerAllGroup(group: IProjectExplorerGroup) {
+    return group == ALL_GROUP;
+}
+
+export const selectProjectExplorerGroup = action(
+    (navigationStore: NavigationStore, group: IProjectExplorerGroup) => {
+        navigationStore.projectExplorerSelectedGroup = group.tabId;
+
+        if (group.variablesSubNavigationItem) {
+            navigationStore.subnavigationSelectedItems[
+                NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+            ] = group.variablesSubNavigationItem;
+        }
+    }
+);
 
 function getAllGroupSections(projectStore: ProjectStore) {
     const sections: IProjectExplorerSection[] = [];
@@ -849,12 +875,7 @@ export const ProjectExplorer = observer(
         }
 
         get groups() {
-            return [
-                ALL_GROUP,
-                ...PROJECT_EXPLORER_GROUPS.filter(group =>
-                    group.isAvailable(this.context)
-                )
-            ];
+            return getProjectExplorerGroups(this.context);
         }
 
         get selectedGroup(): IProjectExplorerGroup | undefined {
@@ -884,15 +905,7 @@ export const ProjectExplorer = observer(
         }
 
         onSelectGroup(group: IProjectExplorerGroup) {
-            const navigationStore = this.context.navigationStore;
-
-            navigationStore.projectExplorerSelectedGroup = group.tabId;
-
-            if (group.variablesSubNavigationItem) {
-                navigationStore.subnavigationSelectedItems[
-                    NavigationStore.VARIABLES_SUB_NAVIGATION_ID
-                ] = group.variablesSubNavigationItem;
-            }
+            selectProjectExplorerGroup(this.context.navigationStore, group);
         }
 
         // each group has its own search text

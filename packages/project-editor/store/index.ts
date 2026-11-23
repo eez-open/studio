@@ -1683,6 +1683,13 @@ export class ProjectStore {
         }
     };
 
+    async showCommandPalette(mode: "objects" | "commands") {
+        const { showCommandPalette } = await import(
+            "project-editor/project/ui/CommandPalette"
+        );
+        showCommandPalette(this, mode);
+    }
+
     async findProjectComponent() {
         if (this.runtime && !this.runtime.isDebuggerActive) {
             return;
