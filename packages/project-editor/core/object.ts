@@ -15,6 +15,7 @@ import type {
     IContextMenuContext,
     EezValueObject
 } from "project-editor/store";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -231,7 +232,7 @@ export interface PropertyInfo {
     defaultValue?: any;
     inheritable?: boolean;
     nonInheritable?: boolean;
-    propertyMenu?: (props: PropertyProps) => Electron.MenuItem[];
+    propertyMenu?: (props: PropertyProps) => IMenuItem[];
     unique?:
         | boolean
         | ((
@@ -427,7 +428,7 @@ export interface ClassInfo {
         object: IEezObject,
         context: IContextMenuContext,
         objects: IEezObject[],
-        menuItems: Electron.MenuItem[],
+        menuItems: IMenuItem[],
         editable: boolean
     ) => void;
 

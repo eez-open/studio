@@ -1,4 +1,3 @@
-import { MenuItem } from "@electron/remote";
 import React from "react";
 import { observable, computed, makeObservable, runInAction } from "mobx";
 import { keepAliveComputed } from "project-editor/core/keep-alive";
@@ -185,6 +184,7 @@ import {
 import { StylePropertyUI } from "project-editor/features/style/StylePropertyUI";
 import { findVariable, ProjectType } from "project-editor/project/project";
 import type { Action } from "project-editor/features/action/action";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -563,7 +563,7 @@ export function makeExpressionProperty(
             propertyMenu:
                 propertyInfo.flowProperty == undefined
                     ? (props: PropertyProps) => {
-                          let menuItems: Electron.MenuItem[] = [];
+                          let menuItems: IMenuItem[] = [];
 
                           if (props.objects.length == 1) {
                               const component = ProjectEditor.getComponent(
@@ -582,53 +582,46 @@ export function makeExpressionProperty(
                                           props.propertyInfo.name
                                   )
                               ) {
-                                  menuItems.push(
-                                      new MenuItem({
-                                          label: "Convert to input",
-                                          click: () => {
-                                              const projectStore =
-                                                  getProjectStore(
-                                                      props.objects[0]
-                                                  );
+                                  menuItems.push({
+                                      label: "Convert to input",
+                                      click: () => {
+                                          const projectStore = getProjectStore(
+                                              props.objects[0]
+                                          );
 
-                                              projectStore.undoManager.setCombineCommands(
-                                                  true
-                                              );
+                                          projectStore.undoManager.setCombineCommands(
+                                              true
+                                          );
 
-                                              const customInput =
-                                                  createObject<CustomInput>(
-                                                      projectStore,
-                                                      {
-                                                          name: props
-                                                              .propertyInfo
-                                                              .name,
-                                                          type:
-                                                              props.propertyInfo
-                                                                  .expressionType ||
-                                                              "any"
-                                                      },
-                                                      CustomInput
-                                                  );
-
-                                              projectStore.addObject(
-                                                  component.customInputs,
-                                                  customInput
-                                              );
-
-                                              projectStore.updateObject(
-                                                  component,
+                                          const customInput =
+                                              createObject<CustomInput>(
+                                                  projectStore,
                                                   {
-                                                      [props.propertyInfo.name]:
-                                                          customInput.name
-                                                  }
+                                                      name: props.propertyInfo
+                                                          .name,
+                                                      type:
+                                                          props.propertyInfo
+                                                              .expressionType ||
+                                                          "any"
+                                                  },
+                                                  CustomInput
                                               );
 
-                                              projectStore.undoManager.setCombineCommands(
-                                                  false
-                                              );
-                                          }
-                                      })
-                                  );
+                                          projectStore.addObject(
+                                              component.customInputs,
+                                              customInput
+                                          );
+
+                                          projectStore.updateObject(component, {
+                                              [props.propertyInfo.name]:
+                                                  customInput.name
+                                          });
+
+                                          projectStore.undoManager.setCombineCommands(
+                                              false
+                                          );
+                                      }
+                                  });
                               }
                           }
 
@@ -1166,15 +1159,12 @@ export class CustomOutput extends EezObject implements ComponentOutput {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function addBreakpointMenuItems(
-    component: Component,
-    menuItems: Electron.MenuItem[]
-) {
+function addBreakpointMenuItems(component: Component, menuItems: IMenuItem[]) {
     if (getClassInfo(component).isFlowExecutableComponent === false) {
         return;
     }
 
-    var additionalMenuItems: Electron.MenuItem[] = [];
+    var additionalMenuItems: IMenuItem[] = [];
 
     const projectStore = getProjectStore(component);
 
@@ -1182,44 +1172,34 @@ function addBreakpointMenuItems(
 
     if (projectStore.projectTypeTraits.hasFlowSupport) {
         if (uiStateStore?.isBreakpointAddedForComponent(component)) {
-            additionalMenuItems.push(
-                new MenuItem({
-                    label: "Remove Breakpoint",
-                    click: () => uiStateStore.removeBreakpoint(component)
-                })
-            );
+            additionalMenuItems.push({
+                label: "Remove Breakpoint",
+                click: () => uiStateStore.removeBreakpoint(component)
+            });
 
             if (uiStateStore.isBreakpointEnabledForComponent(component)) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Disable Breakpoint",
-                        click: () => uiStateStore.disableBreakpoint(component)
-                    })
-                );
+                additionalMenuItems.push({
+                    label: "Disable Breakpoint",
+                    click: () => uiStateStore.disableBreakpoint(component)
+                });
             } else {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Enable Breakpoint",
-                        click: () => uiStateStore.enableBreakpoint(component)
-                    })
-                );
+                additionalMenuItems.push({
+                    label: "Enable Breakpoint",
+                    click: () => uiStateStore.enableBreakpoint(component)
+                });
             }
         } else {
-            additionalMenuItems.push(
-                new MenuItem({
-                    label: "Add Breakpoint",
-                    click: () => uiStateStore.addBreakpoint(component)
-                })
-            );
+            additionalMenuItems.push({
+                label: "Add Breakpoint",
+                click: () => uiStateStore.addBreakpoint(component)
+            });
         }
     }
 
     if (menuItems.length > 0) {
-        additionalMenuItems.push(
-            new MenuItem({
-                type: "separator"
-            })
-        );
+        additionalMenuItems.push({
+            type: "separator"
+        });
     }
 
     menuItems.unshift(...additionalMenuItems);
@@ -2390,7 +2370,7 @@ export class Component extends EezObject {
             thisObject: Component,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[]
+            menuItems: IMenuItem[]
         ): void => {
             addBreakpointMenuItems(thisObject, menuItems);
         },
@@ -3612,40 +3592,36 @@ export class Widget extends Component {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[]
+            menuItems: IMenuItem[]
         ): void => {
             addBreakpointMenuItems(thisObject, menuItems);
 
-            var additionalMenuItems: Electron.MenuItem[] = [];
+            var additionalMenuItems: IMenuItem[] = [];
 
             const project = ProjectEditor.getProject(objects[0]);
             if (!project.projectTypeTraits.isLVGL) {
                 if (objects.length === 1) {
-                    additionalMenuItems.push(
-                        new MenuItem({
-                            label: "Put in Select",
-                            click: () => {
-                                const selectWidget = (
-                                    objects[0] as Widget
-                                ).putInSelect();
-                                context.selectObject(selectWidget);
-                            }
-                        })
-                    );
+                    additionalMenuItems.push({
+                        label: "Put in Select",
+                        click: () => {
+                            const selectWidget = (
+                                objects[0] as Widget
+                            ).putInSelect();
+                            context.selectObject(selectWidget);
+                        }
+                    });
                 }
 
                 if (areAllChildrenOfTheSameParent(objects)) {
-                    additionalMenuItems.push(
-                        new MenuItem({
-                            label: "Put in Container",
-                            click: () => {
-                                const containerWidget = Widget.putInContainer(
-                                    objects as Widget[]
-                                );
-                                context.selectObject(containerWidget);
-                            }
-                        })
-                    );
+                    additionalMenuItems.push({
+                        label: "Put in Container",
+                        click: () => {
+                            const containerWidget = Widget.putInContainer(
+                                objects as Widget[]
+                            );
+                            context.selectObject(containerWidget);
+                        }
+                    });
 
                     // rows and columns: EEZ-GUI projects (eez-framework
                     // gui/layout.h)
@@ -3654,81 +3630,69 @@ export class Widget extends Component {
                             ["Put in Row", "horizontal"],
                             ["Put in Column", "vertical"]
                         ] as const) {
-                            additionalMenuItems.push(
-                                new MenuItem({
-                                    label,
-                                    click: () => {
-                                        const containerWidget =
-                                            Widget.putInContainer(
-                                                objects as Widget[],
-                                                layout
-                                            );
-                                        context.selectObject(containerWidget);
-                                    }
-                                })
-                            );
+                            additionalMenuItems.push({
+                                label,
+                                click: () => {
+                                    const containerWidget =
+                                        Widget.putInContainer(
+                                            objects as Widget[],
+                                            layout
+                                        );
+                                    context.selectObject(containerWidget);
+                                }
+                            });
                         }
                     }
 
                     if (isEezGuiProject(objects[0]) && objects.length === 1) {
-                        additionalMenuItems.push(
-                            new MenuItem({
-                                label: "Save as Preset...",
-                                click: () =>
-                                    (objects[0] as Widget).saveAsPreset()
-                            })
-                        );
+                        additionalMenuItems.push({
+                            label: "Save as Preset...",
+                            click: () => (objects[0] as Widget).saveAsPreset()
+                        });
                     }
 
-                    additionalMenuItems.push(
-                        new MenuItem({
-                            label: "Put in List",
-                            click: () => {
-                                const listWidget = Widget.putInList(
+                    additionalMenuItems.push({
+                        label: "Put in List",
+                        click: () => {
+                            const listWidget = Widget.putInList(
+                                objects as Widget[]
+                            );
+                            context.selectObject(listWidget);
+                        }
+                    });
+
+                    additionalMenuItems.push({
+                        label: "Create User Widget",
+                        click: async () => {
+                            const layoutWidget =
+                                await Widget.createUserWidgetPage(
                                     objects as Widget[]
                                 );
-                                context.selectObject(listWidget);
+                            if (layoutWidget) {
+                                context.selectObject(layoutWidget);
                             }
-                        })
-                    );
+                        }
+                    });
 
-                    additionalMenuItems.push(
-                        new MenuItem({
-                            label: "Create User Widget",
-                            click: async () => {
-                                const layoutWidget =
-                                    await Widget.createUserWidgetPage(
-                                        objects as Widget[]
-                                    );
-                                if (layoutWidget) {
-                                    context.selectObject(layoutWidget);
-                                }
+                    additionalMenuItems.push({
+                        label: "Replace with User Widget",
+                        click: async () => {
+                            const layoutWidget =
+                                await Widget.replaceWithUserWidgetPage(
+                                    objects as Widget[]
+                                );
+                            if (layoutWidget) {
+                                context.selectObject(layoutWidget);
                             }
-                        })
-                    );
-
-                    additionalMenuItems.push(
-                        new MenuItem({
-                            label: "Replace with User Widget",
-                            click: async () => {
-                                const layoutWidget =
-                                    await Widget.replaceWithUserWidgetPage(
-                                        objects as Widget[]
-                                    );
-                                if (layoutWidget) {
-                                    context.selectObject(layoutWidget);
-                                }
-                            }
-                        })
-                    );
+                        }
+                    });
                 }
 
                 if (objects.length === 1) {
-                    additionalMenuItems.push(
-                        new MenuItem({
-                            label: "Resize...",
-                            click: async () => {
-                                const widget = objects[0] as Widget;
+                    additionalMenuItems.push({
+                        label: "Resize...",
+                        click: async () => {
+                            const widget = objects[0] as Widget;
 
                                 const result = await showGenericDialog({
                                     dialogDefinition: {
@@ -3806,47 +3770,38 @@ export class Widget extends Component {
 
                                 resizeWidget(widget);
 
-                                projectStore.undoManager.setCombineCommands(
-                                    false
-                                );
-                            }
-                        })
-                    );
+                            projectStore.undoManager.setCombineCommands(false);
+                        }
+                    });
                 }
             }
 
             if (additionalMenuItems.length > 0) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
+                additionalMenuItems.push({
+                    type: "separator"
+                });
 
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Copy position and size",
-                        click: async () => {
-                            positionAndSize = thisObject.rect;
+                additionalMenuItems.push({
+                    label: "Copy position and size",
+                    click: async () => {
+                        positionAndSize = thisObject.rect;
+                    }
+                });
+
+                additionalMenuItems.push({
+                    label: "Paste position and size",
+                    click: async () => {
+                        if (positionAndSize) {
+                            updateObject(thisObject, {
+                                top: positionAndSize.top,
+                                left: positionAndSize.left,
+                                width: positionAndSize.width,
+                                height: positionAndSize.height
+                            });
                         }
-                    })
-                );
-
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Paste position and size",
-                        click: async () => {
-                            if (positionAndSize) {
-                                updateObject(thisObject, {
-                                    top: positionAndSize.top,
-                                    left: positionAndSize.left,
-                                    width: positionAndSize.width,
-                                    height: positionAndSize.height
-                                });
-                            }
-                        },
-                        enabled: positionAndSize != undefined
-                    })
-                );
+                    },
+                    enabled: positionAndSize != undefined
+                });
             }
 
             menuItems.unshift(...additionalMenuItems);

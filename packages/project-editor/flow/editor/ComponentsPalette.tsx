@@ -10,7 +10,6 @@ import {
 } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { MenuItem } from "@electron/remote";
 
 import { isArray, objectClone } from "eez-studio-shared/util";
 import { SearchInput } from "eez-studio-ui/search-input";
@@ -50,6 +49,7 @@ import {
     IProjectExplorerFilter,
     withProjectExplorerFilter
 } from "project-editor/ui-components/ProjectExplorerFilter";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -129,7 +129,7 @@ const SelectComponentDialog = observer(
 
 export function newComponentMenuItem(
     object: IEezObject,
-    menuItems: Electron.MenuItem[],
+    menuItems: IMenuItem[],
     atPoint?: Point
 ) {
     const flow = ProjectEditor.getFlow(object);
@@ -159,62 +159,58 @@ export function newComponentMenuItem(
                 return;
             }
 
-            menuItems.unshift(new MenuItem({ type: "separator" }));
+            menuItems.unshift({ type: "separator" });
 
-            menuItems.unshift(
-                new MenuItem({
-                    label: `Add ${type == "actions" ? "Action" : "Widget"}...`,
-                    click: async () => {
-                        const projectStore =
-                            ProjectEditor.getProjectStore(object);
+            menuItems.unshift({
+                label: `Add ${type == "actions" ? "Action" : "Widget"}...`,
+                click: async () => {
+                    const projectStore = ProjectEditor.getProjectStore(object);
 
-                        const component = await selectComponentDialog(
-                            projectStore,
-                            type
-                        );
+                    const component = await selectComponentDialog(
+                        projectStore,
+                        type
+                    );
 
-                        if (component) {
-                            if (atPoint) {
-                                component.left = Math.round(atPoint.x);
-                                component.top = Math.round(atPoint.y);
-                            }
+                    if (component) {
+                        if (atPoint) {
+                            component.left = Math.round(atPoint.x);
+                            component.top = Math.round(atPoint.y);
+                        }
 
-                            let parent;
+                        let parent;
 
-                            let selectedWidget = object;
-                            if (
-                                selectedWidget instanceof
-                                ProjectEditor.WidgetClass
-                            ) {
-                                const pastePlace = findPastePlaceInside(
-                                    selectedWidget,
-                                    getClassInfo(component),
-                                    true
-                                );
-                                if (isArray(pastePlace)) {
-                                    parent = pastePlace;
-                                    if (atPoint) {
-                                        component.left -= selectedWidget.left;
-                                        component.top -= selectedWidget.top;
-                                    }
-                                }
-                            }
-
-                            let newObject = projectStore.addObject(
-                                parent || flow.components,
-                                component
-                            );
-
-                            projectStore.navigationStore.showObjects(
-                                [newObject],
-                                true,
-                                true,
+                        let selectedWidget = object;
+                        if (
+                            selectedWidget instanceof ProjectEditor.WidgetClass
+                        ) {
+                            const pastePlace = findPastePlaceInside(
+                                selectedWidget,
+                                getClassInfo(component),
                                 true
                             );
+                            if (isArray(pastePlace)) {
+                                parent = pastePlace;
+                                if (atPoint) {
+                                    component.left -= selectedWidget.left;
+                                    component.top -= selectedWidget.top;
+                                }
+                            }
                         }
+
+                        let newObject = projectStore.addObject(
+                            parent || flow.components,
+                            component
+                        );
+
+                        projectStore.navigationStore.showObjects(
+                            [newObject],
+                            true,
+                            true,
+                            true
+                        );
                     }
-                })
-            );
+                }
+            });
         }
     }
 }

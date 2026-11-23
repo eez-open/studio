@@ -1,4 +1,3 @@
-import { MenuItem } from "@electron/remote";
 import React from "react";
 import { computed, makeObservable, observable, toJS, untracked } from "mobx";
 import { observer } from "mobx-react";
@@ -329,19 +328,15 @@ export class LVGLStyle extends EezObject {
             editable
         ) {
             if (thisObject.redundantModifications.length > 0) {
-                menuItems.push(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
-                menuItems.push(
-                    new MenuItem({
-                        label: "Remove Redundant Modifications",
-                        click: () => {
-                            thisObject.removeRedundantModifications();
-                        }
-                    })
-                );
+                menuItems.push({
+                    type: "separator"
+                });
+                menuItems.push({
+                    label: "Remove Redundant Modifications",
+                    click: () => {
+                        thisObject.removeRedundantModifications();
+                    }
+                });
             }
         }
     };

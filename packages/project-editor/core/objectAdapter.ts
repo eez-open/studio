@@ -1,4 +1,3 @@
-import { Menu, MenuItem } from "@electron/remote";
 import {
     observable,
     action,
@@ -70,6 +69,7 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 import { isArray } from "eez-studio-shared/util";
+import { popupMenu, type IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -554,9 +554,9 @@ export class TreeObjectAdapter {
             atPoint?: Point;
         },
         editable?: boolean,
-        additionalMenuItems?: Electron.MenuItem[]
+        additionalMenuItems?: IMenuItem[]
     ) {
-        let menuItems: Electron.MenuItem[] = [];
+        let menuItems: IMenuItem[] = [];
 
         if (editable == undefined) {
             editable = true;
@@ -595,17 +595,15 @@ export class TreeObjectAdapter {
             canAdd(parentObject) &&
             !(actions?.add === false)
         ) {
-            menuItems.push(
-                new MenuItem({
-                    label: `Add ${getAddItemName(parentObject)}...`,
-                    click: async () => {
-                        const aNewObject = await addItem(parentObject!);
-                        if (aNewObject) {
-                            ProjectEditor.navigateTo(aNewObject);
-                        }
+            menuItems.push({
+                label: `Add ${getAddItemName(parentObject)}...`,
+                click: async () => {
+                    const aNewObject = await addItem(parentObject!);
+                    if (aNewObject) {
+                        ProjectEditor.navigateTo(aNewObject);
                     }
-                })
-            );
+                }
+            });
         }
 
         if (
@@ -613,18 +611,16 @@ export class TreeObjectAdapter {
             !(selectedObject instanceof ProjectEditor.ConnectionLineClass) &&
             this.canDuplicate()
         ) {
-            menuItems.push(
-                new MenuItem({
-                    label: "Duplicate",
-                    click: () => {
-                        if (actions?.duplicateSelection) {
-                            actions.duplicateSelection();
-                        } else {
-                            this.duplicateSelection();
-                        }
+            menuItems.push({
+                label: "Duplicate",
+                click: () => {
+                    if (actions?.duplicateSelection) {
+                        actions.duplicateSelection();
+                    } else {
+                        this.duplicateSelection();
                     }
-                })
-            );
+                }
+            });
         }
 
         if (
@@ -633,40 +629,34 @@ export class TreeObjectAdapter {
             isObjectReferencable(selectedObject)
         ) {
             if (menuItems.length > 0) {
-                menuItems.push(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
+                menuItems.push({
+                    type: "separator"
+                });
             }
 
-            menuItems.push(
-                new MenuItem({
-                    label: "Find All References",
-                    click: () => {
-                        ProjectEditor.getProjectStore(
-                            selectedObject
-                        ).findAllReferences(selectedObject);
-                    }
-                })
-            );
+            menuItems.push({
+                label: "Find All References",
+                click: () => {
+                    ProjectEditor.getProjectStore(
+                        selectedObject
+                    ).findAllReferences(selectedObject);
+                }
+            });
         }
 
-        let clipboardMenuItems: Electron.MenuItem[] = [];
+        let clipboardMenuItems: IMenuItem[] = [];
 
         if (
             editable &&
             !(selectedObject instanceof ProjectEditor.ConnectionLineClass) &&
             this.canCut()
         ) {
-            clipboardMenuItems.push(
-                new MenuItem({
-                    label: "Cut",
-                    click: () => {
-                        this.cutSelection();
-                    }
-                })
-            );
+            clipboardMenuItems.push({
+                label: "Cut",
+                click: () => {
+                    this.cutSelection();
+                }
+            });
         }
 
         if (
@@ -674,14 +664,12 @@ export class TreeObjectAdapter {
             !(selectedObject instanceof ProjectEditor.ConnectionLineClass) &&
             this.canCopy()
         ) {
-            clipboardMenuItems.push(
-                new MenuItem({
-                    label: "Copy",
-                    click: () => {
-                        this.copySelection();
-                    }
-                })
-            );
+            clipboardMenuItems.push({
+                label: "Copy",
+                click: () => {
+                    this.copySelection();
+                }
+            });
         }
 
         if (
@@ -689,49 +677,41 @@ export class TreeObjectAdapter {
             !(selectedObject instanceof ProjectEditor.ConnectionLineClass) &&
             this.canPaste()
         ) {
-            clipboardMenuItems.push(
-                new MenuItem({
-                    label: "Paste",
-                    click: () => {
-                        if (actions?.pasteSelection) {
-                            actions.pasteSelection();
-                        } else {
-                            const projectStore = getProjectStore(this.object);
-                            projectStore.paste();
-                        }
+            clipboardMenuItems.push({
+                label: "Paste",
+                click: () => {
+                    if (actions?.pasteSelection) {
+                        actions.pasteSelection();
+                    } else {
+                        const projectStore = getProjectStore(this.object);
+                        projectStore.paste();
                     }
-                })
-            );
+                }
+            });
         }
 
         if (clipboardMenuItems.length > 0) {
             if (menuItems.length > 0) {
-                menuItems.push(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
+                menuItems.push({
+                    type: "separator"
+                });
             }
             menuItems = menuItems.concat(clipboardMenuItems);
         }
 
         if (editable && this.canDelete()) {
             if (menuItems.length > 0) {
-                menuItems.push(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
+                menuItems.push({
+                    type: "separator"
+                });
             }
 
-            menuItems.push(
-                new MenuItem({
-                    label: "Delete",
-                    click: () => {
-                        this.deleteSelection();
-                    }
-                })
-            );
+            menuItems.push({
+                label: "Delete",
+                click: () => {
+                    this.deleteSelection();
+                }
+            });
         }
 
         if (selectedObject) {
@@ -746,11 +726,9 @@ export class TreeObjectAdapter {
 
         if (additionalMenuItems) {
             if (menuItems.length > 0) {
-                menuItems.push(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
+                menuItems.push({
+                    type: "separator"
+                });
             }
             menuItems = menuItems.concat(additionalMenuItems);
         }
@@ -781,23 +759,19 @@ export class TreeObjectAdapter {
             );
             if (propertiesObjects.length > 0) {
                 if (menuItems.length > 0 && menuItems[0].type != "separator") {
-                    menuItems.unshift(
-                        new MenuItem({
-                            type: "separator"
-                        })
-                    );
+                    menuItems.unshift({
+                        type: "separator"
+                    });
                 }
-                menuItems.unshift(
-                    new MenuItem({
-                        label: "Edit Properties...",
-                        click: () => {
-                            ProjectEditor.showPropertiesDialog(
-                                getProjectStore(propertiesObjects[0]),
-                                propertiesObjects
-                            );
-                        }
-                    })
-                );
+                menuItems.unshift({
+                    label: "Edit Properties...",
+                    click: () => {
+                        ProjectEditor.showPropertiesDialog(
+                            getProjectStore(propertiesObjects[0]),
+                            propertiesObjects
+                        );
+                    }
+                });
             }
         }
 
@@ -807,19 +781,17 @@ export class TreeObjectAdapter {
                 menuItems.splice(menuItems.length - 1, 1);
             }
 
-            const menu = new Menu();
-            menuItems.forEach(menuItem => menu.append(menuItem));
-            return menu;
+            return menuItems;
         }
 
         return undefined;
     }
 
     showSelectionContextMenu(editable: boolean) {
-        let menu = this.createSelectionContextMenu(undefined, editable);
+        let menuItems = this.createSelectionContextMenu(undefined, editable);
 
-        if (menu) {
-            menu.popup({});
+        if (menuItems) {
+            popupMenu(menuItems);
         }
     }
 }

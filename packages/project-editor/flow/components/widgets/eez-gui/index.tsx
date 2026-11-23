@@ -3,8 +3,6 @@ import { observable, makeObservable, computed } from "mobx";
 
 import QRC from "../qrcodegen";
 
-import { MenuItem } from "@electron/remote";
-
 import {
     IEezObject,
     registerClass,
@@ -146,6 +144,7 @@ const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
 import { isArray } from "eez-studio-shared/util";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -611,7 +610,7 @@ export class TextWidget extends Widget {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[],
+            menuItems: IMenuItem[],
             editable: boolean
         ): void => {
             TextWidget.classInfo.parentClassInfo!.extendContextMenu!(
@@ -626,26 +625,23 @@ export class TextWidget extends Widget {
                 const object = objects[0];
                 if (object instanceof TextWidget) {
                     menuItems.push(
-                        new MenuItem({
+                        {
                             type: "separator"
-                        }),
+                        },
                         // the other names of this widget: nothing is lost,
                         // the properties are the same
                         ...TEXT_WIDGET_NAMES.filter(
                             name => name != getTextWidgetName(object)
-                        ).map(
-                            name =>
-                                new MenuItem({
-                                    label: `Change to ${name}`,
-                                    click: () => {
-                                        const widget = object.changeTo(name);
-                                        if (widget) {
-                                            context.selectObject(widget);
-                                        }
-                                    }
-                                })
-                        ),
-                        new MenuItem({
+                        ).map(name => ({
+                            label: `Change to ${name}`,
+                            click: () => {
+                                const widget = object.changeTo(name);
+                                if (widget) {
+                                    context.selectObject(widget);
+                                }
+                            }
+                        })),
+                        {
                             label: "Convert to MultilineText",
                             click: () => {
                                 const widget = object.convertToMultilineText();
@@ -653,7 +649,7 @@ export class TextWidget extends Widget {
                                     context.selectObject(widget);
                                 }
                             }
-                        })
+                        }
                     );
                 }
             }

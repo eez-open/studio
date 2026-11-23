@@ -83,6 +83,7 @@ import {
     DragSnapLines,
     DragSnapLinesOverlay
 } from "project-editor/flow/editor/snap-lines";
+import { popupMenu } from "project-editor/core/menu";
 
 // import { ConnectionLineParams } from "project-editor/flow/connection-line/connection-line-shape";
 
@@ -863,11 +864,11 @@ export const Canvas = observer(
                     }
 
                     setTimeout(() => {
-                        const menu = context.document.createContextMenu(
+                        const menuItems = context.document.createContextMenu(
                             context.viewState.selectedObjects,
                             { atPoint: point }
                         );
-                        if (menu) {
+                        if (menuItems) {
                             if (this.mouseHandler) {
                                 this.mouseHandler.up(
                                     this.props.flowContext,
@@ -876,7 +877,7 @@ export const Canvas = observer(
                                 this.mouseHandler = undefined;
                             }
 
-                            menu.popup();
+                            popupMenu(menuItems);
                         }
                     }, 0);
                 }

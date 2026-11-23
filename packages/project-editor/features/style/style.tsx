@@ -64,7 +64,6 @@ import {
 } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-import { MenuItem } from "@electron/remote";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import {
     makeExpressionProperty,
@@ -74,56 +73,49 @@ import { checkExpression } from "project-editor/flow/expression";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ColorFormat } from "./color-format";
 import { StyleSectionUI, STYLE_SECTIONS } from "./StyleSectionsUI";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const propertyMenu = (props: PropertyProps): Electron.MenuItem[] => {
-    let menuItems: Electron.MenuItem[] = [];
+const propertyMenu = (props: PropertyProps): IMenuItem[] => {
+    let menuItems: IMenuItem[] = [];
 
     if (isDashboardProject(props.objects[0])) {
         const cssAttributeName = props.propertyInfo.cssAttributeName;
         if (cssAttributeName) {
-            menuItems.push(
-                new MenuItem({
-                    label: "Help",
-                    click: () => {
-                        openCssHelpPage(cssAttributeName);
-                    }
-                })
-            );
+            menuItems.push({
+                label: "Help",
+                click: () => {
+                    openCssHelpPage(cssAttributeName);
+                }
+            });
         }
     }
 
     return menuItems;
 };
 
-const backgroundColorPropertyMenu = (
-    props: PropertyProps
-): Electron.MenuItem[] => {
-    let menuItems: Electron.MenuItem[] = [];
+const backgroundColorPropertyMenu = (props: PropertyProps): IMenuItem[] => {
+    let menuItems: IMenuItem[] = [];
 
-    menuItems.push(
-        new MenuItem({
-            label: "Transparent",
-            click: () => {
-                props.objects.forEach(object =>
-                    updateObject(object, {
-                        [props.propertyInfo.name]: "transparent"
-                    })
-                );
-            }
-        })
-    );
+    menuItems.push({
+        label: "Transparent",
+        click: () => {
+            props.objects.forEach(object =>
+                updateObject(object, {
+                    [props.propertyInfo.name]: "transparent"
+                })
+            );
+        }
+    });
 
     if (isDashboardProject(props.objects[0])) {
-        menuItems.push(
-            new MenuItem({
-                label: "Help",
-                click: () => {
-                    openCssHelpPage("background-color");
-                }
-            })
-        );
+        menuItems.push({
+            label: "Help",
+            click: () => {
+                openCssHelpPage("background-color");
+            }
+        });
     }
 
     return menuItems;
@@ -436,57 +428,51 @@ const useStyleProperty: PropertyInfo = {
         !isWidgetParentOfStyle(style) &&
         !style.state &&
         !style.variant,
-    propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
+    propertyMenu: (props: PropertyProps): IMenuItem[] => {
         const projectStore = getProjectStore(props.objects[0]);
 
-        let menuItems: Electron.MenuItem[] = [];
+        let menuItems: IMenuItem[] = [];
 
         if (isAnyPropertyModified(props)) {
-            menuItems.push(
-                new MenuItem({
-                    label: "Reset All Modifications",
-                    click: () => {
-                        const propertyValues: any = {};
-                        properties.forEach(propertyInfo => {
-                            if (propertyInfo.inheritable) {
-                                propertyValues[propertyInfo.name] = undefined;
-                            }
-                        });
-                        props.updateObject(propertyValues);
-                    }
-                })
-            );
+            menuItems.push({
+                label: "Reset All Modifications",
+                click: () => {
+                    const propertyValues: any = {};
+                    properties.forEach(propertyInfo => {
+                        if (propertyInfo.inheritable) {
+                            propertyValues[propertyInfo.name] = undefined;
+                        }
+                    });
+                    props.updateObject(propertyValues);
+                }
+            });
 
             if (props.objects.length === 1) {
                 const object = props.objects[0] as Style;
 
-                menuItems.push(
-                    new MenuItem({
-                        label: "Create New Style",
-                        click: () => {
-                            return showGenericDialog({
-                                dialogDefinition: {
-                                    title: "New Style",
-                                    fields: [
-                                        {
-                                            name: "name",
-                                            type: "string",
-                                            validators: [
-                                                validators.required,
-                                                validators.unique(
-                                                    {},
-                                                    projectStore.project
-                                                        .allStyles
-                                                )
-                                            ]
-                                        }
-                                    ]
-                                },
-                                values: {}
-                            }).then(result => {
-                                projectStore.undoManager.setCombineCommands(
-                                    true
-                                );
+                menuItems.push({
+                    label: "Create New Style",
+                    click: () => {
+                        return showGenericDialog({
+                            dialogDefinition: {
+                                title: "New Style",
+                                fields: [
+                                    {
+                                        name: "name",
+                                        type: "string",
+                                        validators: [
+                                            validators.required,
+                                            validators.unique(
+                                                {},
+                                                projectStore.project.allStyles
+                                            )
+                                        ]
+                                    }
+                                ]
+                            },
+                            values: {}
+                        }).then(result => {
+                            projectStore.undoManager.setCombineCommands(true);
 
                                 const stylePropertyValues: any = {};
                                 const objectPropertyValues: any = {};
@@ -495,99 +481,83 @@ const useStyleProperty: PropertyInfo = {
                                 // complete (all the values the style has)
                                 const isComplete = !isNotEezGuiStyle(object);
 
-                                properties.forEach(propertyInfo => {
-                                    stylePropertyValues[propertyInfo.name] =
-                                        isComplete && propertyInfo.inheritable
-                                            ? getStyleProperty(
-                                                  object,
-                                                  propertyInfo.name,
-                                                  false
-                                              )
-                                            : isComplete &&
-                                                propertyInfo == useStyleProperty
-                                              ? undefined
-                                              : getProperty(
-                                                    object,
-                                                    propertyInfo.name
-                                                );
-
-                                    objectPropertyValues[propertyInfo.name] =
-                                        undefined;
-                                });
-
-                                stylePropertyValues.name = result.values.name;
-
-                                objectPropertyValues.useStyle =
-                                    result.values.name;
-
-                                projectStore.addObject(
-                                    projectStore.project.styles,
-                                    createObject<Style>(
-                                        projectStore,
-                                        stylePropertyValues,
-                                        Style
-                                    )
-                                );
-                                projectStore.updateObject(
-                                    object,
-                                    objectPropertyValues
-                                );
-
-                                projectStore.undoManager.setCombineCommands(
-                                    false
-                                );
-                            });
-                        }
-                    })
-                );
-
-                const style = (props.objects[0] as Style).parentStyle;
-                if (style) {
-                    menuItems.push(
-                        new MenuItem({
-                            label: "Update Style",
-                            click: () => {
-                                projectStore.undoManager.setCombineCommands(
-                                    true
-                                );
-
-                                const stylePropertyValues: any = {};
-                                const objectPropertyValues: any = {};
-                                properties.forEach(propertyInfo => {
-                                    if (
-                                        propertyInfo.inheritable &&
-                                        getProperty(
-                                            object,
-                                            propertyInfo.name
-                                        ) !== undefined
-                                    ) {
-                                        stylePropertyValues[propertyInfo.name] =
-                                            getProperty(
+                            properties.forEach(propertyInfo => {
+                                stylePropertyValues[propertyInfo.name] =
+                                    isComplete && propertyInfo.inheritable
+                                        ? getStyleProperty(
+                                              object,
+                                              propertyInfo.name,
+                                              false
+                                          )
+                                        : isComplete &&
+                                            propertyInfo == useStyleProperty
+                                          ? undefined
+                                          : getProperty(
                                                 object,
                                                 propertyInfo.name
                                             );
 
-                                        objectPropertyValues[
-                                            propertyInfo.name
-                                        ] = undefined;
-                                    }
-                                });
+                                objectPropertyValues[propertyInfo.name] =
+                                    undefined;
+                            });
 
-                                projectStore.updateObject(
-                                    style,
-                                    stylePropertyValues
-                                );
-                                projectStore.updateObject(
-                                    object,
-                                    objectPropertyValues
-                                );
+                            stylePropertyValues.name = result.values.name;
 
-                                projectStore.undoManager.setCombineCommands(
-                                    false
-                                );
-                            }
-                        })
-                    );
+                            objectPropertyValues.useStyle = result.values.name;
+
+                            projectStore.addObject(
+                                projectStore.project.styles,
+                                createObject<Style>(
+                                    projectStore,
+                                    stylePropertyValues,
+                                    Style
+                                )
+                            );
+                            projectStore.updateObject(
+                                object,
+                                objectPropertyValues
+                            );
+
+                            projectStore.undoManager.setCombineCommands(false);
+                        });
+                    }
+                });
+
+                const style = (props.objects[0] as Style).parentStyle;
+                if (style) {
+                    menuItems.push({
+                        label: "Update Style",
+                        click: () => {
+                            projectStore.undoManager.setCombineCommands(true);
+
+                            const stylePropertyValues: any = {};
+                            const objectPropertyValues: any = {};
+                            properties.forEach(propertyInfo => {
+                                if (
+                                    propertyInfo.inheritable &&
+                                    getProperty(object, propertyInfo.name) !==
+                                        undefined
+                                ) {
+                                    stylePropertyValues[propertyInfo.name] =
+                                        getProperty(object, propertyInfo.name);
+
+                                    objectPropertyValues[propertyInfo.name] =
+                                        undefined;
+                                }
+                            });
+
+                            projectStore.updateObject(
+                                style,
+                                stylePropertyValues
+                            );
+                            projectStore.updateObject(
+                                object,
+                                objectPropertyValues
+                            );
+
+                            projectStore.undoManager.setCombineCommands(false);
+                        }
+                    });
                 }
             }
         }
