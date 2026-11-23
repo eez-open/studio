@@ -108,6 +108,7 @@ export function findSnapLines(
 
             if (
                 parent instanceof ProjectEditor.SelectWidgetClass ||
+                parent instanceof ProjectEditor.SelectDashboardWidgetClass ||
                 parent instanceof ProjectEditor.SelectLiteWidgetClass
             ) {
                 const index = parent.getSelectedIndex(flowContext);
@@ -275,6 +276,8 @@ export function findSnapLines(
             if (
                 node.object instanceof ProjectEditor.PageClass ||
                 node.object instanceof ProjectEditor.ContainerWidgetClass ||
+                node.object instanceof
+                    ProjectEditor.ContainerDashboardWidgetClass ||
                 node.object instanceof ProjectEditor.ContainerLiteWidgetClass
             ) {
                 // add inner margin for page and container

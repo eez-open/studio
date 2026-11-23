@@ -10,10 +10,6 @@ It wouldn't be very useful if multiplied Widgets always had the same content, th
 
 Determines how many times the Child widget will be multiplied, i.e. the number of elements in the list. The value of this property can be an integer and then it is the number of elements, and if the value of this property is an array, then the number of elements in the list is equal to the number of elements in that array.
 
-In the case of _EEZ-GUI_ projects, the value of this property can also be `struct:$ScrollbarState`. The same structure is used for the `ScrollBar` Widget, which can then be connected to the `List` Widget via the `struct:$ScrollbarState` variable and thus enable scrolling of the list in case the total number of list elements is greater than the number of elements that fit within the `List` Widget.
-
-More about the `struct:$ScrollbarState` system structure can be found in the `ScrollBar` Widget documentation.
-
 ## Default style
 
 Style used when rendering the background of the Widget.
@@ -27,7 +23,7 @@ Defines vertical or horizontal orientation.
 
 ## Gap
 
-The distance in pixels between two grid elements.
+The distance in pixels between two list elements.
 
 # INPUTS [EMPTY]
 

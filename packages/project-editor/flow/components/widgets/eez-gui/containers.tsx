@@ -1,8 +1,11 @@
+// The container widgets of the EEZ-GUI projects: Container, List, Grid, Select
+// and User Widget. The Dashboard projects have their own container widgets
+// (widgets/dashboard/containers.tsx).
+
 import React from "react";
-import { observable, computed, makeObservable, toJS, runInAction } from "mobx";
+import { observable, computed, makeObservable } from "mobx";
 import { observer } from "mobx-react";
 import { range } from "lodash-es";
-import * as FlexLayout from "flexlayout-react";
 
 import { Button } from "eez-studio-ui/button";
 
@@ -26,7 +29,6 @@ import {
     createObject,
     getChildOfObject,
     updateObject,
-    getObjectPathAsString,
     replaceObject,
     insertObject,
     deleteObject
@@ -38,8 +40,7 @@ import {
     getProject,
     ProjectType,
     findPage,
-    findVariable,
-    Project
+    findVariable
 } from "project-editor/project/project";
 
 import type {
@@ -91,7 +92,6 @@ import {
     WIDGET_TYPE_USER_WIDGET
 } from "project-editor/flow/components/component-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { isEezGuiProject } from "project-editor/project/project-type-traits";
 import {
     getEditorWidgetBox,
     isScrollableInEditor
@@ -102,11 +102,7 @@ import {
     layoutGroup,
     specificGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
-import {
-    getBooleanValue,
-    evalProperty,
-    getStringValue
-} from "project-editor/flow/helper";
+import { getBooleanValue, evalProperty } from "project-editor/flow/helper";
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import type { Page } from "project-editor/features/page/page";
@@ -114,12 +110,6 @@ import { isEezGuiEditorWasmProject } from "project-editor/flow/editor/eez-gui-ed
 import { visitObjects } from "project-editor/core/search";
 
 import { isArray } from "eez-studio-shared/util";
-import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
-import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
-import { showDialog } from "eez-studio-ui/dialog";
-import { EditorFlowContext } from "project-editor/flow/editor/context";
-import type { PageTabState } from "project-editor/features/page/PageEditor";
-import { ProjectContext } from "project-editor/project/context";
 import {
     userPropertyValuesProperty,
     getAdditionalFlowPropertiesForUserProperties,
@@ -133,217 +123,36 @@ const LIST_TYPE_HORIZONTAL = 2;
 const GRID_FLOW_ROW = 1;
 const GRID_FLOW_COLUMN = 2;
 
+// the eez-gui-lite projects have their own Container and Select
+// (eez-gui-lite/widgets.tsx)
+const enabledInComponentPalette = (projectType: ProjectType) =>
+    projectType !== ProjectType.LVGL &&
+    projectType !== ProjectType.DASHBOARD &&
+    projectType !== ProjectType.EEZ_GUI_LITE;
+
 ////////////////////////////////////////////////////////////////////////////////
-
-const ContainerWidgetEditLayout = observer(
-    class ContainerWidgetEditLayout extends React.Component<PropertyProps> {
-        editLayout = () => {
-            const containerWidget = this.props.objects[0] as ContainerWidget;
-            const projectStore = getProjectStore(containerWidget);
-            const page = ProjectEditor.getPage(containerWidget);
-            if (!page) {
-                return;
-            }
-            const editor = projectStore.editorsStore.getEditorByObject(page!);
-            if (!editor) {
-                return;
-            }
-
-            const flowContext = new EditorFlowContext();
-            flowContext.set(editor!.state as PageTabState, {
-                disableUpdateComponentGeometry: true
-            });
-
-            let disposed = false;
-
-            const onSave = () => {
-                updateObject(containerWidget, {
-                    dockingLayout: model.toJson()
-                });
-
-                projectStore.runtimeSettings.writeDockingManagerContainerLayout(
-                    getObjectPathAsString(containerWidget),
-                    undefined
-                );
-
-                onDispose();
-            };
-
-            const onDispose = () => {
-                if (!disposed) {
-                    disposed = true;
-
-                    if (modalDialog) {
-                        modalDialog.close();
-                    }
-                }
-            };
-
-            const model = containerWidget.getDockingLayoutModel(flowContext);
-
-            const [modalDialog] = showDialog(
-                <ProjectContext.Provider value={flowContext.projectStore}>
-                    <div className="EezStudio_ContaineWidget_EditLayout EezStudio_FlowCanvasContainer">
-                        <FlexLayoutContainer
-                            key="flex-layout-container"
-                            model={model}
-                            factory={containerWidget.dockingLayoutFactory(
-                                flowContext
-                            )}
-                        />
-                        <div>
-                            <Button
-                                color="primary"
-                                size="medium"
-                                onClick={onSave}
-                            >
-                                Save
-                            </Button>
-                            <Button
-                                color="secondary"
-                                size="medium"
-                                onClick={onDispose}
-                            >
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
-                </ProjectContext.Provider>,
-                {
-                    jsPanel: {
-                        id: "container-widget-edit-layout",
-                        title: "Edit Layout",
-                        width: page.width,
-                        height: page.height,
-                        onclosed: onDispose
-                    }
-                }
-            );
-        };
-
-        render() {
-            if (this.props.objects.length > 1) {
-                return null;
-            }
-            return (
-                <div style={{ margin: "4px 0" }}>
-                    <Button
-                        color="primary"
-                        size="small"
-                        onClick={this.editLayout}
-                    >
-                        Edit Layout
-                    </Button>
-                </div>
-            );
-        }
-    }
-);
-
-const DockingLayoutTabComponentEnclosure = observer(
-    class DockingLayoutTabComponentEnclosure extends React.Component<{
-        flowContext: IFlowContext;
-        widget: Widget;
-    }> {
-        width: number = 0;
-        height: number = 0;
-
-        el: HTMLElement | null = null;
-
-        // getBoundingClientRect includes the zoom transform, which a
-        // ResizeObserver doesn't report, so the size is polled while visible
-        updateSizeLoop = new VisibleAnimationFrameLoop(
-            () =>
-                this.el ??
-                document.getElementById(
-                    this.props.flowContext.viewState.containerId
-                ) ??
-                document.body,
-            () => this.updateSize()
-        );
-
-        constructor(props: any) {
-            super(props);
-
-            makeObservable(this, {
-                width: observable,
-                height: observable
-            });
-        }
-
-        updateSize = () => {
-            if (!this.el) {
-                let dataFlowObjectId = getId(this.props.widget);
-                const container = document.getElementById(
-                    this.props.flowContext.viewState.containerId
-                );
-                const el = container?.querySelector(
-                    `[data-eez-flow-object-id='${dataFlowObjectId}']`
-                );
-                if (el) {
-                    this.el = el.parentElement;
-                }
-            }
-
-            if (this.el) {
-                const rect = this.el.getBoundingClientRect();
-                if (rect.width != this.width || rect.height != this.height) {
-                    runInAction(() => {
-                        this.width = rect.width;
-                        this.height = rect.height;
-                    });
-                }
-            }
-        };
-
-        componentDidMount() {
-            this.updateSize();
-            this.updateSizeLoop.start();
-        }
-
-        componentWillUnmount() {
-            this.updateSizeLoop.stop();
-        }
-
-        render() {
-            return (
-                <ComponentEnclosure
-                    component={this.props.widget}
-                    flowContext={this.props.flowContext}
-                    left={0}
-                    top={0}
-                    width={this.width}
-                    height={this.height}
-                />
-            );
-        }
-    }
-);
 
 export class ContainerWidget extends Widget {
     name?: string;
     widgets: Widget[];
     overlay?: string;
     shadow?: boolean;
-    layout: "static" | "horizontal" | "vertical" | "docking-manager";
-    dockingLayout: any;
+    layout: "static" | "horizontal" | "vertical";
 
-    // a row or column (EEZ-GUI, see isRowOrColumn)
+    // a row or column (see isRowOrColumn)
     gap?: number;
     justifyContent?: "start" | "center" | "end" | "space-between";
     alignItems?: "start" | "center" | "end" | "stretch" | "baseline";
     fitToContent?: "none" | "width" | "height" | "both";
-    // EEZ-GUI: the children taller than the container scroll vertically
-    // (touch drag, clipped, the scroll indicator of the List)
+    // the children taller than the container scroll vertically (touch drag,
+    // clipped, the scroll indicator of the List)
     scroll?: "none" | "vertical";
-    // EEZ-GUI, a row or column: a line of 1 px in the border color of the
-    // style between the visible children (a group of settings)
+    // a row or column: a line of 1 px in the border color of the style
+    // between the visible children (a group of settings)
     dividers?: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
+        enabledInComponentPalette,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -374,14 +183,7 @@ export class ContainerWidget extends Widget {
                 hideInPropertyGrid: true,
                 hideInDocumentation: "all"
             }),
-            makeDataPropertyInfo("overlay", {
-                disabled: (containerWidget: ContainerWidget) => {
-                    const project = ProjectEditor.getProject(containerWidget);
-                    return (
-                        project.projectTypeTraits.isDashboard
-                    );
-                }
-            }),
+            makeDataPropertyInfo("overlay"),
             {
                 name: "shadow",
                 type: PropertyType.Boolean,
@@ -393,40 +195,11 @@ export class ContainerWidget extends Widget {
             {
                 name: "layout",
                 type: PropertyType.Enum,
-                enumItems: (object: IEezObject) =>
-                    getProject(object).projectTypeTraits.isDashboard
-                        ? [
-                              {
-                                  id: "static"
-                              },
-                              {
-                                  id: "horizontal"
-                              },
-                              {
-                                  id: "vertical"
-                              },
-                              {
-                                  id: "docking-manager",
-                                  label: "Docking Manager"
-                              }
-                          ]
-                        : isEezGuiProject(object)
-                        ? [
-                              { id: "static", label: "Static" },
-                              { id: "horizontal", label: "Row" },
-                              { id: "vertical", label: "Column" }
-                          ]
-                        : [
-                              {
-                                  id: "static"
-                              },
-                              {
-                                  id: "horizontal"
-                              },
-                              {
-                                  id: "vertical"
-                              }
-                          ],
+                enumItems: [
+                    { id: "static", label: "Static" },
+                    { id: "horizontal", label: "Row" },
+                    { id: "vertical", label: "Column" }
+                ],
                 propertyGridGroup: layoutGroup
             },
             {
@@ -441,7 +214,7 @@ export class ContainerWidget extends Widget {
                 type: PropertyType.Boolean,
                 propertyGridGroup: layoutGroup,
                 hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isRowOrColumn(widget) || !isEezGuiProject(widget)
+                    !isRowOrColumn(widget)
             },
             {
                 name: "justifyContent",
@@ -493,28 +266,7 @@ export class ContainerWidget extends Widget {
                     { id: "none", label: "None" },
                     { id: "vertical", label: "Vertical" }
                 ],
-                propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isEezGuiProject(widget) ||
-                    widget.layout == "docking-manager"
-            },
-            {
-                name: "dockingLayout",
-                type: PropertyType.Any,
-                propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: true,
-                hideInDocumentation: "all"
-            },
-            {
-                name: "editLayout",
-                type: PropertyType.Any,
-                propertyGridGroup: layoutGroup,
-                computed: true,
-                propertyGridRowComponent: ContainerWidgetEditLayout,
-                skipSearch: true,
-                hideInPropertyGrid: (widget: ContainerWidget) => {
-                    return widget.layout != "docking-manager";
-                }
+                propertyGridGroup: layoutGroup
             },
             makeStylePropertyInfo("style", "Default style", {
                 hideInDocumentation: "none"
@@ -536,15 +288,15 @@ export class ContainerWidget extends Widget {
 
         beforeLoadHook: (
             widget: ContainerWidget,
-            jsWidget: Partial<ContainerWidget>,
-            project: Project
+            jsWidget: Partial<ContainerWidget>
         ) => {
-            if (jsWidget.layout == undefined) {
+            // "docking-manager" is a layout of the Dashboard projects
+            // (a pasted Dashboard container)
+            if (
+                jsWidget.layout == undefined ||
+                (jsWidget.layout as string) == "docking-manager"
+            ) {
                 jsWidget.layout = "static";
-            } else if (jsWidget.layout == "docking-manager") {
-                if (!project.projectTypeTraits.isDashboard) {
-                    jsWidget.layout = "static";
-                }
             }
         },
 
@@ -628,7 +380,6 @@ export class ContainerWidget extends Widget {
             overlay: observable,
             shadow: observable,
             layout: observable,
-            dockingLayout: observable,
             gap: observable,
             justifyContent: observable,
             alignItems: observable,
@@ -672,151 +423,6 @@ export class ContainerWidget extends Widget {
 
         return widgets;
     }
-
-    getDockingLayoutModel(flowContext: IFlowContext) {
-        let savedDockingLayout;
-        if (flowContext.flowState) {
-            savedDockingLayout =
-                flowContext.projectStore.runtimeSettings.readDockingManagerContainerLayout(
-                    getObjectPathAsString(this)
-                );
-        }
-
-        const dockingLayout = savedDockingLayout ||
-            toJS(this.dockingLayout) || {
-                global: {
-                    borderEnableAutoHide: true,
-                    tabEnableRename: false
-                },
-                borders: [
-                    /*
-                    {
-                        type: "border",
-                        location: "top",
-                        children: []
-                    },
-                    {
-                        type: "border",
-                        location: "left",
-                        children: []
-                    },
-                    {
-                        type: "border",
-                        location: "right",
-                        children: []
-                    },
-                    {
-                        type: "border",
-                        location: "bottom",
-                        children: []
-                    }
-                    */
-                ],
-                layout: {
-                    type: "row",
-                    children: this.widgets.map((widget, i) => ({
-                        type: "tabset",
-                        children: [
-                            {
-                                type: "tab",
-                                enableClose: false,
-                                name: `Child ${i}`,
-                                id: `child${i}`,
-                                component: `child${i}`,
-                                icon: undefined
-                            }
-                        ]
-                    }))
-                }
-            };
-
-        const model = FlexLayout.Model.fromJson(dockingLayout);
-
-        let tabSetNode: FlexLayout.TabSetNode;
-        let tabSetNodeTabIndex = -1;
-        let numTabNodes = 0;
-
-        model.visitNodes((node, level) => {
-            if (node instanceof FlexLayout.TabSetNode) {
-                if (!tabSetNode) {
-                    tabSetNode = node;
-                }
-            } else if (node instanceof FlexLayout.TabNode) {
-                numTabNodes++;
-
-                const i = parseInt(node.getId().slice("child".length));
-                if (i > tabSetNodeTabIndex) {
-                    tabSetNode = node.getParent() as FlexLayout.TabSetNode;
-                    tabSetNodeTabIndex = i;
-                }
-            }
-        });
-
-        if (numTabNodes > this.widgets.length) {
-            for (let i = this.widgets.length; i < numTabNodes; i++) {
-                model.doAction(FlexLayout.Actions.deleteTab(`child${i}`));
-            }
-        } else if (numTabNodes < this.widgets.length) {
-            for (let i = numTabNodes; i < this.widgets.length; i++) {
-                const tab = model.doAction(
-                    FlexLayout.Actions.addNode(
-                        {
-                            type: "tab",
-                            enableClose: false,
-                            name: `Child ${i}`,
-                            id: `child${i}`,
-                            component: `child${i}`,
-                            icon: undefined
-                        },
-                        tabSetNode!.getId(),
-                        FlexLayout.DockLocation.BOTTOM,
-                        -1,
-                        false
-                    )
-                );
-                tabSetNode = tab!.getParent() as FlexLayout.TabSetNode;
-            }
-        }
-
-        for (let i = 0; i < this.widgets.length; i++) {
-            const widget = this.widgets[i];
-            const title = getStringValue(
-                flowContext,
-                widget,
-                "tabTitle",
-                widget.tabTitle ? `{${widget.tabTitle}}` : `Child ${i + 1}`
-            );
-            model.doAction(FlexLayout.Actions.renameTab(`child${i}`, title));
-        }
-
-        return model;
-    }
-
-    dockingLayoutFactory = (flowContext: IFlowContext) => {
-        return (node: FlexLayout.TabNode) => {
-            var component = node.getComponent();
-
-            if (component) {
-                const i = parseInt(component?.slice("child".length));
-                const widget = this.widgets[i];
-
-                return (
-                    <DockingLayoutTabComponentEnclosure
-                        widget={widget}
-                        flowContext={flowContext}
-                    />
-                );
-            }
-
-            return null;
-        };
-    };
-
-    // getClassName(flowContext: IFlowContext) {
-    //     return classNames(super.getClassName(flowContext), {
-    //         "eez-flow-editor-capture-pointers": this.layout == "docking-manager"
-    //     });
-    // }
 
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         super.styleHook(style, flowContext);
@@ -943,22 +549,6 @@ export class ContainerWidget extends Widget {
                     />
                 );
             });
-        } else if (this.layout == "docking-manager") {
-            children = [
-                <FlexLayoutContainer
-                    key="flex-layout-container"
-                    model={this.getDockingLayoutModel(flowContext)}
-                    factory={this.dockingLayoutFactory(flowContext)}
-                    onModelChange={model => {
-                        if (flowContext.flowState) {
-                            flowContext.projectStore.runtimeSettings.writeDockingManagerContainerLayout(
-                                getObjectPathAsString(this),
-                                model.toJson()
-                            );
-                        }
-                    }}
-                />
-            ];
         } else {
             children = (
                 <ComponentsContainerEnclosure
@@ -1093,9 +683,7 @@ export class ListWidget extends Widget {
     pageDotsStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
+        enabledInComponentPalette,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1318,9 +906,7 @@ export class GridWidget extends Widget {
     gridFlow?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
+        enabledInComponentPalette,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1534,7 +1120,7 @@ const GridWidgetItem = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function htmlEncode(value: string) {
+function htmlEncode(value: string) {
     const el = document.createElement("div");
     el.innerText = value;
     return el.innerHTML;
@@ -1546,9 +1132,7 @@ export class SelectWidget extends Widget {
     _lastSelectedIndexInSelectWidget: number | undefined;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
+        enabledInComponentPalette,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1887,8 +1471,10 @@ export class UserWidgetWidget extends Widget {
     context?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        // also in the eez-gui-lite projects
         enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD,
 
         componentPaletteGroupName: "!1Containers",
 

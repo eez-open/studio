@@ -101,7 +101,12 @@ import type {
     UserWidgetWidget,
     ListWidget,
     SelectWidget
-} from "project-editor/flow/components/widgets";
+} from "project-editor/flow/components/widgets/eez-gui/containers";
+import type {
+    ContainerDashboardWidget,
+    ListDashboardWidget,
+    SelectDashboardWidget
+} from "project-editor/flow/components/widgets/dashboard/containers";
 import { WIDGET_TYPE_NONE } from "project-editor/flow/components/component-types";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import {
@@ -361,14 +366,17 @@ export function getOptionalStyleIndex(
 
 function getClassFromType(projectStore: ProjectStore, type: string) {
     if (type.startsWith("Local.")) {
-        return findClass("UserWidgetWidget");
+        type = "UserWidgetWidget";
     }
 
     if (type == "OverrideStyle") {
         type = "OverrideStyleActionComponent";
     }
 
-    type = getLiteWidgetType(projectStore, type);
+    type = getLiteWidgetType(
+        projectStore,
+        getDashboardWidgetType(projectStore, type)
+    );
 
     let componentClass;
 
@@ -471,8 +479,45 @@ export function getComponentClass(projectStore: ProjectStore, jsObject: any) {
     if (jsObject.type == "SCPITerminalWidget") {
         jsObject.type = "InstrumentTerminalWidget";
     }
-    jsObject.type = getLiteWidgetType(projectStore, jsObject.type);
+    jsObject.type = getLiteWidgetType(
+        projectStore,
+        getDashboardWidgetType(projectStore, jsObject.type)
+    );
     return getClassFromType(projectStore, jsObject.type);
+}
+
+// The container widgets of the Dashboard projects (widgets/dashboard/
+// containers.tsx) and of the EEZ-GUI projects (widgets/eez-gui/
+// containers.tsx). A Dashboard project loads the EEZ-GUI types as the
+// Dashboard ones, the other projects load the Dashboard types (pasted widgets)
+// as the EEZ-GUI ones.
+const DASHBOARD_WIDGET_TYPES: [string, string][] = [
+    ["ContainerWidget", "ContainerDashboardWidget"],
+    ["ListWidget", "ListDashboardWidget"],
+    ["GridWidget", "GridDashboardWidget"],
+    ["SelectWidget", "SelectDashboardWidget"],
+    ["UserWidgetWidget", "UserWidgetDashboardWidget"]
+];
+
+function getDashboardWidgetType(projectStore: ProjectStore, type: string) {
+    if (
+        getSerializationOrStoreProject(projectStore)?.projectTypeTraits
+            .isDashboard
+    ) {
+        for (const [eezGuiType, dashboardType] of DASHBOARD_WIDGET_TYPES) {
+            // old projects have "Container", "List", "Grid" and "Select"
+            if (type == eezGuiType || type + "Widget" == eezGuiType) {
+                return dashboardType;
+            }
+        }
+    } else {
+        for (const [eezGuiType, dashboardType] of DASHBOARD_WIDGET_TYPES) {
+            if (type == dashboardType) {
+                return eezGuiType;
+            }
+        }
+    }
+    return type;
 }
 
 // The widgets of the eez-gui-lite projects (eez-gui-lite/widgets.tsx) and the
@@ -1830,7 +1875,7 @@ function isPresetWidget(widget: Component) {
 function isWidgetUnderDockingManager(widget: Component) {
     const parent = getWidgetParent(widget);
     return (
-        parent instanceof ProjectEditor.ContainerWidgetClass &&
+        parent instanceof ProjectEditor.ContainerDashboardWidgetClass &&
         parent.layout == "docking-manager"
     );
 }
@@ -2078,6 +2123,8 @@ export class Component extends EezObject {
             const selectWidget = parentArray && getParent(parentArray);
             if (
                 selectWidget instanceof ProjectEditor.SelectWidgetClass ||
+                selectWidget instanceof
+                    ProjectEditor.SelectDashboardWidgetClass ||
                 selectWidget instanceof ProjectEditor.SelectLiteWidgetClass
             ) {
                 selectChildLabel = selectWidget.getChildLabel(
@@ -2679,7 +2726,7 @@ export class Component extends EezObject {
         if (ProjectEditor.getProject(this).projectTypeTraits.isDashboard) {
             const parent = getWidgetParent(this);
             if (
-                parent instanceof ProjectEditor.ContainerWidgetClass &&
+                parent instanceof ProjectEditor.ContainerDashboardWidgetClass &&
                 parent.layout == "docking-manager"
             ) {
                 return "both";
@@ -3434,7 +3481,7 @@ export class Widget extends Component {
                             const parent = getWidgetParent(widget);
                             if (
                                 parent instanceof
-                                    ProjectEditor.ContainerWidgetClass &&
+                                    ProjectEditor.ContainerDashboardWidgetClass &&
                                 parent.layout == "docking-manager"
                             ) {
                                 return false;
@@ -3732,6 +3779,10 @@ export class Widget extends Component {
                                         widget instanceof
                                             ProjectEditor.SelectWidgetClass ||
                                         widget instanceof
+                                            ProjectEditor.ContainerDashboardWidgetClass ||
+                                        widget instanceof
+                                            ProjectEditor.SelectDashboardWidgetClass ||
+                                        widget instanceof
                                             ProjectEditor.ContainerLiteWidgetClass ||
                                         widget instanceof
                                             ProjectEditor.SelectLiteWidgetClass
@@ -3820,10 +3871,11 @@ export class Widget extends Component {
                 // its bottom
                 if (
                     !(
-                        parent instanceof ProjectEditor.ContainerWidgetClass &&
-                        (parent.layout == "docking-manager" ||
-                            (parent.scroll == "vertical" &&
-                                isEezGuiProject(parent)))
+                        (parent instanceof
+                            ProjectEditor.ContainerDashboardWidgetClass &&
+                            parent.layout == "docking-manager") ||
+                        (parent instanceof ProjectEditor.ContainerWidgetClass &&
+                            parent.scroll == "vertical")
                     )
                 ) {
                     // The size the parent has in the project, not where the
@@ -3913,7 +3965,7 @@ export class Widget extends Component {
         isMoveable(widget: Widget) {
             const parent = ProjectEditor.getWidgetParent(widget);
             if (
-                parent instanceof ProjectEditor.ContainerWidgetClass &&
+                parent instanceof ProjectEditor.ContainerDashboardWidgetClass &&
                 parent.layout == "docking-manager"
             ) {
                 return false;
@@ -4305,13 +4357,15 @@ export class Widget extends Component {
     putInSelect() {
         const projectStore = getProjectStore(this);
 
-        var selectWidgetProperties: Partial<SelectWidget> = Object.assign(
+        var selectWidgetProperties: Partial<
+            SelectWidget | SelectDashboardWidget
+        > = Object.assign(
             {},
             getClassFromType(projectStore, "Select")?.classInfo.defaultValue,
             { type: "Select" }
         );
 
-        const selectWidget = createObject<SelectWidget>(
+        const selectWidget = createObject<SelectWidget | SelectDashboardWidget>(
             projectStore,
             selectWidgetProperties,
             ProjectEditor.SelectWidgetClass
@@ -4421,7 +4475,9 @@ export class Widget extends Component {
     ) {
         const projectStore = getProjectStore(fromWidgets[0]);
 
-        var containerWidgetProperties: Partial<ContainerWidget> = Object.assign(
+        var containerWidgetProperties: Partial<
+            ContainerWidget | ContainerDashboardWidget
+        > = Object.assign(
             {},
             getClassFromType(projectStore, "Container")?.classInfo.defaultValue,
             { type: "Container" },
@@ -4434,7 +4490,9 @@ export class Widget extends Component {
             );
         }
 
-        var containerWidget = createObject<ContainerWidget>(
+        var containerWidget = createObject<
+            ContainerWidget | ContainerDashboardWidget
+        >(
             projectStore,
             containerWidgetProperties,
             ProjectEditor.ContainerWidgetClass
@@ -4471,7 +4529,9 @@ export class Widget extends Component {
 
         let boundingRect: Rect | undefined;
 
-        var containerWidgetJsObjectProperties: Partial<ContainerWidget> =
+        var containerWidgetJsObjectProperties: Partial<
+            ContainerWidget | ContainerDashboardWidget
+        > =
             Object.assign(
                 {},
                 getClassFromType(projectStore, "Container")?.classInfo
@@ -4479,7 +4539,9 @@ export class Widget extends Component {
                 { type: "Container" }
             );
 
-        let containerWidget = createObject<ContainerWidget>(
+        let containerWidget = createObject<
+            ContainerWidget | ContainerDashboardWidget
+        >(
             projectStore,
             containerWidgetJsObjectProperties,
             ProjectEditor.ContainerWidgetClass
@@ -4496,12 +4558,14 @@ export class Widget extends Component {
         containerWidget.width = boundingRect.width;
         containerWidget.height = boundingRect.height;
 
-        var listWidgetJsObjectProperties: Partial<ListWidget> = Object.assign(
+        var listWidgetJsObjectProperties: Partial<
+            ListWidget | ListDashboardWidget
+        > = Object.assign(
             {},
             getClassFromType(projectStore, "List")?.classInfo.defaultValue,
             { type: "List" }
         );
-        const listWidget = createObject<ListWidget>(
+        const listWidget = createObject<ListWidget | ListDashboardWidget>(
             projectStore,
             listWidgetJsObjectProperties,
             ProjectEditor.ListWidgetClass
