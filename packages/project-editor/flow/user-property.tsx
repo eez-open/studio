@@ -233,6 +233,7 @@ function getReferencedFlow(object: IEezObject): Flow | undefined {
         flow = findAction(ProjectEditor.getProject(object), object.action);
     } else if (
         object instanceof ProjectEditor.UserWidgetWidgetClass ||
+        object instanceof ProjectEditor.UserWidgetDashboardWidgetClass ||
         object instanceof ProjectEditor.LVGLUserWidgetWidgetClass
     ) {
         flow = findPage(

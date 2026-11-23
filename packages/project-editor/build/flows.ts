@@ -657,6 +657,8 @@ export function buildFlowDefs(assets: Assets) {
                 componentType.objectClass ==
                     ProjectEditor.UserWidgetWidgetClass ||
                 componentType.objectClass ==
+                    ProjectEditor.UserWidgetDashboardWidgetClass ||
+                componentType.objectClass ==
                     ProjectEditor.LVGLUserWidgetWidgetClass
             ) {
                 enumItems.push(

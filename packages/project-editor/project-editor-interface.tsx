@@ -88,7 +88,14 @@ import type {
     ListWidget,
     GridWidget,
     SelectWidget
-} from "project-editor/flow/components/widgets";
+} from "project-editor/flow/components/widgets/eez-gui/containers";
+import type {
+    ContainerDashboardWidget,
+    UserWidgetDashboardWidget,
+    ListDashboardWidget,
+    GridDashboardWidget,
+    SelectDashboardWidget
+} from "project-editor/flow/components/widgets/dashboard/containers";
 import type {
     TextWidget,
     MultilineTextWidget,
@@ -177,6 +184,11 @@ export interface IProjectEditor {
     SelectLiteWidgetClass: typeof SelectLiteWidget;
     ListWidgetClass: typeof ListWidget;
     GridWidgetClass: typeof GridWidget;
+    UserWidgetDashboardWidgetClass: typeof UserWidgetDashboardWidget;
+    SelectDashboardWidgetClass: typeof SelectDashboardWidget;
+    ContainerDashboardWidgetClass: typeof ContainerDashboardWidget;
+    ListDashboardWidgetClass: typeof ListDashboardWidget;
+    GridDashboardWidgetClass: typeof GridDashboardWidget;
     TextWidgetClass: typeof TextWidget;
     MultilineTextWidgetClass: typeof MultilineTextWidget;
     ButtonWidgetClass: typeof ButtonWidget;

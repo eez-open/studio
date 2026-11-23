@@ -101,7 +101,12 @@ import type {
     UserWidgetWidget,
     ListWidget,
     SelectWidget
-} from "project-editor/flow/components/widgets";
+} from "project-editor/flow/components/widgets/eez-gui/containers";
+import type {
+    ContainerDashboardWidget,
+    ListDashboardWidget,
+    SelectDashboardWidget
+} from "project-editor/flow/components/widgets/dashboard/containers";
 import { WIDGET_TYPE_NONE } from "project-editor/flow/components/component-types";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 import {
@@ -361,14 +366,17 @@ export function getOptionalStyleIndex(
 
 function getClassFromType(projectStore: ProjectStore, type: string) {
     if (type.startsWith("Local.")) {
-        return findClass("UserWidgetWidget");
+        type = "UserWidgetWidget";
     }
 
     if (type == "OverrideStyle") {
         type = "OverrideStyleActionComponent";
     }
 
-    type = getLiteWidgetType(projectStore, type);
+    type = getLiteWidgetType(
+        projectStore,
+        getDashboardWidgetType(projectStore, type)
+    );
 
     let componentClass;
 
@@ -471,8 +479,45 @@ export function getComponentClass(projectStore: ProjectStore, jsObject: any) {
     if (jsObject.type == "SCPITerminalWidget") {
         jsObject.type = "InstrumentTerminalWidget";
     }
-    jsObject.type = getLiteWidgetType(projectStore, jsObject.type);
+    jsObject.type = getLiteWidgetType(
+        projectStore,
+        getDashboardWidgetType(projectStore, jsObject.type)
+    );
     return getClassFromType(projectStore, jsObject.type);
+}
+
+// The container widgets of the Dashboard projects (widgets/dashboard/
+// containers.tsx) and of the EEZ-GUI projects (widgets/eez-gui/
+// containers.tsx). A Dashboard project loads the EEZ-GUI types as the
+// Dashboard ones, the other projects load the Dashboard types (pasted widgets)
+// as the EEZ-GUI ones.
+const DASHBOARD_WIDGET_TYPES: [string, string][] = [
+    ["ContainerWidget", "ContainerDashboardWidget"],
+    ["ListWidget", "ListDashboardWidget"],
+    ["GridWidget", "GridDashboardWidget"],
+    ["SelectWidget", "SelectDashboardWidget"],
+    ["UserWidgetWidget", "UserWidgetDashboardWidget"]
+];
+
+function getDashboardWidgetType(projectStore: ProjectStore, type: string) {
+    if (
+        getSerializationOrStoreProject(projectStore)?.projectTypeTraits
+            .isDashboard
+    ) {
+        for (const [eezGuiType, dashboardType] of DASHBOARD_WIDGET_TYPES) {
+            // old projects have "Container", "List", "Grid" and "Select"
+            if (type == eezGuiType || type + "Widget" == eezGuiType) {
+                return dashboardType;
+            }
+        }
+    } else {
+        for (const [eezGuiType, dashboardType] of DASHBOARD_WIDGET_TYPES) {
+            if (type == dashboardType) {
+                return eezGuiType;
+            }
+        }
+    }
+    return type;
 }
 
 // The widgets of the eez-gui-lite projects (eez-gui-lite/widgets.tsx) and the
@@ -1159,12 +1204,12 @@ export class CustomOutput extends EezObject implements ComponentOutput {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function addBreakpointMenuItems(component: Component, menuItems: IMenuItem[]) {
-    if (getClassInfo(component).isFlowExecutableComponent === false) {
-        return;
-    }
-
+function getBreakpointMenuItems(component: Component) {
     var additionalMenuItems: IMenuItem[] = [];
+
+    if (getClassInfo(component).isFlowExecutableComponent === false) {
+        return additionalMenuItems;
+    }
 
     const projectStore = getProjectStore(component);
 
@@ -1196,13 +1241,27 @@ function addBreakpointMenuItems(component: Component, menuItems: IMenuItem[]) {
         }
     }
 
-    if (menuItems.length > 0) {
-        additionalMenuItems.push({
-            type: "separator"
-        });
+    return additionalMenuItems;
+}
+
+// The groups of menu items with a separator between them, before the items of
+// the menu.
+function unshiftMenuItemGroups(menuItems: IMenuItem[], groups: IMenuItem[][]) {
+    const items: IMenuItem[] = [];
+    for (const group of groups) {
+        if (group.length > 0) {
+            if (items.length > 0) {
+                items.push({ type: "separator" });
+            }
+            items.push(...group);
+        }
     }
 
-    menuItems.unshift(...additionalMenuItems);
+    if (items.length > 0 && menuItems.length > 0) {
+        items.push({ type: "separator" });
+    }
+
+    menuItems.unshift(...items);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1830,7 +1889,7 @@ function isPresetWidget(widget: Component) {
 function isWidgetUnderDockingManager(widget: Component) {
     const parent = getWidgetParent(widget);
     return (
-        parent instanceof ProjectEditor.ContainerWidgetClass &&
+        parent instanceof ProjectEditor.ContainerDashboardWidgetClass &&
         parent.layout == "docking-manager"
     );
 }
@@ -2078,6 +2137,8 @@ export class Component extends EezObject {
             const selectWidget = parentArray && getParent(parentArray);
             if (
                 selectWidget instanceof ProjectEditor.SelectWidgetClass ||
+                selectWidget instanceof
+                    ProjectEditor.SelectDashboardWidgetClass ||
                 selectWidget instanceof ProjectEditor.SelectLiteWidgetClass
             ) {
                 selectChildLabel = selectWidget.getChildLabel(
@@ -2372,7 +2433,9 @@ export class Component extends EezObject {
             objects: IEezObject[],
             menuItems: IMenuItem[]
         ): void => {
-            addBreakpointMenuItems(thisObject, menuItems);
+            unshiftMenuItemGroups(menuItems, [
+                getBreakpointMenuItems(thisObject)
+            ]);
         },
 
         isPropertyMenuSupported: true,
@@ -2679,7 +2742,7 @@ export class Component extends EezObject {
         if (ProjectEditor.getProject(this).projectTypeTraits.isDashboard) {
             const parent = getWidgetParent(this);
             if (
-                parent instanceof ProjectEditor.ContainerWidgetClass &&
+                parent instanceof ProjectEditor.ContainerDashboardWidgetClass &&
                 parent.layout == "docking-manager"
             ) {
                 return "both";
@@ -3434,7 +3497,7 @@ export class Widget extends Component {
                             const parent = getWidgetParent(widget);
                             if (
                                 parent instanceof
-                                    ProjectEditor.ContainerWidgetClass &&
+                                    ProjectEditor.ContainerDashboardWidgetClass &&
                                 parent.layout == "docking-manager"
                             ) {
                                 return false;
@@ -3592,16 +3655,19 @@ export class Widget extends Component {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: IMenuItem[]
+            menuItems: IMenuItem[],
+            editable: boolean
         ): void => {
-            addBreakpointMenuItems(thisObject, menuItems);
-
-            var additionalMenuItems: IMenuItem[] = [];
+            const putInMenuItems: IMenuItem[] = [];
+            const userWidgetMenuItems: IMenuItem[] = [];
+            const resizeMenuItems: IMenuItem[] = [];
+            const presetMenuItems: IMenuItem[] = [];
+            const positionAndSizeMenuItems: IMenuItem[] = [];
 
             const project = ProjectEditor.getProject(objects[0]);
             if (!project.projectTypeTraits.isLVGL) {
                 if (objects.length === 1) {
-                    additionalMenuItems.push({
+                    putInMenuItems.push({
                         label: "Put in Select",
                         click: () => {
                             const selectWidget = (
@@ -3613,7 +3679,7 @@ export class Widget extends Component {
                 }
 
                 if (areAllChildrenOfTheSameParent(objects)) {
-                    additionalMenuItems.push({
+                    putInMenuItems.push({
                         label: "Put in Container",
                         click: () => {
                             const containerWidget = Widget.putInContainer(
@@ -3630,7 +3696,7 @@ export class Widget extends Component {
                             ["Put in Row", "horizontal"],
                             ["Put in Column", "vertical"]
                         ] as const) {
-                            additionalMenuItems.push({
+                            putInMenuItems.push({
                                 label,
                                 click: () => {
                                     const containerWidget =
@@ -3644,14 +3710,7 @@ export class Widget extends Component {
                         }
                     }
 
-                    if (isEezGuiProject(objects[0]) && objects.length === 1) {
-                        additionalMenuItems.push({
-                            label: "Save as Preset...",
-                            click: () => (objects[0] as Widget).saveAsPreset()
-                        });
-                    }
-
-                    additionalMenuItems.push({
+                    putInMenuItems.push({
                         label: "Put in List",
                         click: () => {
                             const listWidget = Widget.putInList(
@@ -3661,7 +3720,7 @@ export class Widget extends Component {
                         }
                     });
 
-                    additionalMenuItems.push({
+                    userWidgetMenuItems.push({
                         label: "Create User Widget",
                         click: async () => {
                             const layoutWidget =
@@ -3674,7 +3733,7 @@ export class Widget extends Component {
                         }
                     });
 
-                    additionalMenuItems.push({
+                    userWidgetMenuItems.push({
                         label: "Replace with User Widget",
                         click: async () => {
                             const layoutWidget =
@@ -3686,10 +3745,17 @@ export class Widget extends Component {
                             }
                         }
                     });
+
+                    if (isEezGuiProject(objects[0]) && objects.length === 1) {
+                        presetMenuItems.push({
+                            label: "Save as Preset...",
+                            click: () => (objects[0] as Widget).saveAsPreset()
+                        });
+                    }
                 }
 
                 if (objects.length === 1) {
-                    additionalMenuItems.push({
+                    resizeMenuItems.push({
                         label: "Resize...",
                         click: async () => {
                             const widget = objects[0] as Widget;
@@ -3731,6 +3797,10 @@ export class Widget extends Component {
                                             ProjectEditor.ContainerWidgetClass ||
                                         widget instanceof
                                             ProjectEditor.SelectWidgetClass ||
+                                        widget instanceof
+                                            ProjectEditor.ContainerDashboardWidgetClass ||
+                                        widget instanceof
+                                            ProjectEditor.SelectDashboardWidgetClass ||
                                         widget instanceof
                                             ProjectEditor.ContainerLiteWidgetClass ||
                                         widget instanceof
@@ -3776,35 +3846,52 @@ export class Widget extends Component {
                 }
             }
 
-            if (additionalMenuItems.length > 0) {
-                additionalMenuItems.push({
-                    type: "separator"
-                });
+            const changeMenuItems = thisObject.getChangeMenuItems(
+                context,
+                objects,
+                editable
+            );
 
-                additionalMenuItems.push({
-                    label: "Copy position and size",
-                    click: async () => {
-                        positionAndSize = thisObject.rect;
-                    }
-                });
-
-                additionalMenuItems.push({
-                    label: "Paste position and size",
-                    click: async () => {
-                        if (positionAndSize) {
-                            updateObject(thisObject, {
-                                top: positionAndSize.top,
-                                left: positionAndSize.left,
-                                width: positionAndSize.width,
-                                height: positionAndSize.height
-                            });
+            if (
+                putInMenuItems.length > 0 ||
+                changeMenuItems.length > 0 ||
+                userWidgetMenuItems.length > 0 ||
+                resizeMenuItems.length > 0 ||
+                presetMenuItems.length > 0
+            ) {
+                positionAndSizeMenuItems.push(
+                    {
+                        label: "Copy position and size",
+                        click: async () => {
+                            positionAndSize = thisObject.rect;
                         }
                     },
-                    enabled: positionAndSize != undefined
-                });
+                    {
+                        label: "Paste position and size",
+                        click: async () => {
+                            if (positionAndSize) {
+                                updateObject(thisObject, {
+                                    top: positionAndSize.top,
+                                    left: positionAndSize.left,
+                                    width: positionAndSize.width,
+                                    height: positionAndSize.height
+                                });
+                            }
+                        },
+                        enabled: positionAndSize != undefined
+                    }
+                );
             }
 
-            menuItems.unshift(...additionalMenuItems);
+            unshiftMenuItemGroups(menuItems, [
+                putInMenuItems,
+                changeMenuItems,
+                userWidgetMenuItems,
+                resizeMenuItems,
+                presetMenuItems,
+                positionAndSizeMenuItems,
+                getBreakpointMenuItems(thisObject)
+            ]);
         },
 
         check: (object: Component, messages: IMessage[]) => {
@@ -3820,10 +3907,11 @@ export class Widget extends Component {
                 // its bottom
                 if (
                     !(
-                        parent instanceof ProjectEditor.ContainerWidgetClass &&
-                        (parent.layout == "docking-manager" ||
-                            (parent.scroll == "vertical" &&
-                                isEezGuiProject(parent)))
+                        (parent instanceof
+                            ProjectEditor.ContainerDashboardWidgetClass &&
+                            parent.layout == "docking-manager") ||
+                        (parent instanceof ProjectEditor.ContainerWidgetClass &&
+                            parent.scroll == "vertical")
                     )
                 ) {
                     // The size the parent has in the project, not where the
@@ -3913,7 +4001,7 @@ export class Widget extends Component {
         isMoveable(widget: Widget) {
             const parent = ProjectEditor.getWidgetParent(widget);
             if (
-                parent instanceof ProjectEditor.ContainerWidgetClass &&
+                parent instanceof ProjectEditor.ContainerDashboardWidgetClass &&
                 parent.layout == "docking-manager"
             ) {
                 return false;
@@ -4302,16 +4390,28 @@ export class Widget extends Component {
         )?.action;
     }
 
+    // The menu items that change this widget into another one (e.g. Text to
+    // Button), shown after the "Put in ..." items of the context menu.
+    getChangeMenuItems(
+        context: IContextMenuContext,
+        objects: IEezObject[],
+        editable: boolean
+    ): IMenuItem[] {
+        return [];
+    }
+
     putInSelect() {
         const projectStore = getProjectStore(this);
 
-        var selectWidgetProperties: Partial<SelectWidget> = Object.assign(
+        var selectWidgetProperties: Partial<
+            SelectWidget | SelectDashboardWidget
+        > = Object.assign(
             {},
             getClassFromType(projectStore, "Select")?.classInfo.defaultValue,
             { type: "Select" }
         );
 
-        const selectWidget = createObject<SelectWidget>(
+        const selectWidget = createObject<SelectWidget | SelectDashboardWidget>(
             projectStore,
             selectWidgetProperties,
             ProjectEditor.SelectWidgetClass
@@ -4421,7 +4521,9 @@ export class Widget extends Component {
     ) {
         const projectStore = getProjectStore(fromWidgets[0]);
 
-        var containerWidgetProperties: Partial<ContainerWidget> = Object.assign(
+        var containerWidgetProperties: Partial<
+            ContainerWidget | ContainerDashboardWidget
+        > = Object.assign(
             {},
             getClassFromType(projectStore, "Container")?.classInfo.defaultValue,
             { type: "Container" },
@@ -4434,7 +4536,9 @@ export class Widget extends Component {
             );
         }
 
-        var containerWidget = createObject<ContainerWidget>(
+        var containerWidget = createObject<
+            ContainerWidget | ContainerDashboardWidget
+        >(
             projectStore,
             containerWidgetProperties,
             ProjectEditor.ContainerWidgetClass
@@ -4471,7 +4575,9 @@ export class Widget extends Component {
 
         let boundingRect: Rect | undefined;
 
-        var containerWidgetJsObjectProperties: Partial<ContainerWidget> =
+        var containerWidgetJsObjectProperties: Partial<
+            ContainerWidget | ContainerDashboardWidget
+        > =
             Object.assign(
                 {},
                 getClassFromType(projectStore, "Container")?.classInfo
@@ -4479,7 +4585,9 @@ export class Widget extends Component {
                 { type: "Container" }
             );
 
-        let containerWidget = createObject<ContainerWidget>(
+        let containerWidget = createObject<
+            ContainerWidget | ContainerDashboardWidget
+        >(
             projectStore,
             containerWidgetJsObjectProperties,
             ProjectEditor.ContainerWidgetClass
@@ -4496,12 +4604,14 @@ export class Widget extends Component {
         containerWidget.width = boundingRect.width;
         containerWidget.height = boundingRect.height;
 
-        var listWidgetJsObjectProperties: Partial<ListWidget> = Object.assign(
+        var listWidgetJsObjectProperties: Partial<
+            ListWidget | ListDashboardWidget
+        > = Object.assign(
             {},
             getClassFromType(projectStore, "List")?.classInfo.defaultValue,
             { type: "List" }
         );
-        const listWidget = createObject<ListWidget>(
+        const listWidget = createObject<ListWidget | ListDashboardWidget>(
             projectStore,
             listWidgetJsObjectProperties,
             ProjectEditor.ListWidgetClass

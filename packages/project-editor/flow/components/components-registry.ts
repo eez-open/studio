@@ -24,6 +24,8 @@ export function getAllComponentClasses(
             objectClassInfo.objectClass ==
                 ProjectEditor.UserWidgetWidgetClass ||
             objectClassInfo.objectClass ==
+                ProjectEditor.UserWidgetDashboardWidgetClass ||
+            objectClassInfo.objectClass ==
                 ProjectEditor.LVGLUserWidgetWidgetClass ||
             objectClassInfo.objectClass ==
                 ProjectEditor.CallActionActionComponentClass
@@ -52,18 +54,25 @@ export function getAllComponentClasses(
 
     const userWidgets: IObjectClassInfo[] = [];
     if (baseClass == ProjectEditor.WidgetClass) {
+        let widgetName: string;
+        let widgetClass: EezClass;
+        if (projectStore.projectTypeTraits.isLVGL) {
+            widgetName = "LVGLUserWidgetWidget";
+            widgetClass = ProjectEditor.LVGLUserWidgetWidgetClass;
+        } else if (projectStore.projectTypeTraits.isDashboard) {
+            widgetName = "UserWidgetDashboardWidget";
+            widgetClass = ProjectEditor.UserWidgetDashboardWidgetClass;
+        } else {
+            widgetName = "UserWidgetWidget";
+            widgetClass = ProjectEditor.UserWidgetWidgetClass;
+        }
+
         for (const pageAsset of projectStore.project._assets.pages) {
             if (pageAsset.page.isUsedAsUserWidget) {
-                const widgetName = projectStore.projectTypeTraits.isLVGL
-                    ? "LVGLUserWidgetWidget"
-                    : "UserWidgetWidget";
-
                 userWidgets.push({
                     id: `${widgetName}<${pageAsset.name}>`,
                     name: widgetName,
-                    objectClass: projectStore.projectTypeTraits.isLVGL
-                        ? ProjectEditor.LVGLUserWidgetWidgetClass
-                        : ProjectEditor.UserWidgetWidgetClass,
+                    objectClass: widgetClass,
                     displayName: pageAsset.name,
                     componentPaletteGroupName: "!7User Widgets",
                     props: {

@@ -552,6 +552,8 @@ const PaletteItem = observer(
                 if (
                     (dragObjectClass == ProjectEditor.UserWidgetWidgetClass ||
                         dragObjectClass ==
+                            ProjectEditor.UserWidgetDashboardWidgetClass ||
+                        dragObjectClass ==
                             ProjectEditor.LVGLUserWidgetWidgetClass) &&
                     this.props.componentClass.objectClass == dragObjectClass
                 ) {

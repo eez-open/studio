@@ -415,6 +415,8 @@ class Model {
                 componentClass.objectClass.classInfo ==
                     ProjectEditor.UserWidgetWidgetClass.classInfo ||
                 componentClass.objectClass.classInfo ==
+                    ProjectEditor.UserWidgetDashboardWidgetClass.classInfo ||
+                componentClass.objectClass.classInfo ==
                     ProjectEditor.LVGLUserWidgetWidgetClass.classInfo ||
                 componentClass.objectClass.classInfo ==
                     AppViewWidget.classInfo ||
