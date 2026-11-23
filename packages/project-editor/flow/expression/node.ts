@@ -1,4 +1,5 @@
 import type { ValueType } from "project-editor/features/variable/value-type";
+import type { Variable } from "project-editor/features/variable/variable";
 
 import type { LocationRange } from "peggy";
 
@@ -21,6 +22,7 @@ export type IdentifierExpressionNode = {
     name: string;
     valueType: ValueType;
     identifierType: IdentifierType;
+    importedVariable?: Variable;
     location: LocationRange;
 };
 

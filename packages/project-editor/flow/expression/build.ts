@@ -429,7 +429,7 @@ function buildExpressionNode(
             assets,
             component,
             node.test,
-            assignable
+            false
         );
         const consequent = buildExpressionNode(
             assets,
@@ -631,7 +631,7 @@ function buildExpressionNode(
                         assets,
                         component,
                         node.property,
-                        assignable
+                        false
                     ),
                     ...buildExpressionNode(
                         assets,
@@ -654,7 +654,7 @@ function buildExpressionNode(
                     assets,
                     component,
                     node.property,
-                    assignable
+                    false
                 ),
                 makeArrayElementInstruction()
             ];

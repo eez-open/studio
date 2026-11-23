@@ -9,7 +9,13 @@
       "projectType": "lvgl",
       "lvglVersion": "9.5.0",
       "extensions": [],
-      "imports": [],
+      "imports": [
+        {
+          "objID": "4579517c-8e09-4324-848d-73c6056a202f",
+          "projectFilePath": "preview-drive.eez-project",
+          "importAs": "Drive"
+        }
+      ],
       "flowSupport": true,
       "displayWidth": 320,
       "displayHeight": 240,
@@ -88,6 +94,30 @@
         "defaultValue": "[41,42]",
         "native": false,
         "persistent": false
+      },
+      {
+        "objID": "ec81aa90-734c-466c-aa84-ed9fb4df7cd9",
+        "name": "Setpoint",
+        "type": "integer",
+        "defaultValue": "80",
+        "native": false,
+        "persistent": false
+      },
+      {
+        "objID": "efa90d56-b46b-46af-9923-16f44a767307",
+        "name": "Index",
+        "type": "integer",
+        "defaultValue": "1",
+        "native": false,
+        "persistent": false
+      },
+      {
+        "objID": "abaffae6-f97f-4737-a350-69d6bd8f1057",
+        "name": "Port",
+        "type": "integer",
+        "defaultValue": "900",
+        "native": false,
+        "persistent": false
       }
     ],
     "structures": [],
@@ -163,6 +193,11 @@
               "objID": "10a342ac-e3d4-4aac-aab3-681863c87cd3",
               "variable": "targets[2]",
               "value": "303"
+            },
+            {
+              "objID": "d2403419-c7c9-4655-b71e-1dc395ecb46b",
+              "variable": "targets[3]",
+              "value": "404"
             }
           ]
         }
@@ -304,11 +339,16 @@
           "inputs": [],
           "outputs": [],
           "action": "ReferenceAction",
+          "customOutputs": [
+            { "objID": "47e1cdd7-59b3-4199-8c9e-64278a742603", "name": "Flag", "type": "boolean" },
+            { "objID": "9a78c668-158d-4b91-a374-5fa851d6fb10", "name": "Index", "type": "integer" },
+            { "objID": "e50e336a-92dd-4386-a0ff-7c939020ef22", "name": "Port", "type": "integer" }
+          ],
           "userPropertyValues": {
             "objID": "1981ab97-111b-4607-8937-a48bca5f8245",
             "values": {
               "2bb6eb45-821e-4f53-9144-3475fadc2a34": "Count",
-              "e751ca4e-35c8-499d-8428-1d79448781d7": "[Flag ? Count : OtherCount, Flag ? Text : OtherText, Numbers[1]]",
+              "e751ca4e-35c8-499d-8428-1d79448781d7": "[Flag ? Count : OtherCount, Flag ? Text : OtherText, Numbers[Index], Flag ? Drive.Setpoint : Setpoint, Port]",
               "a2595bd0-68cd-481f-a923-c3e891a2db21": "[Count, Numbers[1]]"
             }
           }

@@ -68,6 +68,21 @@ function isNativeUserProperty(userProperty: UserProperty): boolean {
     return (owner as { implementationType?: string } | undefined)?.implementationType === "native";
 }
 
+export function getAssignableListDeclarationError(userProperty: UserProperty) {
+    const traits = ProjectEditor.getProjectStore(userProperty)?.projectTypeTraits;
+    if (!traits || !supportsAssignableLists(traits)) {
+        return ASSIGNABLE_LIST_RUNTIME_ERROR;
+    }
+    if (
+        !isNativeUserProperty(userProperty) ||
+        userProperty.type !== "array:any" ||
+        userProperty.assignable
+    ) {
+        return "Assignable lists require type array:any, a native action, and Assignable turned off.";
+    }
+    return undefined;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 export class UserProperty extends EezObject {
@@ -133,10 +148,8 @@ export class UserProperty extends EezObject {
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
                 disabled: (userProperty: UserProperty) =>
-                    !isNativeUserProperty(userProperty) ||
-                    !supportsAssignableLists(
-                        ProjectEditor.getProjectStore(userProperty).projectTypeTraits
-                    ),
+                    !userProperty.assignableList &&
+                    getAssignableListDeclarationError(userProperty) !== undefined,
                 formText: "A literal list of references for a native action using the full EEZ Flow runtime. Not supported by EEZ Flow Lite. References are valid only during the synchronous call."
             },
             {
@@ -231,23 +244,11 @@ export class UserProperty extends EezObject {
 
         check: (userProperty: UserProperty, messages: IMessage[]) => {
             const projectStore = ProjectEditor.getProjectStore(userProperty);
-            if (
-                userProperty.assignableList &&
-                !supportsAssignableLists(projectStore.projectTypeTraits)
-            ) {
-                messages.push(
-                    new Message(
-                        MessageType.ERROR,
-                        ASSIGNABLE_LIST_RUNTIME_ERROR,
-                        userProperty
-                    )
-                );
-            } else if (userProperty.assignableList && (
-                userProperty.assignable || userProperty.type !== "array:any" ||
-                !isNativeUserProperty(userProperty)
-            )) {
-                messages.push(new Message(MessageType.ERROR,
-                    "Assignable lists require type array:any and a native action; Assignable must be disabled.", userProperty));
+            if (userProperty.assignableList) {
+                const error = getAssignableListDeclarationError(userProperty);
+                if (error) {
+                    messages.push(new Message(MessageType.ERROR, error, userProperty));
+                }
             }
             if (userProperty.type) {
                 if (!isValidType(projectStore.project, userProperty.type)) {

@@ -61,8 +61,8 @@ export function parseAssignableListExpression(
         findValueTypeInExpressionNode(
             ProjectEditor.getProject(component), component, node, true
         );
-        checkConditionalTargets(node);
         checkAssignableExpressionNode(component, node);
+        checkConditionalTargets(node);
     }
     return root.elements;
 }

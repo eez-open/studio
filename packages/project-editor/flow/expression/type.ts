@@ -203,7 +203,7 @@ export function findValueTypeInExpressionNode(
             project,
             component,
             node.test,
-            assignable
+            false
         );
         findValueTypeInExpressionNode(
             project,
@@ -354,7 +354,7 @@ export function findValueTypeInExpressionNode(
             project,
             component,
             node.property,
-            assignable
+            false
         );
 
         if (node.object.valueType == "importedProject") {
@@ -378,6 +378,7 @@ export function findValueTypeInExpressionNode(
                     if (globalVariable) {
                         node.valueType = getType(project, globalVariable.type);
                         node.property.identifierType = "global-variable";
+                        node.property.importedVariable = globalVariable;
                     }
                 }
             }

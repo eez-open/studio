@@ -30,17 +30,12 @@ built LVGL runtimes: Run/Debug pause and resume, both conditional branches,
 single/list assignment, parameter inspection, array-element destinations and
 unchanged ordinary value snapshots (20 scenarios).
 
-The preview test temporarily hooks `build/home/build-project.js`, restores it in
-`finally`, and uses a separate profile. Run it with Studio closed and do not run
-it concurrently with another build or preview test. These scripts never change
-the source fixture. An optional first argument selects an output directory;
-the default is a new temporary directory. A completion marker prevents stale
-outputs from making a failed renderer test pass.
-
-For a private Electron host already pointing at this source checkout, set
-`EEZ_TEST_ELECTRON` to its executable and `EEZ_TEST_PACKAGED_HOST=1`. Its packaged
-resources must point at this checkout's resources too; no external runtime
-replacement is performed by the tests. Normally these overrides are unnecessary.
+The preview test uses Studio's hidden build window with a separate profile. It
+only reads the Studio build and source fixtures. An optional first argument
+selects an output directory (use a distinct directory for each concurrent run).
+The default is a new temporary directory. A completion marker prevents stale
+outputs from making a failed renderer test pass. `EEZ_TEST_ELECTRON` can point
+to an unpackaged Electron executable for the same version if needed.
 
 These are headless Flow tests. The EEZ-GUI/Dashboard pair gets an ABI/inspection
 smoke test; the execution scenarios cover LVGL. They do not claim visual UI or

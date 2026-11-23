@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const Module = require('node:module');
+const { initializeWasm } = require('./initialize-wasm.cjs');
 const root = path.resolve(__dirname, '../..');
 const build = path.join(root, 'build');
 const load = Module._load;
@@ -19,11 +20,7 @@ Module._load = function (request, parent, isMain) {
             assert.deepEqual(bytes, fs.readFileSync(path.join(root, 'packages', relative + '.wasm')), 'shipped WASM must match the tracked payload');
             assert.ok(WebAssembly.Module.exports(new WebAssembly.Module(bytes)).some(e => e.name === 'getValueForInspection'));
             const constructor = require(path.join(build, relative + '.js'));
-            let runtime;
-            await new Promise((resolve, reject) => {
-                runtime = constructor(data => { if (data.init) resolve(); });
-                setTimeout(() => reject(Error(name + ' initialization timeout')), 10000).unref();
-            });
+            const runtime = await initializeWasm(constructor, name);
             assert.equal(typeof runtime._getValueForInspection, 'function', 'matching JavaScript export');
             const value = runtime._createIntValue(42);
             const reference = runtime._malloc(16);

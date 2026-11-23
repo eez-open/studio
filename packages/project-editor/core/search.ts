@@ -438,7 +438,9 @@ export function* searchForObjectDependencies(
                                 projectStore.project,
                                 component,
                                 rootNode,
-                                flowProperty == "assignable"
+                                flowProperty === "assignable" ||
+                                    (valueObject.propertyInfo.assignableList === true &&
+                                        rootNode.type === "ArrayExpression")
                             );
 
                             for (const node of visitExpressionNodes(rootNode)) {
@@ -635,7 +637,9 @@ export function* searchForReference(
                         node.identifierType === identifierType &&
                         (identifierType != "enum-member" ||
                             node.valueType == enumType) &&
-                        node.name == objectName
+                        (node.importedVariable
+                            ? node.importedVariable === object
+                            : node.name === objectName)
                     ) {
                         valueObject.foundPositions!.push({
                             start:
