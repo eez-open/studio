@@ -315,41 +315,6 @@ export class ContainerWidget extends Widget {
             </svg>
         ),
 
-        extendContextMenu: (
-            thisObject: Widget,
-            context: IContextMenuContext,
-            objects: IEezObject[],
-            menuItems: IMenuItem[],
-            editable: boolean
-        ): void => {
-            ContainerWidget.classInfo.parentClassInfo!.extendContextMenu!(
-                thisObject,
-                context,
-                objects,
-                menuItems,
-                editable
-            );
-
-            if (editable && objects.length === 1) {
-                const object = objects[0];
-                if (object instanceof ContainerWidget) {
-                    menuItems.push(
-                        {
-                            type: "separator"
-                        },
-                        {
-                            label: "Remove Container",
-                            click: () => {
-                                const widgets = object.removeContainer();
-                                if (widgets.length > 0) {
-                                    context.selectObjects(widgets);
-                                }
-                            }
-                        }
-                    );
-                }
-            }
-        },
 
         check: (object: ContainerWidget, messages: IMessage[]) => {
             checkObjectReference(object, "overlay", messages);
@@ -387,6 +352,28 @@ export class ContainerWidget extends Widget {
             scroll: observable,
             dividers: observable
         });
+    }
+
+    override getChangeMenuItems(
+        context: IContextMenuContext,
+        objects: IEezObject[],
+        editable: boolean
+    ): IMenuItem[] {
+        if (!editable || objects.length !== 1) {
+            return [];
+        }
+
+        return [
+            {
+                label: "Remove Container",
+                click: () => {
+                    const widgets = this.removeContainer();
+                    if (widgets.length > 0) {
+                        context.selectObjects(widgets);
+                    }
+                }
+            }
+        ];
     }
 
     removeContainer() {
@@ -1613,37 +1600,6 @@ export class UserWidgetWidget extends Widget {
 
         open: (object: UserWidgetWidget) => {
             object.open();
-        },
-
-        extendContextMenu: (
-            thisObject: Widget,
-            context: IContextMenuContext,
-            objects: IEezObject[],
-            menuItems: IMenuItem[],
-            editable: boolean
-        ): void => {
-            UserWidgetWidget.classInfo.parentClassInfo!.extendContextMenu!(
-                thisObject,
-                context,
-                objects,
-                menuItems,
-                editable
-            );
-
-            if (objects.length === 1) {
-                const object = objects[0];
-                if (object instanceof UserWidgetWidget) {
-                    menuItems.push({
-                        label: "Replace with Container",
-                        click: () => {
-                            const widget = object.replaceWithContainer();
-                            if (widget) {
-                                context.selectObject(widget);
-                            }
-                        }
-                    });
-                }
-            }
         }
     });
 
@@ -1852,6 +1808,28 @@ export class UserWidgetWidget extends Widget {
                 height: this.userWidgetPage.rect.height
             });
         }
+    }
+
+    override getChangeMenuItems(
+        context: IContextMenuContext,
+        objects: IEezObject[],
+        editable: boolean
+    ): IMenuItem[] {
+        if (objects.length !== 1) {
+            return [];
+        }
+
+        return [
+            {
+                label: "Replace with Container",
+                click: () => {
+                    const widget = this.replaceWithContainer();
+                    if (widget) {
+                        context.selectObject(widget);
+                    }
+                }
+            }
+        ];
     }
 
     replaceWithContainer() {

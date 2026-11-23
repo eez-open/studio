@@ -1204,12 +1204,12 @@ export class CustomOutput extends EezObject implements ComponentOutput {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function addBreakpointMenuItems(component: Component, menuItems: IMenuItem[]) {
-    if (getClassInfo(component).isFlowExecutableComponent === false) {
-        return;
-    }
-
+function getBreakpointMenuItems(component: Component) {
     var additionalMenuItems: IMenuItem[] = [];
+
+    if (getClassInfo(component).isFlowExecutableComponent === false) {
+        return additionalMenuItems;
+    }
 
     const projectStore = getProjectStore(component);
 
@@ -1241,13 +1241,27 @@ function addBreakpointMenuItems(component: Component, menuItems: IMenuItem[]) {
         }
     }
 
-    if (menuItems.length > 0) {
-        additionalMenuItems.push({
-            type: "separator"
-        });
+    return additionalMenuItems;
+}
+
+// The groups of menu items with a separator between them, before the items of
+// the menu.
+function unshiftMenuItemGroups(menuItems: IMenuItem[], groups: IMenuItem[][]) {
+    const items: IMenuItem[] = [];
+    for (const group of groups) {
+        if (group.length > 0) {
+            if (items.length > 0) {
+                items.push({ type: "separator" });
+            }
+            items.push(...group);
+        }
     }
 
-    menuItems.unshift(...additionalMenuItems);
+    if (items.length > 0 && menuItems.length > 0) {
+        items.push({ type: "separator" });
+    }
+
+    menuItems.unshift(...items);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2419,7 +2433,9 @@ export class Component extends EezObject {
             objects: IEezObject[],
             menuItems: IMenuItem[]
         ): void => {
-            addBreakpointMenuItems(thisObject, menuItems);
+            unshiftMenuItemGroups(menuItems, [
+                getBreakpointMenuItems(thisObject)
+            ]);
         },
 
         isPropertyMenuSupported: true,
@@ -3639,16 +3655,19 @@ export class Widget extends Component {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: IMenuItem[]
+            menuItems: IMenuItem[],
+            editable: boolean
         ): void => {
-            addBreakpointMenuItems(thisObject, menuItems);
-
-            var additionalMenuItems: IMenuItem[] = [];
+            const putInMenuItems: IMenuItem[] = [];
+            const userWidgetMenuItems: IMenuItem[] = [];
+            const resizeMenuItems: IMenuItem[] = [];
+            const presetMenuItems: IMenuItem[] = [];
+            const positionAndSizeMenuItems: IMenuItem[] = [];
 
             const project = ProjectEditor.getProject(objects[0]);
             if (!project.projectTypeTraits.isLVGL) {
                 if (objects.length === 1) {
-                    additionalMenuItems.push({
+                    putInMenuItems.push({
                         label: "Put in Select",
                         click: () => {
                             const selectWidget = (
@@ -3660,7 +3679,7 @@ export class Widget extends Component {
                 }
 
                 if (areAllChildrenOfTheSameParent(objects)) {
-                    additionalMenuItems.push({
+                    putInMenuItems.push({
                         label: "Put in Container",
                         click: () => {
                             const containerWidget = Widget.putInContainer(
@@ -3677,7 +3696,7 @@ export class Widget extends Component {
                             ["Put in Row", "horizontal"],
                             ["Put in Column", "vertical"]
                         ] as const) {
-                            additionalMenuItems.push({
+                            putInMenuItems.push({
                                 label,
                                 click: () => {
                                     const containerWidget =
@@ -3691,14 +3710,7 @@ export class Widget extends Component {
                         }
                     }
 
-                    if (isEezGuiProject(objects[0]) && objects.length === 1) {
-                        additionalMenuItems.push({
-                            label: "Save as Preset...",
-                            click: () => (objects[0] as Widget).saveAsPreset()
-                        });
-                    }
-
-                    additionalMenuItems.push({
+                    putInMenuItems.push({
                         label: "Put in List",
                         click: () => {
                             const listWidget = Widget.putInList(
@@ -3708,7 +3720,7 @@ export class Widget extends Component {
                         }
                     });
 
-                    additionalMenuItems.push({
+                    userWidgetMenuItems.push({
                         label: "Create User Widget",
                         click: async () => {
                             const layoutWidget =
@@ -3721,7 +3733,7 @@ export class Widget extends Component {
                         }
                     });
 
-                    additionalMenuItems.push({
+                    userWidgetMenuItems.push({
                         label: "Replace with User Widget",
                         click: async () => {
                             const layoutWidget =
@@ -3733,10 +3745,17 @@ export class Widget extends Component {
                             }
                         }
                     });
+
+                    if (isEezGuiProject(objects[0]) && objects.length === 1) {
+                        presetMenuItems.push({
+                            label: "Save as Preset...",
+                            click: () => (objects[0] as Widget).saveAsPreset()
+                        });
+                    }
                 }
 
                 if (objects.length === 1) {
-                    additionalMenuItems.push({
+                    resizeMenuItems.push({
                         label: "Resize...",
                         click: async () => {
                             const widget = objects[0] as Widget;
@@ -3827,35 +3846,52 @@ export class Widget extends Component {
                 }
             }
 
-            if (additionalMenuItems.length > 0) {
-                additionalMenuItems.push({
-                    type: "separator"
-                });
+            const changeMenuItems = thisObject.getChangeMenuItems(
+                context,
+                objects,
+                editable
+            );
 
-                additionalMenuItems.push({
-                    label: "Copy position and size",
-                    click: async () => {
-                        positionAndSize = thisObject.rect;
-                    }
-                });
-
-                additionalMenuItems.push({
-                    label: "Paste position and size",
-                    click: async () => {
-                        if (positionAndSize) {
-                            updateObject(thisObject, {
-                                top: positionAndSize.top,
-                                left: positionAndSize.left,
-                                width: positionAndSize.width,
-                                height: positionAndSize.height
-                            });
+            if (
+                putInMenuItems.length > 0 ||
+                changeMenuItems.length > 0 ||
+                userWidgetMenuItems.length > 0 ||
+                resizeMenuItems.length > 0 ||
+                presetMenuItems.length > 0
+            ) {
+                positionAndSizeMenuItems.push(
+                    {
+                        label: "Copy position and size",
+                        click: async () => {
+                            positionAndSize = thisObject.rect;
                         }
                     },
-                    enabled: positionAndSize != undefined
-                });
+                    {
+                        label: "Paste position and size",
+                        click: async () => {
+                            if (positionAndSize) {
+                                updateObject(thisObject, {
+                                    top: positionAndSize.top,
+                                    left: positionAndSize.left,
+                                    width: positionAndSize.width,
+                                    height: positionAndSize.height
+                                });
+                            }
+                        },
+                        enabled: positionAndSize != undefined
+                    }
+                );
             }
 
-            menuItems.unshift(...additionalMenuItems);
+            unshiftMenuItemGroups(menuItems, [
+                putInMenuItems,
+                changeMenuItems,
+                userWidgetMenuItems,
+                resizeMenuItems,
+                presetMenuItems,
+                positionAndSizeMenuItems,
+                getBreakpointMenuItems(thisObject)
+            ]);
         },
 
         check: (object: Component, messages: IMessage[]) => {
@@ -4352,6 +4388,16 @@ export class Widget extends Component {
                 eventHandler.eventName == defaultActionEventName &&
                 eventHandler.handlerType == "action"
         )?.action;
+    }
+
+    // The menu items that change this widget into another one (e.g. Text to
+    // Button), shown after the "Put in ..." items of the context menu.
+    getChangeMenuItems(
+        context: IContextMenuContext,
+        objects: IEezObject[],
+        editable: boolean
+    ): IMenuItem[] {
+        return [];
     }
 
     putInSelect() {
