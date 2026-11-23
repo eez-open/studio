@@ -29,10 +29,14 @@ import {
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { Rect } from "eez-studio-shared/geometry";
 import { deleteObject, updateObject } from "project-editor/store";
-import {
+import type {
     ContainerWidget,
     SelectWidget
-} from "project-editor/flow/components/widgets";
+} from "project-editor/flow/components/widgets/eez-gui/containers";
+import type {
+    ContainerDashboardWidget,
+    SelectDashboardWidget
+} from "project-editor/flow/components/widgets/dashboard/containers";
 import { Variable } from "project-editor/features/variable/variable";
 import { ValueType } from "project-editor/features/variable/value-type";
 import {
@@ -456,6 +460,8 @@ export class FlowFragment extends EezObject {
                 let containerAncestor:
                     | ContainerWidget
                     | SelectWidget
+                    | ContainerDashboardWidget
+                    | SelectDashboardWidget
                     | ContainerLiteWidget
                     | SelectLiteWidget
                     | LVGLWidget
@@ -467,6 +473,10 @@ export class FlowFragment extends EezObject {
                         testObject instanceof
                             ProjectEditor.ContainerWidgetClass ||
                         testObject instanceof ProjectEditor.SelectWidgetClass ||
+                        testObject instanceof
+                            ProjectEditor.ContainerDashboardWidgetClass ||
+                        testObject instanceof
+                            ProjectEditor.SelectDashboardWidgetClass ||
                         testObject instanceof
                             ProjectEditor.ContainerLiteWidgetClass ||
                         testObject instanceof

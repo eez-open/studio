@@ -80,7 +80,14 @@ import {
     ListWidget,
     GridWidget,
     SelectWidget
-} from "project-editor/flow/components/widgets";
+} from "project-editor/flow/components/widgets/eez-gui/containers";
+import {
+    ContainerDashboardWidget,
+    UserWidgetDashboardWidget,
+    ListDashboardWidget,
+    GridDashboardWidget,
+    SelectDashboardWidget
+} from "project-editor/flow/components/widgets/dashboard/containers";
 import "project-editor/flow/components/widgets/dashboard";
 import {
     TextWidget,
@@ -220,6 +227,11 @@ export function createProjectEditor(
         SelectLiteWidgetClass: SelectLiteWidget,
         ListWidgetClass: ListWidget,
         GridWidgetClass: GridWidget,
+        UserWidgetDashboardWidgetClass: UserWidgetDashboardWidget,
+        SelectDashboardWidgetClass: SelectDashboardWidget,
+        ContainerDashboardWidgetClass: ContainerDashboardWidget,
+        ListDashboardWidgetClass: ListDashboardWidget,
+        GridDashboardWidgetClass: GridDashboardWidget,
         TextWidgetClass: TextWidget,
         MultilineTextWidgetClass: MultilineTextWidget,
         ButtonWidgetClass: ButtonWidget,

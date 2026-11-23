@@ -185,7 +185,9 @@ export const ComponentEnclosure = observer(
                     return;
                 }
 
-                const el = this.elRef.current.closest(".UserWidgetWidget");
+                const el = this.elRef.current.closest(
+                    ".UserWidgetWidget, .UserWidgetDashboardWidget"
+                );
                 if (el && el != this.elRef.current) {
                     // do not calculate geometry if component is inside UserWidgetWidget
                     return;

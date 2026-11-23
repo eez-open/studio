@@ -1,3 +1,7 @@
+// The container widgets of the Dashboard projects: Container, List, Grid, Select
+// and User Widget. The EEZ-GUI projects have their own container widgets
+// (widgets/eez-gui/containers.tsx).
+
 import React from "react";
 import { observable, computed, makeObservable, toJS, runInAction } from "mobx";
 import { observer } from "mobx-react";
@@ -34,12 +38,10 @@ import {
 import { getProjectStore, IContextMenuContext } from "project-editor/store";
 
 import {
-    checkObjectReference,
     getProject,
     ProjectType,
     findPage,
-    findVariable,
-    Project
+    findVariable
 } from "project-editor/project/project";
 
 import type {
@@ -65,12 +67,7 @@ import {
     makeDataPropertyInfo,
     ComponentInput,
     ComponentOutput,
-    makeStylePropertyInfo,
-    migrateOptionalStyleProperty,
-    getOptionalStyleIndex,
-    isRowOrColumn,
-    getLayoutParent,
-    getLayoutAlignValue
+    makeStylePropertyInfo
 } from "project-editor/flow/component";
 
 import {
@@ -80,9 +77,7 @@ import {
     StartActionComponent
 } from "project-editor/flow/components/actions";
 
-import { Assets, DataBuffer } from "project-editor/build/assets";
-import { buildWidget } from "project-editor/build/widgets";
-import type { Style } from "project-editor/features/style/style";
+import type { Assets, DataBuffer } from "project-editor/build/assets";
 import {
     WIDGET_TYPE_CONTAINER,
     WIDGET_TYPE_LIST,
@@ -91,14 +86,8 @@ import {
     WIDGET_TYPE_USER_WIDGET
 } from "project-editor/flow/components/component-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import { isEezGuiProject } from "project-editor/project/project-type-traits";
-import {
-    getEditorWidgetBox,
-    isScrollableInEditor
-} from "project-editor/flow/editor/eez-gui-editor-boxes";
 import {
     generalGroup,
-    geometryGroup,
     layoutGroup,
     specificGroup
 } from "project-editor/ui-components/PropertyGrid/groups";
@@ -110,7 +99,6 @@ import {
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 import { getComponentName } from "project-editor/flow/components/components-registry";
 import type { Page } from "project-editor/features/page/page";
-import { isEezGuiEditorWasmProject } from "project-editor/flow/editor/eez-gui-editor-wasm-switch";
 import { visitObjects } from "project-editor/core/search";
 
 import { isArray } from "eez-studio-shared/util";
@@ -127,18 +115,15 @@ import {
 } from "project-editor/flow/user-property";
 import type { IMenuItem } from "project-editor/core/menu";
 
-const LIST_TYPE_VERTICAL = 1;
-const LIST_TYPE_HORIZONTAL = 2;
-
-const GRID_FLOW_ROW = 1;
-const GRID_FLOW_COLUMN = 2;
+const enabledInComponentPalette = (projectType: ProjectType) =>
+    projectType === ProjectType.DASHBOARD;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const ContainerWidgetEditLayout = observer(
     class ContainerWidgetEditLayout extends React.Component<PropertyProps> {
         editLayout = () => {
-            const containerWidget = this.props.objects[0] as ContainerWidget;
+            const containerWidget = this.props.objects[0] as ContainerDashboardWidget;
             const projectStore = getProjectStore(containerWidget);
             const page = ProjectEditor.getPage(containerWidget);
             if (!page) {
@@ -320,36 +305,20 @@ const DockingLayoutTabComponentEnclosure = observer(
     }
 );
 
-export class ContainerWidget extends Widget {
+export class ContainerDashboardWidget extends Widget {
     name?: string;
     widgets: Widget[];
-    overlay?: string;
-    shadow?: boolean;
     layout: "static" | "horizontal" | "vertical" | "docking-manager";
     dockingLayout: any;
 
-    // a row or column (EEZ-GUI, see isRowOrColumn)
-    gap?: number;
-    justifyContent?: "start" | "center" | "end" | "space-between";
-    alignItems?: "start" | "center" | "end" | "stretch" | "baseline";
-    fitToContent?: "none" | "width" | "height" | "both";
-    // EEZ-GUI: the children taller than the container scroll vertically
-    // (touch drag, clipped, the scroll indicator of the List)
-    scroll?: "none" | "vertical";
-    // EEZ-GUI, a row or column: a line of 1 px in the border color of the
-    // style between the visible children (a group of settings)
-    dividers?: boolean;
-
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
+        enabledInComponentPalette,
 
         componentPaletteGroupName: "!1Containers",
 
         flowComponentId: WIDGET_TYPE_CONTAINER,
 
-        label: (widget: ContainerWidget) => {
+        label: (widget: ContainerDashboardWidget) => {
             let name = getComponentName(widget.type);
 
             if (widget.name) {
@@ -374,129 +343,25 @@ export class ContainerWidget extends Widget {
                 hideInPropertyGrid: true,
                 hideInDocumentation: "all"
             }),
-            makeDataPropertyInfo("overlay", {
-                disabled: (containerWidget: ContainerWidget) => {
-                    const project = ProjectEditor.getProject(containerWidget);
-                    return (
-                        project.projectTypeTraits.isDashboard
-                    );
-                }
-            }),
-            {
-                name: "shadow",
-                type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup,
-                disabled: (containerWidget: ContainerWidget) => {
-                    return !containerWidget.overlay;
-                }
-            },
             {
                 name: "layout",
                 type: PropertyType.Enum,
-                enumItems: (object: IEezObject) =>
-                    getProject(object).projectTypeTraits.isDashboard
-                        ? [
-                              {
-                                  id: "static"
-                              },
-                              {
-                                  id: "horizontal"
-                              },
-                              {
-                                  id: "vertical"
-                              },
-                              {
-                                  id: "docking-manager",
-                                  label: "Docking Manager"
-                              }
-                          ]
-                        : isEezGuiProject(object)
-                        ? [
-                              { id: "static", label: "Static" },
-                              { id: "horizontal", label: "Row" },
-                              { id: "vertical", label: "Column" }
-                          ]
-                        : [
-                              {
-                                  id: "static"
-                              },
-                              {
-                                  id: "horizontal"
-                              },
-                              {
-                                  id: "vertical"
-                              }
-                          ],
+                enumItems: [
+                    {
+                        id: "static"
+                    },
+                    {
+                        id: "horizontal"
+                    },
+                    {
+                        id: "vertical"
+                    },
+                    {
+                        id: "docking-manager",
+                        label: "Docking Manager"
+                    }
+                ],
                 propertyGridGroup: layoutGroup
-            },
-            {
-                name: "gap",
-                type: PropertyType.Number,
-                propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isRowOrColumn(widget)
-            },
-            {
-                name: "dividers",
-                type: PropertyType.Boolean,
-                propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isRowOrColumn(widget) || !isEezGuiProject(widget)
-            },
-            {
-                name: "justifyContent",
-                displayName: "Justify content",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "start", label: "Start" },
-                    { id: "center", label: "Center" },
-                    { id: "end", label: "End" },
-                    { id: "space-between", label: "Space between" }
-                ],
-                propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isRowOrColumn(widget)
-            },
-            {
-                name: "alignItems",
-                displayName: "Align items",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "start", label: "Start" },
-                    { id: "center", label: "Center" },
-                    { id: "end", label: "End" },
-                    { id: "stretch", label: "Stretch" },
-                    { id: "baseline", label: "Baseline" }
-                ],
-                propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isRowOrColumn(widget)
-            },
-            {
-                name: "fitToContent",
-                displayName: "Fit to content",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "none", label: "None" },
-                    { id: "width", label: "Width" },
-                    { id: "height", label: "Height" },
-                    { id: "both", label: "Both" }
-                ],
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isRowOrColumn(widget) || !getLayoutParent(widget)
-            },
-            {
-                name: "scroll",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "none", label: "None" },
-                    { id: "vertical", label: "Vertical" }
-                ],
-                propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isEezGuiProject(widget) ||
-                    widget.layout == "docking-manager"
             },
             {
                 name: "dockingLayout",
@@ -512,7 +377,7 @@ export class ContainerWidget extends Widget {
                 computed: true,
                 propertyGridRowComponent: ContainerWidgetEditLayout,
                 skipSearch: true,
-                hideInPropertyGrid: (widget: ContainerWidget) => {
+                hideInPropertyGrid: (widget: ContainerDashboardWidget) => {
                     return widget.layout != "docking-manager";
                 }
             },
@@ -522,7 +387,7 @@ export class ContainerWidget extends Widget {
         ],
 
         defaultValue: {
-            type: "Container",
+            type: "ContainerDashboardWidget",
             style: {
                 useStyle: "default"
             },
@@ -535,16 +400,11 @@ export class ContainerWidget extends Widget {
         },
 
         beforeLoadHook: (
-            widget: ContainerWidget,
-            jsWidget: Partial<ContainerWidget>,
-            project: Project
+            widget: ContainerDashboardWidget,
+            jsWidget: Partial<ContainerDashboardWidget>
         ) => {
             if (jsWidget.layout == undefined) {
                 jsWidget.layout = "static";
-            } else if (jsWidget.layout == "docking-manager") {
-                if (!project.projectTypeTraits.isDashboard) {
-                    jsWidget.layout = "static";
-                }
             }
         },
 
@@ -561,62 +421,7 @@ export class ContainerWidget extends Widget {
                 <rect x="4" y="4" width="16" height="16" rx="2" />
                 <path d="M4 12h8m0 3h8m-8-6h8m-8-5v16" />
             </svg>
-        ),
-
-        extendContextMenu: (
-            thisObject: Widget,
-            context: IContextMenuContext,
-            objects: IEezObject[],
-            menuItems: IMenuItem[],
-            editable: boolean
-        ): void => {
-            ContainerWidget.classInfo.parentClassInfo!.extendContextMenu!(
-                thisObject,
-                context,
-                objects,
-                menuItems,
-                editable
-            );
-
-            if (editable && objects.length === 1) {
-                const object = objects[0];
-                if (object instanceof ContainerWidget) {
-                    menuItems.push(
-                        {
-                            type: "separator"
-                        },
-                        {
-                            label: "Remove Container",
-                            click: () => {
-                                const widgets = object.removeContainer();
-                                if (widgets.length > 0) {
-                                    context.selectObjects(widgets);
-                                }
-                            }
-                        }
-                    );
-                }
-            }
-        },
-
-        check: (object: ContainerWidget, messages: IMessage[]) => {
-            checkObjectReference(object, "overlay", messages);
-
-            // LAYOUT_MAX_CHILDREN in eez-framework gui/layout.h
-            const LAYOUT_MAX_CHILDREN = 64;
-            if (
-                isRowOrColumn(object) &&
-                object.widgets.length > LAYOUT_MAX_CHILDREN
-            ) {
-                messages.push(
-                    new Message(
-                        MessageType.WARNING,
-                        `A row or column shows only its first ${LAYOUT_MAX_CHILDREN} children.`,
-                        object
-                    )
-                );
-            }
-        }
+        )
     });
 
     override makeEditable() {
@@ -625,17 +430,31 @@ export class ContainerWidget extends Widget {
         makeObservable(this, {
             name: observable,
             widgets: observable,
-            overlay: observable,
-            shadow: observable,
             layout: observable,
-            dockingLayout: observable,
-            gap: observable,
-            justifyContent: observable,
-            alignItems: observable,
-            fitToContent: observable,
-            scroll: observable,
-            dividers: observable
+            dockingLayout: observable
         });
+    }
+
+    override getChangeMenuItems(
+        context: IContextMenuContext,
+        objects: IEezObject[],
+        editable: boolean
+    ): IMenuItem[] {
+        if (!editable || objects.length !== 1) {
+            return [];
+        }
+
+        return [
+            {
+                label: "Remove Container",
+                click: () => {
+                    const widgets = this.removeContainer();
+                    if (widgets.length > 0) {
+                        context.selectObjects(widgets);
+                    }
+                }
+            }
+        ];
     }
 
     removeContainer() {
@@ -818,27 +637,14 @@ export class ContainerWidget extends Widget {
     //     });
     // }
 
-    styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
-        super.styleHook(style, flowContext);
-
-        if (this.overlay) {
-            if (this.shadow) {
-                style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
-            }
-            style.opacity = this.style.opacityProperty / 255;
-        }
-    }
-
     override render(
         flowContext: IFlowContext,
         containerWidth: number,
         containerHeight: number
     ): React.ReactNode {
-        // the page editor that draws with the framework WASM shows the widgets
-        // of a horizontal or vertical container where the framework draws them
-        const stacked =
-            flowContext.flowState != undefined ||
-            isEezGuiEditorWasmProject(ProjectEditor.getProject(this));
+        // horizontal and vertical layouts are applied at runtime, the editor
+        // shows the children where they are placed
+        const stacked = flowContext.flowState != undefined;
 
         // a widget that isn't visible takes no space
         const isVisible = (widget: Widget) =>
@@ -846,36 +652,8 @@ export class ContainerWidget extends Widget {
                 ? getBooleanValue(flowContext, widget, "visible", !widget.visible)
                 : !widget.hiddenInEditor;
 
-        // a row, a column or a scrolling container of an EEZ-GUI project in
-        // the page editor: the children where the framework laid them out
-        // (EezGuiEditorPage), scrolled by the position set in the editor
-        const containerBox =
-            !flowContext.flowState &&
-            (isRowOrColumn(this) || isScrollableInEditor(this))
-                ? getEditorWidgetBox(this)
-                : undefined;
-
         let children;
-        if (containerBox) {
-            children = this.widgets.map(widget => {
-                const box = getEditorWidgetBox(widget);
-                if (!box) {
-                    // hidden
-                    return null;
-                }
-                return (
-                    <ComponentEnclosure
-                        key={getId(widget)}
-                        component={widget}
-                        flowContext={flowContext}
-                        left={box.left - containerBox.left}
-                        top={box.top - containerBox.top}
-                        width={box.width}
-                        height={box.height}
-                    />
-                );
-            });
-        } else if (stacked && this.layout == "horizontal") {
+        if (stacked && this.layout == "horizontal") {
             let offset = 0;
 
             children = this.widgets.map((widget, i) => {
@@ -1003,99 +781,17 @@ export class ContainerWidget extends Widget {
             return fragment;
         }
     }
-
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // widgets
-        dataBuffer.writeArray(this.widgets, widget =>
-            buildWidget(widget, assets, dataBuffer)
-        );
-
-        let overlay = assets.getWidgetDataItemIndex(this, "overlay");
-
-        // flags
-        let flags = 0;
-
-        const SHADOW_FLAG = 1 << 0;
-
-        if (overlay && this.shadow) {
-            flags |= SHADOW_FLAG;
-        }
-
-        // a row or column: the lines between the children
-        const CONTAINER_WIDGET_DIVIDERS_FLAG = 1 << 6;
-        if (this.dividers && isRowOrColumn(this)) {
-            flags |= CONTAINER_WIDGET_DIVIDERS_FLAG;
-        }
-
-        dataBuffer.writeUint16(flags);
-
-        // overlay
-        dataBuffer.writeInt16(overlay);
-
-        // layout
-        const CONTAINER_WIDGET_LAYOUT_STATIC = 0;
-        const CONTAINER_WIDGET_LAYOUT_HORIZONTAL = 1;
-        const CONTAINER_WIDGET_LAYOUT_VERTICAL = 2;
-
-        let layout = CONTAINER_WIDGET_LAYOUT_STATIC;
-
-        if (this.layout === "horizontal") {
-            layout = CONTAINER_WIDGET_LAYOUT_HORIZONTAL;
-        } else if (this.layout === "vertical") {
-            layout = CONTAINER_WIDGET_LAYOUT_VERTICAL;
-        }
-
-        dataBuffer.writeUint8(layout);
-
-        // a row or column: justifyContent (LAYOUT_JUSTIFY_...), alignItems
-        // (LAYOUT_ALIGN_...), gap
-        const rowOrColumn = isRowOrColumn(this);
-
-        const LAYOUT_JUSTIFY: { [id: string]: number } = {
-            start: 0,
-            center: 1,
-            end: 2,
-            "space-between": 3
-        };
-        dataBuffer.writeUint8(
-            rowOrColumn ? LAYOUT_JUSTIFY[this.justifyContent ?? "start"] ?? 0 : 0
-        );
-
-        dataBuffer.writeUint8(
-            rowOrColumn ? getLayoutAlignValue(this.alignItems ?? "start") : 0
-        );
-
-        // scroll (CONTAINER_WIDGET_SCROLL_...), not of an overlay
-        const CONTAINER_WIDGET_SCROLL_VERTICAL = 1;
-        dataBuffer.writeUint8(
-            this.scroll == "vertical" && !this.overlay
-                ? CONTAINER_WIDGET_SCROLL_VERTICAL
-                : 0
-        );
-
-        dataBuffer.writeInt16(rowOrColumn ? this.gap ?? 0 : 0);
-
-        // reserved2
-        dataBuffer.writeInt16(0);
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ListWidget extends Widget {
+export class ListDashboardWidget extends Widget {
     itemWidget?: Widget;
     listType?: string;
     gap?: number;
-    // a horizontal list shows page dots in this style instead of the scroll
-    // indicator (not set: the indicator); a dot is a box of the border and
-    // the padding of the style, the current one is in its selected state (see
-    // eez-framework ScrollableWidgetState::pageDotsStyle)
-    pageDotsStyle: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
+        enabledInComponentPalette,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1128,19 +824,12 @@ export class ListWidget extends Widget {
                 propertyGridGroup: specificGroup
             },
             makeStylePropertyInfo("style", "Default style"),
-            makeStylePropertyInfo("pageDotsStyle", "Page dots style", {
-                styleWithoutFont: true
-            }),
             makeDataPropertyInfo("data")
         ],
 
-        beforeLoadHook: (object: IEezObject, jsObject: any) => {
-            migrateOptionalStyleProperty(jsObject, "pageDotsStyle");
-        },
-
         defaultValue: {
             itemWidget: {
-                type: "Container",
+                type: "ContainerDashboardWidget",
                 widgets: [],
                 left: 0,
                 top: 0,
@@ -1170,7 +859,7 @@ export class ListWidget extends Widget {
             </svg>
         ),
 
-        check: (object: ListWidget, messages: IMessage[]) => {
+        check: (object: ListDashboardWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -1193,8 +882,7 @@ export class ListWidget extends Widget {
         makeObservable(this, {
             itemWidget: observable,
             listType: observable,
-            gap: observable,
-            pageDotsStyle: observable
+            gap: observable
         });
     }
 
@@ -1206,14 +894,10 @@ export class ListWidget extends Widget {
 
         let dataValue;
         if (this.data) {
-            if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
-                try {
-                    dataValue = evalProperty(flowContext, this, "data");
-                } catch (err) {
-                    //console.error(err);
-                }
-            } else {
-                dataValue = flowContext.dataContext.get(this.data);
+            try {
+                dataValue = evalProperty(flowContext, this, "data");
+            } catch (err) {
+                //console.error(err);
             }
         }
 
@@ -1242,41 +926,12 @@ export class ListWidget extends Widget {
             </>
         );
     }
-
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // itemWidget
-        const itemWidget = this.itemWidget;
-        if (itemWidget) {
-            dataBuffer.writeObjectOffset(() =>
-                buildWidget(itemWidget, assets, dataBuffer)
-            );
-        } else {
-            dataBuffer.writeUint32(0);
-        }
-
-        // listType
-        dataBuffer.writeUint8(
-            this.listType === "vertical"
-                ? LIST_TYPE_VERTICAL
-                : LIST_TYPE_HORIZONTAL
-        );
-
-        // gap
-        dataBuffer.writeUint8(this.gap || 0);
-
-        // pageDotsStyle (0 if not set or vertical: the scroll indicator)
-        dataBuffer.writeInt16(
-            this.listType === "horizontal"
-                ? getOptionalStyleIndex(assets, this, "pageDotsStyle")
-                : 0
-        );
-    }
 }
 
 const ListWidgetItem = observer(
     class ListWidgetItem extends React.Component<{
         flowContext: IFlowContext;
-        listWidget: ListWidget;
+        listWidget: ListDashboardWidget;
         itemWidget: Widget;
         i: number;
         gap: number;
@@ -1313,14 +968,12 @@ const ListWidgetItem = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class GridWidget extends Widget {
+export class GridDashboardWidget extends Widget {
     itemWidget?: Widget;
     gridFlow?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
+        enabledInComponentPalette,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1353,7 +1006,7 @@ export class GridWidget extends Widget {
 
         defaultValue: {
             itemWidget: {
-                type: "Container",
+                type: "ContainerDashboardWidget",
                 widgets: [],
                 left: 0,
                 top: 0,
@@ -1384,7 +1037,7 @@ export class GridWidget extends Widget {
             </svg>
         ),
 
-        check: (object: GridWidget, messages: IMessage[]) => {
+        check: (object: GridDashboardWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             }
@@ -1418,14 +1071,10 @@ export class GridWidget extends Widget {
 
         let dataValue;
         if (this.data) {
-            if (flowContext.projectStore.projectTypeTraits.hasFlowSupport) {
-                try {
-                    dataValue = evalProperty(flowContext, this, "data");
-                } catch (err) {
-                    //console.error(err);
-                }
-            } else {
-                dataValue = flowContext.dataContext.get(this.data);
+            try {
+                dataValue = evalProperty(flowContext, this, "data");
+            } catch (err) {
+                //console.error(err);
             }
         }
 
@@ -1459,29 +1108,12 @@ export class GridWidget extends Widget {
             </>
         );
     }
-
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // itemWidget
-        const itemWidget = this.itemWidget;
-        if (itemWidget) {
-            dataBuffer.writeObjectOffset(() =>
-                buildWidget(itemWidget, assets, dataBuffer)
-            );
-        } else {
-            dataBuffer.writeUint32(0);
-        }
-
-        // gridFlow
-        dataBuffer.writeUint8(
-            this.gridFlow === "column" ? GRID_FLOW_COLUMN : GRID_FLOW_ROW
-        );
-    }
 }
 
 const GridWidgetItem = observer(
     class GridWidgetItem extends React.Component<{
         flowContext: IFlowContext;
-        gridWidget: GridWidget;
+        gridWidget: GridDashboardWidget;
         itemWidget: Widget;
         i: number;
         width: number;
@@ -1534,21 +1166,19 @@ const GridWidgetItem = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export function htmlEncode(value: string) {
+function htmlEncode(value: string) {
     const el = document.createElement("div");
     el.innerText = value;
     return el.innerHTML;
 }
 
-export class SelectWidget extends Widget {
+export class SelectDashboardWidget extends Widget {
     widgets: Widget[];
 
     _lastSelectedIndexInSelectWidget: number | undefined;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
+        enabledInComponentPalette,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1566,7 +1196,7 @@ export class SelectWidget extends Widget {
                     if (getParent(childObject)) {
                         let selectWidgetProperties = getParent(
                             getParent(childObject)
-                        ) as SelectWidget;
+                        ) as SelectDashboardWidget;
 
                         label = selectWidgetProperties.getChildLabel(
                             childObject as Widget
@@ -1585,8 +1215,8 @@ export class SelectWidget extends Widget {
                 interceptAddObject: (widgets: Widget[], object: Widget) => {
                     object.left = 0;
                     object.top = 0;
-                    object.width = (getParent(widgets) as SelectWidget).width;
-                    object.height = (getParent(widgets) as SelectWidget).height;
+                    object.width = (getParent(widgets) as SelectDashboardWidget).width;
+                    object.height = (getParent(widgets) as SelectDashboardWidget).height;
                     return object;
                 }
             },
@@ -1613,7 +1243,7 @@ export class SelectWidget extends Widget {
             </svg>
         ),
 
-        check: (object: SelectWidget, messages: IMessage[]) => {
+        check: (object: SelectDashboardWidget, messages: IMessage[]) => {
             if (!object.data) {
                 messages.push(propertyNotSetMessage(object, "data"));
             } else {
@@ -1833,13 +1463,6 @@ export class SelectWidget extends Widget {
             return fragment;
         }
     }
-
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // widgets
-        dataBuffer.writeArray(this.widgets, widget =>
-            buildWidget(widget, assets, dataBuffer)
-        );
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1847,11 +1470,11 @@ export class SelectWidget extends Widget {
 const UserWidgetPropertyGridUI = observer(
     class UserWidgetPropertyGridUI extends React.Component<PropertyProps> {
         showUserWidgetPage = () => {
-            (this.props.objects[0] as UserWidgetWidget).open();
+            (this.props.objects[0] as UserWidgetDashboardWidget).open();
         };
 
         fitSize = () => {
-            (this.props.objects[0] as UserWidgetWidget).fitSize();
+            (this.props.objects[0] as UserWidgetDashboardWidget).fitSize();
         };
 
         render() {
@@ -1881,14 +1504,13 @@ const UserWidgetPropertyGridUI = observer(
     }
 );
 
-export class UserWidgetWidget extends Widget {
+export class UserWidgetDashboardWidget extends Widget {
     userWidgetPageName: string;
     userPropertyValues: UserPropertyValues;
     context?: string;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL,
+        enabledInComponentPalette,
 
         componentPaletteGroupName: "!1Containers",
 
@@ -1911,7 +1533,7 @@ export class UserWidgetWidget extends Widget {
                 computed: true,
                 propertyGridRowComponent: UserWidgetPropertyGridUI,
                 skipSearch: true,
-                hideInPropertyGrid: (widget: UserWidgetWidget) => {
+                hideInPropertyGrid: (widget: UserWidgetDashboardWidget) => {
                     if (!widget.userWidgetPageName) {
                         return true;
                     }
@@ -1935,8 +1557,8 @@ export class UserWidgetWidget extends Widget {
             getAdditionalFlowPropertiesForUserProperties,
 
         beforeLoadHook: (
-            widget: UserWidgetWidget,
-            jsWidget: Partial<UserWidgetWidget>
+            widget: UserWidgetDashboardWidget,
+            jsWidget: Partial<UserWidgetDashboardWidget>
         ) => {
             if ((jsWidget as any).layout != undefined) {
                 jsWidget.userWidgetPageName = (jsWidget as any).layout;
@@ -1944,7 +1566,7 @@ export class UserWidgetWidget extends Widget {
             }
         },
 
-        label: (widget: UserWidgetWidget) => {
+        label: (widget: UserWidgetDashboardWidget) => {
             let name = getComponentName(widget.type);
 
             if (widget.userWidgetPageName) {
@@ -1963,7 +1585,7 @@ export class UserWidgetWidget extends Widget {
 
         icon: USER_WIDGET_ICON,
 
-        check: (object: UserWidgetWidget, messages: IMessage[]) => {
+        check: (object: UserWidgetDashboardWidget, messages: IMessage[]) => {
             if (!object.data && !object.userWidgetPageName) {
                 messages.push(
                     new Message(
@@ -2025,39 +1647,8 @@ export class UserWidgetWidget extends Widget {
             // checkObjectReference(object, "context", messages);
         },
 
-        open: (object: UserWidgetWidget) => {
+        open: (object: UserWidgetDashboardWidget) => {
             object.open();
-        },
-
-        extendContextMenu: (
-            thisObject: Widget,
-            context: IContextMenuContext,
-            objects: IEezObject[],
-            menuItems: IMenuItem[],
-            editable: boolean
-        ): void => {
-            UserWidgetWidget.classInfo.parentClassInfo!.extendContextMenu!(
-                thisObject,
-                context,
-                objects,
-                menuItems,
-                editable
-            );
-
-            if (objects.length === 1) {
-                const object = objects[0];
-                if (object instanceof UserWidgetWidget) {
-                    menuItems.push({
-                        label: "Replace with Container",
-                        click: () => {
-                            const widget = object.replaceWithContainer();
-                            if (widget) {
-                                context.selectObject(widget);
-                            }
-                        }
-                    });
-                }
-            }
         }
     });
 
@@ -2114,7 +1705,7 @@ export class UserWidgetWidget extends Widget {
             visited.add(page);
 
             for (const widget of visitObjects(page)) {
-                if (widget instanceof ProjectEditor.UserWidgetWidgetClass) {
+                if (widget instanceof UserWidgetDashboardWidget) {
                     if (widget.userWidgetPageName) {
                         const userWidgetPage = findPage(
                             project,
@@ -2268,10 +1859,35 @@ export class UserWidgetWidget extends Widget {
         }
     }
 
+    override getChangeMenuItems(
+        context: IContextMenuContext,
+        objects: IEezObject[],
+        editable: boolean
+    ): IMenuItem[] {
+        if (objects.length !== 1) {
+            return [];
+        }
+
+        return [
+            {
+                label: "Replace with Container",
+                click: () => {
+                    const widget = this.replaceWithContainer();
+                    if (widget) {
+                        context.selectObject(widget);
+                    }
+                }
+            }
+        ];
+    }
+
     replaceWithContainer() {
         if (this.userWidgetPage) {
-            var containerWidgetJsObject: Partial<ContainerWidget> =
-                Object.assign({}, ContainerWidget.classInfo.defaultValue);
+            var containerWidgetJsObject: Partial<ContainerDashboardWidget> =
+                Object.assign(
+                    {},
+                    ContainerDashboardWidget.classInfo.defaultValue
+                );
 
             containerWidgetJsObject.widgets =
                 this.userWidgetPage.components.map(widget =>
@@ -2288,29 +1904,14 @@ export class UserWidgetWidget extends Widget {
             return replaceObject(
                 getParent(this),
                 this,
-                createObject<ContainerWidget>(
+                createObject<ContainerDashboardWidget>(
                     projectStore,
                     containerWidgetJsObject,
-                    ContainerWidget
+                    ContainerDashboardWidget
                 )
             );
         }
         return undefined;
-    }
-
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // layout
-        let userWidgetPage: number = 0;
-        if (this.userWidgetPageName) {
-            userWidgetPage = assets.getPageIndex(this, "userWidgetPageName");
-        }
-        dataBuffer.writeInt16(userWidgetPage);
-
-        // context
-        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "context"));
-
-        // component index
-        dataBuffer.writeUint16(assets.getComponentIndex(this));
     }
 
     buildFlowComponentSpecific(assets: Assets, dataBuffer: DataBuffer) {
@@ -2356,8 +1957,8 @@ export class UserWidgetWidget extends Widget {
     }
 }
 
-registerClass("ContainerWidget", ContainerWidget);
-registerClass("ListWidget", ListWidget);
-registerClass("GridWidget", GridWidget);
-registerClass("SelectWidget", SelectWidget);
-registerClass("UserWidgetWidget", UserWidgetWidget);
+registerClass("ContainerDashboardWidget", ContainerDashboardWidget);
+registerClass("ListDashboardWidget", ListDashboardWidget);
+registerClass("GridDashboardWidget", GridDashboardWidget);
+registerClass("SelectDashboardWidget", SelectDashboardWidget);
+registerClass("UserWidgetDashboardWidget", UserWidgetDashboardWidget);

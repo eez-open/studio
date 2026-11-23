@@ -606,54 +606,6 @@ export class TextWidget extends Widget {
             </svg>
         ),
 
-        extendContextMenu: (
-            thisObject: Widget,
-            context: IContextMenuContext,
-            objects: IEezObject[],
-            menuItems: IMenuItem[],
-            editable: boolean
-        ): void => {
-            TextWidget.classInfo.parentClassInfo!.extendContextMenu!(
-                thisObject,
-                context,
-                objects,
-                menuItems,
-                editable
-            );
-
-            if (editable && objects.length === 1) {
-                const object = objects[0];
-                if (object instanceof TextWidget) {
-                    menuItems.push(
-                        {
-                            type: "separator"
-                        },
-                        // the other names of this widget: nothing is lost,
-                        // the properties are the same
-                        ...TEXT_WIDGET_NAMES.filter(
-                            name => name != getTextWidgetName(object)
-                        ).map(name => ({
-                            label: `Change to ${name}`,
-                            click: () => {
-                                const widget = object.changeTo(name);
-                                if (widget) {
-                                    context.selectObject(widget);
-                                }
-                            }
-                        })),
-                        {
-                            label: "Convert to MultilineText",
-                            click: () => {
-                                const widget = object.convertToMultilineText();
-                                if (widget) {
-                                    context.selectObject(widget);
-                                }
-                            }
-                        }
-                    );
-                }
-            }
-        },
 
         check: (widget: TextWidget, messages: IMessage[]) => {
             const project = ProjectEditor.getProject(widget);
@@ -709,6 +661,41 @@ export class TextWidget extends Widget {
     }
 
     // this widget under another of its names (TEXT_WIDGET_NAMES)
+    // the other names of this widget: nothing is lost, the properties are the
+    // same
+    override getChangeMenuItems(
+        context: IContextMenuContext,
+        objects: IEezObject[],
+        editable: boolean
+    ): IMenuItem[] {
+        if (!editable || objects.length !== 1) {
+            return [];
+        }
+
+        return [
+            ...TEXT_WIDGET_NAMES.filter(
+                name => name != getTextWidgetName(this)
+            ).map(name => ({
+                label: `Change to ${name}`,
+                click: () => {
+                    const widget = this.changeTo(name);
+                    if (widget) {
+                        context.selectObject(widget);
+                    }
+                }
+            })),
+            {
+                label: "Convert to MultilineText",
+                click: () => {
+                    const widget = this.convertToMultilineText();
+                    if (widget) {
+                        context.selectObject(widget);
+                    }
+                }
+            }
+        ];
+    }
+
     changeTo(name: string) {
         const jsObject = objectToJS(this);
 
