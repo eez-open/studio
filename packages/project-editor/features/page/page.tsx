@@ -4,16 +4,11 @@ import { keepAliveComputed } from "project-editor/core/keep-alive";
 import classNames from "classnames";
 import { observer } from "mobx-react";
 
-import type { Rect } from "eez-studio-shared/geometry";
-
 import {
     IEezObject,
-    EezObject,
-    ClassInfo,
     registerClass,
     PropertyType,
     getId,
-    getParent,
     makeDerivedClassInfo,
     MessageType,
     PropertyInfo,
@@ -29,8 +24,7 @@ import {
     getProjectStore,
     getLabel,
     Message,
-    propertyNotFoundMessage,
-    propertyNotSetMessage
+    propertyNotFoundMessage
 } from "project-editor/store";
 import {
     hasFlowSupport,
@@ -69,11 +63,6 @@ import type { Assets, DataBuffer } from "project-editor/build/assets";
 import { buildWidget } from "project-editor/build/widgets";
 import { WIDGET_TYPE_CONTAINER } from "project-editor/flow/components/component-types";
 import { ProjectEditor } from "project-editor/project-editor-interface";
-import {
-    checkOverlappingChildren,
-    isOverlappingChildrenSupported,
-    OVERLAPPING_CHILDREN_FLAG
-} from "project-editor/flow/components/widgets/overlapping-widgets";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 import { validators } from "eez-studio-shared/validation";
 import type { WasmRuntime } from "project-editor/flow/runtime/wasm-runtime";
@@ -90,16 +79,6 @@ import { Property } from "project-editor/ui-components/PropertyGrid/Property";
 import { EezGuiLitePage } from "project-editor/eez-gui-lite/Page";
 import { EezGuiEditorPage } from "project-editor/flow/editor/eez-gui-editor-page";
 import { isEezGuiEditorWasmProject } from "project-editor/flow/editor/eez-gui-editor-wasm-switch";
-import {
-    deletePageLayout,
-    findPageLayoutPage,
-    getEditorPageLayout,
-    getPageLayoutPageName,
-    getPageLayouts,
-    getPageOfPageLayout,
-    isPageLayoutsSupported,
-    renamePageLayout
-} from "project-editor/features/page/page-layouts";
 
 export const FLOW_FRAGMENT_PAGE_NAME = "$FlowFragment";
 
@@ -112,168 +91,6 @@ export interface ICustomWidgetCreateParams {
     width: number;
     height: number;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-const MAX_PAGE_WIDTH = 4096;
-const MAX_PAGE_HEIGHT = 4096;
-
-// The same page (with all its widgets) for the different page size. Layout
-// specific widget properties (see PropertyInfo.layoutSpecific) can be changed
-// in each page layout and one page is built for each page layout.
-export class PageLayout extends EezObject {
-    name: string;
-    width: number;
-    height: number;
-
-    static classInfo: ClassInfo = {
-        properties: [
-            {
-                name: "name",
-                type: PropertyType.String,
-                unique: true
-            },
-            {
-                name: "width",
-                type: PropertyType.Number
-            },
-            {
-                name: "height",
-                type: PropertyType.Number
-            }
-        ],
-
-        label: (pageLayout: PageLayout) =>
-            `${pageLayout.name} (${pageLayout.width} x ${pageLayout.height})`,
-
-        newItem: async (parent: IEezObject) => {
-            const page = getParent(parent) as Page;
-            const project = ProjectEditor.getProject(page);
-
-            const result = await showGenericDialog({
-                dialogDefinition: {
-                    title: "New Page Layout",
-                    fields: [
-                        {
-                            name: "name",
-                            type: "string",
-                            validators: [
-                                validators.required,
-                                validators.unique({}, parent)
-                            ]
-                        },
-                        {
-                            name: "width",
-                            type: "number",
-                            validators: [
-                                validators.rangeInclusive(1, MAX_PAGE_WIDTH)
-                            ]
-                        },
-                        {
-                            name: "height",
-                            type: "number",
-                            validators: [
-                                validators.rangeInclusive(1, MAX_PAGE_HEIGHT)
-                            ]
-                        }
-                    ]
-                },
-                values: {
-                    name: "",
-                    width: page.width,
-                    height: page.height
-                }
-            });
-
-            return createObject<PageLayout>(
-                project._store,
-                {
-                    name: result.values.name,
-                    width: result.values.width,
-                    height: result.values.height
-                },
-                PageLayout
-            );
-        },
-
-        check: (pageLayout: PageLayout, messages: IMessage[]) => {
-            const page = getPageOfPageLayout(pageLayout);
-            if (!isPageLayoutsSupported(page)) {
-                return;
-            }
-
-            if (!pageLayout.name) {
-                messages.push(propertyNotSetMessage(pageLayout, "name"));
-            } else {
-                const project = ProjectEditor.getProject(page);
-                const pageName = getPageLayoutPageName(page, pageLayout);
-
-                if (
-                    project.pages.find(page => page.name == pageName) ||
-                    findPageLayoutPage(project, pageName)?.pageLayout !=
-                        pageLayout
-                ) {
-                    messages.push(
-                        new Message(
-                            MessageType.ERROR,
-                            `Page "${pageName}" built for this layout already exists`,
-                            getChildOfObject(pageLayout, "name")
-                        )
-                    );
-                }
-            }
-
-            if (
-                !(pageLayout.width >= 1 && pageLayout.width <= MAX_PAGE_WIDTH)
-            ) {
-                messages.push(
-                    new Message(
-                        MessageType.ERROR,
-                        `Width must be between 1 and ${MAX_PAGE_WIDTH}`,
-                        getChildOfObject(pageLayout, "width")
-                    )
-                );
-            }
-
-            if (
-                !(
-                    pageLayout.height >= 1 &&
-                    pageLayout.height <= MAX_PAGE_HEIGHT
-                )
-            ) {
-                messages.push(
-                    new Message(
-                        MessageType.ERROR,
-                        `Height must be between 1 and ${MAX_PAGE_HEIGHT}`,
-                        getChildOfObject(pageLayout, "height")
-                    )
-                );
-            }
-        },
-
-        updateObjectValueHook: (pageLayout: PageLayout, values: any) => {
-            if (values.name != undefined) {
-                renamePageLayout(pageLayout, values.name);
-            }
-        },
-
-        deleteObjectRefHook: (pageLayout: PageLayout) => {
-            deletePageLayout(pageLayout);
-        }
-    };
-
-    override makeEditable() {
-        super.makeEditable();
-
-        makeObservable(this, {
-            name: observable,
-            width: observable,
-            height: observable
-        });
-    }
-}
-
-registerClass("PageLayout", PageLayout);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -344,12 +161,6 @@ export const GeometryProperties = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// If the page has the page layouts then the page size is defined by each page
-// layout, and the page's own position and size are not shown.
-function isPageGeometryHidden(page: Page) {
-    return isLVGLProject(page) || getPageLayouts(page).length > 0;
-}
-
 export class Page extends Flow {
     id: number | undefined;
     name: string;
@@ -364,11 +175,8 @@ export class Page extends Flow {
     width: number;
     height: number;
 
-    layouts?: PageLayout[];
-
     scaleToFit: boolean;
 
-    allowOverlappingChildren?: boolean;
 
     isUsedAsUserWidget: boolean;
 
@@ -417,9 +225,7 @@ export class Page extends Flow {
             top: observable,
             width: observable,
             height: observable,
-            layouts: observable,
             scaleToFit: observable,
-            allowOverlappingChildren: observable,
             isUsedAsUserWidget: observable,
             _lvglRuntime: observable,
             _lvglObj: observable,
@@ -493,37 +299,25 @@ export class Page extends Flow {
                 name: "left",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isPageGeometryHidden
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "top",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isPageGeometryHidden
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "width",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isPageGeometryHidden
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "height",
                 type: PropertyType.Number,
                 propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: isPageGeometryHidden
-            },
-            {
-                name: "layouts",
-                type: PropertyType.Array,
-                typeClass: PageLayout,
-                isOptional: true,
-                propertyGridGroup: geometryGroup,
-                partOfNavigation: false,
-                enumerable: false,
-                hideInPropertyGrid: (page: Page) =>
-                    !isPageLayoutsSupported(page),
-                formText: `For each layout a page is built, named as this page with the layout name appended. Select the layout in the toolbar to change the position, size, style and visibility of the widgets in that layout.`
+                hideInPropertyGrid: isLVGLProject
             },
             {
                 name: "geometryProperties",
@@ -539,13 +333,6 @@ export class Page extends Flow {
                 type: PropertyType.Boolean,
                 propertyGridGroup: geometryGroup,
                 disabled: isLVGLProject
-            },
-            {
-                name: "allowOverlappingChildren",
-                type: PropertyType.Boolean,
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: (page: Page) =>
-                    !isOverlappingChildrenSupported(page)
             },
             {
                 name: "style",
@@ -816,15 +603,6 @@ export class Page extends Flow {
                 messages.push(propertyNotFoundMessage(page, "style"));
             }
 
-            checkOverlappingChildren(
-                page,
-                page.components.filter(
-                    component => component instanceof Widget
-                ) as Widget[],
-                !!page.allowOverlappingChildren,
-                messages
-            );
-
             if (
                 projectStore.projectTypeTraits.hasDisplaySizeProperty && !page.isUsedAsUserWidget && !projectStore.projectTypeTraits.isFirmware
             ) {
@@ -909,8 +687,13 @@ export class Page extends Flow {
         }
     });
 
-    get rect(): Rect {
-        return this.pageRect;
+    get rect() {
+        return {
+            left: this.left,
+            top: this.top,
+            width: this.width,
+            height: this.height
+        };
     }
 
     get autoSize(): AutoSize {
@@ -937,14 +720,12 @@ export class Page extends Flow {
         ];
     }
 
-    // in the editor, page has the size of the selected page layout
-    get pageRect(): Rect {
-        const pageLayout = getEditorPageLayout(this);
+    get pageRect() {
         return {
             left: this.left,
             top: this.top,
-            width: pageLayout ? pageLayout.width : this.width,
-            height: pageLayout ? pageLayout.height : this.height
+            width: this.width,
+            height: this.height
         };
     }
 
@@ -1166,9 +947,7 @@ export class Page extends Flow {
         const widgets = assets.projectStore.projectTypeTraits.isDashboard
             ? []
             : (this.components.filter(
-                widget =>
-                    widget instanceof Widget &&
-                    assets.isWidgetVisibleInPageLayout(widget)
+                widget => widget instanceof Widget
             ) as Widget[]);
 
         dataBuffer.writeArray(widgets, widget =>
@@ -1200,10 +979,6 @@ export class Page extends Flow {
 
         if (this.scaleToFit) {
             flags |= PAGE_SCALE_TO_FIT;
-        }
-
-        if (this.allowOverlappingChildren) {
-            flags |= OVERLAPPING_CHILDREN_FLAG;
         }
 
         dataBuffer.writeUint16(flags);

@@ -25,16 +25,7 @@ import {
     getStyleVariantId,
     WIDGET_VARIANT_NONE
 } from "project-editor/features/style/style";
-import { Page, PageLayout } from "project-editor/features/page/page";
-import {
-    findPageLayoutPage,
-    getLayoutPropertyValue,
-    getLayoutsPage,
-    getPageLayoutPageName,
-    getPageLayouts,
-    getPageOfPageLayout,
-    isWidgetVisibleInLayout
-} from "project-editor/features/page/page-layouts";
+import { Page } from "project-editor/features/page/page";
 import { Font } from "project-editor/features/font/font";
 import { Bitmap } from "project-editor/features/bitmap/bitmap";
 import { Action } from "project-editor/features/action/action";
@@ -95,7 +86,6 @@ import {
     NamingConvention,
     TAB
 } from "project-editor/build/helper";
-import { getAssetFullName } from "project-editor/project/assets";
 import {
     FIRST_DASHBOARD_ACTION_COMPONENT_TYPE,
     FIRST_DASHBOARD_WIDGET_COMPONENT_TYPE,
@@ -118,13 +108,12 @@ export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 export const PATH_SEPARATOR = "//";
 
 // The editor build: the page editor draws an EEZ-GUI page with the framework
-// WASM (see build/editor-build.ts). The assets hold the edited page (page 1, in
-// the page layout of the editor) and the user widgets it uses, no actions, and
+// WASM (see build/editor-build.ts). The assets hold the edited page (page 1)
+// and the user widgets it uses, no actions, and
 // all the styles, fonts and bitmaps in a fixed order. Widget properties are what
 // the editor shows. Nothing is written to the Output panel.
 export interface EditorBuild {
     page: Page;
-    pageLayout: PageLayout | undefined;
     userWidgetPages: Page[];
     // the preview background of a user widget page opened in its editor (a
     // theme color name or a color value): the page is drawn with a copy of its
@@ -176,9 +165,7 @@ export class Assets {
     nativeGlobalVariables: Variable[];
 
     actions: Action[];
-    // the page with layouts is built once for each page layout
     pages: (Page | undefined)[];
-    pageLayouts: (PageLayout | undefined)[];
     styles: Style[];
     lvglStyles: LVGLStyle[];
     fonts: Font[];
@@ -187,9 +174,8 @@ export class Assets {
 
     flows: (Flow | undefined)[];
 
-    // flow of the page with layouts has the flow state for each page layout
     flowStates = new Map<
-        Flow | PageLayout,
+        Flow,
         {
             index: number;
             componentIndexes: Map<Component, number>;
@@ -262,77 +248,13 @@ export class Assets {
 
     lvglBuild: LVGLBuild;
 
-    // data buffer which is currently used for building
-    dataBuffer: DataBuffer | DummyDataBuffer;
+    // the data buffer of the build (not the one of a dry run)
+    dataBuffer: DataBuffer | undefined;
 
     get projectStore() {
         return this.editorBuild
             ? getSilentProjectStore(this.rootProject._store)
             : this.rootProject._store;
-    }
-
-    // Layout of the page (and its flow) which is currently built. It is kept in
-    // the data buffer context so it is also available when the objects which
-    // are written later (see DataBuffer.writeObjectOffset) are built.
-    get pageLayout(): PageLayout | undefined {
-        return this.dataBuffer?.context;
-    }
-
-    buildInPageLayout(
-        pageLayout: PageLayout | undefined,
-        callback: () => void
-    ) {
-        const savedPageLayout = this.dataBuffer.context;
-        this.dataBuffer.context = pageLayout;
-        try {
-            callback();
-        } finally {
-            this.dataBuffer.context = savedPageLayout;
-        }
-    }
-
-    // page layout of the flow at flowIndex in the flows
-    getFlowPageLayout(flowIndex: number) {
-        return flowIndex < this.pages.length
-            ? this.pageLayouts[flowIndex]
-            : undefined;
-    }
-
-    getPageName(pageIndex: number) {
-        const page = this.pages[pageIndex];
-        if (!page) {
-            return "";
-        }
-        const pageLayout = this.pageLayouts[pageIndex];
-        return pageLayout
-            ? getPageLayoutPageName(page, pageLayout)
-            : page.name;
-    }
-
-    // page layout, of the page which is currently built, the object belongs to
-    getObjectPageLayout(object: EezObject) {
-        const pageLayout = this.pageLayout;
-        if (pageLayout && getLayoutsPage(object) == getPageOfPageLayout(pageLayout)) {
-            return pageLayout;
-        }
-        return undefined;
-    }
-
-    // value of the property in the page layout which is currently built
-    getPropertyValue(object: EezObject, propertyName: string) {
-        if (object instanceof Component) {
-            const pageLayout = this.getObjectPageLayout(object);
-            if (pageLayout) {
-                return getLayoutPropertyValue(object, propertyName, pageLayout);
-            }
-        }
-        return (object as any)[propertyName];
-    }
-
-    // widgets which are not visible in the page layout are not built
-    isWidgetVisibleInPageLayout(widget: Widget) {
-        const pageLayout = this.getObjectPageLayout(widget);
-        return !pageLayout || isWidgetVisibleInLayout(widget, pageLayout);
     }
 
     // When running FIRMWARE project with master project in the Studio simulator,
@@ -435,7 +357,10 @@ export class Assets {
         buildConfiguration: BuildConfiguration | undefined,
         public option: "check" | "buildAssets" | "buildFiles",
         public includedMasterProjectAssets = new Set<EezObject>(),
-        public editorBuild?: EditorBuild
+        public editorBuild?: EditorBuild,
+        // the assets of the previous editor build of the same page (see
+        // adoptSeed)
+        seed?: Assets
     ) {
         this.map.displayWidth = rootProject.settings.general.displayWidth;
         this.map.displayHeight = rootProject.settings.general.displayHeight;
@@ -465,43 +390,16 @@ export class Assets {
         // pages
         //
         this.pages = [];
-        this.pageLayouts = [];
-
-        const addPage = (page: Page, pageLayout: PageLayout | undefined) => {
-            this.pages.push(page);
-            this.pageLayouts[this.pages.length - 1] = pageLayout;
-        };
-
-        // for the page with ID, the page for the first page layout gets
-        // the ID and the pages for the other page layouts are added after
-        // the pages with ID
-        const otherPageLayouts: PageLayout[] = [];
 
         this.getAssets<Page>(
             project => project.pages,
             page => assetIncludePredicate(page) && this.getAssetId(page) != undefined
-        ).forEach(page => {
-            const pageLayouts = getPageLayouts(page);
-            this.pages[page.id! - 1] = page;
-            this.pageLayouts[page.id! - 1] = pageLayouts[0];
-            otherPageLayouts.push(...pageLayouts.slice(1));
-        });
-
-        otherPageLayouts.forEach(pageLayout =>
-            addPage(getPageOfPageLayout(pageLayout), pageLayout)
-        );
+        ).forEach(page => (this.pages[page.id! - 1] = page));
 
         this.getAssets<Page>(
             project => project.pages,
             page => assetIncludePredicate(page) && this.getAssetId(page) == undefined
-        ).forEach(page => {
-            const pageLayouts = getPageLayouts(page);
-            if (pageLayouts.length == 0) {
-                addPage(page, undefined);
-            } else {
-                pageLayouts.forEach(pageLayout => addPage(page, pageLayout));
-            }
-        });
+        ).forEach(page => this.pages.push(page));
 
         let missingPageIDs = [];
         for (let i = 0; i < this.pages.length; i++) {
@@ -524,10 +422,6 @@ export class Assets {
                 this.editorBuild.page,
                 ...this.editorBuild.userWidgetPages
             ];
-            this.pageLayouts = [
-                this.editorBuild.pageLayout,
-                ...this.editorBuild.userWidgetPages.map(() => undefined)
-            ];
         }
 
         //
@@ -549,15 +443,7 @@ export class Assets {
                   )
               ];
 
-        this.dataBuffer = new DummyDataBuffer(this.utf8Support);
-
-        this.flows.forEach(
-            (flow, flowIndex) =>
-                flow &&
-                this.buildInPageLayout(this.getFlowPageLayout(flowIndex), () =>
-                    this.getFlowState(flow)
-                )
-        );
+        this.flows.forEach(flow => flow && this.getFlowState(flow));
 
         //
 
@@ -772,10 +658,152 @@ export class Assets {
         this.colors = [];
 
         //
-        const dummyDataBuffer = this.dataBuffer as DataBuffer;
+        this.initialLists = {
+            styles: [...this.styles],
+            fonts: [...this.fonts],
+            bitmaps: [...this.bitmaps],
+            flows: [...this.flows]
+        };
+
+        if (seed && this.adoptSeed(seed)) {
+            return;
+        }
+
+        // The dry run: everything is built once without writing, so that the
+        // lists (styles, fonts, bitmaps, colors, constants) and the indexes
+        // of the flows are complete before the first of them is written.
+        // The real build writes nested objects late, after the lists.
+        const dummyDataBuffer = new DummyDataBuffer(this.utf8Support);
         buildGuiDocumentData(this, dummyDataBuffer);
         buildGuiStylesData(this, dummyDataBuffer);
         buildFlowData(this, dummyDataBuffer);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // The editor build of a page runs after every change, and most changes
+    // add nothing to the lists. So instead of the dry run it takes the lists
+    // and the flow indexes of the previous build of the page (the seed), and
+    // after the build it is checked (isSeedComplete): if the build added
+    // something, or didn't use an index of a flow (a widget is gone), the
+    // result is dropped and the page is built again with the dry run.
+    //
+    // Only the lists are taken, not what was looked up in them: the index of
+    // a style is found again (a changed style is then a new one in the list).
+    // An entry of a list that is no longer used does no harm.
+
+    initialLists: {
+        styles: Style[];
+        fonts: Font[];
+        bitmaps: Bitmap[];
+        flows: (Flow | undefined)[];
+    };
+
+    seeded = false;
+    seedSizes: number[] = [];
+    // the flow indexes the build asked for
+    usedFlowEntries = new Set<any>();
+
+    getListSizes() {
+        const sizes = [
+            this.styles.length,
+            this.fonts.length,
+            this.bitmaps.length,
+            this.colors.length,
+            this.jsonValues.length,
+            this.constants.length,
+            this.flowStates.size
+        ];
+        for (const flowState of this.flowStates.values()) {
+            sizes.push(
+                flowState.componentIndexes.size,
+                flowState.componentInputIndexes.size,
+                flowState.flowWidgetDataIndexes.size,
+                flowState.flowWidgetActionIndexes.size
+            );
+        }
+        return sizes;
+    }
+
+    adoptSeed(seed: Assets) {
+        const same = (a: any[], b: any[]) =>
+            a.length == b.length && a.every((item, i) => item === b[i]);
+
+        // the project has the same styles, fonts, bitmaps and flows
+        if (
+            !same(this.initialLists.styles, seed.initialLists.styles) ||
+            !same(this.initialLists.fonts, seed.initialLists.fonts) ||
+            !same(this.initialLists.bitmaps, seed.initialLists.bitmaps) ||
+            !same(this.initialLists.flows, seed.initialLists.flows) ||
+            this.includedMasterProjectAssets != seed.includedMasterProjectAssets
+        ) {
+            return false;
+        }
+
+        this.styles = [...seed.styles];
+        this.fonts = [...seed.fonts];
+        this.bitmaps = [...seed.bitmaps];
+        this.colors = [...seed.colors];
+        this.jsonValues = [...seed.jsonValues];
+        this.constants = [...seed.constants];
+        this.constantsMap = new Map(seed.constantsMap);
+        this.editorPageStylePosition = seed.editorPageStylePosition;
+        this.editorPageStyleObject = seed.editorPageStyleObject;
+
+        this.flowStates = new Map();
+        for (const [flow, flowState] of seed.flowStates) {
+            this.flowStates.set(flow, {
+                index: flowState.index,
+                componentIndexes: new Map(flowState.componentIndexes),
+                componentInputIndexes: new Map(flowState.componentInputIndexes),
+                commponentInputs: [...flowState.commponentInputs],
+                flowWidgetDataIndexes: new Map(flowState.flowWidgetDataIndexes),
+                flowWidgetDataIndexToComponentPropertyValue: new Map(
+                    flowState.flowWidgetDataIndexToComponentPropertyValue
+                ),
+                flowWidgetFromDataIndex: new Map(
+                    flowState.flowWidgetFromDataIndex
+                ),
+                flowWidgetActionIndexes: new Map(
+                    flowState.flowWidgetActionIndexes
+                ),
+                flowWidgetActionIndexToComponentOutput: new Map(
+                    flowState.flowWidgetActionIndexToComponentOutput
+                ),
+                flowWidgetFromActionIndex: new Map(
+                    flowState.flowWidgetFromActionIndex
+                )
+            });
+        }
+
+        this.seeded = true;
+        this.seedSizes = this.getListSizes();
+        return true;
+    }
+
+    // after the build: nothing was added to the lists of the seed and every
+    // flow index of the seed was used
+    isSeedComplete() {
+        if (this.missingMasterProjectAssets.size > 0) {
+            return false;
+        }
+
+        const sizes = this.getListSizes();
+        if (
+            sizes.length != this.seedSizes.length ||
+            sizes.some((size, i) => size != this.seedSizes[i])
+        ) {
+            return false;
+        }
+
+        let numFlowEntries = 0;
+        for (const flowState of this.flowStates.values()) {
+            numFlowEntries +=
+                flowState.componentIndexes.size +
+                flowState.componentInputIndexes.size +
+                flowState.flowWidgetDataIndexes.size +
+                flowState.flowWidgetActionIndexes.size;
+        }
+        return this.usedFlowEntries.size == numFlowEntries;
     }
 
     get utf8Support() {
@@ -889,23 +917,6 @@ export class Assets {
     }
 
     getPageIndex(object: any, propertyName: string) {
-        // page built for the page layout can be referenced by its name,
-        // page with layouts by its name is the page built for the first layout
-        const pageLayoutPage = findPageLayoutPage(
-            getProject(object),
-            object[propertyName]
-        );
-        if (pageLayoutPage) {
-            const pageIndex = this.pages.findIndex(
-                (page, i) =>
-                    page == pageLayoutPage.page &&
-                    this.pageLayouts[i] == pageLayoutPage.pageLayout
-            );
-            if (pageIndex != -1) {
-                return this.masterProject ? -(pageIndex + 1) : pageIndex + 1;
-            }
-        }
-
         return this.getAssetIndex(object, propertyName, findPage, this.pages);
     }
 
@@ -922,7 +933,7 @@ export class Assets {
     // The Variant of the widget for the assets (Widget::variant and
     // Widget::fixedVariant): the data item of its rules and its fixed variant.
     getWidgetVariant(widget: Widget): [number, number] {
-        if (!widget.variant && !(widget.variantRules?.length > 0)) {
+        if (!widget.variant && !((widget.variantRules?.length ?? 0) > 0)) {
             return [0, 0];
         }
 
@@ -947,6 +958,72 @@ export class Assets {
         }
 
         return [variant, fixedVariant];
+    }
+
+    // The flow and the path of an object, kept for the build: both walk up
+    // to the root of the project, and the build asks for them several times
+    // for every component.
+    flowsOfObjects = new Map<EezObject, Flow>();
+    pathsOfObjects = new Map<EezObject, string>();
+
+    flowOf(object: EezObject): Flow {
+        let flow = this.flowsOfObjects.get(object);
+        if (flow == undefined) {
+            flow = ProjectEditor.getFlow(object);
+            this.flowsOfObjects.set(object, flow);
+        }
+        return flow;
+    }
+
+    pathOf(object: EezObject): string {
+        let path = this.pathsOfObjects.get(object);
+        if (path == undefined) {
+            path = getObjectPathAsString(object);
+            this.pathsOfObjects.set(object, path);
+        }
+        return path;
+    }
+
+    // The first style of this.styles that is equal to the style (see
+    // Style.compareTo), found by the key of the style: the styles of the list
+    // are put into two maps as the list grows, with and without their states
+    // (a state style is compared without them).
+    styleKeysOf: Style[] | undefined;
+    styleKeysCount = 0;
+    styleKeys = new Map<string, number>();
+    styleKeysWithStates = new Map<string, number>();
+
+    findEqualStyle(style: Style): number | undefined {
+        if (
+            this.styleKeysOf != this.styles ||
+            this.styleKeysCount > this.styles.length
+        ) {
+            this.styleKeysOf = this.styles;
+            this.styleKeysCount = 0;
+            this.styleKeys.clear();
+            this.styleKeysWithStates.clear();
+        }
+        for (; this.styleKeysCount < this.styles.length; this.styleKeysCount++) {
+            const s = this.styles[this.styleKeysCount];
+            if (s) {
+                const key = s.compareKey;
+                if (!this.styleKeys.has(key)) {
+                    this.styleKeys.set(key, this.styleKeysCount);
+                }
+                const keyWithStates = key + "\u0002" + s.stateKey;
+                if (!this.styleKeysWithStates.has(keyWithStates)) {
+                    this.styleKeysWithStates.set(
+                        keyWithStates,
+                        this.styleKeysCount
+                    );
+                }
+            }
+        }
+        return style.isStateStyle
+            ? this.styleKeys.get(style.compareKey)
+            : this.styleKeysWithStates.get(
+                  style.compareKey + "\u0002" + style.stateKey
+              );
     }
 
     doGetStyleIndex(
@@ -996,8 +1073,9 @@ export class Assets {
                         if (this.getAssetId(style) != undefined) {
                             return style.id;
                         }
-                        // parent of the widget style in the page layout is
-                        // the widget style, which has no name
+                        // the parent of a style made from a widget style
+                        // (a state or variant style) is the widget style,
+                        // which has no name
                         return this.doGetStyleIndex(
                             project,
                             parentStyle.name ?? parentStyle
@@ -1005,11 +1083,9 @@ export class Assets {
                     }
                 }
 
-                for (let i = 0; i < this.styles.length; i++) {
-                    const s = this.styles[i];
-                    if (s && style.compareTo(s)) {
-                        return this.masterProject ? -(i + 1) : i + 1;
-                    }
+                const i = this.findEqualStyle(style);
+                if (i != undefined) {
+                    return this.masterProject ? -(i + 1) : i + 1;
                 }
 
                 const isMasterProjectStyle =
@@ -1062,10 +1138,7 @@ export class Assets {
     getStyleIndex(object: any, propertyName: string): number {
         const project = getProject(object);
 
-        let style: string | Style | undefined = this.getPropertyValue(
-            object,
-            propertyName
-        );
+        let style: string | Style | undefined = object[propertyName];
         if (style === undefined) {
             style = findStyle(project, "default");
             if (!style) {
@@ -1087,16 +1160,29 @@ export class Assets {
     // the copy of the page style with the preview background (see EditorBuild),
     // the position in this.styles
     editorPageStylePosition: number | undefined;
+    editorPageStyleObject: Style | undefined;
+    editorPageStyleChecked = false;
 
     getEditorPageStyleIndex(project: Project, style: string | Style) {
-        if (this.editorPageStylePosition == undefined) {
+        if (
+            this.editorPageStylePosition == undefined ||
+            !this.editorPageStyleChecked
+        ) {
+            this.editorPageStyleChecked = true;
             const styleObject =
                 typeof style == "string" ? findStyle(project, style) : style;
             if (!styleObject) {
                 return this.doGetStyleIndex(project, style);
             }
-            this.styles.push(styleObject);
-            this.editorPageStylePosition = this.styles.length - 1;
+            // (the position of a seed is kept while the page has the style)
+            if (
+                this.editorPageStylePosition == undefined ||
+                this.editorPageStyleObject != styleObject
+            ) {
+                this.styles.push(styleObject);
+                this.editorPageStylePosition = this.styles.length - 1;
+                this.editorPageStyleObject = styleObject;
+            }
         }
         return this.masterProject
             ? -(this.editorPageStylePosition + 1)
@@ -1106,7 +1192,7 @@ export class Assets {
     getFontIndex(object: any, propertyName: string) {
         return this.getFontIndexByName(
             getProject(object),
-            this.getPropertyValue(object, propertyName)
+            object[propertyName]
         );
     }
 
@@ -1148,10 +1234,7 @@ export class Assets {
     }
 
     getBitmapIndex(object: any, propertyName: string) {
-        let bitmapName: string | undefined = this.getPropertyValue(
-            object,
-            propertyName
-        );
+        let bitmapName: string | undefined = object[propertyName];
 
         const project = getProject(object);
 
@@ -1268,12 +1351,26 @@ export class Assets {
     }
 
     // a color as a style property has it: a theme color name or a color value
+    // the color values of the style colors parsed in this build (most styles
+    // use the same few colors)
+    styleColorValues = new Map<string, string>();
+
     getColorIndexFromStyleColor(color: string) {
         if (color != "transparent") {
-            const colorFormat = ColorFormat.parse(color, this.projectStore.masterProject ? this.projectStore.masterProject : this.projectStore.project);
-            if (!colorFormat.isUsingThemeColor) {
-                color = colorFormat.getHexString();
+            let value = this.styleColorValues.get(color);
+            if (value == undefined) {
+                const colorFormat = ColorFormat.parse(
+                    color,
+                    this.projectStore.masterProject
+                        ? this.projectStore.masterProject
+                        : this.projectStore.project
+                );
+                value = colorFormat.isUsingThemeColor
+                    ? color
+                    : colorFormat.getHexString();
+                this.styleColorValues.set(color, value);
             }
+            color = value;
         }
         return this.getColorIndexFromColorValue(color);
     }
@@ -1401,23 +1498,8 @@ export class Assets {
         });
     }
 
-    // flow of the page with layouts has the flow state for each page layout
-    getFlowStateKey(flow: Flow): Flow | PageLayout {
-        if (flow instanceof Page) {
-            const pageLayouts = getPageLayouts(flow);
-            if (pageLayouts.length > 0) {
-                const pageLayout = this.pageLayout;
-                return pageLayout && pageLayouts.indexOf(pageLayout) != -1
-                    ? pageLayout
-                    : pageLayouts[0];
-            }
-        }
-        return flow;
-    }
-
     getFlowState(flow: Flow) {
-        const flowStateKey = this.getFlowStateKey(flow);
-        let flowState = this.flowStates.get(flowStateKey);
+        let flowState = this.flowStates.get(flow);
         if (flowState == undefined) {
             flowState = {
                 index: this.flowStates.size,
@@ -1443,7 +1525,7 @@ export class Assets {
                 >(),
                 flowWidgetFromActionIndex: new Map<number, Widget>()
             };
-            this.flowStates.set(flowStateKey, flowState);
+            this.flowStates.set(flow, flowState);
         }
         return flowState;
     }
@@ -1493,19 +1575,21 @@ export class Assets {
     }
 
     getComponentIndex(component: Component) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         let index = flowState.componentIndexes.get(component);
         if (index == undefined) {
             index = flowState.componentIndexes.size;
             flowState.componentIndexes.set(component, index);
         }
+        this.usedFlowEntries.add(component);
         return index;
     }
 
     getComponentInputIndex(component: Component, inputName: string) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
+            this.pathOf(component) + PATH_SEPARATOR + inputName;
+        this.usedFlowEntries.add("input:" + path);
         let index = flowState.componentInputIndexes.get(path);
         if (index == undefined) {
             index = flowState.componentInputIndexes.size;
@@ -1518,13 +1602,14 @@ export class Assets {
     }
 
     findComponentInputIndex(component: Component, inputName: string) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + inputName;
+            this.pathOf(component) + PATH_SEPARATOR + inputName;
         const inputIndex = flowState.componentInputIndexes.get(path);
         if (inputIndex == undefined) {
             return -1;
         }
+        this.usedFlowEntries.add("input:" + path);
         return inputIndex;
     }
 
@@ -1550,9 +1635,10 @@ export class Assets {
             }
         }
 
-        const flowState = this.getFlowState(ProjectEditor.getFlow(widget));
+        const flowState = this.getFlowState(this.flowOf(widget));
         const path =
-            getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;
+            this.pathOf(widget) + PATH_SEPARATOR + propertyName;
+        this.usedFlowEntries.add("data:" + path);
         let index = flowState.flowWidgetDataIndexes.get(path);
         if (index == undefined) {
             index = flowState.flowWidgetDataIndexes.size;
@@ -1607,10 +1693,10 @@ export class Assets {
             !(component instanceof ProjectEditor.UserWidgetWidgetClass)
         ) {
             const flowState = this.flowStates.get(
-                this.getFlowStateKey(ProjectEditor.getFlow(component))
+                this.flowOf(component)
             );
             const componentPath =
-                getObjectPathAsString(component) + PATH_SEPARATOR;
+                this.pathOf(component) + PATH_SEPARATOR;
             properties = properties.filter(propertyInfo =>
                 flowState?.flowWidgetDataIndexes.has(
                     componentPath + propertyInfo.name
@@ -1696,9 +1782,10 @@ export class Assets {
             }
         }
 
-        const flowState = this.getFlowState(ProjectEditor.getFlow(widget));
+        const flowState = this.getFlowState(this.flowOf(widget));
         const path =
-            getObjectPathAsString(widget) + PATH_SEPARATOR + propertyName;
+            this.pathOf(widget) + PATH_SEPARATOR + propertyName;
+        this.usedFlowEntries.add("action:" + path);
         let index = flowState.flowWidgetActionIndexes.get(path);
         if (index == undefined) {
             index = flowState.flowWidgetActionIndexes.size;
@@ -1714,9 +1801,9 @@ export class Assets {
         componentIndex: number,
         propertyValueIndex: number
     ) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + propertyName;
+            this.pathOf(component) + PATH_SEPARATOR + propertyName;
         let index = flowState.flowWidgetDataIndexes.get(path);
         if (index != undefined) {
             flowState.flowWidgetDataIndexToComponentPropertyValue.set(index, {
@@ -1732,9 +1819,9 @@ export class Assets {
         componentIndex: number,
         componentOutputIndex: number
     ) {
-        const flowState = this.getFlowState(ProjectEditor.getFlow(component));
+        const flowState = this.getFlowState(this.flowOf(component));
         const path =
-            getObjectPathAsString(component) + PATH_SEPARATOR + outputName;
+            this.pathOf(component) + PATH_SEPARATOR + outputName;
         let index = flowState.flowWidgetActionIndexes.get(path);
         if (index != undefined) {
             flowState.flowWidgetActionIndexToComponentOutput.set(index, {
@@ -1755,16 +1842,11 @@ export class Assets {
 
         this.map.constants = this.constants;
 
-        this.flows.forEach((flow, i) => {
+        this.flows.forEach(flow => {
             if (!flow) {
                 return;
             }
-
-            let flowState!: ReturnType<typeof this.getFlowState>;
-            this.buildInPageLayout(
-                this.getFlowPageLayout(i),
-                () => (flowState = this.getFlowState(flow))
-            );
+            const flowState = this.getFlowState(flow);
             const flowIndex = flowState.index;
 
             flowState.flowWidgetDataIndexes.forEach(index => {
@@ -1811,11 +1893,7 @@ export class Assets {
         }
 
         this.map.flows.forEach((flow, i) => {
-            // pages built for the page layouts have the same path,
-            // the first one is used
-            if (this.map.flowIndexes[flow.path] == undefined) {
-                this.map.flowIndexes[flow.path] = i;
-            }
+            this.map.flowIndexes[flow.path] = i;
             flow.components.forEach(
                 (component, i) => (flow.componentIndexes[component.path] = i)
             );
@@ -1823,7 +1901,7 @@ export class Assets {
 
         this.projectStore.project.actions.forEach(action => {
             this.map.actionFlowIndexes[action.name] =
-                this.map.flowIndexes[getObjectPathAsString(action)];
+                this.map.flowIndexes[this.pathOf(action)];
         });
 
         this.map.types = this.projectStore.typesStore.types;
@@ -2017,7 +2095,7 @@ export function buildGuiAssetsDataSync(
         ProjectEditor.writeBB3ModuleMetadata(
             bb3ModuleMetadata,
             dataBuffer,
-            assets.pages.map((page, i) => (page ? assets.getPageName(i) : ""))
+            assets.pages.map(page => (page ? page.name : ""))
         );
     }
 
@@ -2476,13 +2554,10 @@ export function buildGuiPagesEnum(assets: Assets) {
         if (!page) {
             continue;
         }
-        const pageLayout = assets.pageLayouts[i];
         pages.push(
             `${TAB}${getName(
                 "PAGE_ID_",
-                pageLayout
-                    ? getAssetFullName(page, "_") + pageLayout.name
-                    : page,
+                page,
                 NamingConvention.UnderscoreUpperCase
             )} = ${i + 1}`
         );
@@ -2494,18 +2569,18 @@ export function buildGuiPagesEnum(assets: Assets) {
 }
 
 export function buildGuiDocumentData(assets: Assets, dataBuffer: DataBuffer) {
-    const buildPage = (page: Page | undefined, i: number) => {
-        if (page) {
-            assets.buildInPageLayout(assets.pageLayouts[i], () =>
-                buildWidget(page, assets, dataBuffer)
-            );
-        }
-    };
-
     if (dataBuffer) {
-        dataBuffer.writeArray(assets.pages, buildPage);
+        dataBuffer.writeArray(assets.pages, page => {
+            if (page) {
+                buildWidget(page, assets, dataBuffer);
+            }
+        });
     } else {
-        assets.pages.forEach(buildPage);
+        assets.pages.forEach(page => {
+            if (page) {
+                buildWidget(page, assets, dataBuffer);
+            }
+        });
     }
 }
 

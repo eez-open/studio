@@ -94,7 +94,9 @@ import { CodeEditor } from "eez-studio-ui/code-editor";
 import { Icon } from "eez-studio-ui/icon";
 import {
     BB3_MODULE_FIELD_MEASUREMENTS,
-    BB3_MODULE_FIELD_UNITS
+    BB3_MODULE_FIELD_TRACKING_ROLES,
+    BB3_MODULE_FIELD_UNITS,
+    hasBB3ModuleFieldChannel
 } from "project-editor/features/variable/bb3-module-field-unit";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -390,9 +392,13 @@ export class Variable extends EezObject {
     // graphs, data logging) at the rate BB3+ asks for, up to this rate
     bb3ModuleFieldMaxSampleRate: number | undefined;
     // the channel measurement the sampled field is (BB3+ finds the stream
-    // of a channel measurement by it, e.g. for the data logging) and the
-    // module channel index
+    // of a channel measurement by it, e.g. for the data logging)
     bb3ModuleFieldMeasurement: string | undefined;
+    // what the field is for a power channel in a BB3+ tracking group
+    // (OUTPut:TRACk), BB3_TRACKING_ROLE_... in bb3-module.h
+    bb3ModuleFieldTrackingRole: string | undefined;
+    // the module channel index of a field with a measurement or a tracking
+    // role
     bb3ModuleFieldMeasurementChannel: number | undefined;
     // range of an input field, the module (bb3-module.c) clamps the
     // received values to it
@@ -401,6 +407,11 @@ export class Variable extends EezObject {
     // ms, an output field that changes continuously (a measurement) is sent
     // to BB3+ at most this often, 0 or not set: whenever it changes
     bb3ModuleFieldUpdatePeriod: number | undefined;
+    // an input-output field that BB3+ copies, while the modules are the
+    // leader and the follower of a coupling (series, parallel), from the
+    // module with this role ("leader" or "follower") to the field with the
+    // same name in the other one (BB3_FIELD_FLAG_LINK_FROM_...)
+    bb3ModuleFieldLink: string | undefined;
 
     constructor() {
         super();
@@ -430,10 +441,12 @@ export class Variable extends EezObject {
             bb3ModuleFieldResolution: observable,
             bb3ModuleFieldMaxSampleRate: observable,
             bb3ModuleFieldMeasurement: observable,
+            bb3ModuleFieldTrackingRole: observable,
             bb3ModuleFieldMeasurementChannel: observable,
             bb3ModuleFieldMin: observable,
             bb3ModuleFieldMax: observable,
-            bb3ModuleFieldUpdatePeriod: observable
+            bb3ModuleFieldUpdatePeriod: observable,
+            bb3ModuleFieldLink: observable
         });
     }
 
@@ -640,16 +653,28 @@ export class Variable extends EezObject {
                     !variable.bb3ModuleFieldMaxSampleRate
             },
             {
+                name: "bb3ModuleFieldTrackingRole",
+                displayName: "BB3 module field tracking role",
+                type: PropertyType.Enum,
+                enumItems: BB3_MODULE_FIELD_TRACKING_ROLES.map(role => ({
+                    id: role.id,
+                    label: role.label
+                })),
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    variable.bb3ModuleField == undefined ||
+                    variable.bb3ModuleField == "output"
+            },
+            {
                 name: "bb3ModuleFieldMeasurementChannel",
-                displayName: "BB3 module field measurement channel (module channel index)",
+                displayName: "BB3 module field channel (module channel index)",
                 type: PropertyType.Number,
                 isOptional: true,
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
                     !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    !variable.bb3ModuleFieldMaxSampleRate ||
-                    !variable.bb3ModuleFieldMeasurement ||
-                    variable.bb3ModuleFieldMeasurement == "none"
+                    !hasBB3ModuleFieldChannel(variable)
             },
             {
                 name: "bb3ModuleFieldMin",
@@ -687,6 +712,19 @@ export class Variable extends EezObject {
                     !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
                     variable.bb3ModuleField == undefined ||
                     variable.bb3ModuleField == "input"
+            },
+            {
+                name: "bb3ModuleFieldLink",
+                displayName: "BB3 module field link (copied to the coupled module)",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "leader", label: "Written by the leader" },
+                    { id: "follower", label: "Written by the follower" }
+                ],
+                disabled: (variable: Variable) =>
+                    !isGlobalVariable(variable) ||
+                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
+                    variable.bb3ModuleField != "input-output"
             }
         ],
         icon: VARIABLE_ICON,

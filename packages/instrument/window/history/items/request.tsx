@@ -43,6 +43,10 @@ export const RequestHistoryItemComponent = observer(
 );
 
 export class RequestHistoryItem extends HistoryItem {
+    getClipboardText() {
+        return this.message;
+    }
+
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <RequestHistoryItemComponent

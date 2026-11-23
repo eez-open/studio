@@ -23,14 +23,20 @@ import {
 import { getValueType } from "project-editor/build/values";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
+    hasBB3ModuleFieldChannel,
     getBB3ModuleFieldMeasurementValue,
+    getBB3ModuleFieldTrackingRoleValue,
     getBB3ModuleFieldUnitValue
 } from "project-editor/features/variable/bb3-module-field-unit";
 import {
     SCPI_COMMAND_FLAG_QUERY,
     SCPI_COMMAND_FLAG_APPLY_ON_SYNC,
+    SCPI_COMMAND_FLAG_TRACKING_GROUP,
+    SCPI_COMMAND_FLAG_TRACKING_REFUSED,
     BB3_MODULE_FIELD_FLAG_PERSISTENT,
     BB3_MODULE_FIELD_FLAG_SAMPLED,
+    BB3_MODULE_FIELD_FLAG_LINK_FROM_LEADER,
+    BB3_MODULE_FIELD_FLAG_LINK_FROM_FOLLOWER,
     SCPI_DEFAULT_TIMEOUT_MS,
     SCPI_PARAM_FLAG_CALIBRATION_PASSWORD,
     SCPI_PARAM_FLAG_LIST,
@@ -73,6 +79,12 @@ export class BB3ModuleMetadata extends EezObject {
     // graphs (e.g. ch_yt_view_rate), BB3+ requests the sampled fields at
     // that period
     ytRateField: string | undefined;
+    // the coupling types (INSTrument:COUPle:TRACking) the module supports,
+    // BB3_COUPLING_FLAG_... in bb3-module.h
+    couplingCommonGround: boolean;
+    couplingSplitRails: boolean;
+    couplingParallel: boolean;
+    couplingSeries: boolean;
 
     static classInfo: ClassInfo = {
         properties: [
@@ -112,6 +124,30 @@ export class BB3ModuleMetadata extends EezObject {
                     object.bb3ModuleFields
                         .filter(variable => variable.type == "float")
                         .map(variable => ({ id: variable.name }))
+            },
+            {
+                name: "couplingCommonGround",
+                displayName: "Coupling: common ground",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "couplingSplitRails",
+                displayName: "Coupling: split rails",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "couplingParallel",
+                displayName: "Coupling: parallel",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "couplingSeries",
+                displayName: "Coupling: series",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true
             }
         ],
         defaultValue: {
@@ -178,7 +214,11 @@ export class BB3ModuleMetadata extends EezObject {
             moduleRevision: observable,
             firmwareVersion: observable,
             scpiMaxMessageSize: observable,
-            ytRateField: observable
+            ytRateField: observable,
+            couplingCommonGround: observable,
+            couplingSplitRails: observable,
+            couplingParallel: observable,
+            couplingSeries: observable
         });
     }
 
@@ -218,7 +258,10 @@ registerClass("BB3ModuleMetadata", BB3ModuleMetadata);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const BB3_MODULE_METADATA_SPECIFICATION_VERSION_1 = 1;
+// The layout of the metadata and of the assets. BB3+ uses the assets of a module
+// only if it is the number BB3+ knows (MODULE_METADATA_VERSION in
+// bb3/module/module-metadata.h): add one when the layout changes.
+export const BB3_MODULE_METADATA_VERSION = 1;
 
 // size of the field value on the wire and in the BB3+ copy, 0 for a type
 // that is not supported (the project check reports it)
@@ -236,7 +279,7 @@ export function writeBB3ModuleMetadata(
 ) {
     dataBuffer.writeObjectOffset(() => {
         // version
-        dataBuffer.writeUint16(BB3_MODULE_METADATA_SPECIFICATION_VERSION_1);
+        dataBuffer.writeUint16(BB3_MODULE_METADATA_VERSION);
         // moduleType
         dataBuffer.writeUint16(metadata.moduleTypeNum);
         // moduleRevision
@@ -270,7 +313,13 @@ export function writeBB3ModuleMetadata(
             const maxSampleRate = getBB3ModuleFieldMaxSampleRate(variable);
             dataBuffer.writeUint8(
                 (variable.persistent ? BB3_MODULE_FIELD_FLAG_PERSISTENT : 0) |
-                    (maxSampleRate > 0 ? BB3_MODULE_FIELD_FLAG_SAMPLED : 0)
+                    (maxSampleRate > 0 ? BB3_MODULE_FIELD_FLAG_SAMPLED : 0) |
+                    (variable.bb3ModuleField == "input-output" && variable.bb3ModuleFieldLink == "leader"
+                        ? BB3_MODULE_FIELD_FLAG_LINK_FROM_LEADER
+                        : 0) |
+                    (variable.bb3ModuleField == "input-output" && variable.bb3ModuleFieldLink == "follower"
+                        ? BB3_MODULE_FIELD_FLAG_LINK_FROM_FOLLOWER
+                        : 0)
             );
 
             // offset
@@ -285,14 +334,18 @@ export function writeBB3ModuleMetadata(
 
             // unit
             dataBuffer.writeUint16(getBB3ModuleFieldUnitValue(variable.bb3ModuleFieldUnit));
-            // measurement (BB3_MEASUREMENT_...) and its module channel
+            // measurement (BB3_MEASUREMENT_...)
             const measurement =
                 maxSampleRate > 0
                     ? getBB3ModuleFieldMeasurementValue(variable.bb3ModuleFieldMeasurement)
                     : 0;
             dataBuffer.writeUint8(measurement);
+            // channel: the module channel of a field with a measurement or
+            // a tracking role
             dataBuffer.writeUint8(
-                measurement != 0 ? variable.bb3ModuleFieldMeasurementChannel ?? 0 : 0
+                hasBB3ModuleFieldChannel(variable)
+                    ? variable.bb3ModuleFieldMeasurementChannel ?? 0
+                    : 0
             );
 
             // maxSampleRate
@@ -308,6 +361,18 @@ export function writeBB3ModuleMetadata(
                     : 0;
             dataBuffer.writeFloat(resolution);
 
+            // trackingRole (BB3_TRACKING_ROLE_...)
+            dataBuffer.writeUint8(
+                variable.bb3ModuleField != "output"
+                    ? getBB3ModuleFieldTrackingRoleValue(
+                          variable.bb3ModuleFieldTrackingRole
+                      )
+                    : 0
+            );
+            // reserved
+            dataBuffer.writeUint8(0);
+            dataBuffer.writeUint16(0);
+
             offset += size;
         })
 
@@ -320,6 +385,18 @@ export function writeBB3ModuleMetadata(
 
         // ytRateField
         dataBuffer.writeStringPtr(metadata.ytRateField || "");
+
+        // couplingFlags (BB3_COUPLING_FLAG_...)
+        const BB3_COUPLING_FLAG_COMMON_GROUND = 1 << 0;
+        const BB3_COUPLING_FLAG_SPLIT_RAILS = 1 << 1;
+        const BB3_COUPLING_FLAG_PARALLEL = 1 << 2;
+        const BB3_COUPLING_FLAG_SERIES = 1 << 3;
+        dataBuffer.writeUint32(
+            (metadata.couplingCommonGround ? BB3_COUPLING_FLAG_COMMON_GROUND : 0) |
+                (metadata.couplingSplitRails ? BB3_COUPLING_FLAG_SPLIT_RAILS : 0) |
+                (metadata.couplingParallel ? BB3_COUPLING_FLAG_PARALLEL : 0) |
+                (metadata.couplingSeries ? BB3_COUPLING_FLAG_SERIES : 0)
+        );
     });
 }
 
@@ -351,7 +428,13 @@ function writeScpiMetadata(metadata: BB3ModuleMetadata, dataBuffer: DataBuffer) 
         // flags
         dataBuffer.writeUint16(
             (command.isQuery ? SCPI_COMMAND_FLAG_QUERY : 0) |
-                (command.applyOnSync ? SCPI_COMMAND_FLAG_APPLY_ON_SYNC : 0)
+                (command.applyOnSync ? SCPI_COMMAND_FLAG_APPLY_ON_SYNC : 0) |
+                (!command.isQuery && command.tracking == "group"
+                    ? SCPI_COMMAND_FLAG_TRACKING_GROUP
+                    : 0) |
+                (!command.isQuery && command.tracking == "refused"
+                    ? SCPI_COMMAND_FLAG_TRACKING_REFUSED
+                    : 0)
         );
         // timeoutMs
         dataBuffer.writeUint16(command.timeoutMs || SCPI_DEFAULT_TIMEOUT_MS);

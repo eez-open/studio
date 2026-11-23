@@ -158,7 +158,6 @@ ipcMain.once("open-command-line-project", async function () {
                     pageName: process.argv[renderPageArgIndex + 1],
                     outFile: process.argv[renderPageArgIndex + 2],
                     themeIndex: theme != undefined ? parseInt(theme) : undefined,
-                    pageLayoutName: argValue("--layout"),
                     selectChildIndex:
                         select != undefined ? parseInt(select) : undefined,
                     background: argValue("--background")

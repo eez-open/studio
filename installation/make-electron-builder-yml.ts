@@ -7,7 +7,9 @@ const YAML = require("json-to-pretty-yaml");
 const packageJson = require("../package.json");
 
 async function getExtraResource() {
-    const extraResource: string[] = ["./resources/expression-grammar.pegjs"];
+    // the expression grammar is compiled into the app at build time (gulp
+    // task "expression-parser"), so it isn't an extra resource anymore
+    const extraResource: string[] = [];
 
     const extraResources = extraResource.map((extraResourcePath: string) => ({
         from: extraResourcePath,

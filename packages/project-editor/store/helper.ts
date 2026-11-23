@@ -46,6 +46,7 @@ import type { Flow } from "project-editor/flow/flow";
 import { isArray } from "eez-studio-shared/util";
 
 import { getClass, getClassInfo } from "project-editor/core/object";
+import type { IMenuItem } from "project-editor/core/menu";
 export { getClass, getClassInfo } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,9 +348,19 @@ export function getLabel(object: IEezObject): string {
         );
     }
 
+    // a widget made from a widget preset is shown with the name of the
+    // preset instead of the name of its widget type
+    const preset = (object as any).preset;
+    const withPreset = (text: string) =>
+        typeof preset == "string" && preset
+            ? text.indexOf(": ") != -1
+                ? preset + text.substring(text.indexOf(": "))
+                : preset
+            : text;
+
     const label = getClassInfo(object).label;
     if (label) {
-        return label(object);
+        return withPreset(label(object));
     }
 
     let name = (object as any).name;
@@ -357,7 +368,7 @@ export function getLabel(object: IEezObject): string {
         return name;
     }
 
-    return getClass(object).name;
+    return withPreset(getClass(object).name);
 }
 
 export function getListLabel(object: IEezObject, collapsed: boolean) {
@@ -566,10 +577,9 @@ export function getCommonProperties(
     return properties;
 }
 
-export interface PropertyValueSourceInfo {
+interface PropertyValueSourceInfo {
     source: "" | "default" | "modified" | "inherited";
     inheritedFrom?: IEezObject;
-    title?: string;
 }
 
 export function getPropertySourceInfo(
@@ -664,7 +674,7 @@ export function extendContextMenu(
     context: IContextMenuContext,
     object: IEezObject,
     objects: IEezObject[],
-    menuItems: Electron.MenuItem[],
+    menuItems: IMenuItem[],
     editable: boolean
 ) {
     const extendContextMenu = getClassInfo(object).extendContextMenu;

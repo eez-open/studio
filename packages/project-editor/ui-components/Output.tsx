@@ -1,6 +1,5 @@
 import { observer } from "mobx-react";
 import React from "react";
-import { Menu, MenuItem } from "@electron/remote";
 
 import { Icon } from "eez-studio-ui/icon";
 
@@ -25,6 +24,7 @@ import { ITreeNode, Tree } from "eez-studio-ui/tree";
 import { Message, Section } from "project-editor/store/output-sections";
 import { findAllOccurrences } from "project-editor/core/search";
 import { EezValueObject } from "project-editor/store";
+import { popupMenu, type IMenuItem } from "project-editor/core/menu";
 
 const MAX_OUTPUT_MESSAGE_TEXT_SIZE = 1000;
 
@@ -231,32 +231,34 @@ export const Messages = observer(
                 }
             }
 
-            const menu = new Menu();
+            const menuItems: IMenuItem[] = [];
 
             if (clickedMessage) {
-                menu.append(
-                    new MenuItem({
-                        label: "Copy",
-                        click: () => {
-                            copyToClipboard(collectMessagesText(this.props.section.messages.messages, clickedMessage));
-
-                        }
-                    })
-                );
-            }
-
-            menu.append(
-                new MenuItem({
-                    label: "Copy All",
+                menuItems.push({
+                    label: "Copy",
                     click: () => {
-                        copyToClipboard(collectMessagesText(this.props.section.messages.messages));
+                        copyToClipboard(
+                            collectMessagesText(
+                                this.props.section.messages.messages,
+                                clickedMessage
+                            )
+                        );
                     }
-                })
-            );
-
-            if (menu.items.length > 0) {
-                menu.popup({});
+                });
             }
+
+            menuItems.push({
+                label: "Copy All",
+                click: () => {
+                    copyToClipboard(
+                        collectMessagesText(
+                            this.props.section.messages.messages
+                        )
+                    );
+                }
+            });
+
+            popupMenu(menuItems);
         };
 
         render() {

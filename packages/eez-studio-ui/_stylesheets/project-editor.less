@@ -2480,78 +2480,6 @@
     }
 }
 
-// floating over the page editor, at the top center
-.EezStudio_PageLayoutsToolbar {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
-
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    padding: 4px 10px;
-    border: 1px solid @borderColor;
-    border-radius: 6px;
-    background-color: @panelHeaderColor;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    white-space: nowrap;
-    opacity: 0.85;
-
-    // all the buttons have the same size, i.e. the size of the largest one
-    .btn-group {
-        display: inline-grid;
-        grid-auto-flow: column;
-        grid-auto-columns: 1fr;
-        align-items: stretch;
-
-        // buttons have no border, so they are not overlapped as in Bootstrap
-        > .btn.EezStudio_ButtonAction {
-            margin-left: 0;
-        }
-    }
-
-    // page layout rectangle above the page layout name
-    .EezStudio_ButtonAction {
-        flex-direction: column;
-        gap: 3px;
-        padding: 6px 10px;
-    }
-
-    // the rectangle is centered in the space above the name
-    .EezStudio_PageLayoutsToolbar_LayoutRect {
-        flex-grow: 1;
-        display: flex;
-        align-items: center;
-
-        svg {
-            display: block;
-        }
-    }
-
-    // between the page layout buttons and the switch
-    .EezStudio_PageLayoutsToolbar_Separator {
-        align-self: stretch;
-        width: 1px;
-        background-color: @borderColor;
-    }
-
-    .form-switch {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 0;
-        padding-left: 0;
-
-        .form-check-input {
-            float: none;
-            margin: 0;
-        }
-    }
-}
-
 @timelineHeight: 40px;
 @timelineScrollBarSize: 20px;
 @timelineRowHeight: 20px;
@@ -3198,6 +3126,168 @@
     }
 
     margin-bottom: 4px;
+}
+
+.EezStudio_WidgetGeometryProperty {
+    width: 100%;
+    margin-bottom: 4px;
+
+    // the resizing diagrams are next to the fields if there is enough
+    // room, otherwise below them
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 6px 16px;
+
+    .EezStudio_WidgetGeometryProperty_Fields {
+        flex: 1 1 180px;
+        min-width: 0;
+
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+        row-gap: 2px;
+        column-gap: 4px;
+        align-items: center;
+    }
+
+    .EezStudio_WidgetGeometryProperty_Label {
+        transform: translateY(1px);
+
+        &.secondColumn {
+            margin-left: 8px;
+        }
+
+        &.inError {
+            color: @inErrorTextColor;
+        }
+    }
+
+    .EezStudio_WidgetGeometryProperty_Value {
+        min-width: 0;
+
+        &.inError input {
+            color: @inErrorTextColor;
+            background-color: @inErrorBackgroundColor;
+        }
+    }
+
+    .EezStudio_WidgetGeometryProperty_Info {
+        // escaped, otherwise less divides 1 by -1
+        grid-column: ~"1 / -1";
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 24px;
+        white-space: nowrap;
+
+        & > span {
+            opacity: 0.66;
+            font-size: 90%;
+        }
+
+        & > .EezStudio_AlignAndDistributeIcons {
+            margin-left: auto;
+        }
+    }
+
+    .EezStudio_WidgetGeometryProperty_Resizing {
+        flex: 0 0 auto;
+        line-height: 0;
+    }
+}
+
+// the sections of the style properties in EEZ-GUI projects (StyleSectionsUI)
+.EezStudio_StyleSection {
+    width: 100%;
+    margin-top: 6px;
+
+    .EezStudio_StyleSection_Title {
+        font-size: 80%;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        opacity: 0.6;
+        border-bottom: 1px solid @borderColor;
+        padding-bottom: 2px;
+        margin-bottom: 4px;
+    }
+
+    .EezStudio_StyleSection_Row {
+        margin-bottom: 2px;
+    }
+
+    .EezStudio_StyleSection_RowLine {
+        display: flex;
+        align-items: center;
+    }
+
+    // as the property names of the property grid rows
+    .EezStudio_StyleSection_RowLabel {
+        width: 33%;
+        flex-shrink: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .EezStudio_StyleSection_Fields {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .EezStudio_StyleSection_Field {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        &.inError {
+            background-color: @inErrorBackgroundColor;
+        }
+    }
+
+    .EezStudio_StyleSection_FieldLabel {
+        white-space: nowrap;
+        opacity: 0.66;
+    }
+
+    .EezStudio_StyleSection_FieldValue {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .EezStudio_StyleSection_AlignButtons > .btn,
+    .EezStudio_StyleSection_SidesToggle {
+        padding: 2px 5px;
+        line-height: 0;
+    }
+
+    .EezStudio_StyleSection_SidesToggle {
+        flex-shrink: 0;
+    }
+
+    // the value of each side (or corner), under the value of all the sides
+    .EezStudio_StyleSection_Sides {
+        margin: 2px 0 4px 33%;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 2px 8px;
+
+        &.colors {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    .EezStudio_StyleSection_Side {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+    }
 }
 
 .EezStudio_LVGProperty {

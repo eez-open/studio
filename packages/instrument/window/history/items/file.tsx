@@ -311,10 +311,8 @@ export const FileHistoryItemComponent = observer(
         };
 
         onCopy = () => {
-            if (this.props.historyItem.isImage) {
-                let image = nativeImage.createFromBuffer(
-                    Buffer.from(this.props.historyItem.data, "binary")
-                );
+            const image = this.props.historyItem.getClipboardImage();
+            if (image) {
                 clipboard.writeImage(image);
                 notification.success("Image copied to the clipboard");
             } else if (this.props.historyItem.isText) {
@@ -587,6 +585,42 @@ export class FileHistoryItem extends HistoryItem {
         return (
             <FileHistoryItemComponent appStore={appStore!} historyItem={this} />
         );
+    }
+
+    getClipboardText() {
+        if (this.isText && this.transferSucceeded && this.data) {
+            return this.data.toString();
+        }
+
+        const lines: string[] = [];
+        if (this.sourceFilePath) {
+            lines.push(
+                this.sourceFilePath +
+                    (this.destinationFilePath
+                        ? " -> " + this.destinationFilePath
+                        : "")
+            );
+        }
+        lines.push(
+            (this.fileTypeAsDisplayString
+                ? this.fileTypeAsDisplayString + ", "
+                : "") + formatBytes(this.fileLength)
+        );
+        if (this.fileState.description) {
+            lines.push(this.fileState.description);
+        }
+        return lines.join("\n");
+    }
+
+    getClipboardImage() {
+        if (!this.isImage || !this.transferSucceeded || !this.data) {
+            return undefined;
+        }
+        const image = nativeImage.createFromBuffer(
+            Buffer.from(this.data, "binary")
+        );
+        // nativeImage supports only PNG and JPEG
+        return image.isEmpty() ? undefined : image;
     }
 
     getPreviewElement(appStore: IAppStore): JSX.Element | null {

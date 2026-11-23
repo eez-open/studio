@@ -454,8 +454,6 @@ interface AssetsMap {
         flowIndex: number;
         path: string;
         readablePath: string;
-        // name of the page layout, if flow is the page built for the page layout
-        pageLayout?: string;
         components: {
             componentIndex: number;
             path: string;

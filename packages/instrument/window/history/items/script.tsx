@@ -128,6 +128,18 @@ export class ScriptHistoryItem extends HistoryItem {
         return JSON.parse(this.message) as IScriptHistoryItemMessage;
     }
 
+    getClipboardText() {
+        const { name, type, parameters, done, error } = this.scriptMessage;
+        const lines = [`Name: ${name}`, `Type: ${type}`];
+        if (parameters) {
+            lines.push(`Parameters: ${JSON.stringify(parameters)}`);
+        }
+        if (done) {
+            lines.push(`Result: ${error ? error : "Success"}`);
+        }
+        return lines.join("\n");
+    }
+
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <ScriptHistoryItemComponent

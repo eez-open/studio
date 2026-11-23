@@ -1,5 +1,3 @@
-import { MenuItem } from "@electron/remote";
-
 import React from "react";
 import { observable, computed, makeObservable, toJS, runInAction } from "mobx";
 import { observer } from "mobx-react";
@@ -111,17 +109,7 @@ import {
 } from "project-editor/flow/helper";
 import { USER_WIDGET_ICON } from "project-editor/ui-components/icons";
 import { getComponentName } from "project-editor/flow/components/components-registry";
-import type { Page, PageLayout } from "project-editor/features/page/page";
-import {
-    getLayoutPropertyValue,
-    getLayoutsPage,
-    getPageLayouts,
-    getUnenclosedWidgetLayoutValues,
-    isWidgetShownInLayout,
-    isWidgetVisibleInEditorLayout,
-    newPageLayoutMessage,
-    omitLayoutValues
-} from "project-editor/features/page/page-layouts";
+import type { Page } from "project-editor/features/page/page";
 import { isEezGuiEditorWasmProject } from "project-editor/flow/editor/eez-gui-editor-wasm-switch";
 import { visitObjects } from "project-editor/core/search";
 
@@ -130,11 +118,6 @@ import { VisibleAnimationFrameLoop } from "eez-studio-shared/dom";
 import { FlexLayoutContainer } from "eez-studio-ui/FlexLayout";
 import { showDialog } from "eez-studio-ui/dialog";
 import { EditorFlowContext } from "project-editor/flow/editor/context";
-import {
-    checkOverlappingChildren,
-    isOverlappingChildrenSupported,
-    OVERLAPPING_CHILDREN_FLAG
-} from "project-editor/flow/components/widgets/overlapping-widgets";
 import type { PageTabState } from "project-editor/features/page/PageEditor";
 import { ProjectContext } from "project-editor/project/context";
 import {
@@ -142,6 +125,7 @@ import {
     getAdditionalFlowPropertiesForUserProperties,
     UserPropertyValues
 } from "project-editor/flow/user-property";
+import type { IMenuItem } from "project-editor/core/menu";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -343,7 +327,6 @@ export class ContainerWidget extends Widget {
     shadow?: boolean;
     layout: "static" | "horizontal" | "vertical" | "docking-manager";
     dockingLayout: any;
-    allowOverlappingChildren?: boolean;
 
     // a row or column (EEZ-GUI, see isRowOrColumn)
     gap?: number;
@@ -533,15 +516,6 @@ export class ContainerWidget extends Widget {
                     return widget.layout != "docking-manager";
                 }
             },
-            {
-                name: "allowOverlappingChildren",
-                type: PropertyType.Boolean,
-                propertyGridGroup: layoutGroup,
-                hideInPropertyGrid: (widget: ContainerWidget) =>
-                    !isOverlappingChildrenSupported(widget),
-                disabled: (widget: ContainerWidget) =>
-                    widget.layout != "static"
-            },
             makeStylePropertyInfo("style", "Default style", {
                 hideInDocumentation: "none"
             })
@@ -593,7 +567,7 @@ export class ContainerWidget extends Widget {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[],
+            menuItems: IMenuItem[],
             editable: boolean
         ): void => {
             ContainerWidget.classInfo.parentClassInfo!.extendContextMenu!(
@@ -608,10 +582,10 @@ export class ContainerWidget extends Widget {
                 const object = objects[0];
                 if (object instanceof ContainerWidget) {
                     menuItems.push(
-                        new MenuItem({
+                        {
                             type: "separator"
-                        }),
-                        new MenuItem({
+                        },
+                        {
                             label: "Remove Container",
                             click: () => {
                                 const widgets = object.removeContainer();
@@ -619,7 +593,7 @@ export class ContainerWidget extends Widget {
                                     context.selectObjects(widgets);
                                 }
                             }
-                        })
+                        }
                     );
                 }
             }
@@ -642,15 +616,6 @@ export class ContainerWidget extends Widget {
                     )
                 );
             }
-
-            if (object.layout == "static") {
-                checkOverlappingChildren(
-                    object,
-                    object.widgets,
-                    !!object.allowOverlappingChildren,
-                    messages
-                );
-            }
         }
     });
 
@@ -664,7 +629,6 @@ export class ContainerWidget extends Widget {
             shadow: observable,
             layout: observable,
             dockingLayout: observable,
-            allowOverlappingChildren: observable,
             gap: observable,
             justifyContent: observable,
             alignItems: observable,
@@ -685,12 +649,8 @@ export class ContainerWidget extends Widget {
 
         const childJsObjects = this.widgets.map(widget => {
             const jsObject = objectToJS(widget);
-            // position relative to the container parent, also in each
-            // page layout
-            Object.assign(
-                jsObject,
-                getUnenclosedWidgetLayoutValues(widget, this)
-            );
+            jsObject.left = widget.left + this.left;
+            jsObject.top = widget.top + this.top;
             return jsObject;
         });
 
@@ -865,7 +825,7 @@ export class ContainerWidget extends Widget {
             if (this.shadow) {
                 style.boxShadow = "1px 1px 8px 1px rgba(0,0,0,0.5)";
             }
-            style.opacity = this.layoutStyle.opacityProperty / 255;
+            style.opacity = this.style.opacityProperty / 255;
         }
     }
 
@@ -884,8 +844,7 @@ export class ContainerWidget extends Widget {
         const isVisible = (widget: Widget) =>
             flowContext.flowState
                 ? getBooleanValue(flowContext, widget, "visible", !widget.visible)
-                : !widget.hiddenInEditor &&
-                  isWidgetVisibleInEditorLayout(widget);
+                : !widget.hiddenInEditor;
 
         // a row, a column or a scrolling container of an EEZ-GUI project in
         // the page editor: the children where the framework laid them out
@@ -1047,11 +1006,8 @@ export class ContainerWidget extends Widget {
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         // widgets
-        dataBuffer.writeArray(
-            this.widgets.filter(widget =>
-                assets.isWidgetVisibleInPageLayout(widget)
-            ),
-            widget => buildWidget(widget, assets, dataBuffer)
+        dataBuffer.writeArray(this.widgets, widget =>
+            buildWidget(widget, assets, dataBuffer)
         );
 
         let overlay = assets.getWidgetDataItemIndex(this, "overlay");
@@ -1063,10 +1019,6 @@ export class ContainerWidget extends Widget {
 
         if (overlay && this.shadow) {
             flags |= SHADOW_FLAG;
-        }
-
-        if (this.allowOverlappingChildren && this.layout == "static") {
-            flags |= OVERLAPPING_CHILDREN_FLAG;
         }
 
         // a row or column: the lines between the children
@@ -1703,50 +1655,25 @@ export class SelectWidget extends Widget {
                 }
             }
 
-            // with the page layouts, the size is compared in each page layout
-            // in which the Select widget is built
-            const layoutsPage = getLayoutsPage(object);
-            const pageLayouts: (PageLayout | undefined)[] = layoutsPage
-                ? getPageLayouts(layoutsPage).filter(pageLayout =>
-                      isWidgetShownInLayout(object, pageLayout)
-                  )
-                : [undefined];
-
             object.widgets.forEach(childObject => {
-                for (const pageLayout of pageLayouts) {
-                    const newMessage = (text: string) =>
-                        pageLayout
-                            ? newPageLayoutMessage(
-                                  MessageType.WARNING,
-                                  `${text} in the "${pageLayout.name}" layout`,
-                                  childObject
-                              )
-                            : new Message(MessageType.WARNING, text, childObject);
+                if (childObject.width != object.width) {
+                    messages.push(
+                        new Message(
+                            MessageType.WARNING,
+                            "Child of Select widget has different width",
+                            childObject
+                        )
+                    );
+                }
 
-                    if (
-                        getLayoutPropertyValue(childObject, "width", pageLayout) !=
-                        getLayoutPropertyValue(object, "width", pageLayout)
-                    ) {
-                        messages.push(
-                            newMessage(
-                                "Child of Select widget has different width"
-                            )
-                        );
-                    }
-
-                    if (
-                        getLayoutPropertyValue(
-                            childObject,
-                            "height",
-                            pageLayout
-                        ) != getLayoutPropertyValue(object, "height", pageLayout)
-                    ) {
-                        messages.push(
-                            newMessage(
-                                "Child of Select widget has different height"
-                            )
-                        );
-                    }
+                if (childObject.height != object.height) {
+                    messages.push(
+                        new Message(
+                            MessageType.WARNING,
+                            "Child of Select widget has different height",
+                            childObject
+                        )
+                    );
                 }
             });
         }
@@ -2106,7 +2033,7 @@ export class UserWidgetWidget extends Widget {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[],
+            menuItems: IMenuItem[],
             editable: boolean
         ): void => {
             UserWidgetWidget.classInfo.parentClassInfo!.extendContextMenu!(
@@ -2120,17 +2047,15 @@ export class UserWidgetWidget extends Widget {
             if (objects.length === 1) {
                 const object = objects[0];
                 if (object instanceof UserWidgetWidget) {
-                    menuItems.push(
-                        new MenuItem({
-                            label: "Replace with Container",
-                            click: () => {
-                                const widget = object.replaceWithContainer();
-                                if (widget) {
-                                    context.selectObject(widget);
-                                }
+                    menuItems.push({
+                        label: "Replace with Container",
+                        click: () => {
+                            const widget = object.replaceWithContainer();
+                            if (widget) {
+                                context.selectObject(widget);
                             }
-                        })
-                    );
+                        }
+                    });
                 }
             }
         }
@@ -2357,11 +2282,6 @@ export class UserWidgetWidget extends Widget {
             containerWidgetJsObject.top = this.top;
             containerWidgetJsObject.width = this.width;
             containerWidgetJsObject.height = this.height;
-
-            // position, size and visibility in the page layouts
-            containerWidgetJsObject.layoutProperties = omitLayoutValues(this, [
-                "style"
-            ]);
 
             const projectStore = getProjectStore(this);
 

@@ -3,11 +3,10 @@ import { observable, makeObservable, computed } from "mobx";
 
 import QRC from "../qrcodegen";
 
-import { MenuItem } from "@electron/remote";
-
 import {
     IEezObject,
     registerClass,
+    getClassByName,
     PropertyType,
     makeDerivedClassInfo,
     getParent,
@@ -71,6 +70,7 @@ import {
     migrateStyleProperty,
     migrateOptionalStyleProperty,
     getOptionalStyleIndex,
+    addPartStyles,
     makeExpressionProperty,
     getLayoutParent
 } from "project-editor/flow/component";
@@ -78,16 +78,6 @@ import {
 import { Assets, DataBuffer } from "project-editor/build/assets";
 import type { Rect } from "eez-studio-shared/geometry";
 import { isTimelineEditorActive } from "project-editor/flow/timeline";
-import type { PageLayout } from "project-editor/features/page/page";
-import {
-    getEditorLayoutPropertyValue,
-    getLayoutPropertyValue,
-    getLayoutsPage,
-    getPageLayouts,
-    getWidgetStyleInLayout,
-    isLayoutPropertyChanged,
-    isWidgetShownInLayout
-} from "project-editor/features/page/page-layouts";
 import {
     WIDGET_TYPE_DISPLAY_DATA,
     WIDGET_TYPE_MULTILINE_TEXT,
@@ -115,6 +105,7 @@ import {
     WIDGET_TYPE_BUTTON,
     WIDGET_TYPE_TEXT,
     WIDGET_TYPE_RECTANGLE,
+    WIDGET_TYPE_SPACER,
     WIDGET_TYPE_BITMAP
 } from "project-editor/flow/components/component-types";
 import {
@@ -153,6 +144,7 @@ const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
 import { isArray } from "eez-studio-shared/util";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -214,13 +206,60 @@ const labelPositionPropertyInfo: PropertyInfo = {
     disabled: (widget: IEezObject) => !(widget as { label?: string }).label
 };
 
-export class DisplayDataWidget extends Widget {
+
+////////////////////////////////////////////////////////////////////////////////
+
+type TextWidgetFitToContent = "none" | "width" | "height" | "both";
+
+// The properties of the Text widget that only some of its names (Text,
+// DisplayData, Button) show in the property grid, by group. A property that
+// has a value is always shown, so a widget never hides what it uses; to use a
+// hidden property the widget is changed to a name that shows it (see
+// "Change to" in the context menu).
+type TextWidgetPropertyGroup = "number" | "label" | "icon" | "enabled";
+
+// the icon parts of a widget and their styles (see addPartStyles)
+const ICON_PART_STYLES: [string, string][] = [
+    ["icon", "iconStyle"],
+    ["trailingIcon", "trailingIconStyle"]
+];
+
+function isTextWidgetPropertyEmpty(widget: TextWidget, propertyName: string) {
+    const value = (widget as any)[propertyName];
+    return value === undefined || value === "" || value === 0;
+}
+
+function hideInTextWidget(
+    group: TextWidgetPropertyGroup,
+    propertyName: string,
+    otherwise?: (widget: TextWidget) => boolean
+) {
+    return (widget: TextWidget) => {
+        if (
+            widget.shownPropertyGroups.indexOf(group) == -1 &&
+            isTextWidgetPropertyEmpty(widget, propertyName)
+        ) {
+            return true;
+        }
+        return otherwise ? otherwise(widget) : false;
+    };
+}
+
+// The Text, DisplayData and Button widgets of an EEZ-GUI project are three
+// names of one widget (eez-framework TextWidget): it shows one line, a fixed
+// text or the value of its data. The name says what a widget is for, gives
+// its icon and its defaults and chooses the properties the grid shows; every
+// property works in all three. DisplayDataWidget and ButtonWidget are
+// subclasses without code of their own.
+export class TextWidget extends Widget {
+    name: string;
+    text?: string;
     preview: string;
-    displayOption: DisplayOption;
-    unitAndFractionFont: string;
-    refreshRate: string;
-    // in a row or column (see Widget.getLayoutFlags)
-    fitToContent?: "none" | "width" | "height" | "both";
+    fitToContent: TextWidgetFitToContent;
+
+    displayOption?: DisplayOption;
+    unitAndFractionFont?: string;
+    refreshRate?: string;
     // a number is shown in this unit (an expression of a unit name such as
     // "mA") with the decimals of the precision (an expression, the smallest
     // step in that unit): eez-framework getValueInUnit
@@ -228,348 +267,28 @@ export class DisplayDataWidget extends Widget {
     precision?: string;
     // a text above or left of the value (an expression) in the label style,
     // the unit in the unit style with the "Value and unit" option (see
-    // eez-framework drawValueParts)
+    // eez-framework drawValueParts). The two styles are optional: a widget
+    // that never had a label or a unit has none.
     label?: string;
     labelPosition?: LabelPosition;
-    labelStyle: Style;
-    unitStyle: Style;
+    labelStyle?: Style;
+    unitStyle?: Style;
+    // An icon at the left of the widget, before the label, and one at the
+    // right, after the value and the unit (a row of a settings group): a text
+    // (an expression) in the font of its style, see eez-framework ValueParts.
+    // The style is made when the icon is set.
+    icon?: string;
+    iconStyle?: Style;
+    trailingIcon?: string;
+    trailingIconStyle?: Style;
+    // the widget can be used (an expression); not enabled: drawn in the
+    // disabled state, its action doesn't run
+    enabled?: string;
 
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
-
-        flowComponentId: WIDGET_TYPE_DISPLAY_DATA,
-
-        properties: [
-            makeDataPropertyInfo("data", {}, "any"),
-            {
-                name: "fitToContent",
-                displayName: "Fit to content",
-                type: PropertyType.Enum,
-                enumItems: [
-                    { id: "none", label: "None" },
-                    { id: "width", label: "Width" },
-                    { id: "height", label: "Height" },
-                    { id: "both", label: "Both" }
-                ],
-                propertyGridGroup: geometryGroup,
-                hideInPropertyGrid: (widget: DisplayDataWidget) =>
-                    !getLayoutParent(widget)
-            },
-            // shown in the editor instead of the data, not built
-            {
-                name: "preview",
-                type: PropertyType.String,
-                propertyGridGroup: specificGroup
-            },
-            makeStylePropertyInfo("style", "Default style"),
-            makeStylePropertyInfo("labelStyle", "Label style", {
-                styleWithoutFont: true
-            }),
-            makeStylePropertyInfo("unitStyle", "Unit style", {
-                styleWithoutFont: true
-            }),
-            {
-                name: "displayOption",
-                type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: DisplayOption.All,
-                        label: "All"
-                    },
-                    {
-                        id: DisplayOption.Integer,
-                        label: "Integer"
-                    },
-                    {
-                        id: DisplayOption.FractionAndUnit,
-                        label: "Fraction and unit"
-                    },
-                    {
-                        id: DisplayOption.Fraction,
-                        label: "Fraction"
-                    },
-                    {
-                        id: DisplayOption.Unit,
-                        label: "Unit"
-                    },
-                    {
-                        id: DisplayOption.IntegerAndFraction,
-                        label: "Integer and fraction"
-                    },
-                    {
-                        id: DisplayOption.IntegerUnitAndFraction,
-                        label: "Integer, unit and fraction"
-                    },
-                    {
-                        id: DisplayOption.ValueAndUnit,
-                        label: "Value and unit"
-                    }
-                ],
-                propertyGridGroup: specificGroup,
-                layoutSpecific: true
-            },
-            {
-                name: "unitAndFractionFont",
-                displayName: "Unit and fraction font",
-                type: PropertyType.ObjectReference,
-                referencedObjectCollectionPath: "fonts",
-                propertyGridGroup: specificGroup,
-                hideInPropertyGrid: (widget: DisplayDataWidget) =>
-                    getEditorLayoutPropertyValue(widget, "displayOption") !=
-                    DisplayOption.IntegerUnitAndFraction,
-                layoutSpecific: true
-            },
-            makeDataPropertyInfo("refreshRate", {
-                disabled: hasNotFlowSupport
-            }),
-            makeDataPropertyInfo(
-                "displayUnit",
-                {
-                    displayName: "Display unit",
-                    disabled: hasNotFlowSupport
-                },
-                "string"
-            ),
-            makeDataPropertyInfo(
-                "precision",
-                {
-                    disabled: hasNotFlowSupport
-                },
-                "float"
-            ),
-            makeDataPropertyInfo(
-                "label",
-                {
-                    disabled: (widget: DisplayDataWidget) =>
-                        hasNotFlowSupport(widget) ||
-                        getEditorLayoutPropertyValue(
-                            widget,
-                            "displayOption"
-                        ) == DisplayOption.IntegerUnitAndFraction
-                },
-                "string"
-            ),
-            labelPositionPropertyInfo
-        ],
-
-        beforeLoadHook: (
-            object: IEezObject,
-            jsObject: any,
-            project: Project
-        ) => {
-            migrateOptionalStyleProperty(jsObject, "labelStyle");
-            migrateOptionalStyleProperty(jsObject, "unitStyle");
-            if (jsObject.refreshRate == undefined) {
-                if (project.projectTypeTraits.hasFlowSupport) {
-                    jsObject.refreshRate = "0";
-                }
-            }
-        },
-
-        defaultValue: {
-            data: "data",
-            left: 0,
-            top: 0,
-            width: 64,
-            height: 32,
-            displayOption: 0,
-            refreshRate: "0"
-        },
-
-        icon: (
-            <svg
-                strokeWidth="2"
-                stroke="currentColor"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                viewBox="0 0 24 24"
-            >
-                <path d="M0 0h24v24H0z" stroke="none" />
-                <path d="M5 4C2.5 9 2.5 14 5 20M19 4c2.5 5 2.5 10 0 16M9 9h1c1 0 1 1 2.016 3.527C13 15 13 16 14 16h1" />
-                <path d="M8 16c1.5 0 3-2 4-3.5S14.5 9 16 9" />
-            </svg>
-        ),
-
-        check: (object: DisplayDataWidget, messages: IMessage[]) => {
-            if (!object.data) {
-                messages.push(propertyNotSetMessage(object, "data"));
-            }
-
-            if (object.displayOption === undefined) {
-                messages.push(propertyNotSetMessage(object, "displayOption"));
-            }
-
-            // The widget's own unit and fraction font is used if the display
-            // option is "Integer, unit and fraction". With the page layouts,
-            // it is used in the page layouts in which it is not changed.
-            const layoutsPage = getLayoutsPage(object);
-            if (
-                layoutsPage
-                    ? getPageLayouts(layoutsPage).some(
-                          pageLayout =>
-                              isWidgetShownInLayout(object, pageLayout) &&
-                              getLayoutPropertyValue(
-                                  object,
-                                  "displayOption",
-                                  pageLayout
-                              ) === DisplayOption.IntegerUnitAndFraction &&
-                              !isLayoutPropertyChanged(
-                                  object,
-                                  "unitAndFractionFont",
-                                  pageLayout
-                              )
-                      )
-                    : object.displayOption ===
-                      DisplayOption.IntegerUnitAndFraction
-            ) {
-                checkObjectReference(object, "unitAndFractionFont", messages);
-            }
-        }
-    });
-
-    override makeEditable() {
-        super.makeEditable();
-
-        makeObservable(this, {
-            preview: observable,
-            displayOption: observable,
-            unitAndFractionFont: observable,
-            refreshRate: observable,
-            fitToContent: observable,
-            displayUnit: observable,
-            precision: observable,
-            label: observable,
-            labelPosition: observable,
-            labelStyle: observable,
-            unitStyle: observable
-        });
+    // the groups of properties the property grid shows for this name
+    get shownPropertyGroups(): TextWidgetPropertyGroup[] {
+        return [];
     }
-
-    applyDisplayOption(text: string) {
-        text = text.toString();
-
-        // display option in the page layout selected in the editor
-        const displayOption = getEditorLayoutPropertyValue(
-            this,
-            "displayOption"
-        );
-
-        if (displayOption === DisplayOption.Integer) {
-            let i = findStartOfFraction(text);
-            text = text.substr(0, i);
-        } else if (displayOption === DisplayOption.FractionAndUnit) {
-            let i = findStartOfFraction(text);
-            text = text.substr(i);
-        } else if (displayOption === DisplayOption.Fraction) {
-            let i = findStartOfFraction(text);
-            let k = findStartOfUnit(text);
-            if (i < k) {
-                text = text.substring(i, k);
-            } else {
-                text = ".00";
-            }
-        } else if (displayOption === DisplayOption.Unit) {
-            let i = findStartOfUnit(text);
-            text = text.substr(i);
-        } else if (displayOption === DisplayOption.IntegerAndFraction) {
-            let i = findStartOfUnit(text);
-            text = text.substr(0, i);
-        }
-
-        if (typeof text === "string") {
-            text = text.trim();
-        }
-
-        return text;
-    }
-
-    // same split as in the firmware, text that is not a number (firmware:
-    // value that is not a float) is displayed whole as the integer part
-    splitIntegerUnitAndFraction(text: string) {
-        let i = findStartOfFraction(text);
-        let k = findStartOfUnit(text);
-
-        if (!/[0-9]/.test(text.substring(0, k))) {
-            return { integer: text.trim(), unit: "", fraction: "" };
-        }
-
-        return {
-            integer: text.substring(0, i).trim(),
-            unit: text.substring(k).trim(),
-            fraction: i < k ? text.substring(i, k).trim() : ".0"
-        };
-    }
-
-
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // refreshRate
-        dataBuffer.writeInt16(
-            assets.projectStore.projectTypeTraits.hasFlowSupport
-                ? assets.getWidgetDataItemIndex(this, "refreshRate")
-                : 0
-        );
-
-        // displayOption, in the page layout which is built
-        const displayOption = assets.getPropertyValue(this, "displayOption");
-        dataBuffer.writeUint8(displayOption || 0);
-
-        // flags
-        const DISPLAY_DATA_WIDGET_LABEL_LEFT_FLAG = 0x01;
-        dataBuffer.writeUint8(
-            this.label && this.labelPosition == "left"
-                ? DISPLAY_DATA_WIDGET_LABEL_LEFT_FLAG
-                : 0
-        );
-
-        // unitAndFractionFont
-        dataBuffer.writeInt16(
-            displayOption == DisplayOption.IntegerUnitAndFraction &&
-                assets.getPropertyValue(this, "unitAndFractionFont")
-                ? assets.getFontIndex(this, "unitAndFractionFont")
-                : 0
-        );
-
-        // displayUnit, precision (flow expressions, 0 if not set)
-        const hasFlowSupport =
-            assets.projectStore.projectTypeTraits.hasFlowSupport;
-        dataBuffer.writeInt16(
-            hasFlowSupport && this.displayUnit
-                ? assets.getWidgetDataItemIndex(this, "displayUnit")
-                : 0
-        );
-        dataBuffer.writeInt16(
-            hasFlowSupport && this.precision
-                ? assets.getWidgetDataItemIndex(this, "precision")
-                : 0
-        );
-
-        // label (a flow expression, 0 if not set), labelStyle, unitStyle (0 if
-        // not set: the widget style)
-        dataBuffer.writeInt16(
-            hasFlowSupport && this.label
-                ? assets.getWidgetDataItemIndex(this, "label")
-                : 0
-        );
-        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
-        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "unitStyle"));
-    }
-}
-
-registerClass("DisplayDataWidget", DisplayDataWidget);
-
-////////////////////////////////////////////////////////////////////////////////
-
-type TextWidgetFitToContent = "none" | "width" | "height" | "both";
-
-export class TextWidget extends Widget {
-    name: string;
-    text?: string;
-    preview: string;
-    fitToContent: TextWidgetFitToContent;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -639,7 +358,135 @@ export class TextWidget extends Widget {
                 enumDisallowUndefined: true,
                 propertyGridGroup: geometryGroup
             },
-            makeStylePropertyInfo("style", "Default style")
+            makeStylePropertyInfo("style", "Default style"),
+            // A DisplayData always has the two styles. A Text and a Button
+            // have them only once they got them (changed from a DisplayData,
+            // or made from a preset), so a project file doesn't grow.
+            makeStylePropertyInfo("labelStyle", "Label style", {
+                styleWithoutFont: true,
+                isOptional: (widget: IEezObject) =>
+                    !(widget instanceof DisplayDataWidget)
+            }),
+            makeStylePropertyInfo("unitStyle", "Unit style", {
+                styleWithoutFont: true,
+                isOptional: (widget: IEezObject) =>
+                    !(widget instanceof DisplayDataWidget)
+            }),
+            makeStylePropertyInfo("iconStyle", "Icon style", {
+                isOptional: true
+            }),
+            makeStylePropertyInfo("trailingIconStyle", "Trailing icon style", {
+                isOptional: true
+            }),
+            {
+                name: "displayOption",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: DisplayOption.All,
+                        label: "All"
+                    },
+                    {
+                        id: DisplayOption.Integer,
+                        label: "Integer"
+                    },
+                    {
+                        id: DisplayOption.FractionAndUnit,
+                        label: "Fraction and unit"
+                    },
+                    {
+                        id: DisplayOption.Fraction,
+                        label: "Fraction"
+                    },
+                    {
+                        id: DisplayOption.Unit,
+                        label: "Unit"
+                    },
+                    {
+                        id: DisplayOption.IntegerAndFraction,
+                        label: "Integer and fraction"
+                    },
+                    {
+                        id: DisplayOption.IntegerUnitAndFraction,
+                        label: "Integer, unit and fraction"
+                    },
+                    {
+                        id: DisplayOption.ValueAndUnit,
+                        label: "Value and unit"
+                    }
+                ],
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: hideInTextWidget("number", "displayOption")
+            },
+            {
+                name: "unitAndFractionFont",
+                displayName: "Unit and fraction font",
+                type: PropertyType.ObjectReference,
+                referencedObjectCollectionPath: "fonts",
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (widget: TextWidget) =>
+                    widget.displayOption !=
+                    DisplayOption.IntegerUnitAndFraction
+            },
+            makeDataPropertyInfo("refreshRate", {
+                disabled: hasNotFlowSupport,
+                hideInPropertyGrid: hideInTextWidget("number", "refreshRate")
+            }),
+            makeDataPropertyInfo(
+                "displayUnit",
+                {
+                    displayName: "Display unit",
+                    disabled: hasNotFlowSupport,
+                    hideInPropertyGrid: hideInTextWidget(
+                        "number",
+                        "displayUnit"
+                    )
+                },
+                "string"
+            ),
+            makeDataPropertyInfo(
+                "precision",
+                {
+                    disabled: hasNotFlowSupport,
+                    hideInPropertyGrid: hideInTextWidget("number", "precision")
+                },
+                "float"
+            ),
+            makeDataPropertyInfo(
+                "label",
+                {
+                    disabled: (widget: TextWidget) =>
+                        hasNotFlowSupport(widget) ||
+                        widget.displayOption ==
+                            DisplayOption.IntegerUnitAndFraction,
+                    hideInPropertyGrid: hideInTextWidget("label", "label")
+                },
+                "string"
+            ),
+            labelPositionPropertyInfo,
+            makeDataPropertyInfo(
+                "icon",
+                {
+                    disabled: hasNotFlowSupport,
+                    hideInPropertyGrid: hideInTextWidget("icon", "icon")
+                },
+                "string"
+            ),
+            makeDataPropertyInfo(
+                "trailingIcon",
+                {
+                    displayName: "Trailing icon",
+                    disabled: hasNotFlowSupport,
+                    hideInPropertyGrid: hideInTextWidget(
+                        "icon",
+                        "trailingIcon"
+                    )
+                },
+                "string"
+            ),
+            makeDataPropertyInfo("enabled", {
+                hideInPropertyGrid: hideInTextWidget("enabled", "enabled")
+            })
         ],
 
         setRect: (widget: TextWidget, value: Partial<Rect>) => {
@@ -652,27 +499,24 @@ export class TextWidget extends Widget {
                 value.top ?? widget.rect.top
             );
 
-            // compare with the values in the page layout selected in the editor
-            if (left !== getEditorLayoutPropertyValue(widget, "left")) {
+            if (left !== widget.left) {
                 props.left = left;
             }
 
-            if (top !== getEditorLayoutPropertyValue(widget, "top")) {
+            if (top !== widget.top) {
                 props.top = top;
             }
 
             if (!widget.isFitToContentWidth) {
                 const width = value.width ?? widget.rect.width;
-                if (width !== getEditorLayoutPropertyValue(widget, "width")) {
+                if (width !== widget.width) {
                     props.width = width;
                 }
             }
 
             if (!widget.isFitToContentHeight) {
                 const height = value.height ?? widget.rect.height;
-                if (
-                    height !== getEditorLayoutPropertyValue(widget, "height")
-                ) {
+                if (height !== widget.height) {
                     props.height = height;
                 }
             }
@@ -681,6 +525,8 @@ export class TextWidget extends Widget {
         },
 
         updateObjectValueHook: (widget: TextWidget, values: any) => {
+            addPartStyles(widget, values, ICON_PART_STYLES);
+
             if (
                 values.fitToContent == undefined ||
                 values.fitToContent == widget.fitToContent
@@ -696,15 +542,13 @@ export class TextWidget extends Widget {
             const isFitHeight = (fitToContent: TextWidgetFitToContent) =>
                 fitToContent == "height" || fitToContent == "both";
 
-            // content size and size in the page layout selected in the editor
             const contentSize = widget.contentSize;
 
             if (
                 (isFitWidth(widget.fitToContent) ||
                     isFitWidth(values.fitToContent)) &&
                 values.width == undefined &&
-                getEditorLayoutPropertyValue(widget, "width") !=
-                    contentSize.width
+                widget.width != contentSize.width
             ) {
                 values.width = contentSize.width;
             }
@@ -713,8 +557,7 @@ export class TextWidget extends Widget {
                 (isFitHeight(widget.fitToContent) ||
                     isFitHeight(values.fitToContent)) &&
                 values.height == undefined &&
-                getEditorLayoutPropertyValue(widget, "height") !=
-                    contentSize.height
+                widget.height != contentSize.height
             ) {
                 values.height = contentSize.height;
             }
@@ -730,7 +573,12 @@ export class TextWidget extends Widget {
                 }
             }
 
-            if (jsObject.fitToContent == undefined) {
+            // (a DisplayData and a Button are saved without it, as before
+            // they were names of this widget)
+            if (
+                jsObject.fitToContent == undefined &&
+                !/DisplayData|Button/.test(jsObject.type ?? "")
+            ) {
                 jsObject.fitToContent = "none";
             }
         },
@@ -762,7 +610,7 @@ export class TextWidget extends Widget {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[],
+            menuItems: IMenuItem[],
             editable: boolean
         ): void => {
             TextWidget.classInfo.parentClassInfo!.extendContextMenu!(
@@ -777,10 +625,23 @@ export class TextWidget extends Widget {
                 const object = objects[0];
                 if (object instanceof TextWidget) {
                     menuItems.push(
-                        new MenuItem({
+                        {
                             type: "separator"
-                        }),
-                        new MenuItem({
+                        },
+                        // the other names of this widget: nothing is lost,
+                        // the properties are the same
+                        ...TEXT_WIDGET_NAMES.filter(
+                            name => name != getTextWidgetName(object)
+                        ).map(name => ({
+                            label: `Change to ${name}`,
+                            click: () => {
+                                const widget = object.changeTo(name);
+                                if (widget) {
+                                    context.selectObject(widget);
+                                }
+                            }
+                        })),
+                        {
                             label: "Convert to MultilineText",
                             click: () => {
                                 const widget = object.convertToMultilineText();
@@ -788,7 +649,7 @@ export class TextWidget extends Widget {
                                     context.selectObject(widget);
                                 }
                             }
-                        })
+                        }
                     );
                 }
             }
@@ -798,13 +659,25 @@ export class TextWidget extends Widget {
             const project = ProjectEditor.getProject(widget);
 
             if (!project.projectTypeTraits.hasFlowSupport) {
-                if (!widget.text && !widget.data) {
+                if (
+                    !widget.text &&
+                    !widget.data &&
+                    !widget.isInputProperty("data")
+                ) {
                     messages.push(propertyNotSetMessage(widget, "text"));
+                }
+
+                if (widget.enabled) {
+                    checkObjectReference(widget, "enabled", messages, true);
                 }
             } else {
                 if (!widget.data) {
                     messages.push(propertyNotSetMessage(widget, "data"));
                 }
+            }
+
+            if (widget.displayOption === DisplayOption.IntegerUnitAndFraction) {
+                checkObjectReference(widget, "unitAndFractionFont", messages);
             }
         }
     });
@@ -817,9 +690,97 @@ export class TextWidget extends Widget {
             text: observable,
             preview: observable,
             fitToContent: observable,
+            displayOption: observable,
+            unitAndFractionFont: observable,
+            refreshRate: observable,
+            displayUnit: observable,
+            precision: observable,
+            label: observable,
+            labelPosition: observable,
+            labelStyle: observable,
+            unitStyle: observable,
+            icon: observable,
+            iconStyle: observable,
+            trailingIcon: observable,
+            trailingIconStyle: observable,
+            enabled: observable,
             contentSize: computed
         });
     }
+
+    // this widget under another of its names (TEXT_WIDGET_NAMES)
+    changeTo(name: string) {
+        const jsObject = objectToJS(this);
+
+        jsObject.type = `${name}Widget`;
+        Object.assign(jsObject, TEXT_WIDGET_CHANGE_TO_VALUES[name](jsObject));
+
+        return replaceObject(
+            this,
+            // with the ids it has: the connection lines of the flow and the
+            // history of the widget stay
+            createObject<TextWidget>(
+                getProjectStore(this),
+                jsObject,
+                getClassByName(getProjectStore(this), jsObject.type) as any,
+                undefined,
+                false
+            )
+        );
+    }
+
+    applyDisplayOption(text: string) {
+        text = text.toString();
+
+        const displayOption = this.displayOption;
+
+        if (displayOption === DisplayOption.Integer) {
+            let i = findStartOfFraction(text);
+            text = text.substr(0, i);
+        } else if (displayOption === DisplayOption.FractionAndUnit) {
+            let i = findStartOfFraction(text);
+            text = text.substr(i);
+        } else if (displayOption === DisplayOption.Fraction) {
+            let i = findStartOfFraction(text);
+            let k = findStartOfUnit(text);
+            if (i < k) {
+                text = text.substring(i, k);
+            } else {
+                text = ".00";
+            }
+        } else if (displayOption === DisplayOption.Unit) {
+            let i = findStartOfUnit(text);
+            text = text.substr(i);
+        } else if (displayOption === DisplayOption.IntegerAndFraction) {
+            let i = findStartOfUnit(text);
+            text = text.substr(0, i);
+        }
+
+        if (typeof text === "string") {
+            text = text.trim();
+        }
+
+        return text;
+    }
+
+    // same split as in the firmware, text that is not a number (firmware:
+    // value that is not a float) is displayed whole as the integer part
+    splitIntegerUnitAndFraction(text: string) {
+        let i = findStartOfFraction(text);
+        let k = findStartOfUnit(text);
+
+        if (!/[0-9]/.test(text.substring(0, k))) {
+            return { integer: text.trim(), unit: "", fraction: "" };
+        }
+
+        return {
+            integer: text.substring(0, i).trim(),
+            unit: text.substring(k).trim(),
+            fraction: i < k ? text.substring(i, k).trim() : ".0"
+        };
+    }
+
+
 
     get isFitToContentWidth() {
         return this.fitToContent == "width" || this.fitToContent == "both";
@@ -873,9 +834,8 @@ export class TextWidget extends Widget {
         return "<no text>";
     }
 
-    // in the page layout selected in the editor
     get contentSize() {
-        return this.getContentSize(this.layoutStyle);
+        return this.getContentSize(this.style);
     }
 
     // must be kept in sync with TextWidget_autoSize in eez-framework
@@ -924,24 +884,6 @@ export class TextWidget extends Widget {
             return this.contentSize.height;
         }
         return super.componentHeight;
-    }
-
-    override getRectInPageLayout(pageLayout: PageLayout | undefined): Rect {
-        const rect = super.getRectInPageLayout(pageLayout);
-
-        if (this.isFitToContentWidth || this.isFitToContentHeight) {
-            const contentSize = this.getContentSize(
-                getWidgetStyleInLayout(this, "style", pageLayout)
-            );
-            if (this.isFitToContentWidth) {
-                rect.width = contentSize.width;
-            }
-            if (this.isFitToContentHeight) {
-                rect.height = contentSize.height;
-            }
-        }
-
-        return rect;
     }
 
     override getResizeHandlers(): IResizeHandler[] | undefined | false {
@@ -994,36 +936,294 @@ export class TextWidget extends Widget {
     styleHook(style: React.CSSProperties, flowContext: IFlowContext) {
         super.styleHook(style, flowContext);
 
-        if (this.layoutStyle.alignHorizontalProperty == "left") {
+        if (this.style.alignHorizontalProperty == "left") {
             style.textAlign = "left";
-        } else if (this.layoutStyle.alignHorizontalProperty == "center") {
+        } else if (this.style.alignHorizontalProperty == "center") {
             style.textAlign = "center";
-        } else if (this.layoutStyle.alignHorizontalProperty == "right") {
+        } else if (this.style.alignHorizontalProperty == "right") {
             style.textAlign = "right";
         }
     }
 
 
+    // eez-framework TextWidget, the same structure for the three names
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
+        const hasFlowSupport =
+            assets.projectStore.projectTypeTraits.hasFlowSupport;
+
         // text
         buildWidgetText(assets, dataBuffer, this.text);
 
         // flags
+        const TEXT_WIDGET_LABEL_LEFT_FLAG = 1 << 0;
+        const TEXT_WIDGET_FIT_TO_CONTENT_WIDTH_FLAG = 1 << 1;
+        const TEXT_WIDGET_FIT_TO_CONTENT_HEIGHT_FLAG = 1 << 2;
         let flags: number = 0;
-
-        // fitToContent
+        if (this.label && this.labelPosition == "left") {
+            flags |= TEXT_WIDGET_LABEL_LEFT_FLAG;
+        }
         if (this.isFitToContentWidth) {
-            flags |= 1 << 1;
+            flags |= TEXT_WIDGET_FIT_TO_CONTENT_WIDTH_FLAG;
         }
         if (this.isFitToContentHeight) {
-            flags |= 1 << 2;
+            flags |= TEXT_WIDGET_FIT_TO_CONTENT_HEIGHT_FLAG;
         }
+        dataBuffer.writeUint8(flags);
 
-        dataBuffer.writeInt8(flags);
+        // displayOption
+        const displayOption = this.displayOption;
+        dataBuffer.writeUint8(displayOption || 0);
+
+        // enabled
+        dataBuffer.writeInt16(
+            this.enabled ? assets.getWidgetDataItemIndex(this, "enabled") : 0
+        );
+
+        // refreshRate
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.refreshRate
+                ? assets.getWidgetDataItemIndex(this, "refreshRate")
+                : 0
+        );
+
+        // unitAndFractionFont
+        dataBuffer.writeInt16(
+            displayOption == DisplayOption.IntegerUnitAndFraction &&
+                this.unitAndFractionFont
+                ? assets.getFontIndex(this, "unitAndFractionFont")
+                : 0
+        );
+
+        // displayUnit, precision (flow expressions, 0 if not set)
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.displayUnit
+                ? assets.getWidgetDataItemIndex(this, "displayUnit")
+                : 0
+        );
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.precision
+                ? assets.getWidgetDataItemIndex(this, "precision")
+                : 0
+        );
+
+        // label (a flow expression, 0 if not set), labelStyle, unitStyle (0 if
+        // not set: the widget style)
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.label
+                ? assets.getWidgetDataItemIndex(this, "label")
+                : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "unitStyle"));
+
+        // icon, trailingIcon (flow expressions, 0 if not set) and their
+        // styles (0 if not set: the widget style)
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.icon
+                ? assets.getWidgetDataItemIndex(this, "icon")
+                : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "iconStyle"));
+        dataBuffer.writeInt16(
+            hasFlowSupport && this.trailingIcon
+                ? assets.getWidgetDataItemIndex(this, "trailingIcon")
+                : 0
+        );
+        dataBuffer.writeInt16(
+            getOptionalStyleIndex(assets, this, "trailingIconStyle")
+        );
+
+        // reserved
+        dataBuffer.writeInt16(0);
     }
 }
 
 registerClass("TextWidget", TextWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// a value from data: the number and label properties are shown
+export class DisplayDataWidget extends TextWidget {
+    static classInfo = makeDerivedClassInfo(TextWidget.classInfo, {
+        flowComponentId: WIDGET_TYPE_DISPLAY_DATA,
+
+        properties: [
+            makeDataPropertyInfo("data", {}, "any"),
+            // only in a row or column (see Widget.getLayoutFlags)
+            {
+                name: "fitToContent",
+                displayName: "Fit to content",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "none", label: "None" },
+                    { id: "width", label: "Width" },
+                    { id: "height", label: "Height" },
+                    { id: "both", label: "Both" }
+                ],
+                propertyGridGroup: geometryGroup,
+                hideInPropertyGrid: (widget: DisplayDataWidget) =>
+                    !getLayoutParent(widget)
+            }
+        ],
+
+        beforeLoadHook: (
+            object: IEezObject,
+            jsObject: any,
+            project: Project
+        ) => {
+            migrateOptionalStyleProperty(jsObject, "labelStyle");
+            migrateOptionalStyleProperty(jsObject, "unitStyle");
+            if (jsObject.refreshRate == undefined) {
+                if (project.projectTypeTraits.hasFlowSupport) {
+                    jsObject.refreshRate = "0";
+                }
+            }
+        },
+
+        defaultValue: {
+            data: "data",
+            left: 0,
+            top: 0,
+            width: 64,
+            height: 32,
+            displayOption: 0,
+            refreshRate: "0",
+            fitToContent: undefined
+        },
+
+        icon: (
+            <svg
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                viewBox="0 0 24 24"
+            >
+                <path d="M0 0h24v24H0z" stroke="none" />
+                <path d="M5 4C2.5 9 2.5 14 5 20M19 4c2.5 5 2.5 10 0 16M9 9h1c1 0 1 1 2.016 3.527C13 15 13 16 14 16h1" />
+                <path d="M8 16c1.5 0 3-2 4-3.5S14.5 9 16 9" />
+            </svg>
+        ),
+    });
+
+    override get shownPropertyGroups(): TextWidgetPropertyGroup[] {
+        return ["number", "label", "icon", "enabled"];
+    }
+
+    // The size of a DisplayData is set by "Fit to content" only in a row or
+    // column, where the framework measures it (see Widget.getLayoutFlags).
+    override get isFitToContentWidth() {
+        return false;
+    }
+
+    override get isFitToContentHeight() {
+        return false;
+    }
+}
+
+registerClass("DisplayDataWidget", DisplayDataWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// a command: the Enabled property is shown
+export class ButtonWidget extends TextWidget {
+    static classInfo = makeDerivedClassInfo(TextWidget.classInfo, {
+        flowComponentId: WIDGET_TYPE_BUTTON,
+
+        properties: [
+            makeDataPropertyInfo("data", {
+                displayName: (widget: ButtonWidget) => {
+                    const project = ProjectEditor.getProject(widget);
+                    if (project.projectTypeTraits.hasFlowSupport) {
+                        return "Label";
+                    }
+                    return "Data";
+                }
+            }),
+            makeTextPropertyInfo("text", {
+                disabled: isProjectWithFlowSupport
+            })
+        ],
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 80,
+            height: 40,
+            data: `"Button"`,
+            fitToContent: undefined,
+            eventHandlers: [
+                {
+                    eventName: "CLICKED",
+                    handlerType: "flow"
+                }
+            ]
+        },
+
+        componentDefaultValue: (projectStore: ProjectStore) => {
+            return projectStore.projectTypeTraits.isFirmwareModule ||
+                projectStore.projectTypeTraits.isApplet ||
+                projectStore.projectTypeTraits.isResource
+                ? {
+                      style: {
+                          useStyle: "button_M"
+                      }
+                  }
+                : projectStore.projectTypeTraits.isFirmware
+                ? {
+                      style: {
+                          useStyle: "button"
+                      }
+                  }
+                : {};
+        },
+
+        icon: (
+            <svg viewBox="0 0 16 16">
+                <path
+                    fill="currentColor"
+                    d="m15.7 5.3-1-1c-.2-.2-.4-.3-.7-.3H1c-.6 0-1 .4-1 1v5c0 .3.1.6.3.7l1 1c.2.2.4.3.7.3h13c.6 0 1-.4 1-1V6c0-.3-.1-.5-.3-.7zM14 10H1V5h13v5z"
+                />
+            </svg>
+        ),
+    });
+
+    override get shownPropertyGroups(): TextWidgetPropertyGroup[] {
+        return ["icon", "enabled"];
+    }
+}
+
+registerClass("ButtonWidget", ButtonWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// the names of the Text widget and what a widget gets when it is changed to
+// a name (see TextWidget.changeTo)
+const TEXT_WIDGET_NAMES = ["Text", "DisplayData", "Button"];
+
+function getTextWidgetName(widget: TextWidget) {
+    return widget instanceof DisplayDataWidget
+        ? "DisplayData"
+        : widget instanceof ButtonWidget
+        ? "Button"
+        : "Text";
+}
+
+const TEXT_WIDGET_CHANGE_TO_VALUES: {
+    [name: string]: (jsObject: any) => any;
+} = {
+    Text: jsObject => ({
+        fitToContent: jsObject.fitToContent ?? "none"
+    }),
+    DisplayData: jsObject => ({
+        displayOption: jsObject.displayOption ?? 0,
+        refreshRate: jsObject.refreshRate ?? "0",
+        labelStyle: jsObject.labelStyle ?? {},
+        unitStyle: jsObject.unitStyle ?? {}
+    }),
+    Button: jsObject => ({})
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1257,6 +1457,68 @@ registerClass("RectangleWidget", RectangleWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// An empty place: the space between the children of a row or a column, or the
+// child of a Select that shows nothing. It has no style of its own and draws
+// nothing: what is below it is seen. Its style object is always empty (the
+// code of the widgets expects every widget to have one), it is built as 0.
+export class SpacerWidget extends Widget {
+    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
+        enabledInComponentPalette: (projectType: ProjectType) =>
+            projectType !== ProjectType.LVGL &&
+            projectType !== ProjectType.DASHBOARD &&
+            projectType !== ProjectType.EEZ_GUI_LITE,
+
+        flowComponentId: WIDGET_TYPE_SPACER,
+
+        properties: [
+            makeStylePropertyInfo("style", undefined, {
+                styleWithoutFont: true
+            })
+        ],
+
+        beforeLoadHook: (
+            object: IEezObject,
+            jsObject: any,
+            project: Project
+        ) => {
+            jsObject.style = jsObject.style?.objID
+                ? { objID: jsObject.style.objID }
+                : {};
+        },
+
+        defaultValue: {
+            left: 0,
+            top: 0,
+            width: 16,
+            height: 16
+        },
+
+        icon: (
+            <svg
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 6v12M20 6v12M8 12h8M8 12l2.5 -2.5M8 12l2.5 2.5M16 12l-2.5 -2.5M16 12l-2.5 2.5"></path>
+            </svg>
+        ),
+
+        check: (object: SpacerWidget, messages: IMessage[]) => {
+            if (object.data) {
+                messages.push(propertySetButNotUsedMessage(object, "data"));
+            }
+        }
+    });
+}
+
+registerClass("SpacerWidget", SpacerWidget);
+
+////////////////////////////////////////////////////////////////////////////////
+
 const BitmapWidgetPropertyGridUI = observer(
     class BitmapWidgetPropertyGridUI extends React.Component<PropertyProps> {
         get bitmapWidget() {
@@ -1480,136 +1742,6 @@ registerClass("BitmapWidget", BitmapWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class ButtonWidget extends Widget {
-    text?: string;
-    enabled?: string;
-
-    static classInfo = makeDerivedClassInfo(Widget.classInfo, {
-        enabledInComponentPalette: (projectType: ProjectType) =>
-            projectType !== ProjectType.LVGL &&
-            projectType !== ProjectType.DASHBOARD &&
-            projectType !== ProjectType.EEZ_GUI_LITE,
-
-        flowComponentId: WIDGET_TYPE_BUTTON,
-
-        properties: [
-            makeDataPropertyInfo("data", {
-                displayName: (widget: ButtonWidget) => {
-                    const project = ProjectEditor.getProject(widget);
-                    if (project.projectTypeTraits.hasFlowSupport) {
-                        return "Label";
-                    }
-                    return "Data";
-                }
-            }),
-            makeTextPropertyInfo("text", {
-                disabled: isProjectWithFlowSupport
-            }),
-            makeDataPropertyInfo("enabled"),
-            makeStylePropertyInfo("style", "Default style")
-        ],
-
-        beforeLoadHook: (
-            widget: IEezObject,
-            jsObject: any,
-            project: Project
-        ) => {
-            if (jsObject.text) {
-                if (project.projectTypeTraits.hasFlowSupport) {
-                    if (!jsObject.data) {
-                        jsObject.data = `"${jsObject.text}"`;
-                    }
-                    delete jsObject.text;
-                }
-            }
-        },
-
-        defaultValue: {
-            left: 0,
-            top: 0,
-            width: 80,
-            height: 40,
-            data: `"Button"`,
-            eventHandlers: [
-                {
-                    eventName: "CLICKED",
-                    handlerType: "flow"
-                }
-            ]
-        },
-
-        componentDefaultValue: (projectStore: ProjectStore) => {
-            return projectStore.projectTypeTraits.isFirmwareModule ||
-                projectStore.projectTypeTraits.isApplet ||
-                projectStore.projectTypeTraits.isResource
-                ? {
-                      style: {
-                          useStyle: "button_M"
-                      }
-                  }
-                : projectStore.projectTypeTraits.isFirmware
-                ? {
-                      style: {
-                          useStyle: "button"
-                      }
-                  }
-                : {};
-        },
-
-        icon: (
-            <svg viewBox="0 0 16 16">
-                <path
-                    fill="currentColor"
-                    d="m15.7 5.3-1-1c-.2-.2-.4-.3-.7-.3H1c-.6 0-1 .4-1 1v5c0 .3.1.6.3.7l1 1c.2.2.4.3.7.3h13c.6 0 1-.4 1-1V6c0-.3-.1-.5-.3-.7zM14 10H1V5h13v5z"
-                />
-            </svg>
-        ),
-
-        check: (widget: ButtonWidget, messages: IMessage[]) => {
-            const project = ProjectEditor.getProject(widget);
-
-            if (!project.projectTypeTraits.hasFlowSupport) {
-                if (
-                    !widget.text &&
-                    !widget.data &&
-                    !widget.isInputProperty("data")
-                ) {
-                    messages.push(propertyNotSetMessage(widget, "text"));
-                }
-
-                checkObjectReference(widget, "enabled", messages, true);
-            } else {
-                if (!widget.data) {
-                    messages.push(propertyNotSetMessage(widget, "text"));
-                }
-            }
-        }
-    });
-
-    override makeEditable() {
-        super.makeEditable();
-
-        makeObservable(this, {
-            text: observable,
-            enabled: observable
-        });
-    }
-
-    getClassName(flowContext: IFlowContext) {
-        return classNames("eez-widget", this.type);
-    }
-
-
-    buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
-        // text
-        buildWidgetText(assets, dataBuffer, this.text);
-
-        // enabled
-        dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "enabled"));
-    }
-}
-
-registerClass("ButtonWidget", ButtonWidget);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1815,6 +1947,18 @@ export class BarGraphWidget extends Widget {
     min: string;
     max: string;
     refreshRate: string;
+    // The bar as a track with rounded corners (the radius of the style, inside
+    // its padding) when one of these is set: ticks with numbers beside the bar
+    // (the style is made when the scale is turned on), the width of a vertical
+    // or height of a horizontal bar (0: all the room), a triangle pointing at
+    // threshold 1 with a label beside it, the part between the bar and
+    // threshold 1 in the dimmed bar color.
+    scale?: boolean;
+    scaleStyle?: Style;
+    thickness?: number;
+    line1Marker?: boolean;
+    line1Label?: string;
+    zone?: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1844,14 +1988,12 @@ export class BarGraphWidget extends Widget {
                     {
                         id: "bottom-top"
                     }
-                ],
-                layoutSpecific: true
+                ]
             },
             {
                 name: "displayValue",
                 type: PropertyType.Boolean,
-                propertyGridGroup: specificGroup,
-                layoutSpecific: true
+                propertyGridGroup: specificGroup
             },
             makeDataPropertyInfo("data"),
             makeDataPropertyInfo("line1Data", { displayName: "Threshold1" }),
@@ -1865,11 +2007,52 @@ export class BarGraphWidget extends Widget {
             makeDataPropertyInfo("refreshRate", {
                 disabled: hasNotFlowSupport
             }),
+            {
+                name: "scale",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "thickness",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "line1Marker",
+                displayName: "Threshold1 marker",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
+            },
+            makeDataPropertyInfo(
+                "line1Label",
+                {
+                    displayName: "Threshold1 label",
+                    disabled: (widget: BarGraphWidget) =>
+                        hasNotFlowSupport(widget) || !widget.line1Marker
+                },
+                "string"
+            ),
+            {
+                name: "zone",
+                displayName: "Zone to threshold1",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
+            },
             makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("textStyle"),
             makeStylePropertyInfo("line1Style", "Threshold1 style"),
-            makeStylePropertyInfo("line2Style", "Threshold2 style")
+            makeStylePropertyInfo("line2Style", "Threshold2 style"),
+            makeStylePropertyInfo("scaleStyle", "Scale style", {
+                isOptional: true
+            })
         ],
+
+        updateObjectValueHook: (widget: BarGraphWidget, values: any) => {
+            addPartStyles(widget, values, [["scale", "scaleStyle"]]);
+        },
 
         beforeLoadHook: (
             object: IEezObject,
@@ -1947,7 +2130,13 @@ export class BarGraphWidget extends Widget {
             line2Style: observable,
             min: observable,
             max: observable,
-            refreshRate: observable
+            refreshRate: observable,
+            scale: observable,
+            scaleStyle: observable,
+            thickness: observable,
+            line1Marker: observable,
+            line1Label: observable,
+            zone: observable
         });
     }
 
@@ -1981,9 +2170,9 @@ export class BarGraphWidget extends Widget {
                 : 0
         );
 
-        // orientation, in the page layout which is built
+        // orientation
         let orientation: number;
-        switch (assets.getPropertyValue(this, "orientation")) {
+        switch (this.orientation) {
             case "left-right":
                 orientation = BAR_GRAPH_ORIENTATION_LEFT_RIGHT;
                 break;
@@ -1997,12 +2186,41 @@ export class BarGraphWidget extends Widget {
                 orientation = BAR_GRAPH_ORIENTATION_BOTTOM_TOP;
         }
 
-        // displayValue, in the page layout which is built
-        if (!assets.getPropertyValue(this, "displayValue")) {
+        // displayValue
+        if (!this.displayValue) {
             orientation |= BAR_GRAPH_DO_NOT_DISPLAY_VALUE;
         }
 
         dataBuffer.writeUint8(orientation);
+
+        // flags
+        const BAR_GRAPH_FLAG_LINE1_MARKER = 1 << 0;
+        const BAR_GRAPH_FLAG_ZONE = 1 << 1;
+        let flags = 0;
+        if (this.line1Marker) {
+            flags |= BAR_GRAPH_FLAG_LINE1_MARKER;
+        }
+        if (this.zone) {
+            flags |= BAR_GRAPH_FLAG_ZONE;
+        }
+        dataBuffer.writeUint8(flags);
+
+        // scaleStyle (0: no scale)
+        dataBuffer.writeInt16(
+            this.scale ? getOptionalStyleIndex(assets, this, "scaleStyle") : 0
+        );
+
+        // thickness
+        dataBuffer.writeInt16(this.thickness ? Math.round(this.thickness) : 0);
+
+        // line1Label (flow expression, 0: none)
+        dataBuffer.writeInt16(
+            assets.projectStore.projectTypeTraits.hasFlowSupport &&
+                this.line1Marker &&
+                this.line1Label
+                ? assets.getWidgetDataItemIndex(this, "line1Label")
+                : 0
+        );
     }
 }
 
@@ -3654,6 +3872,14 @@ export class InputEmbeddedWidget extends Widget {
     label?: string;
     labelPosition?: LabelPosition;
     labelStyle: Style;
+    // An icon at the left of the widget, before the label, and one at the
+    // right, after the value (a row of a settings group): a text (an
+    // expression) in the font of its style, see eez-framework ValueParts. The
+    // style is made when the icon is set.
+    icon?: string;
+    iconStyle?: Style;
+    trailingIcon?: string;
+    trailingIconStyle?: Style;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -3725,14 +3951,30 @@ export class InputEmbeddedWidget extends Widget {
             },
             makeDataPropertyInfo("label", {}, "string"),
             labelPositionPropertyInfo,
+            makeDataPropertyInfo("icon", {}, "string"),
+            makeDataPropertyInfo(
+                "trailingIcon",
+                { displayName: "Trailing icon" },
+                "string"
+            ),
             makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("labelStyle", "Label style", {
                 styleWithoutFont: true
+            }),
+            makeStylePropertyInfo("iconStyle", "Icon style", {
+                isOptional: true
+            }),
+            makeStylePropertyInfo("trailingIconStyle", "Trailing icon style", {
+                isOptional: true
             })
         ],
 
         beforeLoadHook: (object: IEezObject, jsObject: any) => {
             migrateOptionalStyleProperty(jsObject, "labelStyle");
+        },
+
+        updateObjectValueHook: (widget: InputEmbeddedWidget, values: any) => {
+            addPartStyles(widget, values, ICON_PART_STYLES);
         },
 
         defaultValue: {
@@ -3805,7 +4047,11 @@ export class InputEmbeddedWidget extends Widget {
             info: observable,
             label: observable,
             labelPosition: observable,
-            labelStyle: observable
+            labelStyle: observable,
+            icon: observable,
+            iconStyle: observable,
+            trailingIcon: observable,
+            trailingIconStyle: observable
         });
     }
 
@@ -3893,6 +4139,21 @@ export class InputEmbeddedWidget extends Widget {
             this.label ? assets.getWidgetDataItemIndex(this, "label") : 0
         );
         dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
+
+        // icon, trailingIcon (flow expressions, 0 if not set) and their
+        // styles (0 if not set: the widget style)
+        dataBuffer.writeInt16(
+            this.icon ? assets.getWidgetDataItemIndex(this, "icon") : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "iconStyle"));
+        dataBuffer.writeInt16(
+            this.trailingIcon
+                ? assets.getWidgetDataItemIndex(this, "trailingIcon")
+                : 0
+        );
+        dataBuffer.writeInt16(
+            getOptionalStyleIndex(assets, this, "trailingIconStyle")
+        );
 
         // reserved1
         dataBuffer.writeInt16(0);
@@ -4384,6 +4645,12 @@ registerClass("SliderWidget", SliderWidget);
 
 export class DropDownListWidget extends Widget {
     options: string;
+    // With a label (an expression) the widget is a row: the label at the left
+    // in the label style, the box at the right in the box width (not set:
+    // half of the widget). The style is made when the label is set.
+    label?: string;
+    labelStyle?: Style;
+    boxWidth?: number;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -4400,8 +4667,23 @@ export class DropDownListWidget extends Widget {
         properties: [
             makeDataPropertyInfo("data", {}, "integer"),
             makeDataPropertyInfo("options"),
-            makeStylePropertyInfo("style", "Default style")
+            makeDataPropertyInfo("label", {}, "string"),
+            {
+                name: "boxWidth",
+                displayName: "Box width",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup,
+                disabled: (widget: DropDownListWidget) => !widget.label
+            },
+            makeStylePropertyInfo("style", "Default style"),
+            makeStylePropertyInfo("labelStyle", "Label style", {
+                isOptional: true
+            })
         ],
+
+        updateObjectValueHook: (widget: DropDownListWidget, values: any) => {
+            addPartStyles(widget, values, [["label", "labelStyle"]]);
+        },
 
         defaultValue: {
             left: 0,
@@ -4447,13 +4729,24 @@ export class DropDownListWidget extends Widget {
         super.makeEditable();
 
         makeObservable(this, {
-            options: observable
+            options: observable,
+            label: observable,
+            labelStyle: observable,
+            boxWidth: observable
         });
     }
 
 
     buildFlowWidgetSpecific(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeInt16(assets.getWidgetDataItemIndex(this, "options"));
+
+        // label (a flow expression, 0 if not set), labelStyle (0 if not set),
+        // boxWidth (0 if not set)
+        dataBuffer.writeInt16(
+            this.label ? assets.getWidgetDataItemIndex(this, "label") : 0
+        );
+        dataBuffer.writeInt16(getOptionalStyleIndex(assets, this, "labelStyle"));
+        dataBuffer.writeInt16(this.label && this.boxWidth ? this.boxWidth : 0);
     }
 }
 
@@ -4550,7 +4843,7 @@ export class QRCodeWidget extends Widget {
         super.styleHook(style, flowContext);
 
         style.backgroundColor = ProjectEditor.getProject(this).toColorBpp(
-            this.layoutStyle.backgroundColorProperty
+            this.style.backgroundColorProperty
         );
     }
 
@@ -4588,8 +4881,8 @@ export class QRCodeWidget extends Widget {
         const svg = QRCodeWidget.toSvgString(
             qr0,
             1,
-            flowContext.projectStore.project.toColorBpp(this.layoutStyle.backgroundColorProperty),
-            flowContext.projectStore.project.toColorBpp(this.layoutStyle.colorProperty)
+            flowContext.projectStore.project.toColorBpp(this.style.backgroundColorProperty),
+            flowContext.projectStore.project.toColorBpp(this.style.colorProperty)
         );
 
         return (

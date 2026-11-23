@@ -42,6 +42,7 @@ import {
 import { Selection } from "project-editor/flow/runtime-viewer/selection";
 import classNames from "classnames";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { popupMenu } from "project-editor/core/menu";
 
 const CONF_DOUBLE_CLICK_TIME = 350; // ms
 const CONF_DOUBLE_CLICK_DISTANCE = 5; // px
@@ -441,10 +442,10 @@ export const Canvas = observer(
                     }
 
                     setTimeout(() => {
-                        const menu = context.document.createContextMenu(
+                        const menuItems = context.document.createContextMenu(
                             context.viewState.selectedObjects
                         );
-                        if (menu) {
+                        if (menuItems) {
                             if (this.mouseHandler) {
                                 this.mouseHandler.up(
                                     this.props.flowContext,
@@ -453,7 +454,7 @@ export const Canvas = observer(
                                 this.mouseHandler = undefined;
                             }
 
-                            menu.popup({});
+                            popupMenu(menuItems);
                         }
                     }, 0);
                 }

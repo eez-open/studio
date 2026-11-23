@@ -15,6 +15,7 @@ import type {
     IContextMenuContext,
     EezValueObject
 } from "project-editor/store";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -197,6 +198,11 @@ export interface PropertyInfo {
     hideInPropertyGrid?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
+    // The property has no row of its own in the property grid because the row
+    // component of another property shows it (e.g. the sections of a style).
+    // Unlike hideInPropertyGrid it is still a shown property: its
+    // modifications and its errors count.
+    shownInOtherPropertyGridRow?: (object: IEezObject) => boolean;
     readOnlyInPropertyGrid?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);
@@ -226,7 +232,7 @@ export interface PropertyInfo {
     defaultValue?: any;
     inheritable?: boolean;
     nonInheritable?: boolean;
-    propertyMenu?: (props: PropertyProps) => Electron.MenuItem[];
+    propertyMenu?: (props: PropertyProps) => IMenuItem[];
     unique?:
         | boolean
         | ((
@@ -259,6 +265,8 @@ export interface PropertyInfo {
         propertyInfo: PropertyInfo
     ) => string;
     partOfNavigation?: boolean;
+    // the project checks don't look into this object or array
+    skipChecks?: boolean;
     fileFilters?: any;
 
     flowProperty?:
@@ -309,11 +317,6 @@ export interface PropertyInfo {
     hideElementIndexInPropertyGrid?: boolean;
 
     noColSpanForArray?: boolean;
-
-    // widget property which value can be different in each page layout
-    // (see PageLayout), the values which are different from the default
-    // are stored in the Widget.layoutProperties
-    layoutSpecific?: boolean;
 }
 
 export type InheritedValue =
@@ -425,7 +428,7 @@ export interface ClassInfo {
         object: IEezObject,
         context: IContextMenuContext,
         objects: IEezObject[],
-        menuItems: Electron.MenuItem[],
+        menuItems: IMenuItem[],
         editable: boolean
     ) => void;
 
@@ -686,6 +689,9 @@ export interface IObjectClassInfo {
     displayName?: string;
     componentPaletteGroupName?: string;
     props?: any;
+    // the icon in the palette instead of the icon of the class (the text of
+    // an SVG image), see WidgetPreset
+    svgIcon?: string;
 }
 
 export function getClassesDerivedFrom(

@@ -1,21 +1,6 @@
-import { readFileSync } from "fs";
-import { resolve } from "path";
-import peggy from "peggy";
-
-import { isDev } from "eez-studio-shared/util-electron";
-import { sourceRootDir } from "eez-studio-shared/util";
-
-const expressionParserGrammar = readFileSync(
-    isDev
-        ? resolve(`${sourceRootDir()}/../resources/expression-grammar.pegjs`)
-        : process.resourcesPath! + "/expression-grammar.pegjs",
-    "utf8"
-);
-
-const peggyParser = peggy.generate(expressionParserGrammar, {
-    cache: true,
-    optimize: "speed"
-});
+// expression-parser.js is generated from resources/expression-grammar.pegjs
+// at build time (gulp task "expression-parser")
+import { parse } from "./expression-parser";
 
 const cache = new Map<string, any>();
 
@@ -27,7 +12,8 @@ export const expressionParser = {
         if (resultJSONStr != undefined) {
             result = JSON.parse(resultJSONStr);
         } else {
-            result = peggyParser.parse(expr, {
+            result = parse(expr, {
+                startRule: "Start",
                 grammarSource: expr
             });
             resultJSONStr = JSON.stringify(result);
@@ -38,7 +24,8 @@ export const expressionParser = {
     }
 };
 
-export const identifierParser = peggy.generate(expressionParserGrammar, {
-    allowedStartRules: ["Identifier"],
-    cache: true
-});
+export const identifierParser = {
+    parse(identifier: string) {
+        return parse(identifier, { startRule: "Identifier" });
+    }
+};

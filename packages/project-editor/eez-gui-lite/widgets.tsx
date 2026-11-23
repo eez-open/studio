@@ -68,9 +68,7 @@ function makeLiteStylePropertyInfo(
     displayName?: string
 ): PropertyInfo {
     return Object.assign(makeStylePropertyInfo(name, displayName), {
-        typeClass: LiteStyle,
-        // no page layouts in eez-gui-lite projects
-        layoutSpecific: false
+        typeClass: LiteStyle
     });
 }
 
