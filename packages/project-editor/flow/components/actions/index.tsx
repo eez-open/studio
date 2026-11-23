@@ -3097,6 +3097,24 @@ export class OnEventActionComponent extends ActionComponent {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// how ShowPage changes the page stack of an EEZ-GUI project (the value written
+// to the flow component data, see eez-framework show_page.cpp)
+const SHOW_PAGE_MODE_REPLACE = 0; // the page replaces the active page
+const SHOW_PAGE_MODE_PUSH = 1; // the page goes on the page stack
+const SHOW_PAGE_MODE_SET = 2; // the page stack is cleared, the page is the only one
+
+type ShowPageMode = "replace" | "push" | "set";
+
+// the mode is only for the EEZ-GUI projects, the other project types have no
+// page stack
+function isShowPageModeSupported(object: IEezObject) {
+    const project = ProjectEditor.getProject(object);
+    return (
+        project.projectTypeTraits.isFirmware &&
+        !project.projectTypeTraits.isEezGuiLite
+    );
+}
+
 export class ShowPageActionComponent extends ActionComponent {
     static classInfo = makeDerivedClassInfo(ActionComponent.classInfo, {
         flowComponentId: COMPONENT_TYPE_SHOW_PAGE_ACTION,
@@ -3109,6 +3127,20 @@ export class ShowPageActionComponent extends ActionComponent {
                 type: PropertyType.ObjectReference,
                 propertyGridGroup: specificGroup,
                 referencedObjectCollectionPath: "userPages"
+            },
+            {
+                // not set means "replace"
+                name: "mode",
+                type: PropertyType.Enum,
+                enumItems: [
+                    { id: "replace", label: "Replace" },
+                    { id: "push", label: "Push" },
+                    { id: "set", label: "Set" }
+                ],
+                enumDisallowUndefined: true,
+                propertyGridGroup: specificGroup,
+                hideInPropertyGrid: (object: ShowPageActionComponent) =>
+                    !isShowPageModeSupported(object)
             }
         ],
         check: (object: ShowPageActionComponent, messages: IMessage[]) => {
@@ -3130,13 +3162,19 @@ export class ShowPageActionComponent extends ActionComponent {
     });
 
     page: string;
+    mode: ShowPageMode | undefined;
 
     override makeEditable() {
         super.makeEditable();
 
         makeObservable(this, {
-            page: observable
+            page: observable,
+            mode: observable
         });
+    }
+
+    get effectiveMode(): ShowPageMode {
+        return isShowPageModeSupported(this) && this.mode ? this.mode : "replace";
     }
 
     getInputs() {
@@ -3166,7 +3204,12 @@ export class ShowPageActionComponent extends ActionComponent {
     getBody(flowContext: IFlowContext): React.ReactNode {
         return (
             <div className="body">
-                <pre>{this.page}</pre>
+                <pre>
+                    {this.page}
+                    {this.effectiveMode != "replace"
+                        ? ` (${this.effectiveMode})`
+                        : ""}
+                </pre>
             </div>
         );
     }
@@ -3178,6 +3221,16 @@ export class ShowPageActionComponent extends ActionComponent {
             page = assets.getPageIndex(this, "page");
         }
         dataBuffer.writeInt16(page);
+
+        // mode
+        const mode = this.effectiveMode;
+        dataBuffer.writeInt16(
+            mode == "push"
+                ? SHOW_PAGE_MODE_PUSH
+                : mode == "set"
+                ? SHOW_PAGE_MODE_SET
+                : SHOW_PAGE_MODE_REPLACE
+        );
     }
 }
 
