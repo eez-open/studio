@@ -67,7 +67,24 @@ export const BB3_MODULE_FIELD_TRACKING_ROLES = [
     { id: "i_trigger_level", label: "Current trigger level", value: 22 },
     { id: "output_enable", label: "Output enable", value: 23 },
     { id: "remote_sense", label: "Remote sense", value: 24 },
-    { id: "remote_programming", label: "Remote programming", value: 25 }
+    { id: "remote_programming", label: "Remote programming", value: 25 },
+    { id: "otp_state", label: "OTP state", value: 26 },
+    { id: "otp_level", label: "OTP level", value: 27 },
+    { id: "otp_delay", label: "OTP delay", value: 28 },
+    { id: "trigger_output_state", label: "Output state at the trigger", value: 29 },
+    { id: "trigger_on_list_stop", label: "Exit condition of the lists", value: 30 },
+    { id: "u_func_waveform", label: "Voltage function waveform", value: 31 },
+    { id: "u_func_frequency", label: "Voltage function frequency", value: 32 },
+    { id: "u_func_phase_shift", label: "Voltage function phase shift", value: 33 },
+    { id: "u_func_amplitude", label: "Voltage function amplitude", value: 34 },
+    { id: "u_func_offset", label: "Voltage function offset", value: 35 },
+    { id: "u_func_duty", label: "Voltage function duty cycle", value: 36 },
+    { id: "i_func_waveform", label: "Current function waveform", value: 37 },
+    { id: "i_func_frequency", label: "Current function frequency", value: 38 },
+    { id: "i_func_phase_shift", label: "Current function phase shift", value: 39 },
+    { id: "i_func_amplitude", label: "Current function amplitude", value: 40 },
+    { id: "i_func_offset", label: "Current function offset", value: 41 },
+    { id: "i_func_duty", label: "Current function duty cycle", value: 42 }
 ];
 
 export function getBB3ModuleFieldTrackingRoleValue(role: string | undefined) {
