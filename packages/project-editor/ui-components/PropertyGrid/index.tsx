@@ -272,7 +272,15 @@ export const PropertyGrid = observer(
                 objects = [object];
             }
 
-            let properties = getCommonProperties(objects);
+            let properties = getCommonProperties(objects).filter(
+                propertyInfo =>
+                    !(
+                        propertyInfo.shownInOtherPropertyGridRow &&
+                        objects.some(object =>
+                            propertyInfo.shownInOtherPropertyGridRow!(object)
+                        )
+                    )
+            );
 
             const groupPropertiesArray = getPropertyGroups(
                 objects[0],

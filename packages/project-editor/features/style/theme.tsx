@@ -1,4 +1,3 @@
-import { MenuItem } from "@electron/remote";
 import React from "react";
 import { observable, computed, action, makeObservable } from "mobx";
 import { observer } from "mobx-react";
@@ -49,6 +48,7 @@ import {
     isFirmwareProject
 } from "project-editor/project/project-type-traits";
 import { getColorRGB, rgbToHexString } from "eez-studio-shared/color";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -664,73 +664,68 @@ export class Color extends EezObject {
             thisObject: Color,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[],
+            menuItems: IMenuItem[],
             editable: boolean
         ) => {
-            var additionalMenuItems: Electron.MenuItem[] = [];
+            var additionalMenuItems: IMenuItem[] = [];
 
             if (editable) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Copy to other themes",
-                        click: () => {
-                            const projectStore = getProjectStore(thisObject);
+                additionalMenuItems.push({
+                    label: "Copy to other themes",
+                    click: () => {
+                        const projectStore = getProjectStore(thisObject);
 
-                            const project = getProjectWithThemes(
-                                getProjectStore(thisObject)
-                            );
+                        const project = getProjectWithThemes(
+                            getProjectStore(thisObject)
+                        );
 
-                            const selectedTheme = getSelectedTheme(project);
-                            if (!selectedTheme) {
-                                return;
-                            }
-
-                            if (isModuleColor(thisObject)) {
-                                const value = getModuleColorValue(
-                                    thisObject,
-                                    selectedTheme.name
-                                );
-                                const themeValues: {
-                                    [themeName: string]: string;
-                                } = {};
-                                for (const theme of project.themes) {
-                                    themeValues[theme.name] = value;
-                                }
-                                projectStore.updateObject(thisObject, {
-                                    themeValues
-                                });
-                                return;
-                            }
-
-                            projectStore.undoManager.setCombineCommands(true);
-
-                            const colorIndex =
-                                project.colors.indexOf(thisObject);
-                            const color = project.getThemeColor(
-                                selectedTheme.objID,
-                                thisObject.objID
-                            );
-
-                            project.themes.forEach((theme: any, i: number) => {
-                                if (theme != selectedTheme) {
-                                    const colors = theme.colors.slice();
-                                    colors[colorIndex] = color;
-                                    projectStore.updateObject(theme, {
-                                        colors
-                                    });
-                                }
-                            });
-
-                            projectStore.undoManager.setCombineCommands(false);
+                        const selectedTheme = getSelectedTheme(project);
+                        if (!selectedTheme) {
+                            return;
                         }
-                    })
-                );
 
-                additionalMenuItems.push(
-                    new MenuItem({
-                        type: "separator"
-                    })
-                );
+                        if (isModuleColor(thisObject)) {
+                            const value = getModuleColorValue(
+                                thisObject,
+                                selectedTheme.name
+                            );
+                            const themeValues: {
+                                [themeName: string]: string;
+                            } = {};
+                            for (const theme of project.themes) {
+                                themeValues[theme.name] = value;
+                            }
+                            projectStore.updateObject(thisObject, {
+                                themeValues
+                            });
+                            return;
+                        }
+
+                        projectStore.undoManager.setCombineCommands(true);
+
+                        const colorIndex = project.colors.indexOf(thisObject);
+                        const color = project.getThemeColor(
+                            selectedTheme.objID,
+                            thisObject.objID
+                        );
+
+                        project.themes.forEach((theme: any, i: number) => {
+                            if (theme != selectedTheme) {
+                                const colors = theme.colors.slice();
+                                colors[colorIndex] = color;
+                                projectStore.updateObject(theme, {
+                                    colors
+                                });
+                            }
+                        });
+
+                        projectStore.undoManager.setCombineCommands(false);
+                    }
+                });
+
+                additionalMenuItems.push({
+                    type: "separator"
+                });
             }
 
             menuItems.unshift(...additionalMenuItems);

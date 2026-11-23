@@ -99,6 +99,20 @@ export class NoteHistoryItem extends HistoryItem {
         );
     }
 
+    getClipboardText() {
+        // note is stored as a list of Quill delta operations
+        try {
+            const ops = JSON.parse(this.message);
+            if (Array.isArray(ops)) {
+                return ops
+                    .map(op => (typeof op.insert === "string" ? op.insert : ""))
+                    .join("")
+                    .trimEnd();
+            }
+        } catch (err) {}
+        return this.message;
+    }
+
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <NoteHistoryItemComponent appStore={appStore} historyItem={this} />

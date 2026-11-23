@@ -36,6 +36,11 @@ export const SCPI_COMMAND_FLAG_QUERY = 1 << 0;
 // BB3+ sends sync after the command is executed by all the target modules,
 // so they apply it (e.g. output enable) at the same time
 export const SCPI_COMMAND_FLAG_APPLY_ON_SYNC = 1 << 1;
+// BB3+ sends the command to all the power channels of the tracking group of
+// the addressed channel (OUTPut:TRACk)
+export const SCPI_COMMAND_FLAG_TRACKING_GROUP = 1 << 2;
+// BB3+ refuses the command for a power channel in a tracking group (313)
+export const SCPI_COMMAND_FLAG_TRACKING_REFUSED = 1 << 3;
 
 // BB3 module field flags in the metadata
 // BB3+ saves the field in the profile and restores it on recall
@@ -43,6 +48,10 @@ export const BB3_MODULE_FIELD_FLAG_PERSISTENT = 1 << 0;
 // the module streams the field samples (YT graphs, data logging), see
 // "Field sample streams" in eez-bb3plus-module-interface/docs/module_protocol.md
 export const BB3_MODULE_FIELD_FLAG_SAMPLED = 1 << 1;
+// BB3+ copies the field from the leader (or the follower) of a coupling to the
+// field with the same name in the other module of the pair
+export const BB3_MODULE_FIELD_FLAG_LINK_FROM_LEADER = 1 << 4;
+export const BB3_MODULE_FIELD_FLAG_LINK_FROM_FOLLOWER = 1 << 5;
 
 export const SCPI_ENUM_INDEX_NONE = 0xffff;
 

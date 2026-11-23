@@ -1,5 +1,3 @@
-import { MenuItem } from "@electron/remote";
-
 import React from "react";
 import { observable, computed, makeObservable, toJS, runInAction } from "mobx";
 import { observer } from "mobx-react";
@@ -127,6 +125,7 @@ import {
     getAdditionalFlowPropertiesForUserProperties,
     UserPropertyValues
 } from "project-editor/flow/user-property";
+import type { IMenuItem } from "project-editor/core/menu";
 
 const LIST_TYPE_VERTICAL = 1;
 const LIST_TYPE_HORIZONTAL = 2;
@@ -568,7 +567,7 @@ export class ContainerWidget extends Widget {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[],
+            menuItems: IMenuItem[],
             editable: boolean
         ): void => {
             ContainerWidget.classInfo.parentClassInfo!.extendContextMenu!(
@@ -583,10 +582,10 @@ export class ContainerWidget extends Widget {
                 const object = objects[0];
                 if (object instanceof ContainerWidget) {
                     menuItems.push(
-                        new MenuItem({
+                        {
                             type: "separator"
-                        }),
-                        new MenuItem({
+                        },
+                        {
                             label: "Remove Container",
                             click: () => {
                                 const widgets = object.removeContainer();
@@ -594,7 +593,7 @@ export class ContainerWidget extends Widget {
                                     context.selectObjects(widgets);
                                 }
                             }
-                        })
+                        }
                     );
                 }
             }
@@ -2034,7 +2033,7 @@ export class UserWidgetWidget extends Widget {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[],
+            menuItems: IMenuItem[],
             editable: boolean
         ): void => {
             UserWidgetWidget.classInfo.parentClassInfo!.extendContextMenu!(
@@ -2048,17 +2047,15 @@ export class UserWidgetWidget extends Widget {
             if (objects.length === 1) {
                 const object = objects[0];
                 if (object instanceof UserWidgetWidget) {
-                    menuItems.push(
-                        new MenuItem({
-                            label: "Replace with Container",
-                            click: () => {
-                                const widget = object.replaceWithContainer();
-                                if (widget) {
-                                    context.selectObject(widget);
-                                }
+                    menuItems.push({
+                        label: "Replace with Container",
+                        click: () => {
+                            const widget = object.replaceWithContainer();
+                            if (widget) {
+                                context.selectObject(widget);
                             }
-                        })
-                    );
+                        }
+                    });
                 }
             }
         }

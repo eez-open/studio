@@ -1056,6 +1056,10 @@ export class ScpiCommand extends EezObject {
     addressing?: ScpiAddressing;
     timeoutMs?: number;
     applyOnSync?: boolean;
+    // BB3+ tracking (OUTPut:TRACk) of the power channels: "group" sends the
+    // command to all the channels of the tracking group, "refused" refuses it
+    // for a channel in the group (313)
+    tracking?: string;
 
     constructor() {
         super();
@@ -1080,7 +1084,8 @@ export class ScpiCommand extends EezObject {
             sendsBackDataBlock: observable,
             addressing: observable,
             timeoutMs: observable,
-            applyOnSync: observable
+            applyOnSync: observable,
+            tracking: observable
         });
     }
 
@@ -1152,6 +1157,23 @@ export class ScpiCommand extends EezObject {
                 type: PropertyType.Boolean,
                 checkboxStyleSwitch: true,
                 hideInPropertyGrid: hideIfNotBB3ModuleProject
+            },
+            {
+                name: "tracking",
+                displayName: "Tracking (BB3+ tracked power channels)",
+                type: PropertyType.Enum,
+                enumItems: [
+                    {
+                        id: "group",
+                        label: "Sent to all the channels of the group"
+                    },
+                    {
+                        id: "refused",
+                        label: "Refused for a channel in the group (313)"
+                    }
+                ],
+                hideInPropertyGrid: hideIfNotBB3ModuleProject,
+                disabled: (command: ScpiCommand) => command.isQuery
             }
         ],
         check: (command: ScpiCommand, messages: IMessage[]) => {

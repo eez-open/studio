@@ -81,6 +81,26 @@ export const DisconnectedHistoryItemComponent = observer(
 );
 
 export class DisconnectedHistoryItem extends HistoryItem {
+    getClipboardText() {
+        let message: { error?: string; duration?: number } = {};
+        if (this.message) {
+            try {
+                message = JSON.parse(this.message);
+            } catch (err) {
+                message = { error: this.message };
+            }
+        }
+
+        let text = "DISCONNECTED";
+        if (message.duration !== undefined) {
+            text += " after " + formatDuration(message.duration);
+        }
+        if (message.error) {
+            text += " / " + message.error;
+        }
+        return text;
+    }
+
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <DisconnectedHistoryItemComponent

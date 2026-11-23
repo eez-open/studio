@@ -1,7 +1,6 @@
 import React from "react";
 import { observable, makeObservable, runInAction, computed, toJS } from "mobx";
 import { observer } from "mobx-react";
-import { MenuItem } from "@electron/remote";
 
 import { Rect } from "eez-studio-shared/geometry";
 
@@ -91,7 +90,13 @@ import {
 import { LVGLPropertyInfo } from "project-editor/lvgl/style-catalog";
 
 import { LVGLScreenWidget } from "./internal";
-import { FIT_HEIGHT_TO_CONTENT_ICON, FIT_WIDTH_TO_CONTENT_ICON, PERCENT_ICON, PX_ICON } from "project-editor/ui-components/icons";
+import {
+    FIT_HEIGHT_TO_CONTENT_ICON,
+    FIT_WIDTH_TO_CONTENT_ICON,
+    PERCENT_ICON,
+    PX_ICON
+} from "project-editor/ui-components/icons";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -913,120 +918,150 @@ export class LVGLWidget extends Widget {
                 inputPlaceholder: (widget: LVGLWidget) => {
                     return ProjectEditor.getProject(widget).lvglStyles.defaultStyles[widget.type] ?? undefined;
                 },
-                propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
-                    let menuItems: Electron.MenuItem[] = [];
+                propertyMenu: (props: PropertyProps): IMenuItem[] => {
+                    let menuItems: IMenuItem[] = [];
 
                     if (props.objects.length === 1) {
                         const widget = props.objects[0] as LVGLWidget;
 
                         if (widget.localStyles.hasModifications) {
-                            menuItems.push(
-                                new MenuItem({
-                                    label: "Reset All Modifications",
-                                    click: () => {
-                                        widget.localStyles.resetAllModifications();
-                                    }
-                                })
-                            );
+                            menuItems.push({
+                                label: "Reset All Modifications",
+                                click: () => {
+                                    widget.localStyles.resetAllModifications();
+                                }
+                            });
 
-                            menuItems.push(
-                                new MenuItem({
-                                    label: "Create New Style",
-                                    click: async () => {
-                                        const projectStore = getProjectStore(widget);
+                            menuItems.push({
+                                label: "Create New Style",
+                                click: async () => {
+                                    const projectStore =
+                                        getProjectStore(widget);
 
-                                        const result = await showGenericDialog({
-                                            dialogDefinition: {
-                                                title: "New Style",
-                                                fields: [
-                                                    {
-                                                        name: "name",
-                                                        type: "string",
-                                                        validators: [
-                                                            validators.required,
-                                                            validators.unique(
-                                                                {},
-                                                                projectStore.project.lvglStyles.allStyles
-                                                            )
-                                                        ]
-                                                    }
-                                                ]
-                                            },
-                                            values: {}
-                                        });
-
-                                        projectStore.undoManager.setCombineCommands(true);
-
-                                        let styleParent = projectStore.project.lvglStyles.styles;
-
-                                        if (widget.useStyle) {
-                                            const lvglStyle = findLvglStyle(projectStore.project, widget.useStyle);
-
-                                            if (lvglStyle && lvglStyle.forWidgetType == widget.type) {
-                                                styleParent = lvglStyle.childStyles;
-                                            }
-                                        }
-
-                                        projectStore.addObject(
-                                            styleParent,
-                                            createObject<LVGLStyle>(
-                                                projectStore,
+                                    const result = await showGenericDialog({
+                                        dialogDefinition: {
+                                            title: "New Style",
+                                            fields: [
                                                 {
-                                                    name: result.values.name,
-                                                    forWidgetType: widget.type,
-                                                    definition: createObject<LVGLStylesDefinition>(
+                                                    name: "name",
+                                                    type: "string",
+                                                    validators: [
+                                                        validators.required,
+                                                        validators.unique(
+                                                            {},
+                                                            projectStore.project
+                                                                .lvglStyles
+                                                                .allStyles
+                                                        )
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        values: {}
+                                    });
+
+                                    projectStore.undoManager.setCombineCommands(
+                                        true
+                                    );
+
+                                    let styleParent =
+                                        projectStore.project.lvglStyles.styles;
+
+                                    if (widget.useStyle) {
+                                        const lvglStyle = findLvglStyle(
+                                            projectStore.project,
+                                            widget.useStyle
+                                        );
+
+                                        if (
+                                            lvglStyle &&
+                                            lvglStyle.forWidgetType ==
+                                                widget.type
+                                        ) {
+                                            styleParent = lvglStyle.childStyles;
+                                        }
+                                    }
+
+                                    projectStore.addObject(
+                                        styleParent,
+                                        createObject<LVGLStyle>(
+                                            projectStore,
+                                            {
+                                                name: result.values.name,
+                                                forWidgetType: widget.type,
+                                                definition:
+                                                    createObject<LVGLStylesDefinition>(
                                                         projectStore,
                                                         {
                                                             definition: toJS(widget.localStyles.definition)
                                                         },
                                                         LVGLStylesDefinition
                                                     )
-                                                },
-                                                LVGLStyle
-                                            )
-                                        );
+                                            },
+                                            LVGLStyle
+                                        )
+                                    );
 
-                                        projectStore.updateObject(widget, {
-                                            useStyle: result.values.name
-                                        });
+                                    projectStore.updateObject(widget, {
+                                        useStyle: result.values.name
+                                    });
 
-                                        projectStore.updateObject(widget.localStyles, {
+                                    projectStore.updateObject(
+                                        widget.localStyles,
+                                        {
                                             definition: undefined
-                                        });
+                                        }
+                                    );
 
-                                        projectStore.undoManager.setCombineCommands(false);
-                                    }
-                                })
-                            );
+                                    projectStore.undoManager.setCombineCommands(
+                                        false
+                                    );
+                                }
+                            });
 
                             if (widget.useStyle) {
-                                menuItems.push(
-                                    new MenuItem({
-                                        label: "Update Style",
-                                        click: async () => {
-                                            const projectStore = getProjectStore(widget);
+                                menuItems.push({
+                                    label: "Update Style",
+                                    click: async () => {
+                                        const projectStore =
+                                            getProjectStore(widget);
 
-                                            const lvglStyle = findLvglStyle(projectStore.project, widget.useStyle);
+                                        const lvglStyle = findLvglStyle(
+                                            projectStore.project,
+                                            widget.useStyle
+                                        );
 
-                                            if (lvglStyle) {
-                                                projectStore.undoManager.setCombineCommands(true);
+                                        if (lvglStyle) {
+                                            projectStore.undoManager.setCombineCommands(
+                                                true
+                                            );
 
-                                                projectStore.updateObject(lvglStyle.definition, {
-                                                    definition: LVGLStylesDefinition.combineDefinitions(
-                                                        lvglStyle.definition.definition,
-                                                        widget.localStyles.definition
-                                                    )
-                                                });
+                                            projectStore.updateObject(
+                                                lvglStyle.definition,
+                                                {
+                                                    definition:
+                                                        LVGLStylesDefinition.combineDefinitions(
+                                                            lvglStyle.definition
+                                                                .definition,
+                                                            widget.localStyles
+                                                                .definition
+                                                        )
+                                                }
+                                            );
 
-                                                projectStore.updateObject(widget.localStyles, {
+                                            projectStore.updateObject(
+                                                widget.localStyles,
+                                                {
                                                     definition: undefined
-                                                });
+                                                }
+                                            );
 
-                                                projectStore.undoManager.setCombineCommands(false);
-                                            }
+                                            projectStore.undoManager.setCombineCommands(
+                                                false
+                                            );
                                         }
-                                    })
-                                );
+                                    }
+                                });
                             }
                         }
                     }

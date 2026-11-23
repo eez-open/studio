@@ -1,6 +1,5 @@
 import { computed, makeObservable, runInAction } from "mobx";
 import { intersection } from "lodash-es";
-import { MenuItem } from "@electron/remote";
 
 import { type Point, type Rect } from "eez-studio-shared/geometry";
 import type { IDocument } from "project-editor/flow/flow-interfaces";
@@ -31,6 +30,7 @@ import {
     IsTrueActionComponent,
     LogActionComponent
 } from "../components/actions";
+import type { IMenuItem } from "project-editor/core/menu";
 
 export class FlowDocument implements IDocument {
     constructor(
@@ -178,7 +178,7 @@ export class FlowDocument implements IDocument {
     ) {
         const flow = this.flow.object as Flow;
 
-        let additionalMenuItems: Electron.MenuItem[] = [];
+        let additionalMenuItems: IMenuItem[] = [];
 
         // Add Group/Ungroup menu items for action components
         const selectedActionComponents = objects.filter(
@@ -222,31 +222,27 @@ export class FlowDocument implements IDocument {
             let addToGroupShown = false;
             if (selectedGroups.length === 1 && componentsNotInGroup.length >= 1) {
                 // Add to explicitly selected group
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Add to Group",
-                        click: async () => {
-                            this.addComponentsToGroup(
-                                selectedGroups[0].object as ComponentGroup,
-                                componentsNotInGroup
-                            );
-                        }
-                    })
-                );
+                additionalMenuItems.push({
+                    label: "Add to Group",
+                    click: async () => {
+                        this.addComponentsToGroup(
+                            selectedGroups[0].object as ComponentGroup,
+                            componentsNotInGroup
+                        );
+                    }
+                });
                 addToGroupShown = true;
             } else if (selectedGroups.length === 0 && commonGroup && componentsNotInGroup.length >= 1) {
                 // Add to the common group that some selected components belong to
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Add to Group",
-                        click: async () => {
-                            this.addComponentsToGroup(
-                                commonGroup!,
-                                componentsNotInGroup
-                            );
-                        }
-                    })
-                );
+                additionalMenuItems.push({
+                    label: "Add to Group",
+                    click: async () => {
+                        this.addComponentsToGroup(
+                            commonGroup!,
+                            componentsNotInGroup
+                        );
+                    }
+                });
                 addToGroupShown = true;
             }
 
@@ -254,152 +250,136 @@ export class FlowDocument implements IDocument {
             // - There are ungrouped components AND
             // - "Add to Group" is not shown (no mixed selection with grouped components)
             if (componentsNotInGroup.length >= 1 && !addToGroupShown) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Group",
-                        click: async () => {
-                            this.groupSelectedComponents(componentsNotInGroup);
-                        }
-                    })
-                );
+                additionalMenuItems.push({
+                    label: "Group",
+                    click: async () => {
+                        this.groupSelectedComponents(componentsNotInGroup);
+                    }
+                });
             }
 
             if (componentsInGroup.length > 0) {
                 // Show Ungroup option when there are components in groups
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Remove from Group",
-                        click: async () => {
-                            this.projectStore.undoManager.setCombineCommands(true);
-                            for (const obj of componentsInGroup) {
-                                this.ungroupComponent((obj.object as EezObject).objID);
-                            }
-                            this.projectStore.undoManager.setCombineCommands(false);
+                additionalMenuItems.push({
+                    label: "Remove from Group",
+                    click: async () => {
+                        this.projectStore.undoManager.setCombineCommands(true);
+                        for (const obj of componentsInGroup) {
+                            this.ungroupComponent(
+                                (obj.object as EezObject).objID
+                            );
                         }
-                    })
-                );
+                        this.projectStore.undoManager.setCombineCommands(false);
+                    }
+                });
             } else if (selectedGroups.length > 0) {
                 // Show Ungroup All option when groups are selected
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Ungroup All",
-                        click: async () => {
-                            this.projectStore.undoManager.setCombineCommands(true);
-                            for (const group of selectedGroups) {
-                                this.projectStore.deleteObject(
-                                    group.object
-                                );
-                            }
-                            this.projectStore.undoManager.setCombineCommands(false);
+                additionalMenuItems.push({
+                    label: "Ungroup All",
+                    click: async () => {
+                        this.projectStore.undoManager.setCombineCommands(true);
+                        for (const group of selectedGroups) {
+                            this.projectStore.deleteObject(group.object);
                         }
-                    })
-                );
+                        this.projectStore.undoManager.setCombineCommands(false);
+                    }
+                });
             }
 
             // Add Merge Groups menu item when multiple groups are selected
             if (selectedGroups.length >= 2) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Merge Groups",
-                        click: async () => {
-                            this.mergeGroups(
-                                selectedGroups.map(
-                                    obj => obj.object as ComponentGroup
-                                )
-                            );
-                        }
-                    })
-                );
+                additionalMenuItems.push({
+                    label: "Merge Groups",
+                    click: async () => {
+                        this.mergeGroups(
+                            selectedGroups.map(
+                                obj => obj.object as ComponentGroup
+                            )
+                        );
+                    }
+                });
             }
         }
 
         if (additionalMenuItems.length > 0) {
-            additionalMenuItems.push(
-                new MenuItem({
-                    type: "separator"
-                })
-            );
+            additionalMenuItems.push({
+                type: "separator"
+            });
         }
 
         const isPage = flow instanceof ProjectEditor.PageClass;
         if (isPage && objects.length == 0) {
-            additionalMenuItems.push(
-                new MenuItem({
-                    label: "Center View",
-                    click: async () => {
-                        this.flowContext.viewState.centerView();
-                    }
-                })
-            );
+            additionalMenuItems.push({
+                label: "Center View",
+                click: async () => {
+                    this.flowContext.viewState.centerView();
+                }
+            });
 
-            additionalMenuItems.push(
-                new MenuItem({
-                    label: "Center View on All Pages",
-                    click: async () => {
-                        this.flowContext.viewState.centerView();
+            additionalMenuItems.push({
+                label: "Center View on All Pages",
+                click: async () => {
+                    this.flowContext.viewState.centerView();
 
-                        for (const page of this.projectStore.project.pages) {
-                            if (page != this.flow.object) {
-                                const editor =
-                                    this.projectStore.editorsStore.getEditorByObject(
-                                        page
+                    for (const page of this.projectStore.project.pages) {
+                        if (page != this.flow.object) {
+                            const editor =
+                                this.projectStore.editorsStore.getEditorByObject(
+                                    page
+                                );
+                            if (editor?.state) {
+                                const pageTabState =
+                                    editor.state as PageTabState;
+
+                                pageTabState.centerView();
+                            } else {
+                                let uiState =
+                                    this.projectStore.uiStateStore.getObjectUIState(
+                                        page,
+                                        "flow-state"
                                     );
-                                if (editor?.state) {
-                                    const pageTabState =
-                                        editor.state as PageTabState;
 
-                                    pageTabState.centerView();
-                                } else {
-                                    let uiState =
-                                        this.projectStore.uiStateStore.getObjectUIState(
-                                            page,
-                                            "flow-state"
-                                        );
-
-                                    if (!uiState) {
-                                        uiState = {};
-                                    }
-
-                                    uiState.transform = {
-                                        translate: {
-                                            x: this.flowContext.viewState
-                                                .transform.translate.x,
-                                            y: this.flowContext.viewState
-                                                .transform.translate.y
-                                        },
-                                        scale:
-                                            uiState.transform?.scale ??
-                                            this.flowContext.viewState.transform
-                                                .scale
-                                    };
-
-                                    runInAction(() => {
-                                        this.projectStore.uiStateStore.updateObjectUIState(
-                                            page,
-                                            "flow-state",
-                                            uiState
-                                        );
-                                    });
+                                if (!uiState) {
+                                    uiState = {};
                                 }
+
+                                uiState.transform = {
+                                    translate: {
+                                        x: this.flowContext.viewState.transform
+                                            .translate.x,
+                                        y: this.flowContext.viewState.transform
+                                            .translate.y
+                                    },
+                                    scale:
+                                        uiState.transform?.scale ??
+                                        this.flowContext.viewState.transform
+                                            .scale
+                                };
+
+                                runInAction(() => {
+                                    this.projectStore.uiStateStore.updateObjectUIState(
+                                        page,
+                                        "flow-state",
+                                        uiState
+                                    );
+                                });
                             }
                         }
                     }
-                })
-            );
+                }
+            });
 
             if (!this.projectStore.uiStateStore.globalFlowZoom) {
-                additionalMenuItems.push(
-                    new MenuItem({
-                        label: "Set the Same Zoom for All Pages",
-                        click: async () => {
-                            for (const page of this.projectStore.project
-                                .pages) {
-                                if (page != this.flow.object) {
-                                    let uiState =
-                                        this.projectStore.uiStateStore.getObjectUIState(
-                                            page,
-                                            "flow-state"
-                                        );
+                additionalMenuItems.push({
+                    label: "Set the Same Zoom for All Pages",
+                    click: async () => {
+                        for (const page of this.projectStore.project.pages) {
+                            if (page != this.flow.object) {
+                                let uiState =
+                                    this.projectStore.uiStateStore.getObjectUIState(
+                                        page,
+                                        "flow-state"
+                                    );
 
                                     if (!uiState) {
                                         uiState = {};
@@ -416,18 +396,17 @@ export class FlowDocument implements IDocument {
                                             .transform.scale
                                     };
 
-                                    runInAction(() => {
-                                        this.projectStore.uiStateStore.updateObjectUIState(
-                                            page,
-                                            "flow-state",
-                                            uiState
-                                        );
-                                    });
-                                }
+                                runInAction(() => {
+                                    this.projectStore.uiStateStore.updateObjectUIState(
+                                        page,
+                                        "flow-state",
+                                        uiState
+                                    );
+                                });
                             }
                         }
-                    })
-                );
+                    }
+                });
             }
         }
 

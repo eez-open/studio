@@ -64,7 +64,6 @@ import {
 } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
-import { MenuItem } from "@electron/remote";
 import type { ProjectEditorFeature } from "project-editor/store/features";
 import {
     makeExpressionProperty,
@@ -73,56 +72,50 @@ import {
 import { checkExpression } from "project-editor/flow/expression";
 import type { IFlowContext } from "project-editor/flow/flow-interfaces";
 import { ColorFormat } from "./color-format";
+import { StyleSectionUI, STYLE_SECTIONS } from "./StyleSectionsUI";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const propertyMenu = (props: PropertyProps): Electron.MenuItem[] => {
-    let menuItems: Electron.MenuItem[] = [];
+const propertyMenu = (props: PropertyProps): IMenuItem[] => {
+    let menuItems: IMenuItem[] = [];
 
     if (isDashboardProject(props.objects[0])) {
         const cssAttributeName = props.propertyInfo.cssAttributeName;
         if (cssAttributeName) {
-            menuItems.push(
-                new MenuItem({
-                    label: "Help",
-                    click: () => {
-                        openCssHelpPage(cssAttributeName);
-                    }
-                })
-            );
+            menuItems.push({
+                label: "Help",
+                click: () => {
+                    openCssHelpPage(cssAttributeName);
+                }
+            });
         }
     }
 
     return menuItems;
 };
 
-const backgroundColorPropertyMenu = (
-    props: PropertyProps
-): Electron.MenuItem[] => {
-    let menuItems: Electron.MenuItem[] = [];
+const backgroundColorPropertyMenu = (props: PropertyProps): IMenuItem[] => {
+    let menuItems: IMenuItem[] = [];
 
-    menuItems.push(
-        new MenuItem({
-            label: "Transparent",
-            click: () => {
-                props.objects.forEach(object =>
-                    updateObject(object, {
-                        [props.propertyInfo.name]: "transparent"
-                    })
-                );
-            }
-        })
-    );
+    menuItems.push({
+        label: "Transparent",
+        click: () => {
+            props.objects.forEach(object =>
+                updateObject(object, {
+                    [props.propertyInfo.name]: "transparent"
+                })
+            );
+        }
+    });
 
     if (isDashboardProject(props.objects[0])) {
-        menuItems.push(
-            new MenuItem({
-                label: "Help",
-                click: () => {
-                    openCssHelpPage("background-color");
-                }
-            })
-        );
+        menuItems.push({
+            label: "Help",
+            click: () => {
+                openCssHelpPage("background-color");
+            }
+        });
     }
 
     return menuItems;
@@ -435,57 +428,51 @@ const useStyleProperty: PropertyInfo = {
         !isWidgetParentOfStyle(style) &&
         !style.state &&
         !style.variant,
-    propertyMenu: (props: PropertyProps): Electron.MenuItem[] => {
+    propertyMenu: (props: PropertyProps): IMenuItem[] => {
         const projectStore = getProjectStore(props.objects[0]);
 
-        let menuItems: Electron.MenuItem[] = [];
+        let menuItems: IMenuItem[] = [];
 
         if (isAnyPropertyModified(props)) {
-            menuItems.push(
-                new MenuItem({
-                    label: "Reset All Modifications",
-                    click: () => {
-                        const propertyValues: any = {};
-                        properties.forEach(propertyInfo => {
-                            if (propertyInfo.inheritable) {
-                                propertyValues[propertyInfo.name] = undefined;
-                            }
-                        });
-                        props.updateObject(propertyValues);
-                    }
-                })
-            );
+            menuItems.push({
+                label: "Reset All Modifications",
+                click: () => {
+                    const propertyValues: any = {};
+                    properties.forEach(propertyInfo => {
+                        if (propertyInfo.inheritable) {
+                            propertyValues[propertyInfo.name] = undefined;
+                        }
+                    });
+                    props.updateObject(propertyValues);
+                }
+            });
 
             if (props.objects.length === 1) {
                 const object = props.objects[0] as Style;
 
-                menuItems.push(
-                    new MenuItem({
-                        label: "Create New Style",
-                        click: () => {
-                            return showGenericDialog({
-                                dialogDefinition: {
-                                    title: "New Style",
-                                    fields: [
-                                        {
-                                            name: "name",
-                                            type: "string",
-                                            validators: [
-                                                validators.required,
-                                                validators.unique(
-                                                    {},
-                                                    projectStore.project
-                                                        .allStyles
-                                                )
-                                            ]
-                                        }
-                                    ]
-                                },
-                                values: {}
-                            }).then(result => {
-                                projectStore.undoManager.setCombineCommands(
-                                    true
-                                );
+                menuItems.push({
+                    label: "Create New Style",
+                    click: () => {
+                        return showGenericDialog({
+                            dialogDefinition: {
+                                title: "New Style",
+                                fields: [
+                                    {
+                                        name: "name",
+                                        type: "string",
+                                        validators: [
+                                            validators.required,
+                                            validators.unique(
+                                                {},
+                                                projectStore.project.allStyles
+                                            )
+                                        ]
+                                    }
+                                ]
+                            },
+                            values: {}
+                        }).then(result => {
+                            projectStore.undoManager.setCombineCommands(true);
 
                                 const stylePropertyValues: any = {};
                                 const objectPropertyValues: any = {};
@@ -494,99 +481,83 @@ const useStyleProperty: PropertyInfo = {
                                 // complete (all the values the style has)
                                 const isComplete = !isNotEezGuiStyle(object);
 
-                                properties.forEach(propertyInfo => {
-                                    stylePropertyValues[propertyInfo.name] =
-                                        isComplete && propertyInfo.inheritable
-                                            ? getStyleProperty(
-                                                  object,
-                                                  propertyInfo.name,
-                                                  false
-                                              )
-                                            : isComplete &&
-                                                propertyInfo == useStyleProperty
-                                              ? undefined
-                                              : getProperty(
-                                                    object,
-                                                    propertyInfo.name
-                                                );
-
-                                    objectPropertyValues[propertyInfo.name] =
-                                        undefined;
-                                });
-
-                                stylePropertyValues.name = result.values.name;
-
-                                objectPropertyValues.useStyle =
-                                    result.values.name;
-
-                                projectStore.addObject(
-                                    projectStore.project.styles,
-                                    createObject<Style>(
-                                        projectStore,
-                                        stylePropertyValues,
-                                        Style
-                                    )
-                                );
-                                projectStore.updateObject(
-                                    object,
-                                    objectPropertyValues
-                                );
-
-                                projectStore.undoManager.setCombineCommands(
-                                    false
-                                );
-                            });
-                        }
-                    })
-                );
-
-                const style = (props.objects[0] as Style).parentStyle;
-                if (style) {
-                    menuItems.push(
-                        new MenuItem({
-                            label: "Update Style",
-                            click: () => {
-                                projectStore.undoManager.setCombineCommands(
-                                    true
-                                );
-
-                                const stylePropertyValues: any = {};
-                                const objectPropertyValues: any = {};
-                                properties.forEach(propertyInfo => {
-                                    if (
-                                        propertyInfo.inheritable &&
-                                        getProperty(
-                                            object,
-                                            propertyInfo.name
-                                        ) !== undefined
-                                    ) {
-                                        stylePropertyValues[propertyInfo.name] =
-                                            getProperty(
+                            properties.forEach(propertyInfo => {
+                                stylePropertyValues[propertyInfo.name] =
+                                    isComplete && propertyInfo.inheritable
+                                        ? getStyleProperty(
+                                              object,
+                                              propertyInfo.name,
+                                              false
+                                          )
+                                        : isComplete &&
+                                            propertyInfo == useStyleProperty
+                                          ? undefined
+                                          : getProperty(
                                                 object,
                                                 propertyInfo.name
                                             );
 
-                                        objectPropertyValues[
-                                            propertyInfo.name
-                                        ] = undefined;
-                                    }
-                                });
+                                objectPropertyValues[propertyInfo.name] =
+                                    undefined;
+                            });
 
-                                projectStore.updateObject(
-                                    style,
-                                    stylePropertyValues
-                                );
-                                projectStore.updateObject(
-                                    object,
-                                    objectPropertyValues
-                                );
+                            stylePropertyValues.name = result.values.name;
 
-                                projectStore.undoManager.setCombineCommands(
-                                    false
-                                );
-                            }
-                        })
-                    );
+                            objectPropertyValues.useStyle = result.values.name;
+
+                            projectStore.addObject(
+                                projectStore.project.styles,
+                                createObject<Style>(
+                                    projectStore,
+                                    stylePropertyValues,
+                                    Style
+                                )
+                            );
+                            projectStore.updateObject(
+                                object,
+                                objectPropertyValues
+                            );
+
+                            projectStore.undoManager.setCombineCommands(false);
+                        });
+                    }
+                });
+
+                const style = (props.objects[0] as Style).parentStyle;
+                if (style) {
+                    menuItems.push({
+                        label: "Update Style",
+                        click: () => {
+                            projectStore.undoManager.setCombineCommands(true);
+
+                            const stylePropertyValues: any = {};
+                            const objectPropertyValues: any = {};
+                            properties.forEach(propertyInfo => {
+                                if (
+                                    propertyInfo.inheritable &&
+                                    getProperty(object, propertyInfo.name) !==
+                                        undefined
+                                ) {
+                                    stylePropertyValues[propertyInfo.name] =
+                                        getProperty(object, propertyInfo.name);
+
+                                    objectPropertyValues[propertyInfo.name] =
+                                        undefined;
+                                }
+                            });
+
+                            projectStore.updateObject(
+                                style,
+                                stylePropertyValues
+                            );
+                            projectStore.updateObject(
+                                object,
+                                objectPropertyValues
+                            );
+
+                            projectStore.undoManager.setCombineCommands(false);
+                        }
+                    });
                 }
             }
         }
@@ -615,6 +586,7 @@ export const conditionalStylesProperty: PropertyInfo = {
 
 const fontProperty: PropertyInfo = {
     name: "font",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "fonts",
     defaultValue: undefined,
@@ -716,6 +688,7 @@ const fontStyleProperty: PropertyInfo = {
 
 const alignHorizontalProperty: PropertyInfo = {
     name: "alignHorizontal",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Enum,
     enumItems: [
         {
@@ -734,6 +707,7 @@ const alignHorizontalProperty: PropertyInfo = {
 
 const alignVerticalProperty: PropertyInfo = {
     name: "alignVertical",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Enum,
     enumItems: [
         {
@@ -776,6 +750,7 @@ const directionProperty: PropertyInfo = {
 
 const colorProperty: PropertyInfo = {
     name: "color",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
     defaultValue: "#ffffff",
@@ -786,6 +761,7 @@ const colorProperty: PropertyInfo = {
 
 const backgroundColorProperty: PropertyInfo = {
     name: "backgroundColor",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
     defaultValue: "#000000",
@@ -796,6 +772,7 @@ const backgroundColorProperty: PropertyInfo = {
 
 const backgroundImageProperty: PropertyInfo = {
     name: "backgroundImage",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ObjectReference,
     referencedObjectCollectionPath: "bitmaps",
     inheritable: true,
@@ -850,6 +827,7 @@ const focusBackgroundColorProperty: PropertyInfo = {
 
 const borderSizeProperty: PropertyInfo = {
     name: "borderSize",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.String,
     defaultValue: "0",
     inheritable: true,
@@ -859,6 +837,7 @@ const borderSizeProperty: PropertyInfo = {
 
 const borderRadiusProperty: PropertyInfo = {
     name: "borderRadius",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.String,
     defaultValue: "0",
     inheritable: true,
@@ -868,6 +847,7 @@ const borderRadiusProperty: PropertyInfo = {
 
 const borderColorProperty: PropertyInfo = {
     name: "borderColor",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
     defaultValue: "#000000",
@@ -920,6 +900,7 @@ const borderStyleProperty: PropertyInfo = {
 
 const paddingProperty: PropertyInfo = {
     name: "padding",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.String,
     defaultValue: "0",
     cssAttributeName: "padding",
@@ -929,6 +910,7 @@ const paddingProperty: PropertyInfo = {
 
 const opacityProperty: PropertyInfo = {
     name: "opacity",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Number,
     defaultValue: "255",
     cssAttributeName: "opacity",
@@ -948,6 +930,7 @@ const boxShadowProperty: PropertyInfo = {
 
 const blinkProperty: PropertyInfo = {
     name: "blink",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: true,
@@ -965,6 +948,24 @@ function isNotEezGuiStyle(object: IEezObject) {
 function isNotOldStateColorStyle(object: IEezObject) {
     return isEezGuiProject(object);
 }
+
+// In EEZ-GUI projects the properties of a style are shown in the sections
+// (STYLE_SECTIONS), not each in its own property grid row.
+function isInStyleSection(object: IEezObject) {
+    return isEezGuiProject(object);
+}
+
+const styleSectionProperties: PropertyInfo[] = Object.keys(STYLE_SECTIONS).map(
+    name => ({
+        name,
+        type: PropertyType.Any,
+        computed: true,
+        skipSearch: true,
+        propertyGridRowComponent: StyleSectionUI,
+        hideInPropertyGrid: isNotEezGuiStyle,
+        hideInDocumentation: "all"
+    })
+);
 
 // the states of a widget with their own style, in the order of
 // Style::stateStyles in the framework (StyleState)
@@ -1007,6 +1008,7 @@ const variantProperty: PropertyInfo = {
 
 const letterSpacingProperty: PropertyInfo = {
     name: "letterSpacing",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Letter spacing",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1016,6 +1018,7 @@ const letterSpacingProperty: PropertyInfo = {
 
 const lineHeightProperty: PropertyInfo = {
     name: "lineHeight",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Line height",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1025,6 +1028,7 @@ const lineHeightProperty: PropertyInfo = {
 
 const ellipsisProperty: PropertyInfo = {
     name: "ellipsis",
+    shownInOtherPropertyGridRow: isInStyleSection,
     type: PropertyType.Boolean,
     defaultValue: false,
     inheritable: true,
@@ -1034,6 +1038,7 @@ const ellipsisProperty: PropertyInfo = {
 
 const focusRingWidthProperty: PropertyInfo = {
     name: "focusRingWidth",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Focus ring width",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1043,6 +1048,7 @@ const focusRingWidthProperty: PropertyInfo = {
 
 const focusRingOffsetProperty: PropertyInfo = {
     name: "focusRingOffset",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Focus ring offset",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1052,6 +1058,7 @@ const focusRingOffsetProperty: PropertyInfo = {
 
 const focusRingColorProperty: PropertyInfo = {
     name: "focusRingColor",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Focus ring color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
@@ -1063,6 +1070,7 @@ const focusRingColorProperty: PropertyInfo = {
 
 const shadowOffsetXProperty: PropertyInfo = {
     name: "shadowOffsetX",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow offset X",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1072,6 +1080,7 @@ const shadowOffsetXProperty: PropertyInfo = {
 
 const shadowOffsetYProperty: PropertyInfo = {
     name: "shadowOffsetY",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow offset Y",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1081,6 +1090,7 @@ const shadowOffsetYProperty: PropertyInfo = {
 
 const shadowBlurProperty: PropertyInfo = {
     name: "shadowBlur",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow blur",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1090,6 +1100,7 @@ const shadowBlurProperty: PropertyInfo = {
 
 const shadowSpreadProperty: PropertyInfo = {
     name: "shadowSpread",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow spread",
     type: PropertyType.Number,
     defaultValue: 0,
@@ -1099,6 +1110,7 @@ const shadowSpreadProperty: PropertyInfo = {
 
 const shadowColorProperty: PropertyInfo = {
     name: "shadowColor",
+    shownInOtherPropertyGridRow: isInStyleSection,
     displayName: "Shadow color",
     type: PropertyType.ThemedColor,
     referencedObjectCollectionPath: "colors",
@@ -1188,6 +1200,7 @@ const properties = [
     stateProperty,
     variantProperty,
     useStyleProperty,
+    ...styleSectionProperties,
     conditionalStylesProperty,
     fontProperty,
     fontFamilyProperty,

@@ -3,8 +3,6 @@ import { observable, makeObservable, computed } from "mobx";
 
 import QRC from "../qrcodegen";
 
-import { MenuItem } from "@electron/remote";
-
 import {
     IEezObject,
     registerClass,
@@ -146,6 +144,7 @@ const BAR_GRAPH_ORIENTATION_BOTTOM_TOP = 4;
 const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
 import { isArray } from "eez-studio-shared/util";
+import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -611,7 +610,7 @@ export class TextWidget extends Widget {
             thisObject: Widget,
             context: IContextMenuContext,
             objects: IEezObject[],
-            menuItems: Electron.MenuItem[],
+            menuItems: IMenuItem[],
             editable: boolean
         ): void => {
             TextWidget.classInfo.parentClassInfo!.extendContextMenu!(
@@ -626,26 +625,23 @@ export class TextWidget extends Widget {
                 const object = objects[0];
                 if (object instanceof TextWidget) {
                     menuItems.push(
-                        new MenuItem({
+                        {
                             type: "separator"
-                        }),
+                        },
                         // the other names of this widget: nothing is lost,
                         // the properties are the same
                         ...TEXT_WIDGET_NAMES.filter(
                             name => name != getTextWidgetName(object)
-                        ).map(
-                            name =>
-                                new MenuItem({
-                                    label: `Change to ${name}`,
-                                    click: () => {
-                                        const widget = object.changeTo(name);
-                                        if (widget) {
-                                            context.selectObject(widget);
-                                        }
-                                    }
-                                })
-                        ),
-                        new MenuItem({
+                        ).map(name => ({
+                            label: `Change to ${name}`,
+                            click: () => {
+                                const widget = object.changeTo(name);
+                                if (widget) {
+                                    context.selectObject(widget);
+                                }
+                            }
+                        })),
+                        {
                             label: "Convert to MultilineText",
                             click: () => {
                                 const widget = object.convertToMultilineText();
@@ -653,7 +649,7 @@ export class TextWidget extends Widget {
                                     context.selectObject(widget);
                                 }
                             }
-                        })
+                        }
                     );
                 }
             }
@@ -1951,6 +1947,18 @@ export class BarGraphWidget extends Widget {
     min: string;
     max: string;
     refreshRate: string;
+    // The bar as a track with rounded corners (the radius of the style, inside
+    // its padding) when one of these is set: ticks with numbers beside the bar
+    // (the style is made when the scale is turned on), the width of a vertical
+    // or height of a horizontal bar (0: all the room), a triangle pointing at
+    // threshold 1 with a label beside it, the part between the bar and
+    // threshold 1 in the dimmed bar color.
+    scale?: boolean;
+    scaleStyle?: Style;
+    thickness?: number;
+    line1Marker?: boolean;
+    line1Label?: string;
+    zone?: boolean;
 
     static classInfo = makeDerivedClassInfo(Widget.classInfo, {
         enabledInComponentPalette: (projectType: ProjectType) =>
@@ -1999,11 +2007,52 @@ export class BarGraphWidget extends Widget {
             makeDataPropertyInfo("refreshRate", {
                 disabled: hasNotFlowSupport
             }),
+            {
+                name: "scale",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
+            },
+            {
+                name: "thickness",
+                type: PropertyType.Number,
+                propertyGridGroup: specificGroup
+            },
+            {
+                name: "line1Marker",
+                displayName: "Threshold1 marker",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
+            },
+            makeDataPropertyInfo(
+                "line1Label",
+                {
+                    displayName: "Threshold1 label",
+                    disabled: (widget: BarGraphWidget) =>
+                        hasNotFlowSupport(widget) || !widget.line1Marker
+                },
+                "string"
+            ),
+            {
+                name: "zone",
+                displayName: "Zone to threshold1",
+                type: PropertyType.Boolean,
+                propertyGridGroup: specificGroup,
+                checkboxStyleSwitch: true
+            },
             makeStylePropertyInfo("style", "Default style"),
             makeStylePropertyInfo("textStyle"),
             makeStylePropertyInfo("line1Style", "Threshold1 style"),
-            makeStylePropertyInfo("line2Style", "Threshold2 style")
+            makeStylePropertyInfo("line2Style", "Threshold2 style"),
+            makeStylePropertyInfo("scaleStyle", "Scale style", {
+                isOptional: true
+            })
         ],
+
+        updateObjectValueHook: (widget: BarGraphWidget, values: any) => {
+            addPartStyles(widget, values, [["scale", "scaleStyle"]]);
+        },
 
         beforeLoadHook: (
             object: IEezObject,
@@ -2081,7 +2130,13 @@ export class BarGraphWidget extends Widget {
             line2Style: observable,
             min: observable,
             max: observable,
-            refreshRate: observable
+            refreshRate: observable,
+            scale: observable,
+            scaleStyle: observable,
+            thickness: observable,
+            line1Marker: observable,
+            line1Label: observable,
+            zone: observable
         });
     }
 
@@ -2137,6 +2192,35 @@ export class BarGraphWidget extends Widget {
         }
 
         dataBuffer.writeUint8(orientation);
+
+        // flags
+        const BAR_GRAPH_FLAG_LINE1_MARKER = 1 << 0;
+        const BAR_GRAPH_FLAG_ZONE = 1 << 1;
+        let flags = 0;
+        if (this.line1Marker) {
+            flags |= BAR_GRAPH_FLAG_LINE1_MARKER;
+        }
+        if (this.zone) {
+            flags |= BAR_GRAPH_FLAG_ZONE;
+        }
+        dataBuffer.writeUint8(flags);
+
+        // scaleStyle (0: no scale)
+        dataBuffer.writeInt16(
+            this.scale ? getOptionalStyleIndex(assets, this, "scaleStyle") : 0
+        );
+
+        // thickness
+        dataBuffer.writeInt16(this.thickness ? Math.round(this.thickness) : 0);
+
+        // line1Label (flow expression, 0: none)
+        dataBuffer.writeInt16(
+            assets.projectStore.projectTypeTraits.hasFlowSupport &&
+                this.line1Marker &&
+                this.line1Label
+                ? assets.getWidgetDataItemIndex(this, "line1Label")
+                : 0
+        );
     }
 }
 

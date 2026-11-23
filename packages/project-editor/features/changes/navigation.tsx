@@ -1,9 +1,8 @@
-import { getCurrentWindow, Menu, MenuItem } from "@electron/remote";
+import { getCurrentWindow, dialog } from "@electron/remote";
 import React from "react";
 import { makeObservable, action, computed } from "mobx";
 import { observer } from "mobx-react";
 import classNames from "classnames";
-import { dialog } from "@electron/remote";
 
 import { Loader } from "eez-studio-ui/loader";
 import { List, IListNode } from "eez-studio-ui/list";
@@ -26,6 +25,7 @@ import {
     getFilePathFromHash
 } from "./state";
 import { formatDateCalendar } from "eez-studio-shared/util";
+import { popupMenu, type IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -132,33 +132,29 @@ export const ChangesTab = observer(
         );
 
         onContextMenu = (node: IListNode<Revision>) => {
-            const menu = new Menu();
+            const menuItems: IMenuItem[] = [];
 
             if (
                 node.data.hash ==
                 this.context.project.changes._state.revisionForCompareHash
             ) {
-                menu.append(
-                    new MenuItem({
-                        label: "Deselect",
-                        click: action(() => {
-                            this.context.project.changes._state.revisionForCompareHash =
-                                undefined;
-                        })
+                menuItems.push({
+                    label: "Deselect",
+                    click: action(() => {
+                        this.context.project.changes._state.revisionForCompareHash =
+                            undefined;
                     })
-                );
+                });
             } else {
-                menu.append(
-                    new MenuItem({
-                        label: "Select for Compare",
-                        click: action(() => {
-                            this.context.project.changes._state.revisionForCompareHash =
-                                node.data.hash;
-                        })
+                menuItems.push({
+                    label: "Select for Compare",
+                    click: action(() => {
+                        this.context.project.changes._state.revisionForCompareHash =
+                            node.data.hash;
                     })
-                );
+                });
             }
-            menu.popup();
+            popupMenu(menuItems);
         };
 
         render() {

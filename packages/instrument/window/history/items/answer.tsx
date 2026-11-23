@@ -48,6 +48,10 @@ export const AnswerHistoryItemComponent = observer(
 );
 
 export class AnswerHistoryItem extends HistoryItem {
+    getClipboardText() {
+        return this.message.trim();
+    }
+
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <AnswerHistoryItemComponent

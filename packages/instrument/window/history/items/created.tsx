@@ -50,6 +50,16 @@ export const CreatedHistoryItemComponent = observer(
 );
 
 export class CreatedHistoryItem extends HistoryItem {
+    getClipboardText() {
+        if (this.type === "instrument/restored") {
+            return "Instrument restored!";
+        }
+        if (this.type === "instrument/deleted") {
+            return "Instrument deleted!";
+        }
+        return "Instrument created!";
+    }
+
     getListItemElement(appStore: IAppStore): React.ReactNode {
         return (
             <CreatedHistoryItemComponent

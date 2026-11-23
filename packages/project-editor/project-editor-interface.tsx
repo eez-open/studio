@@ -86,6 +86,7 @@ import type {
     ContainerWidget,
     UserWidgetWidget,
     ListWidget,
+    GridWidget,
     SelectWidget
 } from "project-editor/flow/components/widgets";
 import type {
@@ -175,6 +176,7 @@ export interface IProjectEditor {
     ContainerLiteWidgetClass: typeof ContainerLiteWidget;
     SelectLiteWidgetClass: typeof SelectLiteWidget;
     ListWidgetClass: typeof ListWidget;
+    GridWidgetClass: typeof GridWidget;
     TextWidgetClass: typeof TextWidget;
     MultilineTextWidgetClass: typeof MultilineTextWidget;
     ButtonWidgetClass: typeof ButtonWidget;

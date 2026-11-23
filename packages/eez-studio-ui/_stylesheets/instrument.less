@@ -667,6 +667,14 @@
     align-items: flex-start;
 }
 
+.EezStudio_HistoryRubberBand {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    border: 1px solid @selectionBackgroundColor;
+    background-color: fade(@selectionBackgroundColor, 15%);
+}
+
 .EezStudio_MeasurementChartContainer {
     flex-grow: 1;
     flex-direction: column;

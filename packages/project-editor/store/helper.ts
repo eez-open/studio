@@ -46,6 +46,7 @@ import type { Flow } from "project-editor/flow/flow";
 import { isArray } from "eez-studio-shared/util";
 
 import { getClass, getClassInfo } from "project-editor/core/object";
+import type { IMenuItem } from "project-editor/core/menu";
 export { getClass, getClassInfo } from "project-editor/core/object";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -673,7 +674,7 @@ export function extendContextMenu(
     context: IContextMenuContext,
     object: IEezObject,
     objects: IEezObject[],
-    menuItems: Electron.MenuItem[],
+    menuItems: IMenuItem[],
     editable: boolean
 ) {
     const extendContextMenu = getClassInfo(object).extendContextMenu;

@@ -6,6 +6,7 @@ import type { ProjectStore } from "project-editor/store";
 import type { Transform } from "project-editor/flow/editor/transform";
 import type { Component, Widget } from "project-editor/flow/component";
 import type { ValueType } from "eez-studio-types";
+import type { IMenuItem } from "project-editor/core/menu";
 
 export interface IFlowContext {
     dataContext: IDataContext;
@@ -146,7 +147,7 @@ export interface IDocument {
     getObjectsInsideRect(rect: Rect): TreeObjectAdapter[];
 
     // misc.
-    createContextMenu(objects: TreeObjectAdapter[]): Electron.Menu | undefined;
+    createContextMenu(objects: TreeObjectAdapter[]): IMenuItem[] | undefined;
     duplicateSelection(): void;
     pasteSelection(): void;
 

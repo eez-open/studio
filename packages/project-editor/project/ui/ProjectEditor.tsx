@@ -1,7 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
 import * as FlexLayout from "flexlayout-react";
-import { Menu, MenuItem } from "@electron/remote";
 import classNames from "classnames";
 import { action, computed, makeObservable, runInAction } from "mobx";
 
@@ -47,6 +46,7 @@ import {
 } from "home/extensions-manager/extensions-manager";
 import { LVGLGroupsTab } from "project-editor/lvgl/groups";
 import { settingsController } from "home/settings";
+import { popupMenu } from "project-editor/core/menu";
 import { PageStructure } from "project-editor/features/page/PagesNavigation";
 import { ProjectExplorer } from "project-editor/project/ui/ProjectExplorer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
@@ -447,9 +447,8 @@ const Content = observer(
                 );
                 if (editor && !editor.permanent) {
                     // open context menu
-                    const menu = new Menu();
-                    menu.append(
-                        new MenuItem({
+                    popupMenu([
+                        {
                             label: "Keep Tab Open",
                             click: () => {
                                 runInAction(() => (editor.permanent = true));
@@ -463,9 +462,8 @@ const Content = observer(
                                     )
                                 );
                             }
-                        })
-                    );
-                    menu.popup();
+                        }
+                    ]);
                 }
             }
         };
