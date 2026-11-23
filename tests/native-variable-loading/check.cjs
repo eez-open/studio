@@ -11,6 +11,16 @@ exports.run = async function () {
         objID: randomUUID(), name, type, native, persistent: false,
         defaultValue: type === 'string' ? '""' : type === 'boolean' ? 'false' : type === 'array:integer' ? '[1]' : '0'
     });
+    const nativeGlobals = ['integer', 'float', 'double', 'boolean', 'string']
+        .map((type, index) => variable('Native' + index, type, true));
+    const ordinary = variable('Ordinary', 'integer', false);
+    const unsupported = variable('Unsupported', 'array:integer', true);
+    const local = variable('Local', 'integer', true);
+    const describe = ({ name, type, native }) => ({ name, type, native });
+    const expectedGlobals = [
+        ...nativeGlobals, ordinary, { ...unsupported, native: false }
+    ].map(describe);
+    const expectedLocals = [{ ...local, native: false }].map(describe);
     const input = {
         settings: {
             general: { projectVersion: 'v3', projectType: 'lvgl', lvglVersion: '9.5.0', flowSupport: true },
@@ -18,16 +28,14 @@ exports.run = async function () {
         },
         variables: {
             globalVariables: [
-                ...['integer', 'float', 'double', 'boolean', 'string'].map((type, i) => variable('Native' + i, type, true)),
-                variable('Ordinary', 'integer', false),
-                variable('Unsupported', 'array:integer', true)
+                ...nativeGlobals, ordinary, unsupported
             ],
             structures: [], enums: []
         },
         actions: [{
             objID: randomUUID(), name: 'LocalFlow', implementationType: 'flow',
             userProperties: [], components: [], connectionLines: [],
-            localVariables: [variable('Local', 'integer', true)]
+            localVariables: [local]
         }],
         userPages: [], userWidgets: [], fonts: [], bitmaps: [], colors: [], themes: [],
         lvglStyles: { styles: [], defaultStyles: {} }, lvglGroups: { groups: [] }
@@ -37,10 +45,18 @@ exports.run = async function () {
         try {
             await store.setProject(loadProject(store, data, true), undefined);
             const output = JSON.parse(getJSON(store));
-            for (const item of output.variables.globalVariables) {
-                assert.equal(item.native, item.name.startsWith('Native'), item.name);
-            }
-            assert.equal(output.actions[0].localVariables[0].native, false);
+            assert.deepEqual(
+                output.variables.globalVariables.map(describe),
+                expectedGlobals, 'serialized global variables'
+            );
+            assert.deepEqual(
+                output.actions.map(action => ({
+                    name: action.name,
+                    localVariables: action.localVariables.map(describe)
+                })),
+                [{ name: 'LocalFlow', localVariables: expectedLocals }],
+                'serialized actions and local variables'
+            );
             return output;
         } finally {
             store.unmount();
@@ -48,7 +64,8 @@ exports.run = async function () {
     };
     const first = await roundTrip(input);
     assert.deepEqual(await roundTrip(JSON.stringify(first)), first);
-    return { passed: true, validNativeTypes: 5, ordinaryPreserved: true,
+    const validNativeTypes = first.variables.globalVariables.filter(item => item.native).length;
+    return { passed: true, validNativeTypes, ordinaryPreserved: true,
         unsupportedAndLocalDisabled: true, serializedAndReopened: true,
         noAssignableLists: true, noRenames: true };
 };
