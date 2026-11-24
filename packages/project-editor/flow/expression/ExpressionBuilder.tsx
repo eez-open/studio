@@ -50,6 +50,7 @@ import {
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
 import { parseIdentifier } from "project-editor/flow/expression";
+import { namedExpressionSignature } from "project-editor/flow/expression/named-expression";
 import {
     FONT_TAG_REGEX,
     supportsFontTags
@@ -989,6 +990,45 @@ const SelectItemDialog = observer(
                             expanded: false,
                             data: undefined
                         })),
+                        selected: false,
+                        expanded: true
+                    });
+                }
+
+                const namedExpressions =
+                    this.context.project.variables.namedExpressions ?? [];
+
+                if (namedExpressions.length) {
+                    children.push({
+                        id: "named-expressions",
+                        label: "Named Expressions",
+                        children: namedExpressions
+                            .filter(namedExpression => namedExpression.name)
+                            .map(namedExpression => {
+                                const parameterNames =
+                                    namedExpression.parameterNames;
+                                const data =
+                                    parameterNames.length > 0
+                                        ? `${
+                                              namedExpression.name
+                                          }(${parameterNames
+                                              .map(
+                                                  parameterName =>
+                                                      `${EXPR_MARK_START}${parameterName}${EXPR_MARK_END}`
+                                              )
+                                              .join(", ")})`
+                                        : namedExpression.name;
+                                return {
+                                    id: namedExpression.name,
+                                    label: namedExpressionSignature(
+                                        namedExpression
+                                    ),
+                                    children: [],
+                                    selected: this.selection == data,
+                                    expanded: false,
+                                    data
+                                };
+                            }),
                         selected: false,
                         expanded: true
                     });

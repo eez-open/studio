@@ -70,6 +70,7 @@ export class NavigationStore {
     selectedGlobalVariableObject = observable.box<IEezObject>();
     selectedStructureObject = observable.box<IEezObject>();
     selectedEnumObject = observable.box<IEezObject>();
+    selectedNamedExpressionObject = observable.box<IEezObject>();
     selectedStyleObject = observable.box<IEezObject>();
     selectedThemeObject = observable.box<IEezObject>();
     selectedThemeColorObject = observable.box<IEezObject>();
@@ -91,6 +92,8 @@ export class NavigationStore {
     static VARIABLES_SUB_NAVIGATION_ITEM_LOCAL = "Local";
     static VARIABLES_SUB_NAVIGATION_ITEM_STRUCTS = "Structs";
     static VARIABLES_SUB_NAVIGATION_ITEM_ENUMS = "Enums";
+    static VARIABLES_SUB_NAVIGATION_ITEM_NAMED_EXPRESSIONS =
+        "Named Expressions";
 
     static FLOW_STRUCTURE_SUB_NAVIGATION_ID =
         "flow-structure-tab/sub-navigation/selected-item";
@@ -217,6 +220,14 @@ export class NavigationStore {
                 this.selectedEnumObject.set(
                     this.projectStore.getObjectFromStringPath(
                         state.selectedEnumObject
+                    )
+                );
+            }
+
+            if (state.selectedNamedExpressionObject) {
+                this.selectedNamedExpressionObject.set(
+                    this.projectStore.getObjectFromStringPath(
+                        state.selectedNamedExpressionObject
                     )
                 );
             }
@@ -387,6 +398,10 @@ export class NavigationStore {
             selectedEnumObject: this.selectedEnumObject.get()
                 ? path(this.selectedEnumObject.get())
                 : undefined,
+            selectedNamedExpressionObject:
+                this.selectedNamedExpressionObject.get()
+                    ? path(this.selectedNamedExpressionObject.get())
+                    : undefined,
             selectedStyleObject: this.selectedStyleObject.get()
                 ? path(this.selectedStyleObject.get())
                 : undefined,

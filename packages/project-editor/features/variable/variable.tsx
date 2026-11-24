@@ -53,7 +53,20 @@ import type {
     IVariable
 } from "project-editor/flow/flow-interfaces";
 import { getProjectStore } from "project-editor/store";
-import { evalConstantExpression } from "project-editor/flow//expression";
+import {
+    evalConstantExpression,
+    parseIdentifier
+} from "project-editor/flow//expression";
+import {
+    builtInConstants,
+    builtInFunctions
+} from "project-editor/flow/expression/operations";
+import {
+    INamedExpression,
+    checkNamedExpressionDefinition,
+    namedExpressionSignature,
+    parseNamedExpressionParameters
+} from "project-editor/flow/expression/named-expression";
 import {
     variableTypeProperty,
     migrateType,
@@ -1944,10 +1957,252 @@ export class Enum extends EezObject implements IEnum {
 
 registerClass("Enum", Enum);
 
+////////////////////////////////////////////////////////////////////////////////
+
+// Names which are not allowed as the named expression name, because the same
+// name is already used for something else in the expressions.
+function getNamedExpressionNameConflict(
+    namedExpression: NamedExpression,
+    name: string
+) {
+    const project = ProjectEditor.getProject(namedExpression);
+
+    if (
+        project.allGlobalVariables.find(
+            globalVariable => globalVariable.fullName == name
+        )
+    ) {
+        return "global variable";
+    }
+
+    if (project.variables.enumsMap.get(name)) {
+        return "enum";
+    }
+
+    if (project.importAsList.indexOf(name) != -1) {
+        return "import";
+    }
+
+    const prefix = name + ".";
+
+    if (
+        Object.keys(builtInFunctions).find(functionName =>
+            functionName.startsWith(prefix)
+        )
+    ) {
+        return "built-in function namespace";
+    }
+
+    if (
+        Object.keys(builtInConstants(project._store)).find(constantName =>
+            constantName.startsWith(prefix)
+        )
+    ) {
+        return "built-in constant namespace";
+    }
+
+    return undefined;
+}
+
+const NAMED_EXPRESSION_PARAMETERS_FORM_TEXT =
+    'Comma separated parameter names, e.g. "a, b". Leave empty if there are no parameters. A named expression with parameters is used like a function call with the same number of arguments, e.g. add(1, 2), and one without parameters is used by its name only, e.g. IMPORTANT_NUMBER.';
+
+export class NamedExpression extends EezObject implements INamedExpression {
+    name: string;
+    tags?: string;
+    description?: string;
+    parameters?: string;
+    expression: string;
+
+    static classInfo: ClassInfo = {
+        properties: [
+            {
+                name: "name",
+                type: PropertyType.String,
+                uniqueIdentifier: true
+            },
+            makeTagsProperty(),
+            {
+                name: "description",
+                type: PropertyType.MultilineText
+            },
+            {
+                name: "parameters",
+                type: PropertyType.String,
+                monospaceFont: true,
+                formText: NAMED_EXPRESSION_PARAMETERS_FORM_TEXT
+            },
+            {
+                name: "expression",
+                type: PropertyType.MultilineText,
+                // for the search, find usages and rename
+                expressionType: "any",
+                flowProperty: "input",
+                monospaceFont: true
+            }
+        ],
+        icon: "material:functions",
+        listLabel: (namedExpression: NamedExpression) =>
+            namedExpressionSignature(namedExpression),
+        propertiesPanelLabel: (namedExpression: NamedExpression) => {
+            return `Named Expression: ${namedExpressionSignature(
+                namedExpression
+            )}`;
+        },
+        defaultValue: {
+            expression: ""
+        },
+        check: (namedExpression: NamedExpression, messages: IMessage[]) => {
+            if (!namedExpression.name) {
+                messages.push(propertyNotSetMessage(namedExpression, "name"));
+            } else {
+                const conflict = getNamedExpressionNameConflict(
+                    namedExpression,
+                    namedExpression.name
+                );
+                if (conflict) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Duplicate name: ${conflict} with the name '${namedExpression.name}' already exists`,
+                            getChildOfObject(namedExpression, "name")
+                        )
+                    );
+                }
+            }
+
+            const parameterNames = namedExpression.parameterNames;
+            for (let i = 0; i < parameterNames.length; i++) {
+                const parameterName = parameterNames[i];
+                if (
+                    !parseIdentifier(parameterName) ||
+                    parameterName.startsWith("$")
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid parameter name '${parameterName}'`,
+                            getChildOfObject(namedExpression, "parameters")
+                        )
+                    );
+                } else if (parameterNames.indexOf(parameterName) != i) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Duplicate parameter name '${parameterName}'`,
+                            getChildOfObject(namedExpression, "parameters")
+                        )
+                    );
+                }
+            }
+
+            if (!namedExpression.expression?.trim()) {
+                messages.push(
+                    propertyNotSetMessage(namedExpression, "expression")
+                );
+            } else {
+                try {
+                    checkNamedExpressionDefinition(
+                        ProjectEditor.getProject(namedExpression),
+                        namedExpression
+                    );
+                } catch (err) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `Invalid expression: ${err}`,
+                            getChildOfObject(namedExpression, "expression")
+                        )
+                    );
+                }
+            }
+        },
+        newItem: async (parent: IEezObject) => {
+            const result = await showGenericDialog({
+                dialogDefinition: {
+                    title: "New Named Expression",
+                    fields: [
+                        {
+                            name: "name",
+                            type: "string",
+                            validators: [
+                                validators.required,
+                                validatorsRenderer.identifierValidator,
+                                validators.unique({}, parent)
+                            ]
+                        },
+                        {
+                            name: "parameters",
+                            type: "string",
+                            formText: NAMED_EXPRESSION_PARAMETERS_FORM_TEXT
+                        },
+                        {
+                            name: "expression",
+                            type: "string",
+                            validators: [validators.required]
+                        }
+                    ]
+                },
+                values: {},
+                modal: true,
+                backdrop: "static"
+            });
+
+            const namedExpressionProperties: Partial<NamedExpression> = {
+                name: result.values.name,
+                parameters:
+                    parseNamedExpressionParameters(
+                        result.values.parameters
+                    ).join(", ") || undefined,
+                expression: result.values.expression
+            };
+
+            const project = ProjectEditor.getProject(parent);
+
+            const namedExpression = createObject<NamedExpression>(
+                project._store,
+                namedExpressionProperties,
+                NamedExpression
+            );
+
+            return namedExpression;
+        }
+    };
+
+    constructor() {
+        super();
+
+        makeObservable(this, {
+            parameterNames: computed
+        });
+    }
+
+    override makeEditable() {
+        super.makeEditable();
+
+        makeObservable(this, {
+            name: observable,
+            tags: observable,
+            description: observable,
+            parameters: observable,
+            expression: observable
+        });
+    }
+
+    get parameterNames() {
+        return parseNamedExpressionParameters(this.parameters);
+    }
+}
+
+registerClass("NamedExpression", NamedExpression);
+
+////////////////////////////////////////////////////////////////////////////////
+
 export class ProjectVariables extends EezObject {
     globalVariables: Variable[];
     structures: Structure[];
     enums: Enum[];
+    namedExpressions: NamedExpression[];
 
     static classInfo: ClassInfo = {
         label: () => "Variables",
@@ -1969,13 +2224,25 @@ export class ProjectVariables extends EezObject {
                 type: PropertyType.Array,
                 typeClass: Enum,
                 hideInPropertyGrid: true
+            },
+            {
+                name: "namedExpressions",
+                type: PropertyType.Array,
+                typeClass: NamedExpression,
+                hideInPropertyGrid: true
             }
         ],
         icon: VARIABLE_ICON,
         defaultValue: {
             globalVariables: [],
             structures: [],
-            enums: []
+            enums: [],
+            namedExpressions: []
+        },
+        beforeLoadHook(object, jsObject) {
+            if (!jsObject.namedExpressions) {
+                jsObject.namedExpressions = [];
+            }
         }
     };
 
@@ -1984,7 +2251,8 @@ export class ProjectVariables extends EezObject {
 
         makeObservable(this, {
             enumsMap: keepAliveComputed(),
-            structsMap: keepAliveComputed()
+            structsMap: keepAliveComputed(),
+            namedExpressionsMap: keepAliveComputed()
         });
     }
 
@@ -1994,8 +2262,19 @@ export class ProjectVariables extends EezObject {
         makeObservable(this, {
             globalVariables: observable,
             structures: observable,
-            enums: observable
+            enums: observable,
+            namedExpressions: observable
         });
+    }
+
+    get namedExpressionsMap() {
+        const map = new Map<string, INamedExpression>();
+        for (const namedExpression of this.namedExpressions ?? []) {
+            if (namedExpression.name) {
+                map.set(namedExpression.name, namedExpression);
+            }
+        }
+        return map;
     }
 
     get enumsMap() {
@@ -2045,7 +2324,8 @@ const feature: ProjectEditorFeature = {
         return {
             globalVariables: [],
             structures: [],
-            enums: []
+            enums: [],
+            namedExpressions: []
         };
     },
     check: (projectStore, object: EezObject[], messages: IMessage[]) => {

@@ -746,6 +746,30 @@ function buildViewMenu(win: IWindow | undefined) {
         });
 
         viewSubmenu.push({
+            label: "Go to Object...",
+            accelerator: "CmdOrCtrl+P",
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("goToObject");
+                }
+            }
+        });
+
+        viewSubmenu.push({
+            label: "Command Palette...",
+            accelerator: "CmdOrCtrl+Shift+P",
+            click: function (item) {
+                if (win) {
+                    win.browserWindow.webContents.send("showCommandPalette");
+                }
+            }
+        });
+
+        viewSubmenu.push({
+            type: "separator"
+        });
+
+        viewSubmenu.push({
             label: settings.showComponentsPaletteInProjectEditor
                 ? "Hide Components Palette"
                 : "Show Components Palette",

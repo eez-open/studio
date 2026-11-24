@@ -697,6 +697,18 @@ export class ProjectEditorTab implements IHomeTab {
             projectStore.findProjectComponent();
         };
 
+        const onGoToObject = () => {
+            if (!this.runMode && !scrapbookModel.focused) {
+                projectStore.showCommandPalette("objects");
+            }
+        };
+
+        const onShowCommandPalette = () => {
+            if (!this.runMode && !scrapbookModel.focused) {
+                projectStore.showCommandPalette("commands");
+            }
+        };
+
         const onReloadProject = () => {
             this.reloadProject();
         };
@@ -771,6 +783,8 @@ export class ProjectEditorTab implements IHomeTab {
         ipcRenderer.on("toggleComponentsPalette", onToggleComponentsPalette);
         ipcRenderer.on("resetLayoutModels", onResetLayoutModels);
         ipcRenderer.on("findProjectComponent", onFindProjectComponent);
+        ipcRenderer.on("goToObject", onGoToObject);
+        ipcRenderer.on("showCommandPalette", onShowCommandPalette);
 
         ipcRenderer.on("reload-project", onReloadProject);
 
@@ -806,6 +820,11 @@ export class ProjectEditorTab implements IHomeTab {
             ipcRenderer.removeListener(
                 "findProjectComponent",
                 onFindProjectComponent
+            );
+            ipcRenderer.removeListener("goToObject", onGoToObject);
+            ipcRenderer.removeListener(
+                "showCommandPalette",
+                onShowCommandPalette
             );
 
             ipcRenderer.removeListener("reload-project", onReloadProject);

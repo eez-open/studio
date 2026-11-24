@@ -3,6 +3,7 @@ import type { ExpressionNode } from "./node";
 import { expressionParser } from "./parser";
 import { checkAssignableExpressionNode } from "./check";
 import { findValueTypeInExpressionNode } from "./type";
+import { expandNamedExpressions } from "./named-expression";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     ASSIGNABLE_LIST_RUNTIME_ERROR,
@@ -38,14 +39,22 @@ export function parseAssignableListExpression(
     ) {
         throw ASSIGNABLE_LIST_RUNTIME_ERROR;
     }
-    const root = expressionParser.parse(expression);
+    const root: ExpressionNode = expressionParser.parse(expression);
     if (root.type !== "ArrayExpression") {
         throw "An assignable list must be an array literal";
     }
     if (root.elements.length > 0xffff) {
         throw "Too many targets in an assignable list";
     }
-    for (const node of root.elements) {
+    const project = ProjectEditor.getProject(component);
+    return root.elements.map(element => {
+        const node = expandNamedExpressions(
+            project,
+            component,
+            element,
+            expression,
+            true
+        );
         function isTarget(node: ExpressionNode): boolean {
             return (
                 node.type === "Identifier" ||
@@ -58,11 +67,9 @@ export function parseAssignableListExpression(
             throw "Every item in an assignable list must be assignable";
         }
         // Validate each item independently: targets may have different types.
-        findValueTypeInExpressionNode(
-            ProjectEditor.getProject(component), component, node, true
-        );
+        findValueTypeInExpressionNode(project, component, node, true);
         checkAssignableExpressionNode(component, node);
         checkConditionalTargets(node);
-    }
-    return root.elements;
+        return node;
+    });
 }

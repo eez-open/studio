@@ -15,7 +15,8 @@ import { PageTabState } from "project-editor/features/page/PageEditor";
 import {
     getChildren,
     getObjectIcon,
-    objectToString
+    objectToString,
+    type ProjectStore
 } from "project-editor/store";
 import { RenderVariableStatus } from "project-editor/features/variable/global-variable-status";
 import { FlowTabState } from "project-editor/flow/flow-tab-state";
@@ -149,6 +150,45 @@ export const Toolbar = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// project features with an editor (Settings, Readme, ...), shown as toolbar
+// buttons, which are not shown in the project explorer
+export function getProjectFeatureItems(projectStore: ProjectStore) {
+    const project = projectStore.project;
+
+    let featureItems = getChildren(project).filter(
+        object =>
+            getObjectIcon(object) &&
+            getEditorComponent(object, undefined) &&
+            !(
+                object == project.userPages ||
+                object == project.userWidgets ||
+                object == project.actions ||
+                object == project.variables ||
+                object == project.styles ||
+                object == project.lvglStyles ||
+                object == project.fonts ||
+                object == project.bitmaps ||
+                object == project.texts ||
+                object == project.scpi ||
+                object == project.extensionDefinitions ||
+                object == project.changes
+            )
+    );
+
+    // push Settings to the end
+    const settingsIndex = featureItems.findIndex(
+        item => item == project.settings
+    );
+    if (settingsIndex != -1) {
+        featureItems.splice(settingsIndex, 1);
+        featureItems.push(project.settings);
+    }
+
+    return featureItems;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 const EditorButtons = observer(
     class EditorButtons extends React.Component {
         static contextType = ProjectContext;
@@ -213,38 +253,7 @@ const EditorButtons = observer(
                 return undefined;
             }
 
-            let featureItems = getChildren(this.context.project).filter(
-                object =>
-                    getObjectIcon(object) &&
-                    getEditorComponent(object, undefined) &&
-                    !(
-                        object == this.context.project.userPages ||
-                        object == this.context.project.userWidgets ||
-                        object == this.context.project.actions ||
-                        object == this.context.project.variables ||
-                        object == this.context.project.styles ||
-                        object == this.context.project.lvglStyles ||
-                        object == this.context.project.fonts ||
-                        object == this.context.project.bitmaps ||
-                        object == this.context.project.texts ||
-                        object == this.context.project.scpi ||
-                        object == this.context.project.extensionDefinitions ||
-                        object == this.context.project.changes
-                    )
-            );
-
-            // push Settings to the end
-            if (featureItems) {
-                const settingsIndex = featureItems.findIndex(
-                    item => item == this.context.project.settings
-                );
-                if (settingsIndex != -1) {
-                    featureItems.splice(settingsIndex, 1);
-                    featureItems.push(this.context.project.settings);
-                }
-            }
-
-            return featureItems;
+            return getProjectFeatureItems(this.context);
         }
 
         render() {

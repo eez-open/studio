@@ -43,6 +43,10 @@ import {
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IMPORT_AS_PREFIX, findVariable } from "project-editor/project/assets";
 import { ASSIGNABLE_LIST_MARKER, parseAssignableListExpression } from "./assignable-list";
+import {
+    expandNamedExpressions,
+    withNamedExpressionContext
+} from "project-editor/flow/expression/named-expression";
 
 export function buildAssignableListExpression(
     assets: Assets,
@@ -143,6 +147,12 @@ export function buildExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
+        rootNode = expandNamedExpressions(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            expression
+        );
         findValueTypeInExpressionNode(
             ProjectEditor.getProject(component),
             component,
@@ -196,6 +206,14 @@ export function buildAssignableExpression(
         throw `Expression error: ${err}`;
     }
 
+    rootNode = expandNamedExpressions(
+        ProjectEditor.getProject(component),
+        component,
+        rootNode,
+        expression,
+        true
+    );
+
     findValueTypeInExpressionNode(
         ProjectEditor.getProject(component),
         component,
@@ -224,6 +242,17 @@ export function buildAssignableExpression(
 }
 
 function buildExpressionNode(
+    assets: Assets,
+    component: Component,
+    node: ExpressionNode,
+    assignable: boolean
+): number[] {
+    return withNamedExpressionContext(node, () =>
+        buildExpressionNodeImpl(assets, component, node, assignable)
+    );
+}
+
+function buildExpressionNodeImpl(
     assets: Assets,
     component: Component,
     node: ExpressionNode,

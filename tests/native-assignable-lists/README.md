@@ -11,7 +11,7 @@ node tests/native-assignable-lists/bundle.cjs
 node tests/native-assignable-lists/preview.cjs
 ```
 
-`run.cjs` compiles this checkout into a temporary directory, then runs 24 tests
+`run.cjs` compiles this checkout into a temporary directory, then runs 26 tests
 against its parser, type checker and bytecode compiler. Lightweight project
 metadata adapters replace Electron, not the compiler. Outputs include bytecode
 and `compiler-fixture.h` for the companion framework's native tests.
@@ -28,7 +28,12 @@ generator must reject the option explicitly. The real LVGL exporter must copy
 this checkout's reference-aware C++ amalgamation. It then exercises the five
 built LVGL runtimes: Run/Debug pause and resume, both conditional branches,
 single/list assignment, parameter inspection, array-element destinations and
-unchanged ordinary value snapshots (20 scenarios).
+unchanged ordinary value snapshots (20 scenarios). The renderer also renames
+named expressions and variables used by single and list destinations, with
+same-named component outputs in the fixture. The property grid must reject a
+rename before editing the project if a single token has two bindings or the
+new name would shadow a named destination. Splitting the read and write
+arguments allows both declarations to be renamed independently.
 
 The preview test uses Studio's hidden build window with a separate profile. It
 only reads the Studio build and source fixtures. An optional first argument

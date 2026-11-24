@@ -16,7 +16,13 @@ const store = {
     projectTypeTraits: { isLVGL: true, isDashboard: false, isFirmware: false, isEezFlowLite: false, hasFlowSupport: true },
     typesStore: { createOpenType: () => 'any', getType: type => ({ kind: type.startsWith('array:') ? 'array' : 'basic', valueType: type }) }
 };
-const project = { allGlobalVariables: globals, variables: { enumsMap: new Map(), structsMap: new Map() }, importAsList: [], _store: store };
+const namedExpressions = new Map();
+const project = {
+    allGlobalVariables: globals,
+    variables: { enumsMap: new Map(), structsMap: new Map(), namedExpressionsMap: namedExpressions },
+    importAsList: [],
+    _store: store
+};
 store.project = project;
 const ProjectEditor = { getProject: () => project, getFlow: () => flow, getProjectStore: () => store };
 for (const name of ['Text', 'MultilineText', 'Button', 'Checkbox', 'Radio']) ProjectEditor[name + 'WidgetClass'] = class {};
@@ -56,7 +62,7 @@ const assets = {
     },
     getTypeIndex: type => { if (!(type in typeIndexes)) throw new Error('Unexpected fixture type ' + type); return typeIndexes[type]; }
 };
-module.exports = { component, assets, constants, typeIndexes, store,
+module.exports = { component, assets, constants, typeIndexes, store, namedExpressions,
     ...require(path.join(build, 'project-editor/flow/assignable-list-support.js')),
     ...require(path.join(build, 'project-editor/flow/expression/assignable-list.js')),
     ...require(path.join(build, 'project-editor/flow/expression/build.js')) };

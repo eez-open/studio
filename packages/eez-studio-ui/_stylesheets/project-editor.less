@@ -889,6 +889,104 @@
     }
 }
 
+.EezStudio_CommandPalette {
+    position: fixed;
+    z-index: 2000;
+    top: 48px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(640px, calc(100vw - 32px));
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    border: 1px solid @darkBorderColor;
+    border-radius: 6px;
+    background-color: @backgroundColor;
+    color: @textColor;
+
+    .EezStudio_CommandPalette_Input {
+        flex-shrink: 0;
+    }
+
+    .EezStudio_CommandPalette_List {
+        max-height: 50vh;
+        overflow-y: auto;
+        margin-top: 4px;
+
+        &:empty {
+            display: none;
+        }
+    }
+
+    .EezStudio_CommandPalette_Item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        cursor: pointer;
+
+        &.selected {
+            background-color: @selectionBackgroundColor;
+            color: @selectionColor;
+
+            .EezStudio_CommandPalette_Highlight {
+                color: inherit;
+            }
+
+            .EezStudio_CommandPalette_ItemDescription,
+            .EezStudio_CommandPalette_ItemKeybinding {
+                color: inherit;
+                opacity: 0.85;
+            }
+        }
+    }
+
+    .EezStudio_CommandPalette_ItemIcon {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 22px;
+    }
+
+    .EezStudio_CommandPalette_ItemLabel {
+        flex-shrink: 0;
+        max-width: 70%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .EezStudio_CommandPalette_Highlight {
+        font-weight: 600;
+        color: @selectionBackgroundColor;
+    }
+
+    .EezStudio_CommandPalette_ItemDescription {
+        flex-grow: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 90%;
+        color: var(--bs-secondary-color);
+    }
+
+    .EezStudio_CommandPalette_ItemKeybinding {
+        flex-shrink: 0;
+        margin-left: auto;
+        font-size: 85%;
+        color: var(--bs-secondary-color);
+    }
+
+    .EezStudio_CommandPalette_Message {
+        padding: 4px 8px;
+        color: var(--bs-secondary-color);
+    }
+}
+
 .EezStudio_StylePreviewContainer {
     padding: 10px;
     display: flex;

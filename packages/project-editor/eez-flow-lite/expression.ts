@@ -17,6 +17,7 @@ import {
     NonComputedPropertyExpressionNode
 } from "project-editor/flow/expression/node";
 import { checkArity } from "project-editor/flow/expression/type";
+import { expandNamedExpressions } from "project-editor/flow/expression/named-expression";
 import {
     ExpressionEvalError,
     IExpressionContext
@@ -42,6 +43,8 @@ export function buildExpression(
     }
 ) {
     let rootNode = expressionParser.parse(expression);
+
+    rootNode = expandNamedExpressions(project, component, rootNode, expression);
 
     let flow = component ? ProjectEditor.getFlow(component) : undefined;
 
@@ -307,6 +310,14 @@ export function buildAssignableExpression(
 } {
     let rootNode = expressionParser.parse(expression);
 
+    rootNode = expandNamedExpressions(
+        project,
+        component,
+        rootNode,
+        expression,
+        true
+    );
+
     let flow = component ? ProjectEditor.getFlow(component) : undefined;
 
     findValueTypeInExpressionNode(project, component, rootNode, false);
@@ -384,6 +395,12 @@ export function evalConstantExpression(project: Project, expression: string) {
         valueType = "double";
     } else {
         let rootNode = expressionParser.parse(expression);
+        rootNode = expandNamedExpressions(
+            project,
+            undefined,
+            rootNode,
+            expression
+        );
         findValueTypeInExpressionNode(project, undefined, rootNode, false);
         value = evalConstantExpressionNode(project, rootNode);
         valueType = rootNode.valueType;
@@ -414,6 +431,13 @@ export function evalExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
+
+        rootNode = expandNamedExpressions(
+            expressionContext.projectStore.project,
+            component,
+            rootNode,
+            expression
+        );
 
         findValueTypeInExpressionNode(
             expressionContext.projectStore.project,
@@ -479,6 +503,14 @@ export function evalAssignableExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
+
+        rootNode = expandNamedExpressions(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            expression,
+            true
+        );
 
         findValueTypeInExpressionNode(
             ProjectEditor.getProject(component),

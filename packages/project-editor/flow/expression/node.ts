@@ -15,7 +15,19 @@ export type IdentifierType =
     | "builtin-constant-member"
     | "imported-project"
     | "member"
+    | "named-expression"
     | "unknown";
+
+// Set on the root of a subtree that was spliced in by the named expression
+// expansion (see named-expression.ts), used to tell in the error message
+// where the node came from.
+export interface NamedExpressionExpansionInfo {
+    // the named expressions being expanded, outermost first, empty for the
+    // argument subtrees which come from the expression that is checked
+    path: string[];
+    // the expression that is checked (before the expansion)
+    expression: string;
+}
 
 export type IdentifierExpressionNode = {
     type: "Identifier";
@@ -26,7 +38,7 @@ export type IdentifierExpressionNode = {
     location: LocationRange;
 };
 
-export type ExpressionNode =
+export type ExpressionNode = (
     | {
           type: "Literal";
           value: any;
@@ -101,7 +113,10 @@ export type ExpressionNode =
     | {
           type: "__Unknown";
           valueType: ValueType;
-      };
+      }
+) & {
+    namedExpression?: NamedExpressionExpansionInfo;
+};
 
 export type NonComputedPropertyExpressionNode = ExpressionNode & {
     name: string;

@@ -62,7 +62,9 @@ export class EezValueObject extends EezObject {
     public propertyInfo: PropertyInfo;
     public value: any;
 
-    public foundPositions: { start: number; end: number }[] | undefined;
+    public foundPositions:
+        | { start: number; end: number; ambiguous?: boolean }[]
+        | undefined;
 
     static create(object: IEezObject, propertyInfo: PropertyInfo, value: any) {
         const valueObject = new EezValueObject();
@@ -980,6 +982,10 @@ export function isObjectReferencable(object: IEezObject) {
     }
 
     if (ProjectEditor.EnumClass.classInfo == objectClassInfo) {
+        return true;
+    }
+
+    if (ProjectEditor.NamedExpressionClass.classInfo == objectClassInfo) {
         return true;
     }
 
