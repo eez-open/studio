@@ -1321,7 +1321,7 @@ export function prepareObjectReferenceReplacement(
 
     if (captured) {
         throw new AmbiguousObjectReferenceError(
-            `Cannot rename "${oldName}" to "${newValue}". The new name would change the destination in ${getHumanReadableObjectPath(captured)}. Choose a different name or update that expression first.`
+            "This name is already in use. Choose another."
         );
     }
 

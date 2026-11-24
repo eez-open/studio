@@ -101,11 +101,16 @@ exports.run = async (store, out) => {
         await input.commitChange();
         return input.error;
     };
-    const assertRenameBlocked = async (declaration, name, pattern) => {
+    const assertRenameBlocked = async (declaration, name, expected) => {
         const before = getJSON(store);
         const { undoManager } = store;
         const undoBefore = [undoManager.combineCommands, undoManager.undoStack.length, undoManager.commands.length];
-        assert.match(await renameInPropertyGrid(declaration, name), pattern);
+        const message = await renameInPropertyGrid(declaration, name);
+        if (typeof expected === 'string') {
+            assert.equal(message, expected);
+        } else {
+            assert.match(message, expected);
+        }
         assert.equal(getJSON(store), before, 'blocked rename must preserve all declarations and references');
         assert.deepEqual(
             [undoManager.combineCommands, undoManager.undoStack.length, undoManager.commands.length],
@@ -206,8 +211,9 @@ exports.run = async (store, out) => {
 
             rename(indexOutput, 'OUT_A');
             assert.deepEqual(validateTargets('[DEST, OUT_A]'), []);
-            await assertRenameBlocked(indexOutput, 'DEST', /change the destination.*\[DEST, OUT_A\]/);
-            await assertRenameBlocked(destination, 'OUT_A', /change the destination.*\[DEST, OUT_A\]/);
+            const nameInUse = 'This name is already in use. Choose another.';
+            await assertRenameBlocked(indexOutput, 'DEST', nameInUse);
+            await assertRenameBlocked(destination, 'OUT_A', nameInUse);
 
             // Using the same name only as a read argument is harmless.
             assert.deepEqual(validateTargets('[At(READ_INDEX), OUT_A]'), []);
