@@ -20,6 +20,7 @@ import {
     checkArity
 } from "project-editor/flow/expression/type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { expandNamedExpressions } from "project-editor/flow/expression/named-expression";
 
 export function evalConstantExpression(project: Project, expression: string) {
     if (typeof expression == "string") {
@@ -36,6 +37,12 @@ export function evalConstantExpression(project: Project, expression: string) {
         valueType = "double";
     } else {
         let rootNode = expressionParser.parse(expression);
+        rootNode = expandNamedExpressions(
+            project,
+            undefined,
+            rootNode,
+            expression
+        );
         findValueTypeInExpressionNode(project, undefined, rootNode, false);
         value = evalConstantExpressionNode(project, rootNode);
         valueType = rootNode.valueType;
@@ -72,6 +79,13 @@ export function evalExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
+
+        rootNode = expandNamedExpressions(
+            expressionContext.projectStore.project,
+            component,
+            rootNode,
+            expression
+        );
 
         findValueTypeInExpressionNode(
             expressionContext.projectStore.project,
@@ -112,6 +126,13 @@ export function evalExpressionGetValueType(
             throw `Expression error: ${err}`;
         }
 
+        rootNode = expandNamedExpressions(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            expression
+        );
+
         findValueTypeInExpressionNode(
             ProjectEditor.getProject(component),
             component,
@@ -144,6 +165,14 @@ export function evalAssignableExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
+
+        rootNode = expandNamedExpressions(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            expression,
+            true
+        );
 
         findValueTypeInExpressionNode(
             ProjectEditor.getProject(component),

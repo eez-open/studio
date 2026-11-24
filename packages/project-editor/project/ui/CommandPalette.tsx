@@ -370,6 +370,18 @@ const OBJECT_COLLECTIONS: IObjectCollection[] = [
             navigationStore.selectedEnumObject
     }),
     arrayCollection({
+        typeName: "Named Expression",
+        tabId: LayoutModels.VARIABLES_TAB_ID,
+        variablesSubNavigationItem:
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_NAMED_EXPRESSIONS,
+        getArray: projectStore =>
+            projectStore.projectTypeTraits.hasFlowSupport
+                ? projectStore.project.variables?.namedExpressions
+                : undefined,
+        getSelectedObject: navigationStore =>
+            navigationStore.selectedNamedExpressionObject
+    }),
+    arrayCollection({
         typeName: "Style",
         tabId: LayoutModels.STYLES_TAB_ID,
         getArray: projectStore =>

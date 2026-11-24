@@ -112,6 +112,26 @@ export const VariablesTab = observer(
                 numItems: this.context.project.variables.enums.length
             });
 
+            if (this.context.projectTypeTraits.hasFlowSupport) {
+                items.push({
+                    name: NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_NAMED_EXPRESSIONS,
+                    component: (
+                        <ListNavigation
+                            id="named-expressions"
+                            navigationObject={
+                                this.context.project.variables.namedExpressions
+                            }
+                            selectedObject={
+                                this.context.navigationStore
+                                    .selectedNamedExpressionObject
+                            }
+                        />
+                    ),
+                    numItems:
+                        this.context.project.variables.namedExpressions.length
+                });
+            }
+
             return (
                 <SubNavigation
                     id={NavigationStore.VARIABLES_SUB_NAVIGATION_ID}

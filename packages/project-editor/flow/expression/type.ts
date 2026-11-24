@@ -27,10 +27,22 @@ import {
 } from "project-editor/features/variable/defs";
 
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { withNamedExpressionContext } from "project-editor/flow/expression/named-expression";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export function findValueTypeInExpressionNode(
+    project: Project,
+    component: Component | undefined,
+    node: ExpressionNode,
+    assignable: boolean
+) {
+    withNamedExpressionContext(node, () =>
+        findValueTypeInExpressionNodeImpl(project, component, node, assignable)
+    );
+}
+
+function findValueTypeInExpressionNodeImpl(
     project: Project,
     component: Component | undefined,
     node: ExpressionNode,
@@ -135,6 +147,13 @@ export function findValueTypeInExpressionNode(
             return;
         }
 
+        // only in the not expanded expression (e.g. search)
+        if (project.variables?.namedExpressionsMap.get(node.name)) {
+            node.valueType = "any";
+            node.identifierType = "named-expression";
+            return;
+        }
+
         // TODO test inputs and outputs (assignable expression)
         // throw `identifier '${node.name}' is neither input or local or global variable or enum`;
 
@@ -222,6 +241,25 @@ export function findValueTypeInExpressionNode(
         // }
         node.valueType = node.consequent.valueType;
     } else if (node.type == "CallExpression") {
+        // only in the not expanded expression (e.g. search)
+        if (
+            node.callee.type == "Identifier" &&
+            project.variables?.namedExpressionsMap.get(node.callee.name)
+        ) {
+            node.callee.valueType = "any";
+            node.callee.identifierType = "named-expression";
+            node.arguments.forEach(argument =>
+                findValueTypeInExpressionNode(
+                    project,
+                    component,
+                    argument,
+                    assignable
+                )
+            );
+            node.valueType = "any";
+            return;
+        }
+
         if (
             node.callee.type != "MemberExpression" ||
             node.callee.object.type != "Identifier" ||

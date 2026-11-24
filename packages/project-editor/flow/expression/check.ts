@@ -30,6 +30,10 @@ import {
 } from "project-editor/flow/expression/helper";
 import { findFont } from "project-editor/project/assets";
 import type { Project } from "project-editor/project/project";
+import {
+    expandNamedExpressions,
+    withNamedExpressionContext
+} from "project-editor/flow/expression/named-expression";
 
 export function checkExpression(component: Component, expression: string) {
     if (typeof expression == "string") {
@@ -46,6 +50,12 @@ export function checkExpression(component: Component, expression: string) {
         } catch (err) {
             throw `Expression error: ${err}`;
         }
+        rootNode = expandNamedExpressions(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            expression
+        );
         findValueTypeInExpressionNode(
             ProjectEditor.getProject(component),
             component,
@@ -69,6 +79,12 @@ export function checkTemplateLiteralExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
+        rootNode = expandNamedExpressions(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            templateLiteral.trim()
+        );
         findValueTypeInExpressionNode(
             ProjectEditor.getProject(component),
             component,
@@ -97,6 +113,13 @@ export function checkAssignableExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
+        rootNode = expandNamedExpressions(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            expression,
+            true
+        );
         findValueTypeInExpressionNode(
             ProjectEditor.getProject(component),
             component,
@@ -109,6 +132,10 @@ export function checkAssignableExpression(
 
 function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
     function checkNode(node: ExpressionNode) {
+        withNamedExpressionContext(node, () => checkNodeImpl(node));
+    }
+
+    function checkNodeImpl(node: ExpressionNode) {
         if (node.type == "Literal") {
             if (node.valueType == "string" && supportsFontTags(component)) {
                 const project = ProjectEditor.getProject(component);
@@ -458,6 +485,10 @@ function checkAssignableExpressionNode(
     rootNode: ExpressionNode
 ) {
     function checkNode(node: ExpressionNode) {
+        withNamedExpressionContext(node, () => checkNodeImpl(node));
+    }
+
+    function checkNodeImpl(node: ExpressionNode) {
         if (node.type == "Literal") {
             return;
         }

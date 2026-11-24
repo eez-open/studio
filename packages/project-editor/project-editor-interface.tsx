@@ -135,7 +135,8 @@ import type {
     Structure,
     StructureField,
     Enum,
-    EnumMember
+    EnumMember,
+    NamedExpression
 } from "project-editor/features/variable/variable";
 
 import type { Style } from "project-editor/features/style/style";
@@ -262,6 +263,7 @@ export interface IProjectEditor {
     StructureFieldClass: typeof StructureField;
     EnumClass: typeof Enum;
     EnumMemberClass: typeof EnumMember;
+    NamedExpressionClass: typeof NamedExpression;
     CustomInputClass: typeof CustomInput;
     CustomOutputClass: typeof CustomOutput;
     ImportDirectiveClass: typeof ImportDirective;

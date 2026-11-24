@@ -28,7 +28,11 @@ import {
 
 import { Page } from "project-editor/features/page/page";
 import { Action } from "project-editor/features/action/action";
-import { Enum, Structure } from "project-editor/features/variable/variable";
+import {
+    Enum,
+    NamedExpression,
+    Structure
+} from "project-editor/features/variable/variable";
 import { StylesTab } from "project-editor/features/style/StylesNavigation";
 import { FontsTab } from "project-editor/features/font/FontsNavigation";
 import { BitmapsTab } from "project-editor/features/bitmap/BitmapsNavigation";
@@ -241,6 +245,30 @@ const PROJECT_EXPLORER_GROUPS: IProjectExplorerGroup[] = [
                 id="enums"
                 navigationObject={projectStore.project.variables.enums}
                 selectedObject={projectStore.navigationStore.selectedEnumObject}
+            />
+        )
+    },
+    {
+        tabId: LayoutModels.VARIABLES_TAB_ID,
+        variablesSubNavigationItem:
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_NAMED_EXPRESSIONS,
+        title: "Named Expressions",
+        menu: "variables",
+        get icon() {
+            return NamedExpression.classInfo.icon;
+        },
+        search: true,
+        order: true,
+        isAvailable: hasFlowSupport,
+        render: projectStore => (
+            <ListNavigation
+                id="named-expressions"
+                navigationObject={
+                    projectStore.project.variables.namedExpressions
+                }
+                selectedObject={
+                    projectStore.navigationStore.selectedNamedExpressionObject
+                }
             />
         )
     },

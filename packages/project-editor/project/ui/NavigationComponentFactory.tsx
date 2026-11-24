@@ -24,7 +24,8 @@ import { Style } from "project-editor/features/style/style";
 import {
     Structure,
     Variable,
-    Enum
+    Enum,
+    NamedExpression
 } from "project-editor/features/variable/variable";
 import { ScpiEnum } from "project-editor/features/scpi/enum";
 import { ConnectionLine } from "project-editor/flow/connection-line";
@@ -299,6 +300,24 @@ export const navigateTo = action((object: IEezObject) => {
         return;
     }
 
+    ancestor = getAncestorOfType(object, NamedExpression.classInfo);
+    if (ancestor) {
+        projectStore.layoutModels.selectTab(
+            projectStore.layoutModels.root,
+            LayoutModels.VARIABLES_TAB_ID
+        );
+        projectStore.navigationStore.subnavigationSelectedItems[
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+        ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_NAMED_EXPRESSIONS;
+
+        runInAction(() => {
+            projectStore.navigationStore.selectedNamedExpressionObject.set(
+                ancestor
+            );
+        });
+        return;
+    }
+
     if (getAncestorOfType(object, Settings.classInfo)) {
         projectStore.editorsStore.openEditor(project.settings, object);
         return;
@@ -450,6 +469,17 @@ export function selectObject(object: IEezObject) {
         projectStore.navigationStore.subnavigationSelectedItems[
             NavigationStore.VARIABLES_SUB_NAVIGATION_ID
         ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_ENUMS;
+        return;
+    }
+
+    ancestor = getAncestorOfType(object, NamedExpression.classInfo);
+    if (ancestor) {
+        projectStore.navigationStore.selectedNamedExpressionObject.set(
+            ancestor
+        );
+        projectStore.navigationStore.subnavigationSelectedItems[
+            NavigationStore.VARIABLES_SUB_NAVIGATION_ID
+        ] = NavigationStore.VARIABLES_SUB_NAVIGATION_ITEM_NAMED_EXPRESSIONS;
         return;
     }
 

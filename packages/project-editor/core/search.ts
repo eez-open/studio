@@ -504,6 +504,8 @@ export function* searchForReference(
         structType = `struct:${struct!.name}`;
     } else if (object instanceof ProjectEditor.EnumClass) {
         identifierType = "enum";
+    } else if (object instanceof ProjectEditor.NamedExpressionClass) {
+        identifierType = "named-expression";
     } else if (object instanceof ProjectEditor.EnumMemberClass) {
         identifierType = "enum-member";
         const parentEnum = getAncestorOfType<Enum>(
@@ -872,6 +874,10 @@ export function* searchForUnusedObjects(
 
     yield* checkObjects("Structures", project.variables?.structures);
     yield* checkObjects("Enumerations", project.variables?.enums);
+    yield* checkObjects(
+        "Named Expressions",
+        project.variables?.namedExpressions
+    );
 
     if (project.projectTypeTraits.isLVGL) {
         yield* checkStyles("Styles", project.lvglStyles?.styles);

@@ -152,7 +152,8 @@ import {
     Structure,
     StructureField,
     Enum,
-    EnumMember
+    EnumMember,
+    NamedExpression
 } from "project-editor/features/variable/variable";
 
 import { Style } from "project-editor/features/style/style";
@@ -305,6 +306,7 @@ export function createProjectEditor(
         StructureFieldClass: StructureField,
         EnumClass: Enum,
         EnumMemberClass: EnumMember,
+        NamedExpressionClass: NamedExpression,
         CustomInputClass: CustomInput,
         CustomOutputClass: CustomOutput,
         ImportDirectiveClass: ImportDirective,

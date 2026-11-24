@@ -42,6 +42,10 @@ import {
 } from "project-editor/flow/expression/type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IMPORT_AS_PREFIX, findVariable } from "project-editor/project/assets";
+import {
+    expandNamedExpressions,
+    withNamedExpressionContext
+} from "project-editor/flow/expression/named-expression";
 
 function convertFontTags(assets: Assets, component: Component, text: string) {
     if (text.indexOf("<") == -1 || !supportsFontTags(component)) {
@@ -110,6 +114,12 @@ export function buildExpression(
         } catch (err) {
             throw `Expression error: ${err}`;
         }
+        rootNode = expandNamedExpressions(
+            ProjectEditor.getProject(component),
+            component,
+            rootNode,
+            expression
+        );
         findValueTypeInExpressionNode(
             ProjectEditor.getProject(component),
             component,
@@ -163,6 +173,14 @@ export function buildAssignableExpression(
         throw `Expression error: ${err}`;
     }
 
+    rootNode = expandNamedExpressions(
+        ProjectEditor.getProject(component),
+        component,
+        rootNode,
+        expression,
+        true
+    );
+
     findValueTypeInExpressionNode(
         ProjectEditor.getProject(component),
         component,
@@ -191,6 +209,17 @@ export function buildAssignableExpression(
 }
 
 function buildExpressionNode(
+    assets: Assets,
+    component: Component,
+    node: ExpressionNode,
+    assignable: boolean
+): number[] {
+    return withNamedExpressionContext(node, () =>
+        buildExpressionNodeImpl(assets, component, node, assignable)
+    );
+}
+
+function buildExpressionNodeImpl(
     assets: Assets,
     component: Component,
     node: ExpressionNode,

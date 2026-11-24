@@ -983,6 +983,10 @@ export function isObjectReferencable(object: IEezObject) {
         return true;
     }
 
+    if (ProjectEditor.NamedExpressionClass.classInfo == objectClassInfo) {
+        return true;
+    }
+
     const referencedObjectCollectionPathSet = new Set<string>();
 
     for (const eezClass of getAllClasses()) {
