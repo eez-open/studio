@@ -28,7 +28,7 @@
         "watch": "node node_modules/gulp-cli/bin/gulp.js debug && tsc --project tsconfig.dev.json",
         "pack": "electron-builder --dir",
         "dist": "npm run clean-dist && electron-builder",
-        "dist-raspbian": "USE_SYSTEM_FPM=true npm run clean-dist && npm run dist",
+        "dist-raspbian": "npm run clean-dist && electron-builder --linux deb AppImage",
         "dist-mac-x64": "npm run clean-dist && electron-builder --x64 --config electron-builder-mac.yml",
         "dist-mac-arm64": "electron-builder --arm64 --config electron-builder-mac.yml",
         "tsc-version": "tsc --version",

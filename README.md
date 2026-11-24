@@ -107,23 +107,34 @@ that provides that derivation. It can be used to install the project using
 
 ### Build and run from source (all operating systems)
 
--   Install `Node.JS 16.x` or newer
--   Install `node-gyp`, more information at https://github.com/nodejs/node-gyp#installation
+-   Install [Node.js](https://nodejs.org/) 22.12 or newer (24 LTS recommended)
+-   Install the `node-gyp` prerequisites (Python and a C/C++ toolchain), more information at https://github.com/nodejs/node-gyp#installation
 
-#### Only Linux:
-
-```
-sudo apt-get install build-essential libudev-dev libnss3
-```
-
-#### Only Raspbian:
-
-Install Node.js 16 and npm on Raspberry Pi: https://lindevs.com/install-node-js-and-npm-on-raspberry-pi/
+#### Only Linux (x64):
 
 ```
-sudo apt-get install build-essential libudev-dev libopenjp2-tools ruby-full
-sudo gem install fpm
+sudo apt-get install build-essential libudev-dev libnss3 rpm
 ```
+
+The `rpm` package provides `rpmbuild`, which is needed to create the `.rpm` package.
+
+#### Only Raspberry Pi (64-bit Raspberry Pi OS):
+
+Tested on Raspberry Pi 5 (2 GB RAM) with 64-bit Raspberry Pi OS based on Debian 13 (trixie). A 32-bit OS is not supported.
+
+Install Node.js, for example with [nvm](https://github.com/nvm-sh/nvm):
+
+```
+nvm install 24
+```
+
+Install the build dependencies:
+
+```
+sudo apt-get install build-essential libudev-dev libnss3 libimagequant-dev libpng-dev pkg-config
+```
+
+`libimagequant-dev`, `libpng-dev` and `pkg-config` are needed because there is no prebuilt `pngquant-bin` binary for Linux ARM64, so `npm install` compiles it from source.
 
 #### All platforms:
 
@@ -140,7 +151,7 @@ Start with:
 npm start
 ```
 
-Create distribution packages (except MacOS and Raspbian):
+Create distribution packages in the `dist` folder (Windows: NSIS installer, Linux: `.deb`, `.rpm` and `.AppImage`):
 
 ```
 npm run dist
@@ -158,7 +169,7 @@ or
 npm run dist-mac-x64
 ```
 
-On Raspbian:
+On Raspberry Pi (creates only `.deb` and `.AppImage`):
 
 ```
 npm run dist-raspbian
