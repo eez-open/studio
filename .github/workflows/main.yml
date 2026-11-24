@@ -68,3 +68,34 @@ jobs:
             #   with:
             #       name: "dist_$RUNNER_OS"
             #       path: dist
+
+    # Raspberry Pi (64-bit Raspberry Pi OS) and other Linux ARM64 systems: .deb and .AppImage
+    release-linux-arm64:
+        runs-on: ubuntu-24.04-arm
+
+        steps:
+            - name: Check out Git repository
+              uses: actions/checkout@v5
+
+            - name: Install Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+
+            - name: Install build dependencies
+              # there is no prebuilt pngquant-bin binary for Linux ARM64,
+              # npm install compiles it from source
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libudev-dev libimagequant-dev libpng-dev pkg-config
+
+            - name: Install npm packages
+              run: npm ci
+
+            - name: Build
+              run: npm run build
+
+            - name: Build/release Electron app
+              run: npx electron-builder --linux deb AppImage --publish always
+              env:
+                  GH_TOKEN: ${{ secrets.github_token }}
