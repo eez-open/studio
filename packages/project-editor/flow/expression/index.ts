@@ -8,7 +8,8 @@ export {
 
 export {
     buildExpression,
-    buildAssignableExpression
+    buildAssignableExpression,
+    buildAssignableListExpression
 } from "project-editor/flow/expression/build";
 
 export {

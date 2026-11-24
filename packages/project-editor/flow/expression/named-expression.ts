@@ -14,7 +14,10 @@
 
 import type { Project } from "project-editor/project/project";
 import type { Component } from "project-editor/flow/component";
-import type { ExpressionNode } from "project-editor/flow/expression/node";
+import type {
+    ExpressionNode,
+    IdentifierExpressionNode
+} from "project-editor/flow/expression/node";
 import { expressionParser } from "project-editor/flow/expression/parser";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -60,6 +63,7 @@ interface ExpandContext {
     namedExpressions: Map<string, INamedExpression>;
     component: Component | undefined;
     assignable: boolean;
+    onReference?: (node: IdentifierExpressionNode, assignable: boolean) => void;
     // the expression which is checked, for the error messages
     expression: string;
     // the named expressions being expanded, outermost first
@@ -67,7 +71,7 @@ interface ExpandContext {
 }
 
 interface Argument {
-    node: ExpressionNode;
+    getNode: (assignable: boolean) => ExpressionNode;
     // the expansion path where the argument comes from
     path: string[];
 }
@@ -197,11 +201,17 @@ function expandNode(
 ): ExpressionNode {
     const expand = (node: ExpressionNode) =>
         expandNode(context, node, parameters);
+    const read = (node: ExpressionNode) =>
+        expandNode({ ...context, assignable: false }, node, parameters);
 
     if (node.type == "Identifier") {
         const argument = parameters?.get(node.name);
         if (argument) {
-            return tag(cloneNode(argument.node), context, argument.path);
+            return tag(
+                argument.getNode(context.assignable),
+                context,
+                argument.path
+            );
         }
 
         const namedExpression = context.namedExpressions.get(node.name);
@@ -210,7 +220,7 @@ function expandNode(
         }
 
         checkNamedExpressionArity(namedExpression, undefined);
-
+        context.onReference?.(node, context.assignable);
         return expandDefinition(context, namedExpression, []);
     }
 
@@ -228,15 +238,39 @@ function expandNode(
                     namedExpression,
                     node.arguments.length
                 );
+                context.onReference?.(node.callee, context.assignable);
 
-                // arguments are expanded in the context of the caller
+                // Use the caller's scope and the parameter's read/write role.
                 const path = [...context.stack];
-                const args = node.arguments.map(argument => ({
-                    node: expand(argument),
-                    path
-                }));
+                const args = node.arguments.map(argument => {
+                    const expanded = new Map<boolean, ExpressionNode>();
+                    const getNode = (assignable: boolean) => {
+                        let result = expanded.get(assignable);
+                        if (!result) {
+                            result = expandNode(
+                                { ...context, assignable, stack: [...path] },
+                                cloneNode(argument),
+                                parameters
+                            );
+                            expanded.set(assignable, result);
+                        }
+                        return cloneNode(result);
+                    };
+                    return {
+                        path,
+                        getNode,
+                        checkUnused: () => {
+                            if (expanded.size === 0) {
+                                getNode(context.assignable);
+                            }
+                        }
+                    };
+                });
 
-                return expandDefinition(context, namedExpression, args);
+                const result = expandDefinition(context, namedExpression, args);
+                // Keep the arity and cycle checks for unused arguments.
+                args.forEach(argument => argument.checkUnused());
+                return result;
             }
         }
 
@@ -249,7 +283,7 @@ function expandNode(
     if (node.type == "MemberExpression") {
         node.object = expand(node.object);
         if (node.computed) {
-            node.property = expand(node.property);
+            node.property = read(node.property);
         }
         return node;
     }
@@ -269,7 +303,7 @@ function expandNode(
     }
 
     if (node.type == "ConditionalExpression") {
-        node.test = expand(node.test);
+        node.test = read(node.test);
         node.consequent = expand(node.consequent);
         node.alternate = expand(node.alternate);
         return node;
@@ -300,7 +334,8 @@ export function expandNamedExpressions(
     component: Component | undefined,
     rootNode: ExpressionNode,
     expression: string,
-    assignable: boolean = false
+    assignable: boolean = false,
+    onReference?: (node: IdentifierExpressionNode, assignable: boolean) => void
 ): ExpressionNode {
     const namedExpressions = getNamedExpressions(project);
     if (!namedExpressions || namedExpressions.size == 0) {
@@ -312,6 +347,7 @@ export function expandNamedExpressions(
             namedExpressions,
             component,
             assignable,
+            onReference,
             expression,
             stack: []
         },
@@ -344,13 +380,13 @@ export function checkNamedExpressionDefinition(
         context,
         namedExpression,
         namedExpression.parameterNames.map(parameterName => ({
-            node: {
+            getNode: () => ({
                 type: "Identifier",
                 name: parameterName,
                 valueType: "any",
                 identifierType: "unknown",
                 location: undefined as any
-            },
+            }),
             path: []
         }))
     );

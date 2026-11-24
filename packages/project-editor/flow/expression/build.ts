@@ -42,10 +42,43 @@ import {
 } from "project-editor/flow/expression/type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IMPORT_AS_PREFIX, findVariable } from "project-editor/project/assets";
+import { ASSIGNABLE_LIST_MARKER, parseAssignableListExpression } from "./assignable-list";
 import {
     expandNamedExpressions,
     withNamedExpressionContext
 } from "project-editor/flow/expression/named-expression";
+
+export function buildAssignableListExpression(
+    assets: Assets,
+    dataBuffer: DataBuffer | undefined,
+    component: Component,
+    expression: string
+) {
+    const nodes = parseAssignableListExpression(component, expression);
+    // Byte span includes this header. The runtime also caps it by the actual
+    // loaded asset size; an embedded length is not a trusted memory boundary.
+    const instructions = [ASSIGNABLE_LIST_MARKER, nodes.length, 0, 0];
+    for (const node of nodes) {
+        const entry = [
+            ...buildExpressionNode(assets, component, node, true),
+            ...makeEndInstructionWithType(assets, node.valueType)
+        ];
+        if (entry.length > 0xffff) {
+            throw "Assignable list item is too long";
+        }
+        instructions.push(entry.length, ...entry);
+    }
+    const byteSize = instructions.length * 2;
+    if (byteSize > 0x7fffffff) throw "Assignable list is too long";
+    instructions[2] = byteSize & 0xffff;
+    instructions[3] = byteSize >>> 16;
+    if (dataBuffer) {
+        instructions.forEach(instruction =>
+            dataBuffer.writeUint16NonAligned(instruction)
+        );
+    }
+    return instructions;
+}
 
 function convertFontTags(assets: Assets, component: Component, text: string) {
     if (text.indexOf("<") == -1 || !supportsFontTags(component)) {
@@ -425,7 +458,7 @@ function buildExpressionNodeImpl(
             assets,
             component,
             node.test,
-            assignable
+            false
         );
         const consequent = buildExpressionNode(
             assets,
@@ -627,7 +660,7 @@ function buildExpressionNodeImpl(
                         assets,
                         component,
                         node.property,
-                        assignable
+                        false
                     ),
                     ...buildExpressionNode(
                         assets,
@@ -650,7 +683,7 @@ function buildExpressionNodeImpl(
                     assets,
                     component,
                     node.property,
-                    assignable
+                    false
                 ),
                 makeArrayElementInstruction()
             ];

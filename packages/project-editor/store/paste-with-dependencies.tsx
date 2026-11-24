@@ -13,6 +13,7 @@ import {
 import { Dialog, showDialog } from "eez-studio-ui/dialog";
 import { Loader } from "eez-studio-ui/loader";
 import { Icon } from "eez-studio-ui/icon";
+import * as notification from "eez-studio-ui/notification";
 
 import {
     EezObject,
@@ -47,6 +48,8 @@ import {
 } from "project-editor/store";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
+    AmbiguousObjectReferenceError,
+    prepareObjectReferenceReplacement,
     replaceObjectReference,
     searchForObjectDependencies
 } from "project-editor/core/search";
@@ -1192,22 +1195,29 @@ class PasteWithDependenciesModel {
                 includeAdditionObjects = [flowFragment];
             }
 
-            for (const pasteObject of this.pasteObjects) {
-                if (
-                    pasteObject.conflict.kind == "exists-different" &&
+            const sourceRenames = this.pasteObjects.filter(
+                pasteObject =>
+                    pasteObject.conflict.kind === "exists-different" &&
                     pasteObject.conflictResolution == "rename-source"
-                ) {
-                    replaceObjectReference(
-                        pasteObject.object,
-                        pasteObject.conflictResolutionName,
-                        includeAdditionObjects
-                    );
+            );
+            for (const pasteObject of sourceRenames) {
+                prepareObjectReferenceReplacement(
+                    pasteObject.object,
+                    pasteObject.conflictResolutionName,
+                    includeAdditionObjects
+                );
+            }
+            for (const pasteObject of sourceRenames) {
+                replaceObjectReference(
+                    pasteObject.object,
+                    pasteObject.conflictResolutionName,
+                    includeAdditionObjects
+                );
 
-                    (pasteObject.object as ObjectWithName).name =
-                        pasteObject.conflictResolutionName;
+                (pasteObject.object as ObjectWithName).name =
+                    pasteObject.conflictResolutionName;
 
-                    pasteObject.conflict = { kind: "doesnt-exists" };
-                }
+                pasteObject.conflict = { kind: "doesnt-exists" };
             }
         });
 
@@ -1256,10 +1266,36 @@ class PasteWithDependenciesModel {
     }
 
     doPaste() {
+        // Report all ambiguous destination renames before editing either store.
+        for (const pasteObject of this.pasteObjects) {
+            if (
+                pasteObject.conflict.kind === "exists-different" &&
+                pasteObject.conflictResolution === "rename-destination"
+            ) {
+                prepareObjectReferenceReplacement(
+                    pasteObject.conflict.destinationObject,
+                    pasteObject.conflictResolutionName
+                );
+            }
+        }
+
         this.beforePaste();
 
-        this.destinationProjectStore.undoManager.setCombineCommands(true);
+        const undoManager = this.destinationProjectStore.undoManager;
+        const wasCombining = undoManager.combineCommands;
+        if (!wasCombining) {
+            undoManager.setCombineCommands(true);
+        }
+        try {
+            this.pasteIntoDestination();
+        } finally {
+            if (!wasCombining) {
+                undoManager.setCombineCommands(false);
+            }
+        }
+    }
 
+    private pasteIntoDestination() {
         // rename destination objects
         runInAction(() => {
             for (const pasteObject of this.pasteObjects) {
@@ -1451,8 +1487,6 @@ class PasteWithDependenciesModel {
                 }
             }
         }
-
-        this.destinationProjectStore.undoManager.setCombineCommands(false);
     }
 
     get allConflictsResolved() {
@@ -1793,7 +1827,15 @@ export function showResolvePasteConflictsDialog(
     };
 
     const onOk = () => {
-        pasteWithDependenciesModel.doPaste();
+        try {
+            pasteWithDependenciesModel.doPaste();
+        } catch (error) {
+            if (!(error instanceof AmbiguousObjectReferenceError)) {
+                throw error;
+            }
+            notification.error(error.message);
+            return;
+        }
 
         if (onFinished) {
             onFinished(pasteWithDependenciesModel.destinationProjectStore);

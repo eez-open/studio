@@ -42,6 +42,7 @@ import { buildBB3ModuleFields } from "project-editor/build/bb3-module-fields";
 import { generateSourceCodeForEezFramework } from "project-editor/lvgl/build";
 import { cleanupSourceFile } from "project-editor/build/cleanup-c-source-files";
 import { generateSourceCodeForEezGuiLite } from "project-editor/eez-gui-lite/build";
+import { getAssignableListDeclarationError } from "project-editor/flow/user-property";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -552,6 +553,20 @@ async function buildOne(
     let previousManifest: BuildManifest | null = null;
 
     try {
+        for (const sourceProject of projectStore.openProjectsManager.projects) {
+            for (const flow of [...sourceProject.pages, ...sourceProject.actions]) {
+                for (const property of flow.userProperties) {
+                    if (!property.assignableList) {
+                        continue;
+                    }
+                    const error = getAssignableListDeclarationError(property);
+                    if (error) {
+                        throw new BuildException(error, property);
+                    }
+                }
+            }
+        }
+
         let sectionNames: string[] | undefined = undefined;
 
         let destinationFolderPath;

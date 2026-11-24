@@ -274,6 +274,8 @@ export interface PropertyInfo {
         | ((object: IEezObject | undefined) => FlowPropertyType | undefined);
     expressionType?: ValueType;
     expressionIsConstant?: boolean;
+    // Literal list of assignable targets passed synchronously to a native action.
+    assignableList?: boolean;
     isOutputOptional?:
         | boolean
         | ((object: IEezObject, propertyInfo: PropertyInfo) => boolean);

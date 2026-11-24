@@ -1,0 +1,37 @@
+{
+  "settings": {
+    "general": {
+      "projectVersion": "v3",
+      "projectType": "lvgl",
+      "lvglVersion": "9.5.0",
+      "flowSupport": true
+    },
+    "build": {
+      "configurations": [{ "name": "Default" }],
+      "files": []
+    }
+  },
+  "variables": {
+    "globalVariables": [
+      {
+        "objID": "9bde69d5-f916-4276-890e-a7497940421e",
+        "name": "Setpoint",
+        "type": "integer",
+        "defaultValue": "70",
+        "native": false,
+        "persistent": false
+      }
+    ],
+    "structures": [],
+    "enums": []
+  },
+  "actions": [],
+  "userPages": [],
+  "userWidgets": [],
+  "fonts": [],
+  "bitmaps": [],
+  "colors": [],
+  "themes": [],
+  "lvglStyles": { "styles": [], "defaultStyles": {} },
+  "lvglGroups": { "groups": [] }
+}

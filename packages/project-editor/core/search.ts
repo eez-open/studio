@@ -12,6 +12,7 @@ import {
     getObjectPropertyAsObject,
     isEezObjectArray,
     getObjectPath,
+    getHumanReadableObjectPath,
     getClassInfo,
     EezValueObject,
     ProjectStore,
@@ -21,7 +22,8 @@ import {
 
 import type {
     checkObjectReference,
-    ImportDirective
+    ImportDirective,
+    Project
 } from "project-editor/project/project";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
@@ -33,8 +35,11 @@ import {
 } from "project-editor/flow/expression/helper";
 import type {
     ExpressionNode,
+    IdentifierExpressionNode,
     IdentifierType
 } from "project-editor/flow/expression/node";
+import type { Component } from "project-editor/flow/component";
+import { expandNamedExpressions } from "project-editor/flow/expression/named-expression";
 
 import {
     parseScpi,
@@ -276,12 +281,19 @@ export function* searchForPattern(
     }
 }
 
+type NamedDestinationVisitor = (
+    component: Component | undefined,
+    name: string,
+    reference: EezValueObject
+) => void;
+
 export function* searchForObjectDependencies(
     projectStore: ProjectStore,
     root: IEezObject,
     withPause: boolean,
     lookInsideExpressions: boolean,
-    includeAdditionObjects?: IEezObject[]
+    includeAdditionObjects?: IEezObject[],
+    visitNamedDestination?: NamedDestinationVisitor
 ): IterableIterator<
     | { kind: "object-reference"; valueObject: EezValueObject }
     | { kind: "configuration-reference"; valueObject: EezValueObject }
@@ -290,6 +302,7 @@ export function* searchForObjectDependencies(
           kind: "expression-node";
           valueObject: EezValueObject;
           node: ExpressionNode;
+          ambiguous?: boolean;
           expressionStartIndex: number;
       }
     | { kind: "expression-end"; valueObject: EezValueObject }
@@ -427,25 +440,36 @@ export function* searchForObjectDependencies(
 
                     for (const expression of expressions) {
                         try {
-                            const rootNode = expressionParser.parse(
-                                value.substring(
-                                    expression.start,
-                                    expression.end
-                                )
+                            const source = value.substring(
+                                expression.start,
+                                expression.end
                             );
-
-                            findValueTypeInExpressionNode(
+                            const rootNode: ExpressionNode =
+                                expressionParser.parse(source);
+                            const nodes = expressionNodesForSearch(
                                 projectStore.project,
                                 component,
                                 rootNode,
-                                flowProperty == "assignable"
+                                source,
+                                flowProperty === "assignable" ||
+                                    (valueObject.propertyInfo.assignableList ===
+                                        true &&
+                                        rootNode.type === "ArrayExpression"),
+                                visitNamedDestination
+                                    ? name =>
+                                          visitNamedDestination(
+                                              component,
+                                              name,
+                                              valueObject
+                                          )
+                                    : undefined
                             );
 
-                            for (const node of visitExpressionNodes(rootNode)) {
+                            for (const reference of nodes) {
                                 yield {
                                     kind: "expression-node",
                                     valueObject,
-                                    node,
+                                    ...reference,
                                     expressionStartIndex: expression.start
                                 };
                             }
@@ -472,10 +496,108 @@ export function* searchForObjectDependencies(
     }
 }
 
+function* expressionNodesForSearch(
+    project: Project,
+    component: Component | undefined,
+    root: ExpressionNode,
+    source: string,
+    assignable: boolean,
+    visitNamedDestination?: (name: string) => void
+): IterableIterator<{ node: ExpressionNode; ambiguous?: boolean }> {
+    if (assignable && project.variables?.namedExpressionsMap.size) {
+        const identifiers = new Map<number, IdentifierExpressionNode[]>();
+        const record = (node: IdentifierExpressionNode) => {
+            if (
+                node.location.source !== source ||
+                !node.identifierType ||
+                node.identifierType === "unknown"
+            ) {
+                return;
+            }
+            const offset = node.location.start.offset;
+            const bindings = identifiers.get(offset);
+            if (!bindings) {
+                identifiers.set(offset, [node]);
+            } else if (
+                !bindings.some(
+                    binding =>
+                        binding.identifierType === node.identifierType &&
+                        binding.importedVariable === node.importedVariable &&
+                        (node.identifierType !== "enum-member" ||
+                            binding.valueType === node.valueType)
+                )
+            ) {
+                bindings.push(node);
+            }
+        };
+        try {
+            const namedDestinations = visitNamedDestination
+                ? new Set<string>()
+                : undefined;
+            const expanded = expandNamedExpressions(
+                project,
+                component,
+                root,
+                source,
+                assignable,
+                (node, writable) => {
+                    record({ ...node, identifierType: "named-expression" });
+                    if (writable) {
+                        namedDestinations?.add(node.name);
+                    }
+                }
+            );
+            findValueTypeInExpressionNode(
+                project,
+                component,
+                expanded,
+                assignable
+            );
+            namedDestinations?.forEach(visitNamedDestination!);
+            if (identifiers.size > 0) {
+                const members = new Map<number, ExpressionNode[]>();
+                for (const node of visitExpressionNodes(expanded)) {
+                    if (node.type === "Identifier") {
+                        record(node);
+                    } else if (
+                        node.type === "MemberExpression" &&
+                        node.property.type === "Identifier" &&
+                        node.property.location.source === source
+                    ) {
+                        members.set(node.property.location.start.offset, [node]);
+                    }
+                }
+                // Expansion can duplicate or reorder parameters. Visit each
+                // distinct binding once, at its original source position.
+                const bindings = [...identifiers, ...members]
+                    .sort(([a], [b]) => a - b);
+                for (const [, nodes] of bindings) {
+                    for (const node of nodes) {
+                        yield { node, ambiguous: nodes.length > 1 };
+                    }
+                }
+                return;
+            }
+            for (const node of visitExpressionNodes(expanded)) {
+                yield { node };
+            }
+            return;
+        } catch {
+            // Keep finding explicit references in an unfinished expression.
+            root = expressionParser.parse(source);
+        }
+    }
+    findValueTypeInExpressionNode(project, component, root, assignable);
+    for (const node of visitExpressionNodes(root)) {
+        yield { node };
+    }
+}
+
 export function* searchForReference(
     root: IEezObject,
     searchParams: SearchParamsObject,
-    withPause: boolean
+    withPause: boolean,
+    visitNamedDestination?: NamedDestinationVisitor
 ): IterableIterator<SearchResult> {
     const object = searchParams.object;
     const objectParent = getParent(object);
@@ -562,7 +684,8 @@ export function* searchForReference(
         root,
         withPause,
         identifierType != undefined || structType != undefined,
-        searchParams.includeAdditionObjects
+        searchParams.includeAdditionObjects,
+        visitNamedDestination
     );
     while (true) {
         let visitResult = v.next();
@@ -637,7 +760,9 @@ export function* searchForReference(
                         node.identifierType === identifierType &&
                         (identifierType != "enum-member" ||
                             node.valueType == enumType) &&
-                        node.name == objectName
+                        (node.importedVariable
+                            ? node.importedVariable === object
+                            : node.name === objectName)
                     ) {
                         valueObject.foundPositions!.push({
                             start:
@@ -645,7 +770,8 @@ export function* searchForReference(
                                 dependency.expressionStartIndex,
                             end:
                                 node.location.end.offset +
-                                dependency.expressionStartIndex
+                                dependency.expressionStartIndex,
+                            ambiguous: dependency.ambiguous
                         });
                     }
                 } else if (node.type == "MemberExpression") {
@@ -1098,80 +1224,121 @@ export function isReferenced(object: IEezObject) {
     }
 }
 
+export class AmbiguousObjectReferenceError extends Error {}
+
+export function prepareObjectReferenceReplacement(
+    object: IEezObject,
+    newValue: string,
+    includeAdditionObjects?: IEezObject[]
+): () => void {
+    const rootObject = getRootObject(object);
+    const project = ProjectEditor.getProject(object);
+    const oldName: string = getProperty(object, "name");
+    const outputComponent =
+        object instanceof ProjectEditor.CustomOutputClass &&
+        project.variables?.namedExpressionsMap.has(newValue)
+            ? ProjectEditor.getComponent(object)
+            : undefined;
+    const renameNamedExpression =
+        object instanceof ProjectEditor.NamedExpressionClass;
+    let captured: EezValueObject | undefined;
+    const visitNamedDestination: NamedDestinationVisitor | undefined =
+        outputComponent || renameNamedExpression
+            ? (component, name, reference) => {
+                  if (
+                      (outputComponent &&
+                          component === outputComponent &&
+                          name === newValue) ||
+                      (renameNamedExpression &&
+                          name === oldName &&
+                          component?.outputs?.some(
+                              output => output.name === newValue
+                          ))
+                  ) {
+                      captured ??= reference;
+                  }
+              }
+            : undefined;
+
+    const changes: {
+        parent: IEezObject;
+        key: string;
+        value: string | string[];
+    }[] = [];
+    const references = searchForReference(
+        rootObject,
+        { type: "object", object, includeAdditionObjects },
+        false,
+        visitNamedDestination
+    );
+
+    for (const reference of references) {
+        if (!reference) {
+            continue;
+        }
+
+        const parent = getParent(reference);
+        const key = getKey(reference);
+        if (!parent || !key || typeof key !== "string") {
+            continue;
+        }
+
+        let value: string | string[] = newValue;
+        if (reference.foundPositions) {
+            const oldValue = getProperty(parent, key);
+            const ambiguous = reference.foundPositions.find(
+                position => position.ambiguous
+            );
+            if (ambiguous) {
+                const name = oldValue.slice(ambiguous.start, ambiguous.end);
+                throw new AmbiguousObjectReferenceError(
+                    `Cannot rename "${name}" in ${getHumanReadableObjectPath(reference)}. It refers to different declarations when read and written. Use separate arguments for reading and writing, then rename again.`
+                );
+            }
+
+            value = "";
+            let prevEnd = 0;
+            for (const { start, end } of reference.foundPositions) {
+                if (prevEnd < start) {
+                    value += oldValue.substring(prevEnd, start);
+                }
+                value += newValue;
+                prevEnd = end;
+            }
+
+            if (prevEnd < oldValue.length) {
+                value += oldValue.substring(prevEnd);
+            }
+        } else if (
+            reference.propertyInfo.type === PropertyType.ConfigurationReference
+        ) {
+            value = reference.value.map((item: string) =>
+                item === oldName ? newValue : item
+            );
+        }
+        changes.push({ parent, key, value });
+    }
+
+    if (captured) {
+        throw new AmbiguousObjectReferenceError(
+            "This name is already in use. Choose another."
+        );
+    }
+
+    return () => {
+        const store = getProjectStore(rootObject);
+        for (const { parent, key, value } of changes) {
+            store.updateObject(parent, { [key]: value });
+        }
+    };
+}
+
 export function replaceObjectReference(
     object: IEezObject,
     newValue: string,
     includeAdditionObjects?: IEezObject[]
 ) {
-    const rootObject = getRootObject(object);
-    let resultsGenerator = searchForReference(
-        rootObject,
-        { type: "object", object, includeAdditionObjects },
-        false
-    );
-
-    while (true) {
-        let searchResult = resultsGenerator.next();
-        if (searchResult.done) {
-            break;
-        }
-
-        let searchValue = searchResult.value;
-        if (searchValue) {
-            let parent = getParent(searchValue);
-            if (!parent) {
-                continue;
-            }
-
-            let key = getKey(searchValue);
-            if (!key || !(typeof key == "string")) {
-                continue;
-            }
-
-            let value: string | string[] = newValue;
-
-            if (searchValue.foundPositions) {
-                const oldValue = getProperty(parent, key);
-
-                value = "";
-
-                let prevEnd = 0;
-
-                for (const position of searchValue.foundPositions) {
-                    let start = position.start;
-                    let end = position.end;
-
-                    if (prevEnd < start) {
-                        value += oldValue.substring(prevEnd, start);
-                    }
-
-                    value += newValue;
-
-                    prevEnd = end;
-                }
-
-                if (prevEnd < oldValue.length) {
-                    value += oldValue.substring(prevEnd);
-                }
-            } else if (
-                searchValue.propertyInfo.type ===
-                PropertyType.ConfigurationReference
-            ) {
-                value = [];
-                for (let i = 0; i < searchValue.value.length; i++) {
-                    if (searchValue.value[i] !== getProperty(object, "name")) {
-                        value.push(searchValue.value[i]);
-                    } else {
-                        value.push(newValue);
-                    }
-                }
-            }
-
-            getProjectStore(rootObject).updateObject(parent, {
-                [key]: value
-            });
-        }
-    }
+    prepareObjectReferenceReplacement(object, newValue, includeAdditionObjects)();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

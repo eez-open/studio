@@ -130,6 +130,29 @@ export function checkAssignableExpression(
     }
 }
 
+function checkImportedVariable(
+    project: Project,
+    importAs: string,
+    variableName: string
+) {
+    const importedProject = project.settings.general.imports.find(
+        directive => directive.importAs === importAs
+    )?.project;
+    if (!importedProject) {
+        throw `Unknown import '${importAs}'`;
+    }
+    if (!importedProject.variables) {
+        throw `Import '${importAs}' does not have any variables`;
+    }
+    if (
+        !importedProject.variables.globalVariables.some(
+            variable => variable.name === variableName
+        )
+    ) {
+        throw `Unknown variable '${variableName}' in import '${importAs}'`;
+    }
+}
+
 function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
     function checkNode(node: ExpressionNode) {
         withNamedExpressionContext(node, () => checkNodeImpl(node));
@@ -423,33 +446,11 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
                     }
 
                     if (node.object.valueType == "importedProject") {
-                        // check if it is a global variable from imports
-                        const importAs = node.object.name;
-                        const variableName = node.property.name;
-
-                        const importDirective =
-                            project.settings.general.imports.find(
-                                importDirective =>
-                                    importDirective.importAs == importAs
-                            );
-
-                        if (!importDirective || !importDirective.project) {
-                            throw `Unknown import '${importAs}'`;
-                        }
-
-                        if (!importDirective.project.variables) {
-                            throw `Import '${importAs}' does not have any variables`;
-                        }
-
-                        if (
-                            !importDirective.project.variables.globalVariables.find(
-                                globalVariable =>
-                                    globalVariable.name == variableName
-                            )
-                        ) {
-                            throw `Unknown variable '${variableName}' in import '${importAs}'`;
-                        }
-
+                        checkImportedVariable(
+                            project,
+                            node.object.name,
+                            node.property.name
+                        );
                         return;
                     }
                 }
@@ -480,7 +481,7 @@ function checkExpressionNode(component: Component, rootNode: ExpressionNode) {
     checkNode(rootNode);
 }
 
-function checkAssignableExpressionNode(
+export function checkAssignableExpressionNode(
     component: Component,
     rootNode: ExpressionNode
 ) {
@@ -535,6 +536,18 @@ function checkAssignableExpressionNode(
         }
 
         if (node.type == "MemberExpression") {
+            if (
+                node.object.type === "Identifier" &&
+                node.object.identifierType === "imported-project" &&
+                node.property.type === "Identifier"
+            ) {
+                checkImportedVariable(
+                    project,
+                    node.object.name,
+                    node.property.name
+                );
+                return;
+            }
             checkNode(node.object);
 
             if (node.computed) {

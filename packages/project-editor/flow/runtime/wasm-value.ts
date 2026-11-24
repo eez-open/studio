@@ -34,7 +34,14 @@ import {
     FLOW_VALUE_TYPE_ERROR,
     FLOW_VALUE_TYPE_WIDGET,
     FLOW_VALUE_TYPE_JSON,
-    FLOW_VALUE_TYPE_EVENT
+    FLOW_VALUE_TYPE_EVENT,
+    FLOW_VALUE_TYPE_VALUE_PTR,
+    FLOW_VALUE_TYPE_ARRAY_ELEMENT_VALUE,
+    FLOW_VALUE_TYPE_NATIVE_VARIABLE,
+    FLOW_VALUE_TYPE_JSON_MEMBER_VALUE,
+    FLOW_VALUE_TYPE_PROPERTY_REF,
+    FLOW_VALUE_TYPE_FLOW_OUTPUT,
+    FLOW_VALUE_TYPE_MODULE_FIELD
 } from "project-editor/build/value-types";
 import type {
     ObjectOrArrayValueWithType,
@@ -323,6 +330,24 @@ export function getValue(
     offset: number
 ): ValueWithType {
     const type = WasmFlowRuntime.HEAPU8[offset];
+    // Flow outputs are write-only destinations, not readable variables.
+    if (type == FLOW_VALUE_TYPE_FLOW_OUTPUT) {
+        return { value: undefined, valueType: "undefined" };
+    }
+    // Reference values can occur in native assignable-list parameters and in
+    // the preview's action Flow. Dereference in C++, where all reference kinds
+    // and lifetimes are understood, and release the inspection copy promptly.
+    if ([FLOW_VALUE_TYPE_VALUE_PTR, FLOW_VALUE_TYPE_ARRAY_ELEMENT_VALUE,
+        FLOW_VALUE_TYPE_NATIVE_VARIABLE, FLOW_VALUE_TYPE_JSON_MEMBER_VALUE,
+        FLOW_VALUE_TYPE_PROPERTY_REF, FLOW_VALUE_TYPE_MODULE_FIELD].includes(type)) {
+        const valuePtr = WasmFlowRuntime._getValueForInspection(offset);
+        if (!valuePtr) return { value: undefined, valueType: "undefined" };
+        try {
+            return getValue(WasmFlowRuntime, valuePtr);
+        } finally {
+            WasmFlowRuntime._valueFree(valuePtr);
+        }
+    }
     offset += 8;
     if (type == FLOW_VALUE_TYPE_UNDEFINED) {
         return { value: undefined, valueType: "undefined" };

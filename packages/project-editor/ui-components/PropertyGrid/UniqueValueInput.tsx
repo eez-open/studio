@@ -10,7 +10,10 @@ import { validators } from "eez-studio-shared/validation";
 import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 
 import { isPropertyOptional } from "project-editor/core/object";
-import { replaceObjectReference } from "project-editor/core/search";
+import {
+    AmbiguousObjectReferenceError,
+    prepareObjectReferenceReplacement
+} from "project-editor/core/search";
 import { Icon } from "eez-studio-ui/icon";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,14 +148,37 @@ export const UniqueValueInput = observer(
                         this.props.changeValue(undefined);
                     });
                 } else {
-                    this.context.undoManager.setCombineCommands(true);
+                    let replaceReferences: () => void;
+                    try {
+                        replaceReferences = prepareObjectReferenceReplacement(
+                            this.props.objects[0],
+                            newValue
+                        );
+                    } catch (error) {
+                        if (!(error instanceof AmbiguousObjectReferenceError)) {
+                            throw error;
+                        }
+                        runInAction(() => {
+                            this.error = error.message;
+                        });
+                        return;
+                    }
 
-                    runInAction(() => {
-                        replaceObjectReference(this.props.objects[0], newValue);
-                        this.props.changeValue(newValue);
-                    });
-
-                    this.context.undoManager.setCombineCommands(false);
+                    const undoManager = this.context.undoManager;
+                    const wasCombining = undoManager.combineCommands;
+                    if (!wasCombining) {
+                        undoManager.setCombineCommands(true);
+                    }
+                    try {
+                        runInAction(() => {
+                            replaceReferences();
+                            this.props.changeValue(newValue);
+                        });
+                    } finally {
+                        if (!wasCombining) {
+                            undoManager.setCombineCommands(false);
+                        }
+                    }
                 }
             }
 
