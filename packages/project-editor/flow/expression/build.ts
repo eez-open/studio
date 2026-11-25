@@ -42,6 +42,7 @@ import {
 } from "project-editor/flow/expression/type";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { IMPORT_AS_PREFIX, findVariable } from "project-editor/project/assets";
+import { isBB3ModuleField } from "project-editor/features/variable/bb3-module-field-unit";
 import {
     expandNamedExpressions,
     withNamedExpressionContext
@@ -316,7 +317,7 @@ function buildExpressionNodeImpl(
             node.name,
             (project, assetName) => {
                 const variable = findVariable(project, assetName);
-                if (!variable || assets.projectStore.project.bb3ModuleMetadata && variable.bb3ModuleField != undefined) {
+                if (!variable || assets.projectStore.project.bb3ModuleMetadata && isBB3ModuleField(variable)) {
                     return undefined;
                 }
                 return variable;

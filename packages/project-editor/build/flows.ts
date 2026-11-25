@@ -56,6 +56,7 @@ import {
     objectVariableTypes
 } from "project-editor/features/variable/value-type";
 import type { Structure } from "project-editor/features/variable/variable";
+import { isBB3ModuleField } from "project-editor/features/variable/bb3-module-field-unit";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 
 function getComponentName(componentType: IObjectClassInfo) {
@@ -579,7 +580,7 @@ export function buildFlowData(assets: Assets, dataBuffer: DataBuffer) {
                         !(
                             (assets.option == "buildFiles" ||
                                 assets.getAssetId(globalVariable) != undefined) &&
-                            (globalVariable.native || assets.projectStore.project.bb3ModuleMetadata && globalVariable.bb3ModuleField != undefined)
+                            (globalVariable.native || assets.projectStore.project.bb3ModuleMetadata && isBB3ModuleField(globalVariable))
                         ) // only non-native variables
                 ),
                 globalVariable =>

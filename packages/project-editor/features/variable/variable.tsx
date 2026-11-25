@@ -27,7 +27,8 @@ import {
     getProperty,
     PropertyProps,
     isPropertyDisabled,
-    getParent
+    getParent,
+    type IPropertyGridGroupDefinition
 } from "project-editor/core/object";
 import { makeTagsProperty } from "project-editor/core/tags";
 import {
@@ -86,8 +87,7 @@ import {
     isArrayType,
     getArrayElementTypeFromType,
     isBB3ModuleFieldType,
-    isBB3ModuleFieldFloatType,
-    isIntegerType
+    isBB3ModuleFieldFloatType
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -106,10 +106,13 @@ import { IconAction } from "eez-studio-ui/action";
 import { CodeEditor } from "eez-studio-ui/code-editor";
 import { Icon } from "eez-studio-ui/icon";
 import {
+    BB3_MODULE_FIELD_DIRECTIONS,
     BB3_MODULE_FIELD_MEASUREMENTS,
     BB3_MODULE_FIELD_TRACKING_ROLES,
     BB3_MODULE_FIELD_UNITS,
-    hasBB3ModuleFieldChannel
+    hasBB3ModuleFieldChannel,
+    isBB3ModuleField,
+    isBB3ModuleFieldSampledType
 } from "project-editor/features/variable/bb3-module-field-unit";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,8 +362,39 @@ export const NativeVariableImplementationInfoPropertyUI = observer(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type BB3ModuleField = "input" | "output" | "input-output" | undefined;
+type BB3ModuleFieldDirection = "input" | "output" | "input-output" | undefined;
 
+// The BB3 module field properties of a global variable in a project with BB3
+// module metadata. No position: after the properties without a group.
+const bb3ModuleFieldGroup: IPropertyGridGroupDefinition = {
+    id: "bb3-module-field",
+    title: "BB3 Module Field"
+};
+
+// the "Module field" switch is shown for the global variables of a project
+// with BB3 module metadata
+function isBB3ModuleFieldSwitchDisabled(variable: Variable) {
+    return (
+        !isGlobalVariable(variable) ||
+        !ProjectEditor.getProject(variable).bb3ModuleMetadata
+    );
+}
+
+// the other BB3 module field properties are shown while the switch is on
+function isBB3ModuleFieldPropertyDisabled(variable: Variable) {
+    return (
+        isBB3ModuleFieldSwitchDisabled(variable) || !isBB3ModuleField(variable)
+    );
+}
+
+// Sampled: a field that the module changes, with a type that can be sampled
+function isBB3ModuleFieldSampledDisabled(variable: Variable) {
+    return (
+        isBB3ModuleFieldPropertyDisabled(variable) ||
+        variable.bb3ModuleFieldDirection == "input" ||
+        !isBB3ModuleFieldSampledType(variable.type)
+    );
+}
 
 function isNativeVariableDisabled(variable: Variable) {
     const project = ProjectEditor.getProject(variable);
@@ -391,14 +425,18 @@ export class Variable extends EezObject {
     usedIn?: string[];
     persistent: boolean;
     native: boolean;
-    bb3ModuleField: BB3ModuleField;
+    // the "Module field" switch: the variable is a BB3 module field
+    bb3ModuleField: boolean | undefined;
+    // who changes the field, required while the switch is on
+    bb3ModuleFieldDirection: BB3ModuleFieldDirection;
     bb3ModuleFieldUnit: string | undefined;
     // the smallest step of a float field in its unit: BB3+ shows its values
     // with the decimals of it (0.005 -> 3), the default of the widgets that
     // have no precision (eez-framework getValueInUnit)
     bb3ModuleFieldResolution: number | undefined;
-    // samples per second, if set the module streams the field samples (YT
-    // graphs, data logging) at the rate BB3+ asks for, up to this rate
+    // the module streams the field samples (YT graphs, data logging) at the
+    // rate BB3+ asks for, up to the max sample rate (samples per second)
+    bb3ModuleFieldSampled: boolean | undefined;
     bb3ModuleFieldMaxSampleRate: number | undefined;
     // the channel measurement the sampled field is (BB3+ finds the stream
     // of a channel measurement by it, e.g. for the data logging)
@@ -446,8 +484,10 @@ export class Variable extends EezObject {
             persistent: observable,
             native: observable,
             bb3ModuleField: observable,
+            bb3ModuleFieldDirection: observable,
             bb3ModuleFieldUnit: observable,
             bb3ModuleFieldResolution: observable,
+            bb3ModuleFieldSampled: observable,
             bb3ModuleFieldMaxSampleRate: observable,
             bb3ModuleFieldMeasurement: observable,
             bb3ModuleFieldTrackingRole: observable,
@@ -594,146 +634,143 @@ export class Variable extends EezObject {
             },
             {
                 name: "bb3ModuleField",
-                displayName: "BB3 module field",
+                displayName: "Module field",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: isBB3ModuleFieldSwitchDisabled
+            },
+            {
+                name: "bb3ModuleFieldDirection",
+                displayName: "Direction",
                 type: PropertyType.Enum,
-                enumItems: [
-                    {
-                        id: "input"
-                    },
-                    {
-                        id: "output"
-                    },
-                    {
-                        id: "input-output"
-                    }
-                ],
-                disabled: (variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata
+                enumItems: BB3_MODULE_FIELD_DIRECTIONS,
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: isBB3ModuleFieldPropertyDisabled
             },
             {
                 name: "bb3ModuleFieldUnit",
-                displayName: "BB3 module field unit",
+                displayName: "Unit",
                 type: PropertyType.Enum,
                 enumItems: BB3_MODULE_FIELD_UNITS.map(unit => ({
                     id: unit.id,
                     label: unit.label
                 })),
+                propertyGridGroup: bb3ModuleFieldGroup,
                 disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    variable.bb3ModuleField == undefined ||
+                    isBB3ModuleFieldPropertyDisabled(variable) ||
                     !isBB3ModuleFieldFloatType(variable.type)
             },
             {
                 name: "bb3ModuleFieldResolution",
-                displayName: "BB3 module field resolution",
+                displayName: "Resolution",
                 type: PropertyType.Number,
                 isOptional: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
                 disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    variable.bb3ModuleField == undefined ||
+                    isBB3ModuleFieldPropertyDisabled(variable) ||
                     !isBB3ModuleFieldFloatType(variable.type)
             },
             {
-                name: "bb3ModuleFieldMaxSampleRate",
-                displayName: "BB3 module field max sample rate (S/s)",
-                type: PropertyType.Number,
-                isOptional: true,
-                disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    variable.bb3ModuleField == undefined ||
-                    variable.bb3ModuleField == "input" ||
-                    (variable.type != "float" && !isIntegerType(variable.type))
-            },
-            {
-                name: "bb3ModuleFieldMeasurement",
-                displayName: "BB3 module field measurement",
-                type: PropertyType.Enum,
-                enumItems: BB3_MODULE_FIELD_MEASUREMENTS.map(measurement => ({
-                    id: measurement.id,
-                    label: measurement.label
-                })),
-                disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    !variable.bb3ModuleFieldMaxSampleRate
-            },
-            {
-                name: "bb3ModuleFieldTrackingRole",
-                displayName: "BB3 module field tracking role",
-                type: PropertyType.Enum,
-                enumItems: BB3_MODULE_FIELD_TRACKING_ROLES.map(role => ({
-                    id: role.id,
-                    label: role.label
-                })),
-                disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    variable.bb3ModuleField == undefined ||
-                    variable.bb3ModuleField == "output"
-            },
-            {
-                name: "bb3ModuleFieldMeasurementChannel",
-                displayName: "BB3 module field channel (module channel index)",
-                type: PropertyType.Number,
-                isOptional: true,
-                disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    !hasBB3ModuleFieldChannel(variable)
-            },
-            {
                 name: "bb3ModuleFieldMin",
-                displayName: "BB3 module field min",
+                displayName: "Min",
                 type: PropertyType.Number,
                 isOptional: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
                 disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    variable.bb3ModuleField == undefined ||
-                    variable.bb3ModuleField == "output" ||
+                    isBB3ModuleFieldPropertyDisabled(variable) ||
+                    variable.bb3ModuleFieldDirection == "output" ||
                     variable.type == "boolean" ||
                     !isBB3ModuleFieldType(variable.type)
             },
             {
                 name: "bb3ModuleFieldMax",
-                displayName: "BB3 module field max",
+                displayName: "Max",
                 type: PropertyType.Number,
                 isOptional: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
                 disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    variable.bb3ModuleField == undefined ||
-                    variable.bb3ModuleField == "output" ||
+                    isBB3ModuleFieldPropertyDisabled(variable) ||
+                    variable.bb3ModuleFieldDirection == "output" ||
                     variable.type == "boolean" ||
                     !isBB3ModuleFieldType(variable.type)
             },
             {
                 name: "bb3ModuleFieldUpdatePeriod",
-                displayName: "BB3 module field update period (ms)",
+                displayName: "Update period (ms)",
                 type: PropertyType.Number,
                 isOptional: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
                 disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    variable.bb3ModuleField == undefined ||
-                    variable.bb3ModuleField == "input"
+                    isBB3ModuleFieldPropertyDisabled(variable) ||
+                    variable.bb3ModuleFieldDirection == "input"
+            },
+            {
+                name: "bb3ModuleFieldSampled",
+                displayName: "Sampled",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: isBB3ModuleFieldSampledDisabled
+            },
+            {
+                name: "bb3ModuleFieldMaxSampleRate",
+                displayName: "Max sample rate (S/s)",
+                type: PropertyType.Number,
+                isOptional: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: (variable: Variable) =>
+                    isBB3ModuleFieldSampledDisabled(variable) ||
+                    !variable.bb3ModuleFieldSampled
+            },
+            {
+                name: "bb3ModuleFieldMeasurement",
+                displayName: "Measurement",
+                type: PropertyType.Enum,
+                enumItems: BB3_MODULE_FIELD_MEASUREMENTS.map(measurement => ({
+                    id: measurement.id,
+                    label: measurement.label
+                })),
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: (variable: Variable) =>
+                    isBB3ModuleFieldSampledDisabled(variable) ||
+                    !variable.bb3ModuleFieldSampled
+            },
+            {
+                name: "bb3ModuleFieldMeasurementChannel",
+                displayName: "Channel (module channel index)",
+                type: PropertyType.Number,
+                isOptional: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: (variable: Variable) =>
+                    isBB3ModuleFieldPropertyDisabled(variable) ||
+                    !hasBB3ModuleFieldChannel(variable)
+            },
+            {
+                name: "bb3ModuleFieldTrackingRole",
+                displayName: "Tracking role",
+                type: PropertyType.Enum,
+                enumItems: BB3_MODULE_FIELD_TRACKING_ROLES.map(role => ({
+                    id: role.id,
+                    label: role.label
+                })),
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: (variable: Variable) =>
+                    isBB3ModuleFieldPropertyDisabled(variable) ||
+                    variable.bb3ModuleFieldDirection == "output"
             },
             {
                 name: "bb3ModuleFieldLink",
-                displayName: "BB3 module field link (copied to the coupled module)",
+                displayName: "Link (copied to the coupled module)",
                 type: PropertyType.Enum,
                 enumItems: [
                     { id: "leader", label: "Written by the leader" },
                     { id: "follower", label: "Written by the follower" }
                 ],
+                propertyGridGroup: bb3ModuleFieldGroup,
                 disabled: (variable: Variable) =>
-                    !isGlobalVariable(variable) ||
-                    !ProjectEditor.getProject(variable).bb3ModuleMetadata ||
-                    variable.bb3ModuleField != "input-output"
+                    isBB3ModuleFieldPropertyDisabled(variable) ||
+                    variable.bb3ModuleFieldDirection != "input-output"
             }
         ],
         icon: VARIABLE_ICON,
@@ -749,15 +786,14 @@ export class Variable extends EezObject {
                                 NATIVE
                             </span>
                         )}
-                    {!isPropertyDisabled(
-                        variable,
-                        findPropertyByNameInObject(variable, "bb3ModuleField")!
-                    ) &&
-                        variable.bb3ModuleField && (
-                            <span className="EezStudio_ListLabel_Badge">
-                                {variable.bb3ModuleField.toUpperCase()}
-                            </span>
-                        )}
+                    {!isBB3ModuleFieldPropertyDisabled(variable) && (
+                        <span className="EezStudio_ListLabel_Badge">
+                            {(
+                                variable.bb3ModuleFieldDirection ??
+                                "module field"
+                            ).toUpperCase()}
+                        </span>
+                    )}
                     {!isPropertyDisabled(
                         variable,
                         findPropertyByNameInObject(variable, "persistent")!
@@ -767,15 +803,8 @@ export class Variable extends EezObject {
                                 PERSISTENT
                             </span>
                         )}
-                    {!isPropertyDisabled(
-                        variable,
-                        findPropertyByNameInObject(
-                            variable,
-                            "bb3ModuleFieldMaxSampleRate"
-                        )!
-                    ) &&
-                        variable.bb3ModuleFieldMaxSampleRate != undefined &&
-                        variable.bb3ModuleFieldMaxSampleRate > 0 && (
+                    {!isBB3ModuleFieldSampledDisabled(variable) &&
+                        variable.bb3ModuleFieldSampled && (
                             <span className="EezStudio_ListLabel_Badge">
                                 SAMPLED
                             </span>
@@ -800,6 +829,16 @@ export class Variable extends EezObject {
 
             if (isNativeVariableDisabled(object)) {
                 objectJS.native = false;
+            }
+
+            // "BB3 module field" was the direction, and a field was sampled
+            // when its max sample rate was greater than 0
+            if (typeof objectJS.bb3ModuleField == "string") {
+                objectJS.bb3ModuleFieldDirection = objectJS.bb3ModuleField;
+                objectJS.bb3ModuleField = true;
+                if (objectJS.bb3ModuleFieldMaxSampleRate > 0) {
+                    objectJS.bb3ModuleFieldSampled = true;
+                }
             }
         },
         newItem: async (parent: IEezObject) => {
@@ -985,13 +1024,31 @@ export class Variable extends EezObject {
                 );
             }
 
-            if (
-                variable.bb3ModuleField != undefined &&
-                !isPropertyDisabled(
-                    variable,
-                    findPropertyByNameInObject(variable, "bb3ModuleField")!
-                )
-            ) {
+            if (!isBB3ModuleFieldPropertyDisabled(variable)) {
+                if (!variable.bb3ModuleFieldDirection) {
+                    messages.push(
+                        propertyNotSetMessage(variable, "bb3ModuleFieldDirection")
+                    );
+                }
+                if (
+                    !isBB3ModuleFieldSampledDisabled(variable) &&
+                    variable.bb3ModuleFieldSampled &&
+                    !(
+                        variable.bb3ModuleFieldMaxSampleRate != undefined &&
+                        variable.bb3ModuleFieldMaxSampleRate > 0
+                    )
+                ) {
+                    messages.push(
+                        new Message(
+                            MessageType.ERROR,
+                            `A sampled BB3 module field needs a max sample rate greater than 0`,
+                            getChildOfObject(
+                                variable,
+                                "bb3ModuleFieldMaxSampleRate"
+                            )
+                        )
+                    );
+                }
                 if (!isBB3ModuleFieldType(variable.type)) {
                     messages.push(
                         new Message(

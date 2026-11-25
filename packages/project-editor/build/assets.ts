@@ -102,6 +102,7 @@ import type { LVGLStyle } from "project-editor/lvgl/style";
 import { buildEezGuiLiteSections } from "project-editor/eez-gui-lite/build";
 import { ColorFormat } from "project-editor/features/style/color-format";
 import type { Color } from "project-editor/features/style/theme";
+import { isBB3ModuleField as isBB3ModuleFieldSwitchOn } from "project-editor/features/variable/bb3-module-field-unit";
 
 export { DummyDataBuffer, DataBuffer } from "project-editor/build/data-buffer";
 
@@ -454,7 +455,7 @@ export class Assets {
         //
         const isBB3ModuleField = (globalVariable: Variable) =>
             this.projectStore.project.bb3ModuleMetadata &&
-            globalVariable.bb3ModuleField != undefined;
+            isBB3ModuleFieldSwitchOn(globalVariable);
 
         const nonNativeVariables = hasFlowSupport ? this.getAssets<Variable>(
             project =>

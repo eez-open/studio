@@ -1,3 +1,50 @@
+import { isIntegerType } from "project-editor/features/variable/value-type";
+
+// Direction of a BB3 module field: who changes it (input: BB3+, output: the
+// module, input-output: both).
+export const BB3_MODULE_FIELD_DIRECTIONS = [
+    { id: "input", label: "Input" },
+    { id: "output", label: "Output" },
+    { id: "input-output", label: "Input-output" }
+];
+
+// The properties of a variable that say what kind of BB3 module field it is.
+interface BB3ModuleFieldProperties {
+    type: string;
+    bb3ModuleField: boolean | undefined;
+    bb3ModuleFieldDirection: string | undefined;
+    bb3ModuleFieldSampled: boolean | undefined;
+    bb3ModuleFieldMaxSampleRate: number | undefined;
+    bb3ModuleFieldMeasurement: string | undefined;
+    bb3ModuleFieldTrackingRole: string | undefined;
+}
+
+// The "Module field" switch is on. Without a direction (a check error) the
+// field is built as input-output.
+export function isBB3ModuleField(variable: { bb3ModuleField: boolean | undefined }) {
+    return variable.bb3ModuleField === true;
+}
+
+// The type of a field that can be sampled: float, or an integer for the bit
+// field of the digital input pins.
+export function isBB3ModuleFieldSampledType(type: string) {
+    return type == "float" || isIntegerType(type);
+}
+
+// The module streams the samples of the field: the Sampled switch is on, the
+// field is not input only, it has a type that can be sampled and the max
+// sample rate is set (the check reports Sampled without it).
+export function isBB3ModuleFieldSampled(variable: BB3ModuleFieldProperties) {
+    return (
+        isBB3ModuleField(variable) &&
+        variable.bb3ModuleFieldSampled === true &&
+        variable.bb3ModuleFieldDirection != "input" &&
+        isBB3ModuleFieldSampledType(variable.type) &&
+        variable.bb3ModuleFieldMaxSampleRate != undefined &&
+        variable.bb3ModuleFieldMaxSampleRate > 0
+    );
+}
+
 // Unit of a float BB3 module field: BB3+ gives the value with this unit to the flows
 // (e.g. displayed as "1.5 V" or "250 mA"). Value is the eez-framework Unit
 // enum value.
@@ -94,19 +141,14 @@ export function getBB3ModuleFieldTrackingRoleValue(role: string | undefined) {
 
 // a sampled field with a measurement or a field with a tracking role belongs
 // to a module channel
-export function hasBB3ModuleFieldChannel(variable: {
-    bb3ModuleField: string | undefined;
-    bb3ModuleFieldMaxSampleRate: number | undefined;
-    bb3ModuleFieldMeasurement: string | undefined;
-    bb3ModuleFieldTrackingRole: string | undefined;
-}) {
+export function hasBB3ModuleFieldChannel(variable: BB3ModuleFieldProperties) {
     const hasMeasurement =
-        !!variable.bb3ModuleFieldMaxSampleRate &&
+        isBB3ModuleFieldSampled(variable) &&
         !!variable.bb3ModuleFieldMeasurement &&
         variable.bb3ModuleFieldMeasurement != "none";
     const hasTrackingRole =
-        variable.bb3ModuleField != undefined &&
-        variable.bb3ModuleField != "output" &&
+        isBB3ModuleField(variable) &&
+        variable.bb3ModuleFieldDirection != "output" &&
         !!variable.bb3ModuleFieldTrackingRole &&
         variable.bb3ModuleFieldTrackingRole != "none";
     return hasMeasurement || hasTrackingRole;

@@ -3,6 +3,7 @@ import type { BuildResult } from "project-editor/store/features";
 import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 
 import type { Variable } from "project-editor/features/variable/variable";
+import { isBB3ModuleField } from "project-editor/features/variable/bb3-module-field-unit";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,11 +62,12 @@ function buildBB3ModuleFieldTags(assets: Assets) {
     let fieldTags = [];
 
     // the tag is the index in the BB3 module fields of the BB3 module metadata (only
-    // the global variables with bb3ModuleField set), see BB3ModuleMetadata.bb3ModuleFields
+    // the global variables with the "Module field" switch on), see
+    // BB3ModuleMetadata.bb3ModuleFields
     const variables = assets.projectStore.project.variables.globalVariables;
     let fieldIndex = 0;
     for (let i = 0; i < variables.length; i++) {
-        if (variables[i].bb3ModuleField != undefined) {
+        if (isBB3ModuleField(variables[i])) {
             fieldTags.push(
                 `${TAB}${getName(
                     "BB3_MODULE_FIELD_TAG_",

@@ -17,8 +17,7 @@ import { DataBuffer } from "project-editor/build/data-buffer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     BB3_MODULE_FIELD_TYPES,
-    isBB3ModuleFieldFloatType,
-    isIntegerType,
+    isBB3ModuleFieldFloatType
 } from "project-editor/features/variable/value-type";
 import { getValueType } from "project-editor/build/values";
 import type { Variable } from "project-editor/features/variable/variable";
@@ -26,7 +25,9 @@ import {
     hasBB3ModuleFieldChannel,
     getBB3ModuleFieldMeasurementValue,
     getBB3ModuleFieldTrackingRoleValue,
-    getBB3ModuleFieldUnitValue
+    getBB3ModuleFieldUnitValue,
+    isBB3ModuleField,
+    isBB3ModuleFieldSampled
 } from "project-editor/features/variable/bb3-module-field-unit";
 import {
     SCPI_COMMAND_FLAG_QUERY,
@@ -242,8 +243,8 @@ export class BB3ModuleMetadata extends EezObject {
 
     get bb3ModuleFields() {
         const project = ProjectEditor.getProject(this);
-        return project.variables.globalVariables.filter(
-            globalVariable => globalVariable.bb3ModuleField != undefined
+        return project.variables.globalVariables.filter(globalVariable =>
+            isBB3ModuleField(globalVariable)
         );
     }
 
@@ -302,9 +303,9 @@ export function writeBB3ModuleMetadata(
             const BB3_MODULE_FIELD_DIRECTION_OUTPUT = 1;
             const BB3_MODULE_FIELD_DIRECTION_INPUT_OUTPUT = 2;
             dataBuffer.writeUint8(
-                variable.bb3ModuleField == "input"
+                variable.bb3ModuleFieldDirection == "input"
                     ? BB3_MODULE_FIELD_DIRECTION_INPUT
-                    : variable.bb3ModuleField == "output"
+                    : variable.bb3ModuleFieldDirection == "output"
                       ? BB3_MODULE_FIELD_DIRECTION_OUTPUT
                       : BB3_MODULE_FIELD_DIRECTION_INPUT_OUTPUT
             );
@@ -314,10 +315,10 @@ export function writeBB3ModuleMetadata(
             dataBuffer.writeUint8(
                 (variable.persistent ? BB3_MODULE_FIELD_FLAG_PERSISTENT : 0) |
                     (maxSampleRate > 0 ? BB3_MODULE_FIELD_FLAG_SAMPLED : 0) |
-                    (variable.bb3ModuleField == "input-output" && variable.bb3ModuleFieldLink == "leader"
+                    (variable.bb3ModuleFieldDirection == "input-output" && variable.bb3ModuleFieldLink == "leader"
                         ? BB3_MODULE_FIELD_FLAG_LINK_FROM_LEADER
                         : 0) |
-                    (variable.bb3ModuleField == "input-output" && variable.bb3ModuleFieldLink == "follower"
+                    (variable.bb3ModuleFieldDirection == "input-output" && variable.bb3ModuleFieldLink == "follower"
                         ? BB3_MODULE_FIELD_FLAG_LINK_FROM_FOLLOWER
                         : 0)
             );
@@ -363,7 +364,7 @@ export function writeBB3ModuleMetadata(
 
             // trackingRole (BB3_TRACKING_ROLE_...)
             dataBuffer.writeUint8(
-                variable.bb3ModuleField != "output"
+                variable.bb3ModuleFieldDirection != "output"
                     ? getBB3ModuleFieldTrackingRoleValue(
                           variable.bb3ModuleFieldTrackingRole
                       )
@@ -402,12 +403,8 @@ export function writeBB3ModuleMetadata(
 
 // samples per second, 0 if the field is not sampled
 function getBB3ModuleFieldMaxSampleRate(variable: Variable) {
-    if (variable.type != "float" && !isIntegerType(variable.type)) {
-        return 0;
-    }
-    return variable.bb3ModuleFieldMaxSampleRate != undefined &&
-        variable.bb3ModuleFieldMaxSampleRate > 0
-        ? variable.bb3ModuleFieldMaxSampleRate
+    return isBB3ModuleFieldSampled(variable)
+        ? variable.bb3ModuleFieldMaxSampleRate!
         : 0;
 }
 

@@ -145,6 +145,7 @@ const BAR_GRAPH_DO_NOT_DISPLAY_VALUE = 1 << 4;
 
 import { isArray } from "eez-studio-shared/util";
 import type { IMenuItem } from "project-editor/core/menu";
+import { isBB3ModuleFieldSampled } from "project-editor/features/variable/bb3-module-field-unit";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2274,8 +2275,7 @@ function getSampledBB3ModuleFields(object: IEezObject) {
     return bb3ModuleMetadata.bb3ModuleFields.filter(
         variable =>
             (variable.type == "float" || variable.type == "integer") &&
-            variable.bb3ModuleFieldMaxSampleRate != undefined &&
-            variable.bb3ModuleFieldMaxSampleRate > 0
+            isBB3ModuleFieldSampled(variable)
     );
 }
 
@@ -2414,7 +2414,7 @@ class YTChartTrace extends EezObject {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            `"${field}" is not a sampled BB3 module field (set "Module field max sample rate" of the variable)`,
+                            `"${field}" is not a sampled BB3 module field (turn on "Sampled" and set "Max sample rate" in the BB3 Module Field section of the variable)`,
                             getChildOfObject(trace, propertyName)
                         )
                     );

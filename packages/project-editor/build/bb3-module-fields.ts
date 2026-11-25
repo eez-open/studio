@@ -1,5 +1,5 @@
 // Generates the BB3 module fields of a BB3 module: the global variables of the
-// project with "BB3 module field" set, exchanged with BB3+ as module fields (tag
+// project with the "Module field" switch on, exchanged with BB3+ as module fields (tag
 // BB3_MODULE_FIELD_TAG_START + index). The module firmware includes the
 // generic runtime bb3-module.c (eez-bb3plus-cm5-firmware/eez-bb3plus-module-
 // interface), which uses these definitions by their fixed names.
@@ -17,15 +17,16 @@ import { TAB, NamingConvention, getName } from "project-editor/build/helper";
 import { BB3_MODULE_FIELD_TYPES } from "project-editor/features/variable/value-type";
 import { evalConstantExpression } from "project-editor/flow/expression";
 import { BB3_MODULE_METADATA_VERSION } from "project-editor/features/bb3-module-metadata";
+import { isBB3ModuleFieldSampled } from "project-editor/features/variable/bb3-module-field-unit";
 
 function getFieldIndexName(variable: Variable) {
     return getName("MODULE_FIELD_", variable, NamingConvention.UnderscoreUpperCase);
 }
 
 function getDirectionName(variable: Variable) {
-    return variable.bb3ModuleField == "input"
+    return variable.bb3ModuleFieldDirection == "input"
         ? "INPUT"
-        : variable.bb3ModuleField == "output"
+        : variable.bb3ModuleFieldDirection == "output"
         ? "OUTPUT"
         : "INPUT_OUTPUT";
 }
@@ -79,7 +80,7 @@ function getDefaultValue(project: Project, variable: Variable) {
 
 function getFieldComment(variable: Variable) {
     const parts: string[] = [];
-    parts.push(variable.bb3ModuleField == "input-output" ? "input-output" : variable.bb3ModuleField!);
+    parts.push(variable.bb3ModuleFieldDirection ?? "input-output");
     if (variable.persistent) {
         parts.push("persistent");
     }
@@ -98,7 +99,7 @@ function getFieldComment(variable: Variable) {
     if (variable.bb3ModuleFieldUpdatePeriod) {
         parts.push(`every ${variable.bb3ModuleFieldUpdatePeriod} ms`);
     }
-    if (variable.bb3ModuleFieldMaxSampleRate) {
+    if (isBB3ModuleFieldSampled(variable)) {
         parts.push(`sampled up to ${variable.bb3ModuleFieldMaxSampleRate} S/s`);
     }
     return parts.join(", ");
@@ -191,7 +192,7 @@ function buildDef(project: Project, fields: Variable[]) {
         if (variable.persistent) {
             flags.push("BB3_FIELD_FLAG_PERSISTENT");
         }
-        if (variable.bb3ModuleFieldMaxSampleRate && variable.bb3ModuleFieldMaxSampleRate > 0) {
+        if (isBB3ModuleFieldSampled(variable)) {
             flags.push("BB3_FIELD_FLAG_SAMPLED");
         }
         const hasMin = variable.bb3ModuleFieldMin != undefined && variable.type != "boolean";
