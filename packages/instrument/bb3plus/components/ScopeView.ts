@@ -1737,6 +1737,7 @@ export class ScopeView extends BB3PlusView {
                 "div",
                 { className: "EezStudio_BB3Plus_Toolbar" },
                 this.runButton,
+                this.addSelect,
                 h("label", null, "Rate"),
                 this.rateSelect,
                 h("label", null, "Span"),
@@ -1757,7 +1758,6 @@ export class ScopeView extends BB3PlusView {
                     this.resetZoomButton
                 ),
                 this.optionsButton,
-                this.addSelect,
                 this.droppedText,
                 this.pushStatus.element,
                 this.samplesError.element
