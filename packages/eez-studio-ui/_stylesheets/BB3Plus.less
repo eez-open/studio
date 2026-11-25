@@ -51,6 +51,14 @@
         padding: 0 6px;
         font-size: 12px;
     }
+
+    // unselected chip: on hover only tint it, Bootstrap's default fills it
+    // exactly like a selected (btn-secondary) chip
+    & > .btn-outline-secondary {
+        --bs-btn-hover-bg: var(--bs-secondary-bg-subtle);
+        --bs-btn-hover-color: var(--bs-secondary-text-emphasis);
+        --bs-btn-hover-border-color: var(--bs-btn-border-color);
+    }
 }
 
 .EezStudio_BB3Plus_Body {
