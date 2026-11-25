@@ -78,6 +78,7 @@ export interface IInstrumentObjectProps {
     custom?: any;
     commandsProtocol?: CommandsProtocolType; // in the future we will also support Modbus
     commandLineEnding?: CommandLineEnding;
+    sortIndex?: number | null;
     getQueryResponseType(query: string): Promise<IResponseTypeType | undefined>;
     isCommandSendsBackDataBlock(commandName: string): Promise<boolean>;
     defaultConnectionParameters: ConnectionParameters;
@@ -116,6 +117,9 @@ export class InstrumentObject {
     custom: any;
     commandsProtocol: CommandsProtocolType;
     commandLineEnding: CommandLineEnding;
+    // position in the Instruments tab, set when the user reorders them
+    // (null/undefined: never reordered, sorted by name after the ordered ones)
+    sortIndex: number | null | undefined;
 
     _connection: IConnection | undefined;
     _commandsTree: CommandsTree | undefined;
@@ -135,6 +139,7 @@ export class InstrumentObject {
             custom: observable,
             commandsProtocol: observable,
             commandLineEnding: observable,
+            sortIndex: observable,
             _extension: observable,
             extension: computed,
             properties: computed,
@@ -185,6 +190,8 @@ export class InstrumentObject {
         this.commandLineEnding =
             props.commandLineEnding ||
             (this.commandsProtocol == "SCPI" ? "newline" : "no-line-ending");
+
+        this.sortIndex = props.sortIndex;
 
         if (!isRenderer()) {
             setTimeout(() => {
@@ -1151,7 +1158,11 @@ export const store = createStore({
             db.exec(
                 `UPDATE versions SET version = 10 WHERE tableName = 'instrument'`
             );
-        }
+        },
+
+        // version 11
+        `ALTER TABLE instrument ADD COLUMN sortIndex INTEGER;
+        UPDATE versions SET version = 11 WHERE tableName = 'instrument';`
     ],
     properties: {
         id: types.id,
@@ -1167,7 +1178,13 @@ export const store = createStore({
         recordHistory: types.boolean,
         custom: types.object,
         commandsProtocol: types.string,
-        commandLineEnding: types.string
+        commandLineEnding: types.string,
+        // not types.integer, which would turn NULL (never reordered) into 0;
+        // Number() because the db returns integers as BigInt (safe integers)
+        sortIndex: {
+            fromDB: (value: any) => (value != null ? Number(value) : null),
+            toDB: (value: any) => value
+        }
     },
     create(props: IInstrumentObjectProps) {
         return new InstrumentObject(props);
@@ -1191,6 +1208,17 @@ export function createInstrument(extension: IExtension): string {
         commandsProtocol: extension.commandsProtocol,
         commandLineEnding: extension.commandLineEnding
     });
+}
+
+export function setInstrumentsOrder(orderedInstrumentIds: string[]) {
+    beginTransaction("Reorder instruments");
+    orderedInstrumentIds.forEach((id, sortIndex) => {
+        const instrument = instruments.get(id);
+        if (instrument && instrument.sortIndex !== sortIndex) {
+            store.updateObject({ id, sortIndex });
+        }
+    });
+    commitTransaction();
 }
 
 export function changeGroupNameInInstruments(

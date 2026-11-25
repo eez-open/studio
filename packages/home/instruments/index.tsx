@@ -16,7 +16,11 @@ import { ToolbarHeader } from "eez-studio-ui/header-with-body";
 import { ButtonAction } from "eez-studio-ui/action";
 import { Icon } from "eez-studio-ui/icon";
 
-import { instruments, InstrumentObject } from "instrument/instrument-object";
+import {
+    instruments,
+    InstrumentObject,
+    setInstrumentsOrder
+} from "instrument/instrument-object";
 
 import { stringCompare } from "eez-studio-shared/string";
 import { beginTransaction, commitTransaction } from "eez-studio-shared/store";
@@ -36,10 +40,28 @@ import { showImportDialog } from "./import-dialog";
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Instruments the user has reordered come first, by their sortIndex, the rest
+// (never reordered, e.g. newly added) after them, by name.
+function compareInstruments(a: InstrumentObject, b: InstrumentObject) {
+    const aOrdered = typeof a.sortIndex == "number";
+    const bOrdered = typeof b.sortIndex == "number";
+    if (aOrdered && bOrdered && a.sortIndex != b.sortIndex) {
+        return a.sortIndex! - b.sortIndex!;
+    }
+    if (aOrdered != bOrdered) {
+        return aOrdered ? -1 : 1;
+    }
+    return stringCompare(a.name, b.name);
+}
+
 export class InstrumentsStore {
     _selectedInstrumentId: string | undefined;
     connectionParameters: ConnectionParameters | null;
     searchText: string;
+
+    // drag and drop reordering
+    draggedInstrumentId: string | undefined;
+    dropTarget: { instrumentId: string; before: boolean } | undefined;
 
     onSelectInstrument: (() => void) | undefined;
 
@@ -47,10 +69,16 @@ export class InstrumentsStore {
         makeObservable(this, {
             _selectedInstrumentId: observable,
             searchText: observable,
+            draggedInstrumentId: observable,
+            dropTarget: observable.ref,
             selectedInstrumentId: computed,
             selectedInstrument: computed,
+            allInstruments: computed,
             instruments: computed,
-            onSearchChange: action.bound
+            onSearchChange: action.bound,
+            startDrag: action,
+            setDropTarget: action,
+            endDrag: action
         });
     }
 
@@ -68,16 +96,70 @@ export class InstrumentsStore {
         });
     }
 
+    get allInstruments() {
+        return Array.from(instruments.values()).sort(compareInstruments);
+    }
+
     get instruments() {
-        return Array.from(instruments.values())
-            .filter(
-                instrument =>
-                    (this.searchText || "").trim().length == 0 ||
-                    instrument.name
-                        .toLowerCase()
-                        .indexOf(this.searchText.trim().toLowerCase()) != -1
-            )
-            .sort((a, b) => stringCompare(a.name, b.name));
+        return this.allInstruments.filter(
+            instrument =>
+                (this.searchText || "").trim().length == 0 ||
+                instrument.name
+                    .toLowerCase()
+                    .indexOf(this.searchText.trim().toLowerCase()) != -1
+        );
+    }
+
+    startDrag(instrumentId: string) {
+        this.draggedInstrumentId = instrumentId;
+        this.dropTarget = undefined;
+    }
+
+    setDropTarget(instrumentId: string | undefined, before: boolean) {
+        if (instrumentId == undefined) {
+            this.dropTarget = undefined;
+        } else if (
+            this.dropTarget?.instrumentId != instrumentId ||
+            this.dropTarget.before != before
+        ) {
+            this.dropTarget = { instrumentId, before };
+        }
+    }
+
+    endDrag() {
+        this.draggedInstrumentId = undefined;
+        this.dropTarget = undefined;
+    }
+
+    // Moves the dragged instrument before/after the drop target, in the full
+    // (unfiltered) list, and stores the new order of all instruments.
+    drop() {
+        const draggedInstrumentId = this.draggedInstrumentId;
+        const dropTarget = this.dropTarget;
+        this.endDrag();
+
+        if (
+            !draggedInstrumentId ||
+            !dropTarget ||
+            dropTarget.instrumentId == draggedInstrumentId
+        ) {
+            return;
+        }
+
+        const ids = this.allInstruments
+            .map(instrument => instrument.id)
+            .filter(id => id != draggedInstrumentId);
+
+        let index = ids.indexOf(dropTarget.instrumentId);
+        if (index == -1) {
+            return;
+        }
+        if (!dropTarget.before) {
+            index++;
+        }
+        ids.splice(index, 0, draggedInstrumentId);
+
+        setInstrumentsOrder(ids);
     }
 
     get selectedInstrument() {
@@ -578,7 +660,12 @@ const InstrumentComponent = observer(
         };
 
         componentDidUpdate() {
-            if (this.props.isSelected) {
+            if (
+                this.props.isSelected &&
+                // while dragging, all instruments re-render on every drop
+                // target change, don't scroll then
+                !this.props.instrumentsStore.draggedInstrumentId
+            ) {
                 this.ref.current!.scrollIntoView({
                     block: "nearest",
                     behavior: "smooth"
@@ -586,8 +673,53 @@ const InstrumentComponent = observer(
             }
         }
 
+        onDragStart = (event: React.DragEvent<HTMLDivElement>) => {
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", this.props.instrument.id);
+            this.props.instrumentsStore.startDrag(this.props.instrument.id);
+        };
+
+        onDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+            const { instrumentsStore, instrument } = this.props;
+            if (!instrumentsStore.draggedInstrumentId) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.dataTransfer.dropEffect = "move";
+
+            if (instrumentsStore.draggedInstrumentId == instrument.id) {
+                instrumentsStore.setDropTarget(undefined, false);
+            } else {
+                const rect = event.currentTarget.getBoundingClientRect();
+                instrumentsStore.setDropTarget(
+                    instrument.id,
+                    event.clientX < rect.left + rect.width / 2
+                );
+            }
+        };
+
+        onDrop = (event: React.DragEvent<HTMLDivElement>) => {
+            if (!this.props.instrumentsStore.draggedInstrumentId) {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            this.props.instrumentsStore.drop();
+        };
+
+        onDragEnd = () => {
+            this.props.instrumentsStore.endDrag();
+        };
+
         render() {
-            const { instrument } = this.props;
+            const { instrument, instrumentsStore } = this.props;
+
+            const dropTarget =
+                instrumentsStore.dropTarget?.instrumentId == instrument.id
+                    ? instrumentsStore.dropTarget
+                    : undefined;
 
             return (
                 <div
@@ -595,9 +727,19 @@ const InstrumentComponent = observer(
                     className={classNames(
                         "EezStudio_InstrumentComponentEnclosure shadow-sm rounded bg-light",
                         {
-                            selected: this.props.isSelected
+                            selected: this.props.isSelected,
+                            dragging:
+                                instrumentsStore.draggedInstrumentId ==
+                                instrument.id,
+                            "drop-before": dropTarget?.before === true,
+                            "drop-after": dropTarget?.before === false
                         }
                     )}
+                    draggable={!instrumentsStore.selectInstrument}
+                    onDragStart={this.onDragStart}
+                    onDragOver={this.onDragOver}
+                    onDrop={this.onDrop}
+                    onDragEnd={this.onDragEnd}
                     onClick={() => this.props.selectInstrument(instrument)}
                     onDoubleClick={() => {
                         if (this.props.instrumentsStore.selectInstrument) {
@@ -709,6 +851,33 @@ export const Instruments = observer(
                                 "EezStudio_Instruments",
                                 "EezStudio_Instruments_Size_" + this.props.size
                             )}
+                            // over the gaps between the instruments: keep the
+                            // current drop target, so dropping there still
+                            // moves to where the indicator is shown
+                            onDragOver={event => {
+                                if (instrumentsStore.draggedInstrumentId) {
+                                    event.preventDefault();
+                                    event.dataTransfer.dropEffect = "move";
+                                }
+                            }}
+                            onDrop={event => {
+                                if (instrumentsStore.draggedInstrumentId) {
+                                    event.preventDefault();
+                                    instrumentsStore.drop();
+                                }
+                            }}
+                            onDragLeave={event => {
+                                if (
+                                    !event.currentTarget.contains(
+                                        event.relatedTarget as Node | null
+                                    )
+                                ) {
+                                    instrumentsStore.setDropTarget(
+                                        undefined,
+                                        false
+                                    );
+                                }
+                            }}
                         >
                             {instrumentsStore.instruments.map(obj => (
                                 <InstrumentComponent

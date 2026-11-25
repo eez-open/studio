@@ -694,6 +694,33 @@
                     background-color: @selectionBackgroundColor!important;
                     color: @selectionColor;
                 }
+
+                // drag and drop reordering
+                position: relative;
+
+                &.dragging {
+                    opacity: 0.5;
+                }
+
+                &.drop-before::before,
+                &.drop-after::after {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    width: 4px;
+                    border-radius: 2px;
+                    background-color: @selectionBackgroundColor;
+                    pointer-events: none;
+                }
+
+                &.drop-before::before {
+                    left: -6px;
+                }
+
+                &.drop-after::after {
+                    right: -6px;
+                }
             }
         }
 
