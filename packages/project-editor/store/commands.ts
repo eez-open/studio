@@ -204,7 +204,7 @@ export let updateObject = action((object: IEezObject, values: any) => {
         updateObjectValueHook(object, values);
     }
 
-    let previousCommand;
+    let previousCommand: UpdateCommand | undefined;
 
     // TODO this should be moved to undoManager implementation
     // merge with previous command
@@ -216,9 +216,15 @@ export let updateObject = action((object: IEezObject, values: any) => {
         }
     }
 
-    undoManager.executeCommand(
-        new UpdateCommand(object, values, previousCommand)
-    );
+    const command: ICommand = new UpdateCommand(object, values, previousCommand);
+    undoManager.executeCommand(command);
+    if (previousCommand) {
+        // The merged command replaces the previous one, so its undo goes back
+        // to the revision before the previous one (the saved revision if the
+        // project was saved then), not to the revision of the previous one,
+        // which executeCommand gave it.
+        command.previousRevision = (previousCommand as ICommand).previousRevision;
+    }
 
     if (closeCombineCommands) {
         undoManager.setCombineCommands(false);
