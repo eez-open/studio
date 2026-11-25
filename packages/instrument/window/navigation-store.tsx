@@ -26,6 +26,7 @@ import type * as ListsModule from "instrument/window/lists/lists";
 import type { INavigationItem } from "instrument/window/navigation";
 
 import type * as Bb3Module from "instrument/bb3";
+import type * as Bb3PlusModule from "instrument/bb3plus";
 
 import type * as DashboardModule from "instrument/window/dashboard";
 
@@ -53,6 +54,7 @@ export class NavigationStore {
         >(this, {
             _mainNavigationSelectedItem: observable.ref,
             startPageNavigationItem: computed({ keepAlive: true }),
+            bb3PlusNavigationItems: computed({ keepAlive: true }),
             navigationItems: computed,
             mainNavigationSelectedItem: computed,
             navigateToHistory: action.bound,
@@ -166,7 +168,10 @@ export class NavigationStore {
     }
 
     get startPageNavigationItem() {
-        if (this.appStore.instrument.isBB3) {
+        if (
+            this.appStore.instrument.isBB3 &&
+            !this.appStore.instrument.isBB3Plus
+        ) {
             return {
                 id: "start-page",
                 icon: "material:dashboard",
@@ -185,6 +190,15 @@ export class NavigationStore {
         }
 
         return undefined;
+    }
+
+    get bb3PlusNavigationItems(): INavigationItem[] {
+        if (!this.appStore.instrument.isBB3Plus) {
+            return [];
+        }
+        const { createNavigationItems } =
+            require("instrument/bb3plus") as typeof Bb3PlusModule;
+        return createNavigationItems(this.appStore);
     }
 
     get dashboardNavigationItems() {
@@ -224,6 +238,7 @@ export class NavigationStore {
         navigationItems.push(...this.dashboardNavigationItems);
 
         navigationItems.push(this.terminalNavigationItem);
+        navigationItems.push(...this.bb3PlusNavigationItems);
         navigationItems.push(this.deletedHistoryItemsNavigationItem);
         navigationItems.push(this.scriptsNavigationItem);
         navigationItems.push(this.shortcutsAndGroupsNavigationItem);

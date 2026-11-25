@@ -6,7 +6,8 @@ import { Icon } from "eez-studio-ui/icon";
 
 export interface INavigationItem {
     id: string;
-    icon: string;
+    // "material:<name>", "svg:<name>", an image URL or an element
+    icon: string | JSX.Element;
     title: string;
     position?: "hidden";
     attention?: boolean;

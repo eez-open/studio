@@ -1,0 +1,295 @@
+// EEZ BB3+ views of the instrument window (instrument/bb3plus)
+
+.EezStudio_BB3Plus_Host {
+    width: 100%;
+    height: 100%;
+}
+
+.EezStudio_BB3Plus_View {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: @backgroundColor;
+    color: @textColor;
+
+    --bb3plus-grid: rgba(128, 128, 128, 0.3);
+    --bb3plus-changed: rgba(242, 191, 51, 0.6);
+}
+
+.EezStudio_BB3Plus_Toolbar {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    padding: 6px 10px;
+    border-bottom: 1px solid @borderColor;
+
+    & > label {
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    & > select,
+    & > input {
+        flex-shrink: 0;
+    }
+}
+
+.EezStudio_BB3Plus_Status {
+    color: var(--bs-secondary-color);
+}
+
+.EezStudio_BB3Plus_Chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 3px;
+
+    & > .btn {
+        padding: 0 6px;
+        font-size: 12px;
+    }
+}
+
+.EezStudio_BB3Plus_Body {
+    flex-grow: 1;
+    overflow: auto;
+    padding: 6px 10px;
+}
+
+// module fields
+
+.EezStudio_BB3Plus_SlotTitle {
+    font-weight: 600;
+    padding: 6px 0;
+    cursor: pointer;
+}
+
+.EezStudio_BB3Plus_FieldsTable {
+    width: auto;
+    margin-bottom: 10px;
+    font-size: 13px;
+
+    th,
+    td {
+        padding: 2px 14px 2px 4px;
+        white-space: nowrap;
+        background-color: transparent;
+    }
+
+    td.EezStudio_BB3Plus_FieldValue {
+        min-width: 150px;
+        font-family: "Roboto Mono", monospace;
+
+        &.settable {
+            cursor: pointer;
+        }
+
+        input {
+            display: inline-block;
+            width: 120px;
+            padding: 0 4px;
+            margin-right: 4px;
+        }
+    }
+}
+
+// debug log
+
+.EezStudio_BB3Plus_LogList {
+    flex-grow: 1;
+    min-height: 100px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    font-family: "Roboto Mono", monospace;
+    font-size: 12px;
+}
+
+// as high as all the rows, only the visible rows are in it
+.EezStudio_BB3Plus_LogSpacer {
+    position: relative;
+    width: 100%;
+}
+
+.EezStudio_BB3Plus_LogRow {
+    position: absolute;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    white-space: nowrap;
+    cursor: default;
+
+    & > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 0;
+    }
+
+    .time {
+        width: 100px;
+    }
+
+    .level {
+        width: 20px;
+        color: var(--bs-secondary-color);
+    }
+
+    .cat {
+        width: 140px;
+        color: var(--bs-secondary-color);
+    }
+
+    .slot {
+        width: 20px;
+    }
+
+    .summary {
+        flex-shrink: 1;
+        flex-grow: 1;
+    }
+
+    &.warning {
+        color: var(--bs-warning-text-emphasis);
+    }
+
+    &.error {
+        color: var(--bs-danger-text-emphasis);
+    }
+
+    &:hover {
+        background-color: var(--bs-tertiary-bg);
+    }
+
+    &.selected {
+        background-color: @selectionBackgroundColor;
+        color: @selectionColor;
+
+        .level,
+        .cat {
+            color: inherit;
+        }
+    }
+}
+
+.EezStudio_BB3Plus_LogDetails {
+    flex-shrink: 0;
+    max-height: 35%;
+    margin: 0;
+    padding: 6px 10px;
+    overflow: auto;
+    border-top: 1px solid @borderColor;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+// scope
+
+.EezStudio_BB3Plus_Legend {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    padding: 4px 10px;
+    font-size: 13px;
+}
+
+.EezStudio_BB3Plus_LegendItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+
+    .swatch {
+        display: inline-block;
+        width: 14px;
+        height: 3px;
+        border-radius: 1px;
+    }
+
+    .btn-link {
+        color: var(--bs-secondary-color);
+        text-decoration: none;
+        line-height: 1;
+    }
+}
+
+.EezStudio_BB3Plus_ScopeCanvas {
+    position: relative;
+    flex-grow: 1;
+    min-height: 100px;
+    overflow: hidden;
+
+    & > canvas {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+}
+
+.EezStudio_BB3Plus_IconButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+
+    svg {
+        flex-shrink: 0;
+    }
+}
+
+.EezStudio_BB3Plus_ScopeOptions {
+    flex-shrink: 0;
+    padding: 4px 10px 6px;
+    border-bottom: 1px solid @borderColor;
+    font-size: 13px;
+}
+
+.EezStudio_BB3Plus_ScopeOptionsRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 3px 0;
+
+    & > label {
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    & > select,
+    & > input {
+        flex-shrink: 0;
+    }
+
+    & > .name {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        width: 130px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .swatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    &.text-muted {
+        font-size: 12px;
+    }
+}
+
+.EezStudio_BB3Plus_ScopeCanvas {
+    touch-action: none;
+    user-select: none;
+}

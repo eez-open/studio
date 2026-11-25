@@ -156,7 +156,8 @@ export class InstrumentObject {
             setCommandLineEnding: action,
             sendFileToInstrumentHandler: computed,
             setCustomProperty: action,
-            isBB3: computed
+            isBB3: computed,
+            isBB3Plus: computed
         });
 
         this.id = props.id;
@@ -998,6 +999,13 @@ export class InstrumentObject {
             this.availableConnections,
             this.serialBaudRates
         );
+    }
+
+    // EEZ BB3+, by the model of its *IDN? ("Envox,EEZ BB3+,..."), with any
+    // instrument extension
+    get isBB3Plus() {
+        const model = this.idn?.split(",")[1]?.trim();
+        return !!model && model.startsWith("EEZ BB3+");
     }
 
     get isBB3() {

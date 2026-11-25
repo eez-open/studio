@@ -38,6 +38,7 @@ import { BaseList } from "instrument/window/lists/store-renderer";
 import { getScrapbookStore } from "instrument/window/history/scrapbook";
 import { unwatch } from "eez-studio-shared/notify";
 import * as notification from "eez-studio-ui/notification";
+import type * as Bb3PlusModule from "instrument/bb3plus";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,6 +72,7 @@ export class InstrumentAppStore implements IEditor {
     autorunDisposer: IReactionDisposer | undefined;
     reactionDisposer: IReactionDisposer | undefined;
     recordHistoryWarningDisposer: IReactionDisposer | undefined;
+    bb3PlusDisposer: IReactionDisposer | undefined;
 
     _created = false;
 
@@ -208,6 +210,15 @@ export class InstrumentAppStore implements IEditor {
             }
             wasConnected = isConnected;
         });
+
+        // BB3+: the push port connection while the window is open
+        this.bb3PlusDisposer = autorun(() => {
+            if (this.instrument.isBB3Plus) {
+                const { getBB3PlusInstrument } =
+                    require("instrument/bb3plus") as typeof Bb3PlusModule;
+                getBB3PlusInstrument(this, true);
+            }
+        });
     }
 
     onActivate() {
@@ -245,6 +256,13 @@ export class InstrumentAppStore implements IEditor {
         if (this.recordHistoryWarningDisposer) {
             this.recordHistoryWarningDisposer();
             this.recordHistoryWarningDisposer = undefined;
+        }
+        if (this.bb3PlusDisposer) {
+            this.bb3PlusDisposer();
+            this.bb3PlusDisposer = undefined;
+            const { terminateBB3PlusInstrument } =
+                require("instrument/bb3plus") as typeof Bb3PlusModule;
+            terminateBB3PlusInstrument(this.instrument.id);
         }
         this.undoManager.onTerminate();
         this.history.onTerminate();
