@@ -97,7 +97,63 @@ let files = [
     "!node_modules/koffi/src",
     "!node_modules/koffi/doc",
     "!node_modules/tabulator-tables/src",
-    "!node_modules/koffi/build/koffi/**"
+    "!node_modules/koffi/build/koffi/**",
+
+    // native binaries prebuilt for all platforms: keep only the target's
+    // (${platform} is the build host's platform, ${arch} the target arch)
+    "!node_modules/better-sqlite3/prebuilds/**",
+    "node_modules/better-sqlite3/prebuilds/${platform}-${arch}.node",
+    "!node_modules/@serialport/bindings-cpp/prebuilds/**",
+    "node_modules/@serialport/bindings-cpp/prebuilds/${platform}-*/**",
+
+    // (a whole package is excluded with "/**": electron-builder doesn't test
+    // the package directory itself, only its content)
+
+    // needed only to compile native modules
+    "!node_modules/koffi/vendor",
+    "!**/node_modules/node-addon-api/**",
+    "!**/node_modules/**/*.{c,cc,cpp,h,gyp,gypi,vcxproj,filters}",
+
+    // Babel and its dependencies, pulled in by @emotion/babel-plugin, which is
+    // used only by the compile time macros (@emotion/react/macro)
+    "!node_modules/@emotion/babel-plugin/**",
+    "!node_modules/babel-plugin-macros/**",
+    "!node_modules/@babel/{code-frame,generator,helper-module-imports,helper-string-parser,helper-validator-identifier,parser,template,traverse,types}/**",
+
+    // type definitions, sources and source maps
+    "!**/node_modules/**/*.{flow,map,ts,mts,cts,scss}",
+
+    // packages are loaded with require(), so only the CommonJS build their
+    // "main" points to is used, not the UMD/ESM/browser builds
+    "!node_modules/react/umd",
+    "!node_modules/react-dom/umd",
+    "!node_modules/mobx/src",
+    "!node_modules/mobx/dist/mobx.{esm,umd}*",
+    "!node_modules/luxon/src",
+    "!node_modules/luxon/build/{amd,cjs-browser,es6,global}",
+    "!node_modules/csv-parse/dist/{esm,iife,umd}",
+    "!node_modules/csv-stringify/dist/{esm,iife,umd}",
+    "!node_modules/opentype.js/src",
+    "!node_modules/opentype.js/dist/opentype.{min,module,module.min}.js",
+    "!node_modules/mqtt/dist",
+    "!node_modules/js-sdsl/dist/{esm,umd}",
+    "!node_modules/@popperjs/core/{lib,dist/esm,dist/umd}",
+    "!node_modules/bootstrap/dist/js/bootstrap.{bundle,esm,min}*",
+    "!node_modules/tabulator-tables/dist/js/**",
+    "node_modules/tabulator-tables/dist/js/tabulator.js",
+
+    // jquery.min.js is loaded from home/index.html
+    "!node_modules/jquery/src",
+    "!node_modules/jquery/dist/jquery.slim*",
+
+    // jspanel4 is loaded from dist/ by home/index.html
+    "!node_modules/jspanel4/es6module",
+
+    // only these stylesheets are used (home/index.html, app.less)
+    "!node_modules/bootstrap/dist/css/**",
+    "node_modules/bootstrap/dist/css/bootstrap.min.css",
+    "!node_modules/tabulator-tables/dist/css/**",
+    "node_modules/tabulator-tables/dist/css/tabulator.min.css"
 ];
 
 files.push(
