@@ -105,28 +105,37 @@
     overflow-y: auto;
     font-family: "Roboto Mono", monospace;
     font-size: 12px;
+    // the changes of the rows don't lay out the rest of the page
+    contain: strict;
 }
 
 // as high as all the rows, only the visible rows are in it
 .EezStudio_BB3Plus_LogSpacer {
     position: relative;
     width: 100%;
+    contain: strict;
 }
 
+// placed with a transform (translateY), set by the view; a block, not flex:
+// flex measures the long summary once more
 .EezStudio_BB3Plus_LogRow {
     position: absolute;
+    top: 0;
     left: 0;
     right: 0;
-    display: flex;
-    align-items: center;
+    contain: strict;
     padding: 0 10px;
+    line-height: 22px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     cursor: default;
 
     & > span {
+        display: inline-block;
+        vertical-align: top;
         overflow: hidden;
         text-overflow: ellipsis;
-        flex-shrink: 0;
     }
 
     .time {
@@ -147,9 +156,9 @@
         width: 20px;
     }
 
-    .summary {
-        flex-shrink: 1;
-        flex-grow: 1;
+    // the rest of the row, cut with the ellipsis of the row
+    & > span.summary {
+        display: inline;
     }
 
     &.warning {

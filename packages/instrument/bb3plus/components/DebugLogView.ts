@@ -26,26 +26,39 @@ import {
 
 const ROW_HEIGHT = 22;
 
+// how often the receive rates are measured (ms)
+const RATE_INTERVAL = 1000;
+
+function formatByteRate(bytesPerSecond: number) {
+    if (bytesPerSecond >= 1e6) {
+        return `${(bytesPerSecond / 1e6).toFixed(2)} MB/s`;
+    }
+    if (bytesPerSecond >= 1e3) {
+        return `${(bytesPerSecond / 1e3).toFixed(1)} kB/s`;
+    }
+    return `${Math.round(bytesPerSecond)} B/s`;
+}
+
 // rows drawn above and below the visible ones
 const OVERSCAN_ROWS = 5;
 
 // The records that pass the filter. The ids of the records are consecutive
 // in the array of the instrument (a new array after clear), so only the new
-// records are filtered while the filter is the same, and the oldest records
-// that went are removed from the start.
+// records are filtered while the filter is the same (the same object, the
+// instrument sets a new one on a change), and the oldest records that went
+// are removed from the start.
 class FilteredRecords {
     private all: LogRecord[] | undefined;
-    private filterKey = "";
+    private filter: LogFilter | undefined;
     private active = false;
     // the id of the newest record filtered
     private lastId = 0;
     records: LogRecord[] = [];
 
     update(all: LogRecord[], filter: LogFilter) {
-        const filterKey = JSON.stringify(filter);
-        if (all !== this.all || filterKey != this.filterKey) {
+        if (all !== this.all || filter !== this.filter) {
             this.all = all;
-            this.filterKey = filterKey;
+            this.filter = filter;
             this.active = isLogFilterActive(filter);
             this.lastId = 0;
             this.records = [];
@@ -118,9 +131,33 @@ export class DebugLogView extends BB3PlusView {
     private selectedId = 0;
     private follow = true;
 
+    // the update runs in the next frame, once for all the changes before it
+    private updateFrame = 0;
+    // what the controls show: the filter object and the level
+    private shownFilter: LogFilter | undefined;
+    private shownLogLevel = -1;
+    // the categories shown: the set of the instrument and its size
+    private shownCategories: Set<string> | undefined;
+    private shownCategoriesSize = 0;
+    // the height of the list, from the resize observer (reading it would
+    // lay out the page)
+    private listHeight = 0;
+    // the scroll position the rows are drawn for
+    private renderedScrollTop = -1;
+    // the scroll position the view set, until its scroll event came: that
+    // event isn't a scroll of the user
+    private ownScrollTop = -1;
+
     private levelSelect: HTMLSelectElement;
     private followCheckbox: HTMLInputElement;
     private countText = h("span", { className: "text-muted" });
+    private rateText = h("span", {
+        className: "text-muted",
+        title: "Log records and bytes received per second (push frames with their headers), before the filter"
+    });
+    private rateTime = 0;
+    private rateRecords = 0;
+    private rateBytes = 0;
     private droppedText = h("span", {
         className: "text-warning",
         title: "BB3+ dropped them because they were not read fast enough"
@@ -133,7 +170,6 @@ export class DebugLogView extends BB3PlusView {
     private textInput: HTMLInputElement;
     private severityChips: HTMLSpanElement;
     private categoryChips = h("span", { className: "EezStudio_BB3Plus_Chips" });
-    private categoriesKey = "";
     private resetButton: HTMLButtonElement;
 
     private list: HTMLDivElement;
@@ -202,6 +238,7 @@ export class DebugLogView extends BB3PlusView {
                 "Follow"
             ),
             this.countText,
+            this.rateText,
             this.droppedText,
             this.pushStatus.element,
             this.logError.element
@@ -302,27 +339,56 @@ export class DebugLogView extends BB3PlusView {
         this.element.append(toolbar, filterBar, this.list, this.details);
 
         const resizeObserver = new ResizeObserver(() => {
+            this.listHeight = this.list.clientHeight;
             if (this.follow) {
                 this.scrollToEnd();
+            } else {
+                this.renderRows();
             }
-            this.renderRows();
         });
         resizeObserver.observe(this.list);
         this.addDisposer(() => resizeObserver.disconnect());
 
-        this.listen(["log"], () => this.update());
+        this.listen(["log"], () => this.requestUpdate());
         this.listen(["status"], () => this.updateStatus());
+        this.addDisposer(() => cancelAnimationFrame(this.updateFrame));
         this.update();
         this.updateStatus();
+
+        this.updateRate();
+        const rateTimer = setInterval(() => this.updateRate(), RATE_INTERVAL);
+        this.addDisposer(() => clearInterval(rateTimer));
+    }
+
+    // the records and bytes received per second since the last call
+    private updateRate() {
+        const { logRecordsReceived, logBytesReceived } = this.bb3PlusInstrument;
+        const now = performance.now();
+        if (this.rateTime) {
+            const seconds = (now - this.rateTime) / 1000;
+            const records = (logRecordsReceived - this.rateRecords) / seconds;
+            const bytes = (logBytesReceived - this.rateBytes) / seconds;
+            setText(
+                this.rateText,
+                `${Math.round(records)} records/s, ${formatByteRate(bytes)}`
+            );
+        } else {
+            setText(this.rateText, "0 records/s, 0 B/s");
+        }
+        this.rateTime = now;
+        this.rateRecords = logRecordsReceived;
+        this.rateBytes = logBytesReceived;
     }
 
     mounted() {
         super.mounted();
         // the list has its size now
+        this.listHeight = this.list.clientHeight;
         if (this.follow) {
             this.scrollToEnd();
+        } else {
+            this.renderRows();
         }
-        this.renderRows();
     }
 
     private updateStatus() {
@@ -336,31 +402,50 @@ export class DebugLogView extends BB3PlusView {
         setVisible(this.droppedText, bb3PlusInstrument.droppedLogRecords > 0);
     }
 
+    private requestUpdate() {
+        if (!this.updateFrame) {
+            this.updateFrame = requestAnimationFrame(() => {
+                this.updateFrame = 0;
+                this.update();
+            });
+        }
+    }
+
     private update() {
         const bb3PlusInstrument = this.bb3PlusInstrument;
         const { settings, logRecords } = bb3PlusInstrument;
         const filter = settings.logFilter;
 
-        // controls
-        setSelectValue(this.levelSelect, settings.logLevel);
-        setSelectValue(this.maxLevelSelect, filter.maxLevel);
-        setSelectValue(this.slotSelect, filter.slot);
-        if (this.textInput.value != filter.text) {
-            this.textInput.value = filter.text;
-        }
-        for (const button of Array.from(this.severityChips.children)) {
-            const hidden =
-                filter.hiddenSeverities.indexOf(
-                    (button as HTMLElement).dataset.value!
-                ) != -1;
-            setClass(button, "btn-secondary", !hidden);
-            setClass(button, "btn-outline-secondary", hidden);
+        // controls, when the settings changed
+        if (
+            filter !== this.shownFilter ||
+            settings.logLevel != this.shownLogLevel
+        ) {
+            this.shownFilter = filter;
+            this.shownLogLevel = settings.logLevel;
+            setSelectValue(this.levelSelect, settings.logLevel);
+            setSelectValue(this.maxLevelSelect, filter.maxLevel);
+            setSelectValue(this.slotSelect, filter.slot);
+            if (this.textInput.value != filter.text) {
+                this.textInput.value = filter.text;
+            }
+            for (const button of Array.from(this.severityChips.children)) {
+                const hidden =
+                    filter.hiddenSeverities.indexOf(
+                        (button as HTMLElement).dataset.value!
+                    ) != -1;
+                setClass(button, "btn-secondary", !hidden);
+                setClass(button, "btn-outline-secondary", hidden);
+            }
+            setVisible(this.resetButton, isLogFilterActive(filter));
+            // the hidden categories
+            this.shownCategories = undefined;
         }
         this.updateCategories(filter);
-        setVisible(this.resetButton, isLogFilterActive(filter));
 
-        // records; the record at the top stays there when the oldest went
-        const topRecord = this.getTopRecord();
+        // records; while not following, the record at the top stays there
+        // when the oldest went
+        const topRecord = this.follow ? undefined : this.getTopRecord();
         this.records = this.filtered.update(logRecords, filter);
         this.recordCount = this.records.length;
         setText(
@@ -380,9 +465,12 @@ export class DebugLogView extends BB3PlusView {
             const index = this.findRecordIndex(topRecord.id);
             if (index != topRecord.index) {
                 this.list.scrollTop += (index - topRecord.index) * ROW_HEIGHT;
+                this.ownScrollTop = this.list.scrollTop;
             }
+            this.renderRows();
+        } else {
+            this.renderRows();
         }
-        this.renderRows();
         this.updateDetails();
     }
 
@@ -413,18 +501,21 @@ export class DebugLogView extends BB3PlusView {
         return low;
     }
 
+    // when a category came, the categories were cleared or the filter changed
     private updateCategories(filter: LogFilter) {
-        const categories = Array.from(
-            new Set([
-                ...Array.from(this.bb3PlusInstrument.logCategories),
-                ...filter.hiddenCategories
-            ])
-        ).sort();
-        const key = JSON.stringify([categories, filter.hiddenCategories]);
-        if (key == this.categoriesKey) {
+        const logCategories = this.bb3PlusInstrument.logCategories;
+        if (
+            logCategories === this.shownCategories &&
+            logCategories.size == this.shownCategoriesSize
+        ) {
             return;
         }
-        this.categoriesKey = key;
+        this.shownCategories = logCategories;
+        this.shownCategoriesSize = logCategories.size;
+
+        const categories = Array.from(
+            new Set([...Array.from(logCategories), ...filter.hiddenCategories])
+        ).sort();
         this.categoryChips.replaceChildren(
             ...categories.map(cat => {
                 const hidden = filter.hiddenCategories.indexOf(cat) != -1;
@@ -453,24 +544,42 @@ export class DebugLogView extends BB3PlusView {
         );
     }
 
+    // and draws the rows; the end from the record count and the list height,
+    // without reading the layout
     private scrollToEnd() {
-        const top = this.list.scrollHeight - this.list.clientHeight;
-        if (top > 0 && this.list.scrollTop != top) {
+        const top = Math.max(
+            0,
+            this.recordCount * ROW_HEIGHT - this.listHeight
+        );
+        // a scroll of the user whose event didn't come yet stays (the rows
+        // are drawn for it then), when the end didn't move
+        if (top != this.renderedScrollTop) {
             this.list.scrollTop = top;
+            this.ownScrollTop = top;
         }
+        this.renderRows(top);
     }
 
     private onScroll() {
+        if (this.list.clientHeight == 0) {
+            // hidden, the scroll position is 0 then
+            return;
+        }
+        const scrollTop = this.list.scrollTop;
+        const own = scrollTop == this.ownScrollTop;
+        this.ownScrollTop = -1;
+        if (own) {
+            // the scrolling of the view, the rows are drawn
+            return;
+        }
         // following while at the end
-        const list = this.list;
         const atEnd =
-            list.scrollTop + list.clientHeight >=
-            list.scrollHeight - ROW_HEIGHT;
+            scrollTop + this.listHeight >= (this.recordCount - 1) * ROW_HEIGHT;
         if (atEnd != this.follow) {
             this.follow = atEnd;
             this.followCheckbox.checked = atEnd;
         }
-        this.renderRows();
+        this.renderRows(scrollTop);
     }
 
     private onClick(event: MouseEvent) {
@@ -498,7 +607,10 @@ export class DebugLogView extends BB3PlusView {
 
     private createRow(): Row {
         const row: Row = {
-            element: h("div", { className: "EezStudio_BB3Plus_LogRow" }),
+            element: h("div", {
+                className: "EezStudio_BB3Plus_LogRow",
+                style: { display: "none" }
+            }),
             time: h("span", { className: "time" }),
             level: h("span", { className: "level" }),
             cat: h("span", { className: "cat" }),
@@ -513,46 +625,60 @@ export class DebugLogView extends BB3PlusView {
         return row;
     }
 
-    // only the visible rows are elements
-    private renderRows() {
-        const scrollTop = this.list.scrollTop;
-        const height = this.list.clientHeight;
+    private hideRow(row: Row) {
+        row.index = -1;
+        row.record = undefined;
+        setVisible(row.element, false);
+    }
+
+    // Only the visible rows are elements. The row of a record is the one of
+    // its index modulo the number of rows: a record keeps its row while it is
+    // visible, only the rows of the records that came into view change.
+    private renderRows(scrollTop = this.list.scrollTop) {
+        this.renderedScrollTop = scrollTop;
         const first = Math.max(
             0,
             Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN_ROWS
         );
         const last = Math.min(
             this.recordCount - 1,
-            Math.ceil((scrollTop + height) / ROW_HEIGHT) + OVERSCAN_ROWS
+            Math.ceil((scrollTop + this.listHeight) / ROW_HEIGHT) +
+                OVERSCAN_ROWS
         );
         const count = Math.max(0, last - first + 1);
 
-        while (this.rows.length < count) {
-            this.rows.push(this.createRow());
+        if (this.rows.length < count) {
+            // the rows of the indexes change
+            for (const row of this.rows) {
+                this.hideRow(row);
+            }
+            while (this.rows.length < count) {
+                this.rows.push(this.createRow());
+            }
         }
 
-        for (let i = 0; i < this.rows.length; i++) {
-            const row = this.rows[i];
-            if (i >= count) {
-                if (row.record) {
-                    row.record = undefined;
-                    row.index = -1;
-                    setVisible(row.element, false);
-                }
-                continue;
+        // the rows that went out of view
+        for (const row of this.rows) {
+            if (row.index != -1 && (row.index < first || row.index > last)) {
+                this.hideRow(row);
             }
+        }
 
-            const index = first + i;
+        const numRows = this.rows.length;
+        for (let index = first; index <= last; index++) {
+            const row = this.rows[index % numRows];
             const record = this.records[index];
             if (row.index != index) {
+                if (row.index == -1) {
+                    setVisible(row.element, true);
+                }
                 row.index = index;
-                row.element.style.top = index * ROW_HEIGHT + "px";
+                row.element.style.transform = `translateY(${
+                    index * ROW_HEIGHT
+                }px)`;
                 row.element.dataset.index = String(index);
             }
             if (row.record !== record) {
-                if (!row.record) {
-                    setVisible(row.element, true);
-                }
                 row.record = record;
                 setText(row.time, getLogRecordTime(record));
                 setText(row.level, String(record.level));
@@ -564,8 +690,9 @@ export class DebugLogView extends BB3PlusView {
                 setText(row.summary, getLogRecordSummary(record));
                 setClass(row.element, "error", record.sev == "error");
                 setClass(row.element, "warning", record.sev == "warning");
+                // a new selection sets the class of all rows (onClick)
+                setClass(row.element, "selected", record.id == this.selectedId);
             }
-            setClass(row.element, "selected", record.id == this.selectedId);
         }
     }
 

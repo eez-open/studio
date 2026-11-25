@@ -6,6 +6,7 @@ import type { InstrumentObject } from "instrument/instrument-object";
 
 import {
     PushFrameParser,
+    FRAME_HEADER_SIZE,
     FRAME_SCPI_OUTPUT,
     FRAME_SCPI_DONE,
     FRAME_LOG,
@@ -62,7 +63,9 @@ const TRACE_COLORS = [
 // closed while the instrument is connected
 const RECONNECT_DELAY = 3000;
 
-// the "fields" and "log" changes are sent at most this often (ms)
+// the "fields" change is sent at most this often (ms); the "log" change is
+// sent after each data received with log records, the view draws them in
+// the next frame
 const UPDATE_INTERVAL = 100;
 
 // the settings are saved this long after the last change (ms)
@@ -195,6 +198,10 @@ export class BB3PlusInstrument {
     // the categories of the records received
     logCategories = new Set<string>();
     private nextLogRecordId = 1;
+    // the log records and their frame bytes received, never reset
+    // (the rates are the differences)
+    logRecordsReceived = 0;
+    logBytesReceived = 0;
 
     traces: ScopeTrace[] = [];
     scopeRunning = true;
@@ -530,6 +537,10 @@ export class BB3PlusInstrument {
             }
             this.onFrame(frame.type, frame.payload);
         }
+        if (this.logChanged) {
+            this.logChanged = false;
+            this.emit("log");
+        }
     }
 
     private onFrame(type: number, payload: Buffer) {
@@ -553,6 +564,8 @@ export class BB3PlusInstrument {
             );
             this.logRecords.push(record);
             this.logCategories.add(record.cat);
+            this.logRecordsReceived++;
+            this.logBytesReceived += FRAME_HEADER_SIZE + payload.length;
             if (this.logRecords.length > MAX_LOG_RECORDS + LOG_TRIM_BATCH) {
                 this.logRecords.splice(
                     0,
@@ -560,7 +573,6 @@ export class BB3PlusInstrument {
                 );
             }
             this.logChanged = true;
-            this.scheduleUpdate();
         } else if (type == FRAME_DROPPED) {
             const dropped = parseDropped(payload);
             this.droppedLogRecords += dropped.logRecords;
@@ -593,10 +605,6 @@ export class BB3PlusInstrument {
             if (this.fieldsChanged) {
                 this.fieldsChanged = false;
                 this.emit("fields");
-            }
-            if (this.logChanged) {
-                this.logChanged = false;
-                this.emit("log");
             }
         }, UPDATE_INTERVAL);
     }
