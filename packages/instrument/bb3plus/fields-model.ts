@@ -26,13 +26,6 @@ export const FIELD_DIRECTION_INPUT_OUTPUT = 2;
 export const FIELD_FLAG_PERSISTENT = 1 << 0;
 export const FIELD_FLAG_SAMPLED = 1 << 1;
 
-// bb3_measurement_t
-export const MEASUREMENT_NONE = 0;
-export const MEASUREMENT_VOLTAGE = 1;
-export const MEASUREMENT_CURRENT = 2;
-export const MEASUREMENT_ANALOG = 3;
-export const MEASUREMENT_DIGITAL = 4;
-
 // eez Unit (eez-framework core/unit.h), the order is fixed
 const UNIT_NAMES = [
     "",
@@ -107,21 +100,6 @@ export function getFieldDirectionName(direction: number) {
     }
 }
 
-export function getMeasurementName(measurement: number) {
-    switch (measurement) {
-        case MEASUREMENT_VOLTAGE:
-            return "U";
-        case MEASUREMENT_CURRENT:
-            return "I";
-        case MEASUREMENT_ANALOG:
-            return "analog";
-        case MEASUREMENT_DIGITAL:
-            return "digital";
-        default:
-            return "";
-    }
-}
-
 export interface FieldInfo {
     index: number;
     name: string;
@@ -131,8 +109,10 @@ export interface FieldInfo {
     size: number;
     unit: number;
     maxSampleRate: number;
-    measurement: number;
     channel: number;
+    // the label of a sampled field ("U", "AIN1", "DIN"), "" for the other
+    // fields
+    label: string;
 }
 
 export function isFieldFloat(field: FieldInfo) {
@@ -207,8 +187,8 @@ export class ModuleFields {
                 size: getNumber(item, "size", 0),
                 unit: getNumber(item, "unit", 255),
                 maxSampleRate: getNumber(item, "maxSampleRate", 0),
-                measurement: getNumber(item, "measurement", 0),
-                channel: getNumber(item, "channel", 0)
+                channel: getNumber(item, "channel", 0),
+                label: getString(item, "label")
             });
         });
         slotFields.values = new Array(slotFields.fields.length).fill(undefined);

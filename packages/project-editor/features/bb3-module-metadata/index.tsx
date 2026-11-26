@@ -25,7 +25,6 @@ import type { Variable } from "project-editor/features/variable/variable";
 import {
     BB3_MODULE_FIELD_MAX_BITS,
     hasBB3ModuleFieldChannel,
-    getBB3ModuleFieldMeasurementValue,
     getBB3ModuleFieldTrackingRoleValue,
     getBB3ModuleFieldUnitValue,
     isBB3ModuleField,
@@ -356,11 +355,8 @@ export function writeBB3ModuleMetadata(
 
             // unit
             dataBuffer.writeUint16(getBB3ModuleFieldUnitValue(variable.bb3ModuleFieldUnit));
-            // measurement (BB3_MEASUREMENT_...)
-            const measurement = sampled
-                ? getBB3ModuleFieldMeasurementValue(variable.bb3ModuleFieldMeasurement)
-                : 0;
-            dataBuffer.writeUint8(measurement);
+            // reserved0
+            dataBuffer.writeUint8(0);
             // channel: the module channel of a sampled field or a field with
             // a tracking role
             dataBuffer.writeUint8(

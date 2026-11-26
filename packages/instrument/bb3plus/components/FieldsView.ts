@@ -9,7 +9,6 @@ import {
     formatFieldNumber,
     getFieldTypeName,
     getFieldDirectionName,
-    getMeasurementName,
     getUnitName,
     isFieldFloat,
     isFieldSettable,
@@ -71,12 +70,8 @@ function getSampled(field: FieldInfo) {
     if (!(field.flags & FIELD_FLAG_SAMPLED)) {
         return "";
     }
-    let sampled = `up to ${formatNumber(field.maxSampleRate)} SPS`;
-    const measurement = getMeasurementName(field.measurement);
-    if (measurement) {
-        sampled = `${measurement} ch${field.channel + 1}, ${sampled}`;
-    }
-    return sampled;
+    const label = field.label ? `${field.label} ` : "";
+    return `${label}ch${field.channel + 1}, up to ${formatNumber(field.maxSampleRate)} SPS`;
 }
 
 interface FieldRow {

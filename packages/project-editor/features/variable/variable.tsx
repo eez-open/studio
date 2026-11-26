@@ -111,7 +111,6 @@ import {
     BB3_MODULE_FIELD_DIRECTIONS,
     BB3_MODULE_FIELD_LABEL_MAX_LENGTH,
     BB3_MODULE_FIELD_MAX_BITS,
-    BB3_MODULE_FIELD_MEASUREMENTS,
     BB3_MODULE_FIELD_TRACKING_ROLES,
     BB3_MODULE_FIELD_UNITS,
     getBB3ModuleFieldItemLabels,
@@ -554,9 +553,6 @@ export class Variable extends EezObject {
     bb3ModuleFieldColor: string | undefined;
     // the number of bits (pins) of a sampled bit field, 1 to 8 (8 if not set)
     bb3ModuleFieldBits: number | undefined;
-    // the channel measurement the sampled field is (BB3+ finds the stream
-    // of a channel measurement by it, e.g. for the data logging)
-    bb3ModuleFieldMeasurement: string | undefined;
     // what the field is for a power channel in a BB3+ tracking group
     // (OUTPut:TRACk), BB3_TRACKING_ROLE_... in bb3-module.h
     bb3ModuleFieldTrackingRole: string | undefined;
@@ -608,7 +604,6 @@ export class Variable extends EezObject {
             bb3ModuleFieldLabel: observable,
             bb3ModuleFieldColor: observable,
             bb3ModuleFieldBits: observable,
-            bb3ModuleFieldMeasurement: observable,
             bb3ModuleFieldTrackingRole: observable,
             bb3ModuleFieldChannel: observable,
             bb3ModuleFieldMin: observable,
@@ -882,18 +877,6 @@ export class Variable extends EezObject {
                     )
             },
             {
-                name: "bb3ModuleFieldMeasurement",
-                displayName: "Measurement",
-                type: PropertyType.Enum,
-                enumItems: BB3_MODULE_FIELD_MEASUREMENTS.map(measurement => ({
-                    id: measurement.id,
-                    label: measurement.label
-                })),
-                propertyGridGroup: bb3ModuleFieldGroup,
-                disabled: (variable: Variable) =>
-                    !isBB3ModuleFieldSampledOn(variable)
-            },
-            {
                 name: "bb3ModuleFieldTrackingRole",
                 displayName: "Tracking role",
                 type: PropertyType.Enum,
@@ -996,6 +979,10 @@ export class Variable extends EezObject {
                 }
                 delete objectJS.bb3ModuleFieldMeasurementChannel;
             }
+
+            // BB3+ logs every sampled field by its label, a project can still
+            // have the measurement of a sampled field
+            delete objectJS.bb3ModuleFieldMeasurement;
         },
         newItem: async (parent: IEezObject) => {
             const project = ProjectEditor.getProject(parent);

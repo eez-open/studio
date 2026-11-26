@@ -15,7 +15,6 @@ interface BB3ModuleFieldProperties {
     bb3ModuleFieldDirection: string | undefined;
     bb3ModuleFieldSampled: boolean | undefined;
     bb3ModuleFieldMaxSampleRate: number | undefined;
-    bb3ModuleFieldMeasurement: string | undefined;
     bb3ModuleFieldTrackingRole: string | undefined;
 }
 
@@ -94,22 +93,6 @@ const BB3_MODULE_FIELD_UNIT_NONE = 255;
 export function getBB3ModuleFieldUnitValue(bb3ModuleFieldUnit: string | undefined) {
     const unit = BB3_MODULE_FIELD_UNITS.find(unit => unit.id == bb3ModuleFieldUnit);
     return unit ? unit.value : BB3_MODULE_FIELD_UNIT_NONE;
-}
-
-// Channel measurement of a sampled BB3 module field, BB3_MEASUREMENT_... in
-// bb3-module.h: BB3+ finds the stream of a channel measurement (data
-// logging, YT) by it instead of by the field name.
-export const BB3_MODULE_FIELD_MEASUREMENTS = [
-    { id: "none", label: "None", value: 0 },
-    { id: "voltage", label: "Voltage (MEASure:VOLTage)", value: 1 },
-    { id: "current", label: "Current (MEASure:CURRent)", value: 2 },
-    { id: "analog", label: "Analog input (voltage or current)", value: 3 },
-    { id: "digital", label: "Digital input pins", value: 4 }
-];
-
-export function getBB3ModuleFieldMeasurementValue(measurement: string | undefined) {
-    const item = BB3_MODULE_FIELD_MEASUREMENTS.find(item => item.id == measurement);
-    return item ? item.value : 0;
 }
 
 // Tracking role of a power channel BB3 module field, BB3_TRACKING_ROLE_... in
