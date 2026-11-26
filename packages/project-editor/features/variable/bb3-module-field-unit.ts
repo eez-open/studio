@@ -167,17 +167,12 @@ export function getBB3ModuleFieldTrackingRoleValue(role: string | undefined) {
     return item ? item.value : 0;
 }
 
-// a sampled field with a measurement or a field with a tracking role belongs
-// to a module channel
+// a sampled field or a field with a tracking role belongs to a module channel
 export function hasBB3ModuleFieldChannel(variable: BB3ModuleFieldProperties) {
-    const hasMeasurement =
-        isBB3ModuleFieldSampled(variable) &&
-        !!variable.bb3ModuleFieldMeasurement &&
-        variable.bb3ModuleFieldMeasurement != "none";
     const hasTrackingRole =
         isBB3ModuleField(variable) &&
         variable.bb3ModuleFieldDirection != "output" &&
         !!variable.bb3ModuleFieldTrackingRole &&
         variable.bb3ModuleFieldTrackingRole != "none";
-    return hasMeasurement || hasTrackingRole;
+    return isBB3ModuleFieldSampled(variable) || hasTrackingRole;
 }

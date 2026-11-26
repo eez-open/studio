@@ -2096,7 +2096,8 @@ export function buildGuiAssetsDataSync(
         ProjectEditor.writeBB3ModuleMetadata(
             bb3ModuleMetadata,
             dataBuffer,
-            assets.pages.map(page => (page ? page.name : ""))
+            assets.pages.map(page => (page ? page.name : "")),
+            color => assets.getColorIndexFromColorValue(color)
         );
     }
 

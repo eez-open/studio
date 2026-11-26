@@ -11,6 +11,7 @@ import {
 import { keepAliveComputed } from "project-editor/core/keep-alive";
 
 import { validators } from "eez-studio-shared/validation";
+import { isValid as isValidColor } from "eez-studio-shared/color";
 import { validators as validatorsRenderer } from "eez-studio-shared/validation-renderer";
 
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
@@ -95,6 +96,7 @@ import {
     FLOW_ITERATOR_INDEX_VARIABLE
 } from "project-editor/features/variable/defs";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { getThemedColor } from "project-editor/features/style/theme";
 import { generalGroup } from "project-editor/ui-components/PropertyGrid/groups";
 import { RenderVariableStatusPropertyUI } from "project-editor/features/variable/global-variable-status";
 import { VARIABLE_ICON } from "project-editor/ui-components/icons";
@@ -454,8 +456,20 @@ function checkBB3ModuleFieldSampled(variable: Variable, messages: IMessage[]) {
         }
     }
 
-    if (!variable.bb3ModuleFieldColor) {
+    const color = variable.bb3ModuleFieldColor;
+    if (!color) {
         messages.push(propertyNotSetMessage(variable, "bb3ModuleFieldColor"));
+    } else if (
+        color == "transparent" ||
+        !isValidColor(getThemedColor(getProjectStore(variable), color).colorValue)
+    ) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `Invalid color "${color}"`,
+                getChildOfObject(variable, "bb3ModuleFieldColor")
+            )
+        );
     }
 
     if (

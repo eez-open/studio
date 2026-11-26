@@ -17,11 +17,13 @@ import { DataBuffer } from "project-editor/build/data-buffer";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import {
     BB3_MODULE_FIELD_TYPES,
-    isBB3ModuleFieldFloatType
+    isBB3ModuleFieldFloatType,
+    isIntegerType
 } from "project-editor/features/variable/value-type";
 import { getValueType } from "project-editor/build/values";
 import type { Variable } from "project-editor/features/variable/variable";
 import {
+    BB3_MODULE_FIELD_MAX_BITS,
     hasBB3ModuleFieldChannel,
     getBB3ModuleFieldMeasurementValue,
     getBB3ModuleFieldTrackingRoleValue,
@@ -262,7 +264,10 @@ registerClass("BB3ModuleMetadata", BB3ModuleMetadata);
 // The layout of the metadata and of the assets. BB3+ uses the assets of a module
 // only if it is the number BB3+ knows (MODULE_METADATA_VERSION in
 // bb3/module/module-metadata.h): add one when the layout changes.
-export const BB3_MODULE_METADATA_VERSION = 1;
+export const BB3_MODULE_METADATA_VERSION = 2;
+
+// the color of a field without one (TRANSPARENT_COLOR_INDEX of eez-framework)
+const BB3_MODULE_FIELD_NO_COLOR = 0xffff;
 
 // size of the field value on the wire and in the BB3+ copy, 0 for a type
 // that is not supported (the project check reports it)
@@ -272,12 +277,23 @@ function getBB3ModuleFieldSize(variable: Variable) {
 }
 
 // pageNames: names of the pages in the assets (index is page id - 1), BB3+ finds
-// the module pages (slot views, settings) by name
+// the module pages (slot views, settings) by name. getColorIndex: the index of
+// a color in the assets (as the widgets have it).
 export function writeBB3ModuleMetadata(
     metadata: BB3ModuleMetadata,
     dataBuffer: DataBuffer,
-    pageNames: string[]
+    pageNames: string[],
+    getColorIndex: (color: string) => number
 ) {
+    // the color indexes are got now: a color value that is not a theme color
+    // becomes a custom color of the assets, and the colors are written before
+    // the field records
+    const fieldColors = metadata.bb3ModuleFields.map(variable =>
+        isBB3ModuleFieldSampled(variable) && variable.bb3ModuleFieldColor
+            ? getColorIndex(variable.bb3ModuleFieldColor)
+            : BB3_MODULE_FIELD_NO_COLOR
+    );
+
     dataBuffer.writeObjectOffset(() => {
         // version
         dataBuffer.writeUint16(BB3_MODULE_METADATA_VERSION);
@@ -294,7 +310,9 @@ export function writeBB3ModuleMetadata(
 
         // moduleFields
         let offset = 0;
-        dataBuffer.writeArray(metadata.bb3ModuleFields, variable => {
+        dataBuffer.writeArray(metadata.bb3ModuleFields, (variable, fieldIndex) => {
+            const sampled = isBB3ModuleFieldSampled(variable);
+
             // valueType
             dataBuffer.writeUint16(getValueType(variable.type));
 
@@ -332,16 +350,18 @@ export function writeBB3ModuleMetadata(
 
             // name
             dataBuffer.writeStringPtr(variable.name);
+            // label: the name of a sampled field in BB3+ and in its views,
+            // empty for the other fields
+            dataBuffer.writeStringPtr(sampled ? variable.bb3ModuleFieldLabel ?? "" : "");
 
             // unit
             dataBuffer.writeUint16(getBB3ModuleFieldUnitValue(variable.bb3ModuleFieldUnit));
             // measurement (BB3_MEASUREMENT_...)
-            const measurement =
-                maxSampleRate > 0
-                    ? getBB3ModuleFieldMeasurementValue(variable.bb3ModuleFieldMeasurement)
-                    : 0;
+            const measurement = sampled
+                ? getBB3ModuleFieldMeasurementValue(variable.bb3ModuleFieldMeasurement)
+                : 0;
             dataBuffer.writeUint8(measurement);
-            // channel: the module channel of a field with a measurement or
+            // channel: the module channel of a sampled field or a field with
             // a tracking role
             dataBuffer.writeUint8(
                 hasBB3ModuleFieldChannel(variable)
@@ -370,9 +390,16 @@ export function writeBB3ModuleMetadata(
                       )
                     : 0
             );
-            // reserved
-            dataBuffer.writeUint8(0);
-            dataBuffer.writeUint16(0);
+            // bits: the number of bits of a sampled bit field (an integer
+            // field), 0 for the other fields
+            dataBuffer.writeUint8(
+                sampled && isIntegerType(variable.type)
+                    ? variable.bb3ModuleFieldBits ?? BB3_MODULE_FIELD_MAX_BITS
+                    : 0
+            );
+            // color: the color of a sampled field, the index in the assets
+            // as the widgets have it
+            dataBuffer.writeUint16(fieldColors[fieldIndex]);
 
             offset += size;
         })
