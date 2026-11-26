@@ -15,6 +15,11 @@ import {
 
 const CONF_FILE_TRANSFER_TIMEOUT_FOR_ARBITRARY_BLOCK_MS = 2500;
 
+// While the data comes, the activity log entry is updated at most this often:
+// each update is a database write and a message to the windows, per received
+// chunk it slows down the transfer.
+const CONF_PROGRESS_LOG_UPDATE_INTERVAL_MS = 250;
+
 export class FileDownload extends FileTransfer {
     fileType:
         | {
@@ -28,6 +33,10 @@ export class FileDownload extends FileTransfer {
     note: string | undefined;
 
     isQuery = true;
+
+    lastLogUpdateTime: number;
+    // the progress update that comes after the interval
+    logUpdateTimeoutId: any;
 
     constructor(
         connection: Connection,
@@ -53,6 +62,7 @@ export class FileDownload extends FileTransfer {
         this.logId = log(activityLogStore, this.logEntry, {
             undoable: false
         });
+        this.lastLogUpdateTime = Date.now();
 
         this.setTimeout();
     }
@@ -94,7 +104,32 @@ export class FileDownload extends FileTransfer {
         this.setTimeout();
     }
 
+    // The progress is written at most every CONF_PROGRESS_LOG_UPDATE_INTERVAL_MS,
+    // the last one after the interval. The other states are written at once.
     updateLog() {
+        if (this.state === "progress") {
+            if (this.logUpdateTimeoutId) {
+                return;
+            }
+            const elapsed = Date.now() - this.lastLogUpdateTime;
+            if (elapsed < CONF_PROGRESS_LOG_UPDATE_INTERVAL_MS) {
+                this.logUpdateTimeoutId = setTimeout(() => {
+                    this.logUpdateTimeoutId = undefined;
+                    this.writeLog();
+                }, CONF_PROGRESS_LOG_UPDATE_INTERVAL_MS - elapsed);
+                return;
+            }
+        } else if (this.logUpdateTimeoutId) {
+            clearTimeout(this.logUpdateTimeoutId);
+            this.logUpdateTimeoutId = undefined;
+        }
+
+        this.writeLog();
+    }
+
+    writeLog() {
+        this.lastLogUpdateTime = Date.now();
+
         this.logEntry.message = this.serializeState();
 
         if (this.state === "success") {
