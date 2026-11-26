@@ -2307,7 +2307,9 @@ class YTChartTrace extends EezObject {
     field: string;
     field2: string;
     bit: number | undefined;
-    color: string;
+    // empty: the color of the field (BB3 module field Color), a product trace
+    // has its own
+    color: string | undefined;
     min: string;
     max: string;
     visible: string;
@@ -2361,6 +2363,10 @@ class YTChartTrace extends EezObject {
             },
             {
                 name: "color",
+                displayName: (trace: YTChartTrace) =>
+                    isProductTrace(trace)
+                        ? "Color"
+                        : "Color (empty: the color of the field)",
                 type: PropertyType.ThemedColor,
                 propertyGridGroup: specificGroup
             },
@@ -2449,6 +2455,9 @@ class YTChartTrace extends EezObject {
                 }
             }
 
+            if (isProductTrace(trace) && !trace.color) {
+                messages.push(propertyNotSetMessage(trace, "color"));
+            }
             checkModuleColorProperty(trace, "color", messages);
 
             const widget = getParent(getParent(trace)!)! as YTChartWidget;
@@ -2470,7 +2479,6 @@ class YTChartTrace extends EezObject {
         },
         defaultValue: {
             type: "field",
-            color: "#ffff00",
             min: "0",
             max: "1",
             visible: "true"
@@ -2605,8 +2613,17 @@ export class YTChartWidget extends Widget {
             // fieldIndex
             dataBuffer.writeUint16(getFieldIndex(trace.field));
 
-            // color
-            let color = assets.getColorIndexFromColorValue(trace.color);
+            // color: its own, else the color of the field
+            const colorValue =
+                trace.color ||
+                (!isProductTrace(trace)
+                    ? bb3ModuleMetadata?.bb3ModuleFields.find(
+                          variable => variable.name == trace.field
+                      )?.bb3ModuleFieldColor
+                    : undefined);
+            let color = colorValue
+                ? assets.getColorIndexFromColorValue(colorValue)
+                : NaN;
             if (isNaN(color)) {
                 color = 0;
             }
