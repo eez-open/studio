@@ -2360,7 +2360,7 @@ class YTChartTrace extends EezObject {
             },
             {
                 name: "color",
-                type: PropertyType.Color,
+                type: PropertyType.ThemedColor,
                 propertyGridGroup: specificGroup
             },
             makeExpressionProperty(
@@ -3297,7 +3297,7 @@ class LineChartLine extends EezObject {
             ),
             {
                 name: "color",
-                type: PropertyType.Color,
+                type: PropertyType.ThemedColor,
                 propertyGridGroup: specificGroup
             },
             {
