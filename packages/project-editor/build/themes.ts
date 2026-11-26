@@ -67,7 +67,21 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
         dataBuffer.writeNumberArray(colors, buildColor);
     }
 
-    const themes = getProjectWithThemes(assets.projectStore).themes;
+    const projectWithThemes = getProjectWithThemes(assets.projectStore);
+    const themes = projectWithThemes.themes;
+
+    // the values of the colors for the theme in the order of the color
+    // indexes (getColorIndexFromColorValue): buildColors puts a color with an
+    // id at that index, theme.colors is in the order of the colors list
+    const buildColors = (
+        assets.projectStore.project.masterProject ??
+        assets.projectStore.project
+    ).buildColors;
+    function getColorValues(theme: Theme) {
+        return buildColors.map(color =>
+            projectWithThemes.getThemeColor(theme.objID, color.objID)
+        );
+    }
 
     if (!assets.masterProject) {
         dataBuffer.writeObjectOffset(() => {
@@ -75,7 +89,7 @@ export function buildGuiColors(assets: Assets, dataBuffer: DataBuffer) {
             // the module colors after the master colors)
             dataBuffer.writeArray(themes, theme =>
                 buildTheme(theme, [
-                    ...theme.colors,
+                    ...getColorValues(theme),
                     ...getModuleColorValues(theme)
                 ])
             );
