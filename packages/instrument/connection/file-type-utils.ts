@@ -51,12 +51,8 @@ export function convertDlogToCsv(dlog: IDlog<IUnit>) {
     }
 
     for (let columnIndex = 0; columnIndex < dlog.yAxes.length; columnIndex++) {
-        csv += separator;
-        if (dlog.yAxes[columnIndex].label) {
-            csv += dlog.yAxes[columnIndex].label;
-        } else {
-            csv += dlog.yAxes[columnIndex].unit.name;
-        }
+        const yAxis = dlog.yAxes[columnIndex];
+        csv += separator + (yAxis.name ?? yAxis.unit.name);
     }
 
     csv += "\n";

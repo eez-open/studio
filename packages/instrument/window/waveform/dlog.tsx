@@ -4,10 +4,12 @@ import {
     computed,
     reaction,
     toJS,
+    action,
     runInAction,
     makeObservable,
     IReactionDisposer
 } from "mobx";
+import { observer } from "mobx-react";
 import classNames from "classnames";
 
 import { objectEqual, formatDateTimeLong } from "eez-studio-shared/util";
@@ -45,6 +47,7 @@ import { WaveformLineView } from "eez-studio-ui/chart/WaveformLineView";
 import { DataType } from "eez-studio-ui/chart/DataType";
 import { WaveformFormat } from "eez-studio-ui/chart/WaveformFormat";
 import { initValuesAccesor } from "eez-studio-ui/chart/value-accesor";
+import { Checkbox } from "eez-studio-ui/properties";
 
 import {
     logUpdate,
@@ -80,12 +83,69 @@ import {
 import type { ChartsDisplayOption } from "instrument/window/lists/common-tools";
 import type { IAppStore } from "instrument/window/history/history";
 import { globalViewOptions } from "eez-studio-ui/chart/GlobalViewOptions";
+import {
+    getThemeColor,
+    DARK_THEME,
+    LIGHT_THEME
+} from "instrument/bb3plus/labels";
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// the name of a column (IDlogYAxis.name), a column of the old BB3 firmware
+// without a label by its channel and unit
+function getLabel(yAxis: IDlogYAxis<IUnit>) {
+    return (
+        yAxis.name ??
+        `Channel ${yAxis.channelIndex + 1} ${capitalize(yAxis.unit.name)}`
+    );
+}
+
+// the view options of a dlog: the columns of a recording from the BB3+
+// modules in the channel colors, not in the field colors
+class DlogViewOptions extends ViewOptions {
+    channelColors: boolean;
+
+    constructor(props?: any) {
+        super(props);
+        this.channelColors = props?.channelColors === true;
+        makeObservable(this, {
+            channelColors: observable
+        });
+    }
+}
+
+// The colors of a column on a dark and on a light background: the field
+// colors, or the channel colors with the option (a column without them keeps
+// its field colors); undefined if the file has none.
+function getColumnColors(yAxis: IDlogYAxis<IUnit>, channelColors: boolean) {
+    if (channelColors && yAxis.channelColor) {
+        return {
+            color: getThemeColor(yAxis.channelColor, DARK_THEME),
+            colorInverse: getThemeColor(yAxis.channelColor, LIGHT_THEME)
+        };
+    }
+    return { color: yAxis.color, colorInverse: yAxis.colorInverse };
+}
+
+const ChannelColorsOption = observer(
+    ({ viewOptions }: { viewOptions: DlogViewOptions }) => (
+        <div>
+            <Checkbox
+                checked={viewOptions.channelColors}
+                onChange={action(
+                    (checked: boolean) => (viewOptions.channelColors = checked)
+                )}
+            >
+                Channel colors
+            </Checkbox>
+        </div>
+    )
+);
 
 class DlogWaveformAxisModel implements IAxisModel {
     constructor(
         public yAxis: IDlogYAxis<IUnit>,
+        private viewOptions: DlogViewOptions,
         public semiLogarithmic?: { a: number; b: number },
         private yAxes?: IDlogYAxis<IUnit>[],
         private chartsController?: ChartsController
@@ -167,14 +227,6 @@ class DlogWaveformAxisModel implements IAxisModel {
     defaultSubdivisionScale: number | undefined = undefined;
 
     get label() {
-        function getLabel(yAxis: IDlogYAxis<IUnit>) {
-            return yAxis.label
-                ? yAxis.label
-                : `Channel ${yAxis.channelIndex + 1} ${capitalize(
-                      yAxis.unit.name
-                  )}`;
-        }
-
         if (this.yAxes) {
             return this.yAxes.map(getLabel).join(", ");
         }
@@ -207,27 +259,32 @@ class DlogWaveformAxisModel implements IAxisModel {
                         key={i}
                         style={{
                             color: globalViewOptions.blackBackground
-                                ? yAxis.color
-                                : yAxis.colorInverse
+                                ? this.getColors(yAxis).color
+                                : this.getColors(yAxis).colorInverse
                         }}
                     >
-                        {yAxis.label}
+                        {getLabel(yAxis)}
                     </div>
                 ))}
             </div>
         );
     }
 
+    private getColors(yAxis: IDlogYAxis<IUnit>) {
+        return getColumnColors(yAxis, this.viewOptions.channelColors);
+    }
+
     get color() {
         return this.yAxes && this.yAxes.length > 1
             ? "#fff"
-            : this.yAxis.color ?? this.yAxis.unit.color;
+            : this.getColors(this.yAxis).color ?? this.yAxis.unit.color;
     }
 
     get colorInverse() {
         return this.yAxes && this.yAxes.length > 1
             ? "#333"
-            : this.yAxis.colorInverse ?? this.yAxis.unit.colorInverse;
+            : this.getColors(this.yAxis).colorInverse ??
+                  this.yAxis.unit.colorInverse;
     }
 }
 
@@ -385,13 +442,17 @@ class DlogWaveformLineController extends LineController {
     }
 
     render(): JSX.Element {
+        const colors = getColumnColors(
+            this.channel.yAxis,
+            this.dlogWaveform.viewOptions.channelColors
+        );
         return (
             <WaveformLineView
                 key={this.id}
                 waveformLineController={this}
                 label={this.channel.axisModel.label}
-                color={this.channel.yAxis.color}
-                colorInverse={this.channel.yAxis.colorInverse}
+                color={colors.color}
+                colorInverse={colors.colorInverse}
             />
         );
     }
@@ -409,9 +470,18 @@ class DlogWaveformChartsController extends ChartsController {
     }
 
     get chartViewOptionsProps() {
+        // the option only for the files with the channel colors
+        const channelColors = this.dlogWaveform.dlog.yAxes.some(
+            yAxis => yAxis.channelColor
+        );
         return {
             showRenderAlgorithm: true,
-            showShowSampledDataOption: false
+            showShowSampledDataOption: false,
+            extraOptions: channelColors ? (
+                <ChannelColorsOption
+                    viewOptions={this.dlogWaveform.viewOptions}
+                />
+            ) : undefined
         };
     }
 
@@ -472,7 +542,7 @@ export class DlogWaveform extends FileHistoryItem {
 
         const message = JSON.parse(this.message);
 
-        this.viewOptions = new ViewOptions(message.viewOptions);
+        this.viewOptions = new DlogViewOptions(message.viewOptions);
         this.rulers = new RulersModel(message.rulers);
         this.measurements = new MeasurementsModel(message.measurements);
 
@@ -613,7 +683,7 @@ export class DlogWaveform extends FileHistoryItem {
     get channels() {
         return this.dlog.yAxes.map(yAxis => ({
             yAxis,
-            axisModel: new DlogWaveformAxisModel(yAxis)
+            axisModel: new DlogWaveformAxisModel(yAxis, this.viewOptions)
         })) as IChannel[];
     }
 
@@ -756,6 +826,7 @@ export class DlogWaveform extends FileHistoryItem {
         chartController.createYAxisController(
             new DlogWaveformAxisModel(
                 yAxis,
+                this.viewOptions,
                 this.dlog.yAxisScaleType == ScaleType.LOGARITHMIC
                     ? {
                           a: 0,
@@ -786,7 +857,7 @@ export class DlogWaveform extends FileHistoryItem {
         return chartController;
     }
 
-    viewOptions: ViewOptions;
+    viewOptions: DlogViewOptions;
     rulers: IRulersModel;
     measurements: IMeasurementsModel;
 

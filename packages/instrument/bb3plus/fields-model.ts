@@ -3,6 +3,7 @@
 // eez-bb3plus-cm5-firmware/src/bb3/push/push_protocol.h).
 
 import { NUM_SLOTS } from "instrument/bb3plus/push-protocol";
+import type { NameParts } from "instrument/bb3plus/labels";
 
 // bb3_field_type_t (eez-bb3plus-module-interface/bb3-module.h)
 export const FIELD_TYPE_BOOL = 2;
@@ -110,9 +111,32 @@ export interface FieldInfo {
     unit: number;
     maxSampleRate: number;
     channel: number;
-    // the label of a sampled field ("U", "AIN1", "DIN"), "" for the other
-    // fields
+    // a sampled field: its label ("U", "AIN1", "DIN"), the number of bits of
+    // a bit field (0 for the other fields), its color per theme
+    // ("Dark=#..;Light=#..;Legacy=#.."), the user's label of its channel (or
+    // its default) and the color BB3+ draws the channel with; "" and 0 for
+    // the other fields
     label: string;
+    bits: number;
+    color: string;
+    channelLabel: string;
+    channelColor: string;
+    // a bit field: the user's label (or its default) of each pin, bit 0
+    // first
+    pinLabels: string[];
+}
+
+// the parts of the name of a sampled field (labels.ts), the field name if
+// it has no label
+export function getFieldNameParts(
+    slotFields: SlotFields,
+    field: FieldInfo
+): NameParts {
+    return {
+        label: field.label || field.name,
+        channelLabel: field.channelLabel,
+        slotLabel: slotFields.slotLabel
+    };
 }
 
 export function isFieldFloat(field: FieldInfo) {
@@ -139,6 +163,10 @@ export class SlotFields {
     moduleBrand = "";
     firmwareVersion = "";
     serialNumber = "";
+    // the user's label of the slot (or its default), the color BB3+ draws
+    // the slot with (per theme)
+    slotLabel = "";
+    slotColor = "";
     // in the order of the field index
     fields: FieldInfo[] = [];
     // the value of each field (its bytes), undefined if not received yet
@@ -175,9 +203,16 @@ export class ModuleFields {
         slotFields.moduleBrand = getString(root, "moduleBrand");
         slotFields.firmwareVersion = getString(root, "firmwareVersion");
         slotFields.serialNumber = getString(root, "serialNumber");
+        slotFields.slotLabel = getString(root, "slotLabel");
+        slotFields.slotColor = getString(root, "slotColor");
 
         const fields = Array.isArray(root.fields) ? root.fields : [];
         fields.forEach((item: any, i: number) => {
+            const pinLabels = Array.isArray(item?.pinLabels)
+                ? item.pinLabels.map((label: any) =>
+                      typeof label == "string" ? label : ""
+                  )
+                : [];
             slotFields.fields.push({
                 index: getNumber(item, "index", i),
                 name: getString(item, "name"),
@@ -188,7 +223,12 @@ export class ModuleFields {
                 unit: getNumber(item, "unit", 255),
                 maxSampleRate: getNumber(item, "maxSampleRate", 0),
                 channel: getNumber(item, "channel", 0),
-                label: getString(item, "label")
+                label: getString(item, "label"),
+                bits: getNumber(item, "bits", 0),
+                color: getString(item, "color"),
+                channelLabel: getString(item, "channelLabel"),
+                channelColor: getString(item, "channelColor"),
+                pinLabels
             });
         });
         slotFields.values = new Array(slotFields.fields.length).fill(undefined);

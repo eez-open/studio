@@ -2,6 +2,8 @@ import net from "net";
 // mobx only to follow the state of the Studio instrument (its connection)
 import { autorun, IReactionDisposer } from "mobx";
 
+import { settingsController } from "home/settings";
+
 import type { InstrumentObject } from "instrument/instrument-object";
 
 import {
@@ -25,9 +27,18 @@ import {
 import {
     ModuleFields,
     FieldInfo,
+    SlotFields,
     isFieldFloat,
-    isFieldSampled
+    isFieldSampled,
+    getFieldNameParts
 } from "instrument/bb3plus/fields-model";
+import {
+    NameParts,
+    getUniqueNames,
+    getThemeColor,
+    DARK_THEME,
+    LIGHT_THEME
+} from "instrument/bb3plus/labels";
 import {
     LogRecord,
     LogFilter,
@@ -48,6 +59,7 @@ const DEFAULT_SPAN = 1;
 export const FIELDS_INTERVALS = [50, 100, 250, 1000];
 const DEFAULT_FIELDS_INTERVAL = 250;
 
+// the colors of the traces of the fields without a color
 const TRACE_COLORS = [
     "#f5c211",
     "#2ec27e",
@@ -146,6 +158,8 @@ interface Settings {
     scopeAxes: { [key: string]: ScopeAxisSettings };
     scopeReadoutSize: number;
     scopeShowOptions: boolean;
+    // the traces in the channel colors, not in the field colors
+    scopeChannelColors: boolean;
 }
 
 export class ScopeTrace {
@@ -162,14 +176,22 @@ export class ScopeTrace {
     // period of the subscription sent, 0 if not subscribed
     subscribedPeriod = 0;
 
+    // the name shown, as the BB3+ dlog view names its columns ("U",
+    // "Ch1 U", "DCP405+ #2 U"), and the color drawn; set by
+    // BB3PlusInstrument.updateTraceLooks
+    name: string;
+    color: string;
+    // the module, the slot and the field name, for the tooltips
+    details = "";
+
     constructor(
         public slot: number,
         public fieldName: string,
-        public color: string
-    ) {}
-
-    get label() {
-        return `${this.slot}: ${this.fieldName}`;
+        // the color without a field color
+        public paletteColor: string
+    ) {
+        this.name = `${slot}: ${fieldName}`;
+        this.color = paletteColor;
     }
 
     get key() {
@@ -215,6 +237,9 @@ export class BB3PlusInstrument {
 
     // the state of the Studio instrument, set by the autorun
     instrumentConnected = false;
+    // the Studio theme, the colors of the BB3+ theme of the same name are
+    // drawn
+    darkTheme = settingsController.isDarkTheme;
     // the push port while the instrument is connected over Ethernet
     pushAddress: { host: string; port: number } | undefined;
 
@@ -242,6 +267,7 @@ export class BB3PlusInstrument {
         for (const traceSettings of this.settings.scopeTraces) {
             this.createTrace(traceSettings.slot, traceSettings.fieldName);
         }
+        this.updateTraceLooks();
 
         // the push port connection while the instrument is connected over
         // Ethernet
@@ -261,6 +287,17 @@ export class BB3PlusInstrument {
                     }
                 }
                 this.emit("status");
+            })
+        );
+
+        this.disposers.push(
+            autorun(() => {
+                const darkTheme = settingsController.isDarkTheme;
+                if (darkTheme != this.darkTheme) {
+                    this.darkTheme = darkTheme;
+                    this.updateTraceLooks();
+                    this.emit("scope");
+                }
             })
         );
     }
@@ -363,7 +400,8 @@ export class BB3PlusInstrument {
             )
                 ? saved.scopeReadoutSize
                 : DEFAULT_READOUT_SIZE,
-            scopeShowOptions: saved.scopeShowOptions === true
+            scopeShowOptions: saved.scopeShowOptions === true,
+            scopeChannelColors: saved.scopeChannelColors === true
         };
     }
 
@@ -766,6 +804,13 @@ export class BB3PlusInstrument {
         this.emit("scope");
     }
 
+    setScopeChannelColors(channelColors: boolean) {
+        this.settings.scopeChannelColors = channelColors;
+        this.settingsChanged();
+        this.updateTraceLooks();
+        this.emit("scope");
+    }
+
     // the samples kept: a bit more than the span, they arrive late
     private getBufferSpan() {
         return this.settings.scopeSpan * 1.2 + 0.5;
@@ -782,12 +827,16 @@ export class BB3PlusInstrument {
 
     // the sampled fields that can be added to the scope
     get sampledFields() {
-        const result: { slot: number; field: FieldInfo }[] = [];
+        const result: {
+            slot: number;
+            slotFields: SlotFields;
+            field: FieldInfo;
+        }[] = [];
         this.fields.slots.forEach((slotFields, i) => {
             if (slotFields && slotFields.state == "ok") {
                 for (const field of slotFields.fields) {
                     if (isFieldSampled(field)) {
-                        result.push({ slot: i + 1, field });
+                        result.push({ slot: i + 1, slotFields, field });
                     }
                 }
             }
@@ -817,6 +866,7 @@ export class BB3PlusInstrument {
             return;
         }
         this.createTrace(slot, fieldName);
+        this.updateTraceLooks();
         this.saveTraces();
         this.syncSampleSubscriptions();
         this.emit("scope");
@@ -833,6 +883,8 @@ export class BB3PlusInstrument {
                 `SUBScribe:SAMPles ${trace.slot},"${trace.fieldName}",0`
             );
         }
+        // the names of the others can be shorter now
+        this.updateTraceLooks();
         this.saveTraces();
         this.emit("scope");
     }
@@ -845,17 +897,53 @@ export class BB3PlusInstrument {
         this.settingsChanged();
     }
 
-    private resolveTraceField(trace: ScopeTrace) {
+    private findTraceField(trace: ScopeTrace) {
         const slotFields = this.fields.slots[trace.slot - 1];
-        const field =
-            slotFields && slotFields.state == "ok"
-                ? slotFields.fields.find(field => field.name == trace.fieldName)
-                : undefined;
+        return slotFields && slotFields.state == "ok"
+            ? slotFields.fields.find(field => field.name == trace.fieldName)
+            : undefined;
+    }
+
+    private resolveTraceField(trace: ScopeTrace) {
+        const field = this.findTraceField(trace);
         trace.fieldIndex = field ? field.index : -1;
         if (field) {
             trace.unit = field.unit;
             trace.bits = !isFieldFloat(field);
         }
+    }
+
+    // The names and the colors of the traces, from the catalogs (BB3+ sends
+    // the catalog of a slot again when the user changes a label or a color),
+    // the option of the channel colors and the Studio theme. A name depends
+    // on the names of the other traces.
+    private updateTraceLooks() {
+        const themeName = this.darkTheme ? DARK_THEME : LIGHT_THEME;
+        const named: ScopeTrace[] = [];
+        const parts: NameParts[] = [];
+        for (const trace of this.traces) {
+            const slotFields = this.fields.slots[trace.slot - 1];
+            const field = this.findTraceField(trace);
+            if (!slotFields || !field) {
+                trace.name = `${trace.slot}: ${trace.fieldName}`;
+                trace.color = trace.paletteColor;
+                trace.details = "";
+                continue;
+            }
+            named.push(trace);
+            parts.push(getFieldNameParts(slotFields, field));
+            trace.color =
+                getThemeColor(
+                    this.settings.scopeChannelColors
+                        ? field.channelColor
+                        : field.color,
+                    themeName
+                ) ?? trace.paletteColor;
+            trace.details =
+                `${slotFields.moduleName}, slot ${trace.slot}, ` + field.name;
+        }
+        const names = getUniqueNames(parts);
+        named.forEach((trace, i) => (trace.name = names[i]));
     }
 
     // a new catalog of a slot: its sample subscriptions ended
@@ -870,6 +958,9 @@ export class BB3PlusInstrument {
                 this.resolveTraceField(trace);
                 changed = true;
             }
+        }
+        if (changed) {
+            this.updateTraceLooks();
         }
         this.syncSampleSubscriptions();
         if (changed) {
@@ -893,7 +984,7 @@ export class BB3PlusInstrument {
                     this.samplesError =
                         result.errors.length > 0
                             ? `SUBScribe:SAMPles ${
-                                  trace.label
+                                  trace.name
                               } failed: ${formatScpiErrors(result.errors)}`
                             : undefined;
                     this.emit("status");

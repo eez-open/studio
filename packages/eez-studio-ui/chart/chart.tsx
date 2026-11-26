@@ -332,10 +332,7 @@ export interface IChartsController {
 
     zoomDefault(): void;
 
-    chartViewOptionsProps: {
-        showRenderAlgorithm: boolean;
-        showShowSampledDataOption: boolean;
-    };
+    chartViewOptionsProps: ChartViewOptionsProps;
 
     destroy(): void;
 }

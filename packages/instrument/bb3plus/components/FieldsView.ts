@@ -71,7 +71,10 @@ function getSampled(field: FieldInfo) {
         return "";
     }
     const label = field.label ? `${field.label} ` : "";
-    return `${label}ch${field.channel + 1}, up to ${formatNumber(field.maxSampleRate)} SPS`;
+    const bits = field.bits > 0 ? `, ${field.bits} bits` : "";
+    return `${label}ch${field.channel + 1}${bits}, up to ${formatNumber(
+        field.maxSampleRate
+    )} SPS`;
 }
 
 interface FieldRow {

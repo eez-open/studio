@@ -1,5 +1,11 @@
 import { IUnit, TIME_UNIT, UNKNOWN_UNIT } from "eez-studio-shared/units";
 import { DataType } from "eez-studio-ui/chart/DataType";
+import {
+    getUniqueNames,
+    getThemeColor,
+    DARK_THEME,
+    LIGHT_THEME
+} from "instrument/bb3plus/labels";
 
 export enum Unit {
     UNIT_UNKNOWN = 255,
@@ -66,11 +72,19 @@ enum Fields {
     FIELD_ID_Y_DATA_TYPE = 31, // default is DATA_TYPE_FLOAT
     FIELD_ID_Y_RANGE_MIN = 32,
     FIELD_ID_Y_RANGE_MAX = 33,
-    FIELD_ID_Y_LABEL = 34,
-    FIELD_ID_Y_CHANNEL_INDEX = 35,
-    FIELD_ID_Y_SCALE_TYPE = 36, // 0 - linear, 1 - logarithmic
+    FIELD_ID_Y_LABEL = 34, // the item label: "U", "AIN1", "DIN3"
+    FIELD_ID_Y_CHANNEL_INDEX = 35, // the old BB3 firmware: the channel, from 1
+    FIELD_ID_Y_SCALE_TYPE = 36, // 0 - linear, 1 - logarithmic, without the Y axis index
     FIELD_ID_Y_TRANSFORM_OFFSET = 37, // default is 0.0
     FIELD_ID_Y_TRANSFORM_SCALE = 38, // default is 1.0
+    FIELD_ID_Y_MODULE = 39, // string, the module name: "DCP405+"
+    FIELD_ID_Y_SLOT = 40, // U8, the slot, from 1
+    FIELD_ID_Y_CHANNEL = 41, // U8, the module channel, from 1
+    FIELD_ID_Y_SLOT_LABEL = 42, // string, the user's slot label at the start
+    FIELD_ID_Y_CHANNEL_LABEL = 43, // string, the user's channel label at the start
+    FIELD_ID_Y_PIN_LABEL = 44, // string, the user's pin label of a bit column
+    FIELD_ID_Y_COLOR = 45, // string, the color of the field per theme
+    FIELD_ID_Y_CHANNEL_COLOR = 46, // string, the color of the channel per theme
     FIELD_ID_Y_LAST_FIELD,
 
     FIELD_ID_CHANNEL_MODULE_TYPE = 50,
@@ -105,6 +119,25 @@ export interface IDlogYAxis<UnitType> {
     channelIndex: number;
     transformOffset: number;
     transformScale: number;
+    // a column of a recording from the BB3+ modules: the module name, the
+    // slot and the module channel (from 1), the user's slot, channel and pin
+    // labels at the start, the color of the field and of the channel per BB3+
+    // theme ("Dark=#F8B440;Light=#A05C00;Legacy=#F8C858")
+    module?: string;
+    slot?: number;
+    channel?: number;
+    slotLabel?: string;
+    channelLabel?: string;
+    pinLabel?: string;
+    fieldColor?: string;
+    channelColor?: string;
+    // the name shown, as the BB3+ dlog view names its columns ("U", "Ch1 U",
+    // "DCP405+ #2 U"); "Y<column number>" for a column without a label and
+    // a channel; undefined for a column of the old BB3 firmware without a
+    // label (the channel and the unit name it)
+    name?: string;
+    // the color on a dark background (the field color of the BB3+ "Dark"
+    // theme) and on a light background ("Light")
     color?: string;
     colorInverse?: string;
 }
@@ -197,7 +230,7 @@ export function decodeDlog<UnitType>(
     function readInt24BE(i: number) {
         buffer[0] = data[i];
         buffer[1] = data[i + 1];
-        buffer[1] = data[i + 1];
+        buffer[2] = data[i + 2];
         buffer[3] = 0;
         return buffer.readInt32BE(0) >> 8;
     }
@@ -302,6 +335,9 @@ export function decodeDlog<UnitType>(
             } else if (fieldId === Fields.FIELD_ID_X_LABEL) {
                 xAxis.label = readString(offset, offset + fieldDataLength);
                 offset += fieldDataLength;
+            } else if (fieldId === Fields.FIELD_ID_Y_SCALE_TYPE) {
+                yAxisScaleType = readUInt8(offset);
+                offset++;
             } else if (
                 fieldId >= Fields.FIELD_ID_Y_UNIT &&
                 fieldId < Fields.FIELD_ID_Y_LAST_FIELD
@@ -348,9 +384,6 @@ export function decodeDlog<UnitType>(
                 } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MIN) {
                     destYAxis.range!.min = readFloat(offset);
                     offset += 4;
-                } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MIN) {
-                    destYAxis.range!.min = readFloat(offset);
-                    offset += 4;
                 } else if (fieldId === Fields.FIELD_ID_Y_RANGE_MAX) {
                     destYAxis.range!.max = readFloat(offset);
                     offset += 4;
@@ -369,13 +402,52 @@ export function decodeDlog<UnitType>(
                 } else if (fieldId === Fields.FIELD_ID_Y_TRANSFORM_SCALE) {
                     destYAxis.transformScale = readDouble(offset);
                     offset += 8;
+                } else if (fieldId === Fields.FIELD_ID_Y_MODULE) {
+                    destYAxis.module = readString(
+                        offset,
+                        offset + fieldDataLength
+                    );
+                    offset += fieldDataLength;
+                } else if (fieldId === Fields.FIELD_ID_Y_SLOT) {
+                    destYAxis.slot = readUInt8(offset);
+                    offset++;
+                } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL) {
+                    destYAxis.channel = readUInt8(offset);
+                    offset++;
+                } else if (fieldId === Fields.FIELD_ID_Y_SLOT_LABEL) {
+                    destYAxis.slotLabel = readString(
+                        offset,
+                        offset + fieldDataLength
+                    );
+                    offset += fieldDataLength;
+                } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL_LABEL) {
+                    destYAxis.channelLabel = readString(
+                        offset,
+                        offset + fieldDataLength
+                    );
+                    offset += fieldDataLength;
+                } else if (fieldId === Fields.FIELD_ID_Y_PIN_LABEL) {
+                    destYAxis.pinLabel = readString(
+                        offset,
+                        offset + fieldDataLength
+                    );
+                    offset += fieldDataLength;
+                } else if (fieldId === Fields.FIELD_ID_Y_COLOR) {
+                    destYAxis.fieldColor = readString(
+                        offset,
+                        offset + fieldDataLength
+                    );
+                    offset += fieldDataLength;
+                } else if (fieldId === Fields.FIELD_ID_Y_CHANNEL_COLOR) {
+                    destYAxis.channelColor = readString(
+                        offset,
+                        offset + fieldDataLength
+                    );
+                    offset += fieldDataLength;
                 } else {
                     // unknown field, skip
                     offset += fieldDataLength;
                 }
-            } else if (fieldId === Fields.FIELD_ID_Y_SCALE_TYPE) {
-                yAxisScaleType = readUInt8(offset);
-                offset++;
             } else if (fieldId === Fields.FIELD_ID_CHANNEL_MODULE_TYPE) {
                 readUInt8(offset); // channel index
                 offset++;
@@ -459,6 +531,8 @@ export function decodeDlog<UnitType>(
         readFields();
         hasJitterColumn = false;
     }
+
+    setNamesAndColors(yAxes);
 
     //
     let hasIsValidBit = false;
@@ -563,7 +637,8 @@ export function decodeDlog<UnitType>(
         if (!hasIsValidBit || readUInt8(offset) & 0x80) {
             offset += columnDataIndexes[columnIndex];
 
-            const dataType = yAxes[columnIndex].dataType;
+            const column = yAxes[columnIndex];
+            const dataType = column.dataType;
 
             if (dataType == DataType.DATA_TYPE_BIT) {
                 return readUInt8(offset) & columnBitMask[columnIndex]
@@ -572,22 +647,22 @@ export function decodeDlog<UnitType>(
             }
             if (dataType == DataType.DATA_TYPE_INT16_BE) {
                 return (
-                    yAxis.transformOffset +
-                    yAxis.transformScale * readInt16BE(offset)
+                    column.transformOffset +
+                    column.transformScale * readInt16BE(offset)
                 );
             }
             if (dataType == DataType.DATA_TYPE_INT24_BE) {
                 return (
-                    yAxis.transformOffset +
-                    yAxis.transformScale * readInt24BE(offset)
+                    column.transformOffset +
+                    column.transformScale * readInt24BE(offset)
                 );
             }
 
-            if (yAxis.dataType == DataType.DATA_TYPE_FLOAT) {
+            if (dataType == DataType.DATA_TYPE_FLOAT) {
                 return readFloat(offset);
             }
 
-            console.error("Unknown data type", yAxis.dataType);
+            console.error("Unknown data type", dataType);
         }
 
         return NaN;
@@ -614,6 +689,28 @@ export function decodeDlog<UnitType>(
         hasJitterColumn,
         getValue
     };
+}
+
+// The names of the columns (IDlogYAxis.name) and their colors (the field
+// colors of the BB3+ themes "Dark" and "Light").
+function setNamesAndColors<UnitType>(yAxes: IDlogYAxis<UnitType>[]) {
+    const labelled = yAxes.filter(yAxis => yAxis.label);
+    const names = getUniqueNames(
+        labelled.map(yAxis => ({
+            label: yAxis.label!,
+            channelLabel: yAxis.channelLabel ?? "",
+            slotLabel: yAxis.slotLabel ?? ""
+        }))
+    );
+    labelled.forEach((yAxis, i) => (yAxis.name = names[i]));
+
+    yAxes.forEach((yAxis, i) => {
+        if (!yAxis.label && yAxis.channelIndex < 0) {
+            yAxis.name = `Y${i + 1}`;
+        }
+        yAxis.color = getThemeColor(yAxis.fieldColor, DARK_THEME);
+        yAxis.colorInverse = getThemeColor(yAxis.fieldColor, LIGHT_THEME);
+    });
 }
 
 export const EMPTY_DLOG: IDlog<IUnit> = {

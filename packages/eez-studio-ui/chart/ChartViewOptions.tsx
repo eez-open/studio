@@ -119,6 +119,7 @@ export const ChartViewOptions = observer(
                                 Show zoom in/out buttons
                             </Checkbox>
                         </div>
+                        {this.props.extraOptions}
                         <div className="EezStudio_GlobalOptionsContainer">
                             Global options:
                         </div>
@@ -166,6 +167,8 @@ export const ChartViewOptions = observer(
 export interface ChartViewOptionsProps {
     showRenderAlgorithm: boolean;
     showShowSampledDataOption: boolean;
+    // the options of the chart's own, after the options of the view
+    extraOptions?: React.ReactNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

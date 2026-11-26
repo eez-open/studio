@@ -8,14 +8,18 @@ import {
     SCOPE_SPANS,
     READOUT_SIZES
 } from "instrument/bb3plus/BB3PlusInstrument";
-import { getUnitName, formatNumber } from "instrument/bb3plus/fields-model";
+import {
+    getUnitName,
+    formatNumber,
+    getFieldNameParts
+} from "instrument/bb3plus/fields-model";
+import { getListName } from "instrument/bb3plus/labels";
 import {
     h,
     setText,
     setVisible,
     setClass,
     createSelect,
-    setSelectOptions,
     setSelectValue,
     BB3PlusView,
     PushStatus,
@@ -1263,7 +1267,7 @@ class ScopeCanvas {
                     const unit = trace.bits ? "" : getUnitName(trace.unit);
                     rows.push({
                         trace,
-                        name: trace.label,
+                        name: trace.name,
                         value: isNaN(value)
                             ? "-"
                             : formatNumber(value, 6) + (unit ? " " + unit : "")
@@ -1351,7 +1355,7 @@ class ScopeCanvas {
 }
 
 // the options of the scales: a row per Y axis, the time zoom, the size of
-// the values at the cursor
+// the values at the cursor, the colors
 class ScopeOptions {
     element = h("div", { className: "EezStudio_BB3Plus_ScopeOptions" });
     private axesElement = h("div");
@@ -1371,6 +1375,7 @@ class ScopeOptions {
     private timeText = h("span");
     private showAllButton: HTMLButtonElement;
     private readoutSelect: HTMLSelectElement;
+    private channelColorsCheckbox: HTMLInputElement;
 
     constructor(
         private bb3PlusInstrument: BB3PlusInstrument,
@@ -1392,6 +1397,15 @@ class ScopeOptions {
             size => bb3PlusInstrument.setScopeReadoutSize(size)
         );
 
+        this.channelColorsCheckbox = h("input", {
+            type: "checkbox",
+            className: "form-check-input me-1",
+            onchange: () =>
+                bb3PlusInstrument.setScopeChannelColors(
+                    this.channelColorsCheckbox.checked
+                )
+        });
+
         this.element.append(
             this.axesElement,
             h(
@@ -1402,6 +1416,20 @@ class ScopeOptions {
                 this.showAllButton,
                 h("label", { className: "ms-4" }, "Size of the cursor values"),
                 this.readoutSelect
+            ),
+            h(
+                "div",
+                { className: "EezStudio_BB3Plus_ScopeOptionsRow" },
+                h("span", { className: "name" }, "Colors"),
+                h(
+                    "label",
+                    {
+                        className: "form-check-label",
+                        title: "The colors BB3+ draws the channels with (the channel or the slot color), not the colors of the fields"
+                    },
+                    this.channelColorsCheckbox,
+                    "Channel colors"
+                )
             ),
             h(
                 "div",
@@ -1417,7 +1445,10 @@ class ScopeOptions {
         // a row per axis
         const axes = getAxes(bb3PlusInstrument.traces);
         const axesKey = JSON.stringify(
-            axes.map(axis => [axis.key, axis.traces.map(trace => trace.key)])
+            axes.map(axis => [
+                axis.key,
+                axis.traces.map(trace => [trace.key, trace.name, trace.color])
+            ])
         );
         if (axesKey != this.axesKey) {
             this.axesKey = axesKey;
@@ -1455,6 +1486,9 @@ class ScopeOptions {
             this.readoutSelect,
             bb3PlusInstrument.settings.scopeReadoutSize
         );
+
+        this.channelColorsCheckbox.checked =
+            bb3PlusInstrument.settings.scopeChannelColors;
     }
 
     // the values of the rows, the ranges of the auto axes as drawn
@@ -1601,7 +1635,7 @@ class ScopeOptions {
                 "span",
                 {
                     className: "name",
-                    title: axis.traces.map(trace => trace.label).join(", ")
+                    title: axis.traces.map(trace => trace.name).join(", ")
                 },
                 ...axis.traces.map(trace =>
                     h("span", {
@@ -1830,18 +1864,39 @@ export class ScopeView extends BB3PlusView {
                     trace => trace.slot == slot && trace.fieldName == field.name
                 )
         );
-        const addKey = JSON.stringify(
-            available.map(({ slot, field }) => [slot, field.name])
-        );
+        const addItems = available.map(({ slot, slotFields, field }) => ({
+            slot,
+            slotLabel: slotFields.slotLabel || slotFields.moduleName,
+            fieldName: field.name,
+            name: getListName(getFieldNameParts(slotFields, field))
+        }));
+        const addKey = JSON.stringify(addItems);
         if (addKey != this.addKey) {
             this.addKey = addKey;
-            setSelectOptions(this.addSelect, [
-                { value: "", label: "Add sampled field..." },
-                ...available.map(({ slot, field }) => ({
-                    value: JSON.stringify([slot, field.name]),
-                    label: `${slot}: ${field.name}`
-                }))
-            ]);
+            // a group per slot
+            const groups: HTMLOptGroupElement[] = [];
+            for (const item of addItems) {
+                const groupLabel = `Slot ${item.slot}: ${item.slotLabel}`;
+                let group = groups[groups.length - 1];
+                if (!group || group.label != groupLabel) {
+                    group = h("optgroup", { label: groupLabel });
+                    groups.push(group);
+                }
+                group.append(
+                    h(
+                        "option",
+                        {
+                            value: JSON.stringify([item.slot, item.fieldName]),
+                            title: item.fieldName
+                        },
+                        item.name
+                    )
+                );
+            }
+            this.addSelect.replaceChildren(
+                h("option", { value: "" }, "Add sampled field..."),
+                ...groups
+            );
             this.addSelect.value = "";
             this.addSelect.disabled = available.length == 0;
         }
@@ -1853,6 +1908,8 @@ export class ScopeView extends BB3PlusView {
         const key = JSON.stringify(
             traces.map(trace => [
                 trace.key,
+                trace.name,
+                trace.details,
                 trace.color,
                 trace.fieldIndex,
                 trace.unit,
@@ -1885,7 +1942,7 @@ export class ScopeView extends BB3PlusView {
                         className: "EezStudio_BB3Plus_LegendItem",
                         title: missing
                             ? "The module in the slot doesn't have this sampled field"
-                            : undefined
+                            : trace.details
                     },
                     h("span", {
                         className: "swatch",
@@ -1894,7 +1951,7 @@ export class ScopeView extends BB3PlusView {
                     h(
                         "span",
                         { className: missing ? "text-muted" : "" },
-                        trace.label +
+                        trace.name +
                             (unit ? ` [${unit}]` : "") +
                             (missing ? " (not available)" : "")
                     ),
