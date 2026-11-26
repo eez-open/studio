@@ -31,6 +31,7 @@ import {
     replaceObject,
     createObject
 } from "project-editor/store";
+import { checkModuleColorProperty } from "project-editor/features/style/theme";
 import {
     isProjectWithFlowSupport,
     isNotProjectWithFlowSupport,
@@ -2447,6 +2448,8 @@ class YTChartTrace extends EezObject {
                     );
                 }
             }
+
+            checkModuleColorProperty(trace, "color", messages);
 
             const widget = getParent(getParent(trace)!)! as YTChartWidget;
             for (const propertyName of isBitTrace(trace)

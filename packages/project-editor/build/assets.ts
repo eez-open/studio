@@ -1284,18 +1284,9 @@ export class Assets {
             color = color.toUpperCase();
         }
 
-        // TODO: currently all colors are available from master project,
-        // we should add support for exporting colors (internal and exported),
-        // like we are doing for styles
         let colors = this.projectStore.project.masterProject
             ? this.projectStore.project.masterProject.buildColors
             : this.projectStore.project.buildColors;
-
-        for (let i = 0; i < colors.length; i++) {
-            if (colors[i].name === color) {
-                return i;
-            }
-        }
 
         // the colors defined in the module project come before the custom
         // colors, they have a value for each master theme
@@ -1303,6 +1294,18 @@ export class Assets {
         const moduleColorIndex = moduleColors.findIndex(
             moduleColor => moduleColor.name === color
         );
+
+        // in a module project: an exported master color (with an id), a
+        // module color, then a master color that is not exported (the master
+        // styles the module styles are based on use them)
+        for (let i = 0; i < colors.length; i++) {
+            if (
+                colors[i].name === color &&
+                (moduleColorIndex == -1 || colors[i].id != undefined)
+            ) {
+                return i;
+            }
+        }
 
         let customColorIndex = this.colors.indexOf(color);
         if (moduleColorIndex == -1 && customColorIndex == -1) {

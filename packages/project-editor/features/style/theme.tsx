@@ -26,7 +26,8 @@ import {
     getProjectStore,
     createObject,
     objectToClipboardData,
-    Message
+    Message,
+    getChildOfObject
 } from "project-editor/store";
 import { replaceObjectReference } from "project-editor/core/search";
 
@@ -47,7 +48,7 @@ import {
     isEezGuiProject,
     isFirmwareProject
 } from "project-editor/project/project-type-traits";
-import { getColorRGB, rgbToHexString } from "eez-studio-shared/color";
+import { getColorRGB, isValid, rgbToHexString } from "eez-studio-shared/color";
 import type { IMenuItem } from "project-editor/core/menu";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -542,15 +543,11 @@ export class Color extends EezObject {
             if (isModuleColor(color)) {
                 const masterProject = getProjectWithThemes(projectStore);
 
-                if (
-                    masterProject.colors.find(
-                        masterColor => masterColor.name == color.name
-                    )
-                ) {
+                if (findExportedMasterColor(projectStore, color.name)) {
                     messages.push(
                         new Message(
                             MessageType.ERROR,
-                            `Color "${color.name}" is also defined in the master project`,
+                            `Color "${color.name}" is also exported by the master project`,
                             color
                         )
                     );
@@ -1130,19 +1127,82 @@ export function getModuleColorValue(
     return "#000000";
 }
 
-// In a module project a color name can't be a name of a master color.
+// A master project exports the colors with an id, as the styles: a module
+// project uses those and its own colors. The other master colors are used
+// only by the styles of the master project, so a module color can have the
+// name of one of them (in the module it comes before that master color).
+export function isExportedColor(color: Color) {
+    return color.id != undefined;
+}
+
+// The exported color of the master project with this name.
+export function findExportedMasterColor(
+    projectStore: ProjectStore,
+    name: string
+) {
+    if (!projectStore.masterProject) {
+        return undefined;
+    }
+    return getProjectWithThemes(projectStore).colors.find(
+        color => color.name == name && isExportedColor(color)
+    );
+}
+
+// In a module project a color name can't be a name of an exported master
+// color.
 function notMasterColorName(projectStore: ProjectStore) {
     return function (object: any, ruleName: string) {
-        if (
-            projectStore.masterProject &&
-            getProjectWithThemes(projectStore).colors.find(
-                color => color.name == object[ruleName]
-            )
-        ) {
-            return "Color with this name is defined in the master project";
+        if (findExportedMasterColor(projectStore, object[ruleName])) {
+            return "Color with this name is exported by the master project";
         }
         return null;
     };
+}
+
+// The check of a color a module project chooses (e.g. the color of a sampled
+// field): a color value, an exported master color or a module color.
+export function checkModuleColorProperty(
+    object: IEezObject,
+    propertyName: string,
+    messages: IMessage[]
+) {
+    const color: string | undefined = (object as any)[propertyName];
+    if (!color) {
+        return;
+    }
+
+    const projectStore = getProjectStore(object);
+    if (
+        projectStore.masterProject &&
+        !color.startsWith("#") &&
+        !findModuleColor(projectStore, color) &&
+        !findExportedMasterColor(projectStore, color) &&
+        getProjectWithThemes(projectStore).colors.find(
+            masterColor => masterColor.name == color
+        )
+    ) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `Color "${color}" is not exported by the master project`,
+                getChildOfObject(object, propertyName)
+            )
+        );
+        return;
+    }
+
+    if (
+        color == "transparent" ||
+        !isValid(getThemedColor(projectStore, color).colorValue)
+    ) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `Invalid color "${color}"`,
+                getChildOfObject(object, propertyName)
+            )
+        );
+    }
 }
 
 function getThemedColorInProject(
@@ -1177,13 +1237,11 @@ export function getThemedColor(projectStore: ProjectStore, colorValue: string) {
     }
 
     const project = getProjectWithThemes(projectStore);
-    let color = getThemedColorInProject(project, colorValue);
-    if (color) {
-        return { colorValue: color, isFromTheme: true };
-    }
 
+    // in a module project: an exported master color, a module color, then a
+    // master color that is not exported (used by the master styles)
     const moduleColor = findModuleColor(projectStore, colorValue);
-    if (moduleColor) {
+    if (moduleColor && !findExportedMasterColor(projectStore, colorValue)) {
         return {
             colorValue: getModuleColorValue(
                 moduleColor,
@@ -1191,6 +1249,11 @@ export function getThemedColor(projectStore: ProjectStore, colorValue: string) {
             ),
             isFromTheme: true
         };
+    }
+
+    let color = getThemedColorInProject(project, colorValue);
+    if (color) {
+        return { colorValue: color, isFromTheme: true };
     }
 
     return { colorValue, isFromTheme: false };

@@ -29,7 +29,8 @@ import { getEezStudioDataFromDragEvent } from "project-editor/store";
 import { ProjectContext } from "project-editor/project/context";
 import {
     getProjectWithThemes,
-    getThemedColor
+    getThemedColor,
+    isExportedColor
 } from "project-editor/features/style/theme";
 import { ColorFormat, ColorFormatType } from "project-editor/features/style/color-format";
 
@@ -1396,10 +1397,16 @@ export const ThemedColorInput = observer(
                                 colorFormat={colorFormat}
                                 onChange={this.onPickerChange}
                                 themeColors={[
-                                    // in a module project: the master colors,
-                                    // then the colors defined in the module
-                                    ...getProjectWithThemes(this.context)
-                                        .colors,
+                                    // in a module project: the exported master
+                                    // colors, then the colors defined in the
+                                    // module
+                                    ...getProjectWithThemes(
+                                        this.context
+                                    ).colors.filter(
+                                        color =>
+                                            !this.context.masterProject ||
+                                            isExportedColor(color)
+                                    ),
                                     ...(this.context.masterProject
                                         ? this.context.project.colors
                                         : [])
