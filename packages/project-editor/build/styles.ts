@@ -6,6 +6,8 @@ import {
     getBorderColors,
     getStyleProperty,
     getStyleVariants,
+    STYLE_VARIANT_MAX_ID,
+    STYLE_VARIANT_MODULE_FIRST_ID,
     type Style
 } from "project-editor/features/style/style";
 import type { Assets, DataBuffer } from "project-editor/build/assets";
@@ -13,6 +15,10 @@ import { Section } from "project-editor/store";
 import { MessageType } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
 import { createTemporaryObject } from "project-editor/core/keep-alive";
+
+// in the first number of a variant list: the list has a second part, the
+// styles of the module variants (VARIANT_STYLES_FLAG_EXTERNAL of eez-framework)
+const VARIANT_STYLES_FLAG_EXTERNAL = 0x4000;
 
 export const STYLE_FLAGS_HORZ_ALIGN_LEFT = 0;
 export const STYLE_FLAGS_HORZ_ALIGN_RIGHT = 1;
@@ -137,29 +143,63 @@ function addVariantStyles(assets: Assets) {
             continue;
         }
 
-        const styleVariants = getStyleVariants(style);
+        // the variants of the project that is built (ids from 1) and the
+        // variants a module project adds (ids from
+        // STYLE_VARIANT_MODULE_FIRST_ID), also for a master style built with
+        // a module (the editor build, the Studio simulator)
+        const styleVariants = getStyleVariants(assets.rootProject);
         const count = styleVariants.reduce(
-            (max, styleVariant) => Math.max(max, styleVariant.id || 0),
+            (max, styleVariant) =>
+                styleVariant.id <= STYLE_VARIANT_MAX_ID
+                    ? Math.max(max, styleVariant.id || 0)
+                    : max,
+            0
+        );
+        const moduleCount = styleVariants.reduce(
+            (max, styleVariant) =>
+                styleVariant.id >= STYLE_VARIANT_MODULE_FIRST_ID
+                    ? Math.max(
+                          max,
+                          styleVariant.id - STYLE_VARIANT_MODULE_FIRST_ID + 1
+                      )
+                    : max,
             0
         );
 
         const indexes = new Array<number>(count + 1).fill(0);
         indexes[0] = count;
+        const moduleIndexes = new Array<number>(moduleCount + 1).fill(0);
+        moduleIndexes[0] = moduleCount;
         let hasVariantStyle = false;
+        let hasModuleVariantStyle = false;
 
         for (const styleVariant of styleVariants) {
             const entry = variantDeltas[styleVariant.name];
             if (!entry || !(styleVariant.id >= 1)) {
                 continue;
             }
-            indexes[styleVariant.id] = assets.doGetStyleIndex(
+            const index = assets.doGetStyleIndex(
                 ProjectEditor.getProject(style),
                 getVariantStyle(style, styleVariant.name, entry)
             );
+            if (styleVariant.id >= STYLE_VARIANT_MODULE_FIRST_ID) {
+                moduleIndexes[
+                    styleVariant.id - STYLE_VARIANT_MODULE_FIRST_ID + 1
+                ] = index;
+                hasModuleVariantStyle = true;
+            } else if (styleVariant.id <= STYLE_VARIANT_MAX_ID) {
+                indexes[styleVariant.id] = index;
+            }
             hasVariantStyle = true;
         }
 
         if (hasVariantStyle) {
+            // the second part only for a style with a variant style for a
+            // module variant (VARIANT_STYLES_FLAG_EXTERNAL in the first number)
+            if (hasModuleVariantStyle) {
+                indexes[0] |= VARIANT_STYLES_FLAG_EXTERNAL;
+                indexes.push(...moduleIndexes);
+            }
             assets.variantStyleIndexes.set(style, indexes);
         }
     }

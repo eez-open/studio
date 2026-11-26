@@ -756,6 +756,17 @@ registerClass("ResourceFile", ResourceFile);
 // A variant of the styles of an EEZ-GUI project: a look of a style that a
 // widget chooses (see Style.variant and Widget.variant). The id is what the
 // assets store, so the ids are 1, 2, ... without holes.
+// The ids of the style variants of the project of the object (as
+// STYLE_VARIANT_... in features/style/style.tsx): 1 - 127, in a module project
+// 128 - 254 (its variants come after the ones of its master project).
+function getStyleVariantIdRange(object: IEezObject) {
+    const projectStore = getProjectStore(object);
+    return projectStore.masterProject &&
+        ProjectEditor.getProject(object) != projectStore.masterProject
+        ? { first: 128, last: 254 }
+        : { first: 1, last: 127 };
+}
+
 export class StyleVariant extends EezObject {
     id: number;
     name: string;
@@ -789,6 +800,7 @@ export class StyleVariant extends EezObject {
         defaultValue: {},
         newItem: async (parent: IEezObject) => {
             const styleVariants = parent as any as StyleVariant[];
+            const { first } = getStyleVariantIdRange(parent);
             return createObject<StyleVariant>(
                 getProjectStore(parent),
                 {
@@ -796,7 +808,7 @@ export class StyleVariant extends EezObject {
                         styleVariants.reduce(
                             (max, styleVariant) =>
                                 Math.max(max, styleVariant.id || 0),
-                            0
+                            first - 1
                         ) + 1,
                     name: ""
                 } as any,
@@ -818,15 +830,18 @@ export class StyleVariant extends EezObject {
 
             const styleVariants = getParent(object) as any as StyleVariant[];
             const index = styleVariants.indexOf(object);
+            const { first, last } = getStyleVariantIdRange(object);
             if (
                 !Number.isInteger(object.id) ||
-                object.id < 1 ||
-                object.id > 255
+                object.id < first ||
+                object.id > last
             ) {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
-                        "The id of a style variant is a number from 1 to 255.",
+                        first == 1
+                            ? `The id of a style variant is a number from 1 to ${last}.`
+                            : `The id of a style variant of a module project is a number from ${first} to ${last} (the master project has the ids before).`,
                         getChildOfObject(object, "id")
                     )
                 );
@@ -835,15 +850,37 @@ export class StyleVariant extends EezObject {
                 styleVariants.some(
                     (_, i) =>
                         !styleVariants.find(
-                            styleVariant => styleVariant.id == i + 1
+                            styleVariant => styleVariant.id == first + i
                         )
                 )
             ) {
                 messages.push(
                     new Message(
                         MessageType.ERROR,
-                        `The ids of the style variants must be 1 to ${styleVariants.length}, without holes.`,
+                        `The ids of the style variants must be ${first} to ${
+                            first + styleVariants.length - 1
+                        }, without holes.`,
                         getChildOfObject(object, "id")
+                    )
+                );
+            }
+
+            // a variant of a module project has a name the master project
+            // doesn't have
+            const masterProject = getProjectStore(object).masterProject;
+            if (
+                object.name &&
+                masterProject &&
+                ProjectEditor.getProject(object) != masterProject &&
+                masterProject.settings?.eezGui?.styleVariants?.find(
+                    styleVariant => styleVariant.name == object.name
+                )
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `The master project has a style variant "${object.name}".`,
+                        getChildOfObject(object, "name")
                     )
                 );
             }

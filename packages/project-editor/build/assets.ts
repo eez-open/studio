@@ -23,6 +23,7 @@ import {
     Style,
     getStyleProperty,
     getStyleVariantId,
+    hasModuleVariantStyles,
     WIDGET_VARIANT_NONE
 } from "project-editor/features/style/style";
 import { Page } from "project-editor/features/page/page";
@@ -1070,7 +1071,13 @@ export class Assets {
 
                 const parentStyle = style.parentStyle;
                 if (parentStyle) {
-                    if (style.compareTo(parentStyle)) {
+                    // a master style the module adds variant styles to:
+                    // the widget style is built as a style of the module,
+                    // with the variant styles of the master and the module
+                    if (
+                        style.compareTo(parentStyle) &&
+                        !(this.masterProject && hasModuleVariantStyles(parentStyle))
+                    ) {
                         if (this.getAssetId(style) != undefined) {
                             return style.id;
                         }

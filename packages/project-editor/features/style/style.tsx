@@ -199,23 +199,36 @@ export class ConditionalStyle extends EezObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// The style variants of the project of the object (see StyleVariant): the
-// ones of the project itself, of its master project or of the first imported
-// project that has them.
+// The ids of the style variants (STYLE_VARIANT_EXTERNAL_FIRST of
+// eez-framework): a project without a master project has the ids 1 - 127, a
+// module project adds its own variants with the ids 128 - 254 to the variants
+// of its master project.
+export const STYLE_VARIANT_MAX_ID = 127;
+export const STYLE_VARIANT_MODULE_FIRST_ID = 128;
+export const STYLE_VARIANT_MODULE_MAX_ID = 254;
+
+// The style variants of the project of the object (see StyleVariant): in a
+// module project the variants of the master project, then its own; otherwise
+// the ones of the project itself or of the first imported project that has
+// them.
 export function getStyleVariants(object: IEezObject): StyleVariant[] {
     const project = ProjectEditor.getProject(object);
     if (!project) {
         return [];
     }
 
-    const own = project.settings?.eezGui?.styleVariants;
-    if (own && own.length > 0) {
-        return own;
-    }
+    const own = project.settings?.eezGui?.styleVariants ?? [];
 
     const masterProject = project.masterProject;
     if (masterProject) {
-        return masterProject.settings?.eezGui?.styleVariants ?? [];
+        return [
+            ...(masterProject.settings?.eezGui?.styleVariants ?? []),
+            ...own
+        ];
+    }
+
+    if (own.length > 0) {
+        return own;
     }
 
     for (const importDirective of project.settings?.general?.imports ?? []) {
@@ -3109,13 +3122,67 @@ function getStateStyles(baseStyle: Style) {
 }
 
 // the variant styles of a project style (in the same project), also the
-// ones with a state, in the order of the project styles
+// ones with a state, in the order of the project styles. Seen from a module
+// project, a master style also has the variant styles the module adds to it
+// for its own variants (see findMasterBaseStyle).
 function getVariantStyles(baseStyle: Style) {
     if (!baseStyle.name) {
         return [];
     }
-    return ProjectEditor.getProject(baseStyle).allStyles.filter(
+    const project = ProjectEditor.getProject(baseStyle);
+    const variantStyles = project.allStyles.filter(
         style => style.variant && style.useStyle == baseStyle.name
+    );
+    const projectStore = getProjectStore(baseStyle);
+    if (projectStore.masterProject && projectStore.masterProject == project) {
+        variantStyles.push(
+            ...getModuleVariantStyles(projectStore.project, baseStyle)
+        );
+    }
+    return variantStyles;
+}
+
+// The variant styles the module project adds to the master style: their base style is not a style of the module.
+function getModuleVariantStyles(moduleProject: Project, masterStyle: Style) {
+    if (
+        moduleProject.allStyles.find(
+            style =>
+                style.name == masterStyle.name && !style.state && !style.variant
+        )
+    ) {
+        return [];
+    }
+    return moduleProject.allStyles.filter(
+        style => style.variant && style.useStyle == masterStyle.name
+    );
+}
+
+// The exported master style that is the base style of a variant style of a
+// module project (not a style of the module), undefined if none.
+function findMasterBaseStyle(style: Style) {
+    const projectStore = getProjectStore(style);
+    const masterProject = projectStore.masterProject;
+    if (!masterProject || !style.variant || !style.useStyle) {
+        return undefined;
+    }
+    return masterProject.allStyles.find(
+        masterStyle =>
+            masterStyle.name == style.useStyle &&
+            masterStyle.id != undefined &&
+            !masterStyle.state &&
+            !masterStyle.variant
+    );
+}
+
+// A widget style of a module project that is a master style (no properties of
+// its own) is built as a style of the module when the module adds variant
+// styles to that master style (see Assets.doGetStyleIndex).
+export function hasModuleVariantStyles(masterStyle: Style) {
+    const projectStore = getProjectStore(masterStyle);
+    return (
+        !!projectStore.masterProject &&
+        ProjectEditor.getProject(masterStyle) == projectStore.masterProject &&
+        getModuleVariantStyles(projectStore.project, masterStyle).length > 0
     );
 }
 
@@ -3158,9 +3225,30 @@ function checkFlatStyle(style: Style, messages: IMessage[]) {
         return;
     }
 
-    const baseStyle = ProjectEditor.getProject(style).allStyles.find(
+    let baseStyle = ProjectEditor.getProject(style).allStyles.find(
         projectStyle => projectStyle.name == style.useStyle
     );
+    if (!baseStyle) {
+        // a variant style a module adds to an exported master style, only
+        // for a variant of the module
+        const masterStyle = findMasterBaseStyle(style);
+        if (masterStyle) {
+            if (
+                getStyleVariantId(style, style.variant) <
+                STYLE_VARIANT_MODULE_FIRST_ID
+            ) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `A module adds a variant style to the master style "${style.useStyle}" only for a variant of the module.`,
+                        getChildOfObject(style, "variant")
+                    )
+                );
+                return;
+            }
+            baseStyle = masterStyle;
+        }
+    }
     if (!baseStyle) {
         messages.push(
             new Message(
