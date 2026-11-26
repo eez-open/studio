@@ -345,7 +345,7 @@ export function writeBB3ModuleMetadata(
             // a tracking role
             dataBuffer.writeUint8(
                 hasBB3ModuleFieldChannel(variable)
-                    ? variable.bb3ModuleFieldMeasurementChannel ?? 0
+                    ? variable.bb3ModuleFieldChannel ?? 0
                     : 0
             );
 

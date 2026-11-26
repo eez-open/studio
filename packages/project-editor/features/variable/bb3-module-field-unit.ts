@@ -31,6 +31,34 @@ export function isBB3ModuleFieldSampledType(type: string) {
     return type == "float" || isIntegerType(type);
 }
 
+// A sampled integer field is a bit field (e.g. the digital input pins, bit 0 is
+// the first pin) with this many bits at most: the stream sends 8 bits.
+export const BB3_MODULE_FIELD_MAX_BITS = 8;
+
+// The longest label of a sampled field, with the bit number of a bit field.
+export const BB3_MODULE_FIELD_LABEL_MAX_LENGTH = 10;
+
+// The labels a sampled field is known by in BB3+ (data logging items, legends,
+// the Studio Scope): the label, or <label>1 to <label><bits> for a bit field.
+export function getBB3ModuleFieldItemLabels(variable: {
+    type: string;
+    bb3ModuleFieldLabel: string | undefined;
+    bb3ModuleFieldBits: number | undefined;
+}) {
+    const label = variable.bb3ModuleFieldLabel ?? "";
+    if (!label) {
+        return [];
+    }
+    if (!isIntegerType(variable.type)) {
+        return [label];
+    }
+    const labels: string[] = [];
+    for (let bit = 1; bit <= (variable.bb3ModuleFieldBits ?? BB3_MODULE_FIELD_MAX_BITS); bit++) {
+        labels.push(label + bit);
+    }
+    return labels;
+}
+
 // The module streams the samples of the field: the Sampled switch is on, the
 // field is not input only, it has a type that can be sampled and the max
 // sample rate is set (the check reports Sampled without it).

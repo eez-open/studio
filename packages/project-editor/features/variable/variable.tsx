@@ -87,7 +87,8 @@ import {
     isArrayType,
     getArrayElementTypeFromType,
     isBB3ModuleFieldType,
-    isBB3ModuleFieldFloatType
+    isBB3ModuleFieldFloatType,
+    isIntegerType
 } from "project-editor/features/variable/value-type";
 import {
     FLOW_ITERATOR_INDEXES_VARIABLE,
@@ -107,9 +108,12 @@ import { CodeEditor } from "eez-studio-ui/code-editor";
 import { Icon } from "eez-studio-ui/icon";
 import {
     BB3_MODULE_FIELD_DIRECTIONS,
+    BB3_MODULE_FIELD_LABEL_MAX_LENGTH,
+    BB3_MODULE_FIELD_MAX_BITS,
     BB3_MODULE_FIELD_MEASUREMENTS,
     BB3_MODULE_FIELD_TRACKING_ROLES,
     BB3_MODULE_FIELD_UNITS,
+    getBB3ModuleFieldItemLabels,
     hasBB3ModuleFieldChannel,
     isBB3ModuleField,
     isBB3ModuleFieldSampledType
@@ -396,6 +400,106 @@ function isBB3ModuleFieldSampledDisabled(variable: Variable) {
     );
 }
 
+// the Sampled switch is shown and on: the properties of a sampled field
+// (Label, Color, Bits, Channel) are shown and checked
+function isBB3ModuleFieldSampledOn(variable: Variable) {
+    return (
+        !isBB3ModuleFieldSampledDisabled(variable) &&
+        !!variable.bb3ModuleFieldSampled
+    );
+}
+
+// the checks of the Label, Color, Bits and Channel of a sampled field
+function checkBB3ModuleFieldSampled(variable: Variable, messages: IMessage[]) {
+    const label = variable.bb3ModuleFieldLabel;
+    if (!label) {
+        messages.push(propertyNotSetMessage(variable, "bb3ModuleFieldLabel"));
+    } else {
+        const isBitField = isIntegerType(variable.type);
+        const bits = variable.bb3ModuleFieldBits ?? BB3_MODULE_FIELD_MAX_BITS;
+        const length = label.length + (isBitField ? String(bits).length : 0);
+        if (!/^[A-Za-z0-9_]+$/.test(label)) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    `A label can have only letters, digits and "_"`,
+                    getChildOfObject(variable, "bb3ModuleFieldLabel")
+                )
+            );
+        } else if (length > BB3_MODULE_FIELD_LABEL_MAX_LENGTH) {
+            messages.push(
+                new Message(
+                    MessageType.ERROR,
+                    `A label can have at most ${BB3_MODULE_FIELD_LABEL_MAX_LENGTH} characters` +
+                        (isBitField ? `, with the bit number` : ""),
+                    getChildOfObject(variable, "bb3ModuleFieldLabel")
+                )
+            );
+        } else {
+            const others = getBB3ModuleFieldLabelsOfChannel(variable);
+            const same = getBB3ModuleFieldItemLabels(variable).find(itemLabel =>
+                others.has(itemLabel.toUpperCase())
+            );
+            if (same) {
+                messages.push(
+                    new Message(
+                        MessageType.ERROR,
+                        `Another sampled field of channel ${
+                            variable.bb3ModuleFieldChannel ?? "(not set)"
+                        } has the label "${same}"`,
+                        getChildOfObject(variable, "bb3ModuleFieldLabel")
+                    )
+                );
+            }
+        }
+    }
+
+    if (!variable.bb3ModuleFieldColor) {
+        messages.push(propertyNotSetMessage(variable, "bb3ModuleFieldColor"));
+    }
+
+    if (
+        isIntegerType(variable.type) &&
+        variable.bb3ModuleFieldBits != undefined &&
+        !(
+            Number.isInteger(variable.bb3ModuleFieldBits) &&
+            variable.bb3ModuleFieldBits >= 1 &&
+            variable.bb3ModuleFieldBits <= BB3_MODULE_FIELD_MAX_BITS
+        )
+    ) {
+        messages.push(
+            new Message(
+                MessageType.ERROR,
+                `Bits must be an integer from 1 to ${BB3_MODULE_FIELD_MAX_BITS}`,
+                getChildOfObject(variable, "bb3ModuleFieldBits")
+            )
+        );
+    }
+
+    if (variable.bb3ModuleFieldChannel == undefined) {
+        messages.push(propertyNotSetMessage(variable, "bb3ModuleFieldChannel"));
+    }
+}
+
+// the sampled fields of the project whose labels must differ from the labels
+// of the variable: the other sampled fields of the same module channel
+function getBB3ModuleFieldLabelsOfChannel(variable: Variable) {
+    const project = ProjectEditor.getProject(variable);
+    const labels = new Set<string>();
+    for (const other of project.variables.globalVariables) {
+        if (
+            other != variable &&
+            isBB3ModuleFieldSampledOn(other) &&
+            other.bb3ModuleFieldChannel == variable.bb3ModuleFieldChannel
+        ) {
+            for (const label of getBB3ModuleFieldItemLabels(other)) {
+                labels.add(label.toUpperCase());
+            }
+        }
+    }
+    return labels;
+}
+
 function isNativeVariableDisabled(variable: Variable) {
     const project = ProjectEditor.getProject(variable);
     if (!project.projectTypeTraits) {
@@ -438,15 +542,24 @@ export class Variable extends EezObject {
     // rate BB3+ asks for, up to the max sample rate (samples per second)
     bb3ModuleFieldSampled: boolean | undefined;
     bb3ModuleFieldMaxSampleRate: number | undefined;
+    // the name of a sampled field in BB3+ (data logging items, legends, the
+    // Studio Scope), unique among the sampled fields of its module channel; a
+    // bit field gives the names <label>1 to <label><bits>
+    bb3ModuleFieldLabel: string | undefined;
+    // the color of a sampled field in the YT graphs, the data logging and the
+    // Studio Scope, a theme color
+    bb3ModuleFieldColor: string | undefined;
+    // the number of bits (pins) of a sampled bit field, 1 to 8 (8 if not set)
+    bb3ModuleFieldBits: number | undefined;
     // the channel measurement the sampled field is (BB3+ finds the stream
     // of a channel measurement by it, e.g. for the data logging)
     bb3ModuleFieldMeasurement: string | undefined;
     // what the field is for a power channel in a BB3+ tracking group
     // (OUTPut:TRACk), BB3_TRACKING_ROLE_... in bb3-module.h
     bb3ModuleFieldTrackingRole: string | undefined;
-    // the module channel index of a field with a measurement or a tracking
+    // the module channel index of a sampled field or a field with a tracking
     // role
-    bb3ModuleFieldMeasurementChannel: number | undefined;
+    bb3ModuleFieldChannel: number | undefined;
     // range of an input field, the module (bb3-module.c) clamps the
     // received values to it
     bb3ModuleFieldMin: number | undefined;
@@ -489,9 +602,12 @@ export class Variable extends EezObject {
             bb3ModuleFieldResolution: observable,
             bb3ModuleFieldSampled: observable,
             bb3ModuleFieldMaxSampleRate: observable,
+            bb3ModuleFieldLabel: observable,
+            bb3ModuleFieldColor: observable,
+            bb3ModuleFieldBits: observable,
             bb3ModuleFieldMeasurement: observable,
             bb3ModuleFieldTrackingRole: observable,
-            bb3ModuleFieldMeasurementChannel: observable,
+            bb3ModuleFieldChannel: observable,
             bb3ModuleFieldMin: observable,
             bb3ModuleFieldMax: observable,
             bb3ModuleFieldUpdatePeriod: observable,
@@ -724,6 +840,45 @@ export class Variable extends EezObject {
                     !variable.bb3ModuleFieldSampled
             },
             {
+                name: "bb3ModuleFieldLabel",
+                displayName: "Label",
+                type: PropertyType.String,
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: (variable: Variable) =>
+                    !isBB3ModuleFieldSampledOn(variable)
+            },
+            {
+                name: "bb3ModuleFieldColor",
+                displayName: "Color",
+                type: PropertyType.ThemedColor,
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: (variable: Variable) =>
+                    !isBB3ModuleFieldSampledOn(variable)
+            },
+            {
+                name: "bb3ModuleFieldBits",
+                displayName: `Bits (1 - ${BB3_MODULE_FIELD_MAX_BITS})`,
+                type: PropertyType.Number,
+                isOptional: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: (variable: Variable) =>
+                    !isBB3ModuleFieldSampledOn(variable) ||
+                    !isIntegerType(variable.type)
+            },
+            {
+                name: "bb3ModuleFieldChannel",
+                displayName: "Channel (module channel index)",
+                type: PropertyType.Number,
+                isOptional: true,
+                propertyGridGroup: bb3ModuleFieldGroup,
+                disabled: (variable: Variable) =>
+                    isBB3ModuleFieldPropertyDisabled(variable) ||
+                    !(
+                        isBB3ModuleFieldSampledOn(variable) ||
+                        hasBB3ModuleFieldChannel(variable)
+                    )
+            },
+            {
                 name: "bb3ModuleFieldMeasurement",
                 displayName: "Measurement",
                 type: PropertyType.Enum,
@@ -733,18 +888,7 @@ export class Variable extends EezObject {
                 })),
                 propertyGridGroup: bb3ModuleFieldGroup,
                 disabled: (variable: Variable) =>
-                    isBB3ModuleFieldSampledDisabled(variable) ||
-                    !variable.bb3ModuleFieldSampled
-            },
-            {
-                name: "bb3ModuleFieldMeasurementChannel",
-                displayName: "Channel (module channel index)",
-                type: PropertyType.Number,
-                isOptional: true,
-                propertyGridGroup: bb3ModuleFieldGroup,
-                disabled: (variable: Variable) =>
-                    isBB3ModuleFieldPropertyDisabled(variable) ||
-                    !hasBB3ModuleFieldChannel(variable)
+                    !isBB3ModuleFieldSampledOn(variable)
             },
             {
                 name: "bb3ModuleFieldTrackingRole",
@@ -839,6 +983,15 @@ export class Variable extends EezObject {
                 if (objectJS.bb3ModuleFieldMaxSampleRate > 0) {
                     objectJS.bb3ModuleFieldSampled = true;
                 }
+            }
+
+            // the channel was only for a measurement or a tracking role
+            if (objectJS.bb3ModuleFieldMeasurementChannel != undefined) {
+                if (objectJS.bb3ModuleFieldChannel == undefined) {
+                    objectJS.bb3ModuleFieldChannel =
+                        objectJS.bb3ModuleFieldMeasurementChannel;
+                }
+                delete objectJS.bb3ModuleFieldMeasurementChannel;
             }
         },
         newItem: async (parent: IEezObject) => {
@@ -1048,6 +1201,9 @@ export class Variable extends EezObject {
                             )
                         )
                     );
+                }
+                if (isBB3ModuleFieldSampledOn(variable)) {
+                    checkBB3ModuleFieldSampled(variable, messages);
                 }
                 if (!isBB3ModuleFieldType(variable.type)) {
                     messages.push(
