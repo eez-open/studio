@@ -2416,7 +2416,16 @@ export class ProjectVariables extends EezObject {
                 name: "globalVariables",
                 type: PropertyType.Array,
                 typeClass: Variable,
-                hideInPropertyGrid: true
+                hideInPropertyGrid: true,
+                // (the check of the variables feature is not called: the
+                // variables object has no property info)
+                check: (globalVariables: IEezObject, messages: IMessage[]) =>
+                    checkIds(
+                        getProjectStore(globalVariables),
+                        "global variable",
+                        globalVariables,
+                        messages
+                    )
             },
             {
                 name: "structures",
@@ -2543,8 +2552,6 @@ const feature: ProjectEditorFeature = {
                 )
             );
         }
-
-        checkIds(projectStore, "global variable", object, messages);
     }
 };
 

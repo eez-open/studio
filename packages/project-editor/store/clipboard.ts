@@ -155,7 +155,7 @@ export function clipboardDataToObject(
             rewireEnd(serializedData.objects);
         }
 
-        dropIdsInProjectWithMasterProject(
+        dropIdsInProjectThatDoesntExport(
             projectStore,
             serializedData.object
                 ? [serializedData.object]
@@ -166,14 +166,14 @@ export function clipboardDataToObject(
     return serializedData;
 }
 
-// A project with a master project doesn't export (see project/ids.ts): the
-// objects pasted into it lose their ID (copied from the master project, for
-// example).
-export function dropIdsInProjectWithMasterProject(
+// A project that doesn't export (Project.exportsObjects, see project/ids.ts):
+// the objects pasted into it lose their ID (copied from the master project,
+// for example).
+export function dropIdsInProjectThatDoesntExport(
     projectStore: ProjectStore,
     objects: IEezObject[]
 ) {
-    if (!projectStore.project?.settings.general.masterProject) {
+    if (!projectStore.project || projectStore.project.exportsObjects) {
         return;
     }
     runInAction(() => {

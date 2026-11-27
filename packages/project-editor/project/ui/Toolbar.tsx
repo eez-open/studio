@@ -394,9 +394,7 @@ const EditorButtons = observer(
                     {!this.context.runtime &&
                         this.context.project.settings.general.projectType ==
                             ProjectType.FIRMWARE &&
-                        // a project with a master project doesn't export
-                        !this.context.project.settings.general
-                            .masterProject && (
+                        this.context.project.exportsObjects && (
                             <div className="btn-group" role="group">
                                 <IconAction
                                     title="Exported Items"

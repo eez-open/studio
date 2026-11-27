@@ -878,9 +878,16 @@ export const Property = observer(
                     }
                 }
             } else if (propertyInfo.type === PropertyType.Boolean) {
-                let values = this.props.objects.map(object =>
-                    getObjectPropertyValue(object, this.props.propertyInfo)
-                );
+                // a value that isn't set: the default value of the property
+                let values = this.props.objects.map(object => {
+                    const value = getObjectPropertyValue(
+                        object,
+                        this.props.propertyInfo
+                    );
+                    return value === undefined
+                        ? this.props.propertyInfo.defaultValue
+                        : value;
+                });
 
                 let numEnabled = 0;
                 let numDisabled = 0;

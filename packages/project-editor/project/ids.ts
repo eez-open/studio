@@ -13,8 +13,9 @@ import { isBB3ModuleField } from "project-editor/features/variable/bb3-module-fi
 // An object with an ID is built at the index of its ID (see Assets): the ID is
 // what the module projects and the generated C++ code use. The IDs of a kind
 // must have no gaps (from 1, the colors from 0), otherwise the project can't be
-// built. A project with a master project doesn't export: its objects have no
-// ID.
+// built. A project that doesn't export (a project with a master project, or
+// "Export objects with an ID" off, see Project.exportsObjects) has no objects
+// with an ID.
 
 type IdKind =
     | "page"
@@ -35,12 +36,15 @@ const ID_KINDS: IdKind[] = [
     "color"
 ];
 
-// the ID property is hidden in a project with a master project, unless the
-// object has one (a paste drops it, see dropIdsInProjectWithMasterProject,
-// but a file can have one): then it can be removed
+// the ID property is hidden in a project that doesn't export (see
+// Project.exportsObjects), unless the object has one (a paste drops it, see
+// dropIdsInProjectThatDoesntExport, but a file can have one): then it can be
+// removed
 export function isIdHidden(object: IEezObject) {
+    const project = getProject(object);
     return (
-        !!getProject(object)?.settings.general.masterProject &&
+        !!project &&
+        !project.exportsObjects &&
         (object as { id?: number }).id == undefined
     );
 }
@@ -94,19 +98,26 @@ function formatIds(ids: number[]) {
 }
 
 function getIdError(projectStore: ProjectStore, kind: IdKind) {
+    const project = projectStore.project;
+    const masterProject = project.settings.general.masterProject;
+
     // the colors of a module project are found by name (see module colors)
-    if (projectStore.project.settings.general.masterProject) {
-        if (kind == "color") {
-            return undefined;
-        }
-        const names = getObjects(projectStore, projectStore.project, kind)
+    if (masterProject && kind == "color") {
+        return undefined;
+    }
+
+    // a project that doesn't export has no objects with an ID
+    if (!project.exportsObjects) {
+        const names = getObjects(projectStore, project, kind)
             .filter(object => object.id != undefined)
             .map(object => object.name);
-        return names.length > 0
-            ? `A project with a master project doesn't export, remove the ID of: ${names.join(
-                  ", "
-              )}`
-            : undefined;
+        if (names.length > 0) {
+            return `${
+                masterProject
+                    ? "A project with a master project doesn't export"
+                    : `"Export objects with an ID" is off in the project settings`
+            }, remove the ID of: ${names.join(", ")}`;
+        }
     }
 
     // the project and its imports are built together, the colors come from

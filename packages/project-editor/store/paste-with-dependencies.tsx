@@ -26,7 +26,7 @@ import {
 import {
     cloneObjectWithNewObjIds,
     cloneObjectWithoutNewObjIds,
-    dropIdsInProjectWithMasterProject,
+    dropIdsInProjectThatDoesntExport,
     getProjectEditorDataFromClipboard
 } from "project-editor/store/clipboard";
 import {
@@ -1225,7 +1225,7 @@ class PasteWithDependenciesModel {
             )
         );
         rewireEnd(clonedObjects);
-        dropIdsInProjectWithMasterProject(
+        dropIdsInProjectThatDoesntExport(
             this.destinationProjectStore,
             clonedObjects
         );

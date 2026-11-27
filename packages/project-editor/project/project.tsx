@@ -1217,6 +1217,9 @@ export class General extends EezObject {
     lvglVersion: LVGLVersion;
     commandsDocFolder?: string;
     masterProject: string;
+    // an EEZ-GUI project without a master project can opt out from exporting
+    // its objects (undefined, older projects: exported), see exportsObjects
+    exportObjects?: boolean;
     extensions: ExtensionDirective[];
     imports: ImportDirective[];
     flowSupport: boolean;
@@ -1356,6 +1359,17 @@ export class General extends EezObject {
                         general.projectType == ProjectType.FIRMWARE
                     );
                 }
+            },
+            {
+                name: "exportObjects",
+                displayName: "Export objects with an ID",
+                type: PropertyType.Boolean,
+                checkboxStyleSwitch: true,
+                // not in the file (older projects): exported
+                defaultValue: true,
+                disabled: (general: General) =>
+                    general.projectType != ProjectType.FIRMWARE ||
+                    !!general.masterProject
             },
             {
                 name: "extensions",
@@ -1742,6 +1756,7 @@ export class General extends EezObject {
             lvglVersion: observable,
             commandsDocFolder: observable,
             masterProject: observable,
+            exportObjects: observable,
             extensions: observable,
             imports: observable,
             flowSupport: observable,
@@ -2374,6 +2389,18 @@ export class Project extends EezObject {
 
     get projectTypeTraits() {
         return createProjectTypeTraits(this);
+    }
+
+    // The objects with an id are exported (the module projects use them): not
+    // by a project with a master project, and an EEZ-GUI project can opt out
+    // (General.exportObjects).
+    get exportsObjects() {
+        const general = this.settings.general;
+        return (
+            !general.masterProject &&
+            (general.projectType != ProjectType.FIRMWARE ||
+                general.exportObjects !== false)
+        );
     }
 
     get projectName() {

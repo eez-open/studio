@@ -114,7 +114,8 @@ function isExportableAsset(object: IEezObject) {
 }
 
 // The id of an item exported to the module projects, undefined if the item is
-// not exported. Only a firmware project without a master project exports.
+// not exported. Only a firmware project that exports (Project.exportsObjects:
+// no master project, "Export objects with an ID" on) exports.
 export function getExportedId(object: IEezObject): number | undefined {
     const id = (object as any).id;
     if (typeof id != "number" || !isExportableAsset(object)) {
@@ -124,7 +125,7 @@ export function getExportedId(object: IEezObject): number | undefined {
     if (
         !(project instanceof ProjectEditor.ProjectClass) ||
         !project.projectTypeTraits.isFirmware ||
-        project.settings.general.masterProject
+        !project.exportsObjects
     ) {
         return undefined;
     }

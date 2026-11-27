@@ -286,8 +286,13 @@ export const ThemesSideView = observer(
 
             const fields: IFieldProperties[] = [];
 
-            // the colors of a module project are not exported, no id
-            const hasId = isFirmwareProject(color) && !isModuleColor(color);
+            // the colors of a module project are not exported, no id; in a
+            // project that doesn't export only to remove one
+            const hasId =
+                isFirmwareProject(color) &&
+                !isModuleColor(color) &&
+                (ProjectEditor.getProject(color).exportsObjects ||
+                    color.id != undefined);
 
             if (hasId) {
                 fields.push({
