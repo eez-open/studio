@@ -46,6 +46,7 @@ import {
     isNotDashboardProject
 } from "project-editor/project/project-type-traits";
 import { getProjectStore } from "project-editor/store";
+import { checkIds, isIdHidden } from "project-editor/project/ids";
 import { validators } from "eez-studio-shared/validation";
 import { showGenericDialog } from "eez-studio-ui/generic-dialog";
 
@@ -380,7 +381,9 @@ const idProperty: PropertyInfo = {
     unique: true,
     inheritable: false,
     disabled: style =>
-        isWidgetParentOfStyle(style) || isDashboardProject(style),
+        isWidgetParentOfStyle(style) ||
+        isDashboardProject(style) ||
+        isIdHidden(style),
     defaultValue: undefined
 };
 
@@ -4173,6 +4176,14 @@ const feature: ProjectEditorFeature = {
                 )
             );
         }
+
+        checkIds(projectStore, "style", object, messages);
+        checkIds(
+            projectStore,
+            "color",
+            projectStore.project.colors,
+            messages
+        );
     },
     afterLoadProject: (project: Project) => {
         if (project.themes) {

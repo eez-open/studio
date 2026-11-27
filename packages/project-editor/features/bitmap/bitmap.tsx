@@ -40,6 +40,7 @@ import {
     ProjectStore,
     propertyNotSetMessage
 } from "project-editor/store";
+import { checkIds, isIdHidden } from "project-editor/project/ids";
 
 import { getThemedColor } from "project-editor/features/style/theme";
 
@@ -161,7 +162,7 @@ export class Bitmap extends EezObject {
                 unique: true,
                 propertyGridGroup: generalGroup,
                 disabled: (bitmap: Bitmap) =>
-                    isLVGLProject(bitmap) || isDashboardProject(bitmap) || isEezGuiLiteProject(bitmap)
+                    isLVGLProject(bitmap) || isDashboardProject(bitmap) || isEezGuiLiteProject(bitmap) || isIdHidden(bitmap)
             },
             {
                 name: "name",
@@ -882,6 +883,8 @@ const feature: ProjectEditorFeature = {
                 )
             );
         }
+
+        checkIds(projectStore, "bitmap", object, messages);
 
         if (
             !projectStore.projectTypeTraits.isDashboard &&

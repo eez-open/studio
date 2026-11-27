@@ -42,6 +42,7 @@ import { buildBB3ModuleFields } from "project-editor/build/bb3-module-fields";
 import { generateSourceCodeForEezFramework } from "project-editor/lvgl/build";
 import { cleanupSourceFile } from "project-editor/build/cleanup-c-source-files";
 import { generateSourceCodeForEezGuiLite } from "project-editor/eez-gui-lite/build";
+import { getIdErrors } from "project-editor/project/ids";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -552,6 +553,18 @@ async function buildOne(
     let previousManifest: BuildManifest | null = null;
 
     try {
+        // an object with an ID is built at the index of its ID: no build
+        // while the IDs have gaps (see project/ids.ts)
+        const idErrors = getIdErrors(projectStore);
+        if (idErrors.length > 0) {
+            for (const idError of idErrors) {
+                OutputSections.write(Section.OUTPUT, MessageType.ERROR, idError);
+            }
+            throw new BuildException(
+                "The project can't be built until the IDs are fixed"
+            );
+        }
+
         let sectionNames: string[] | undefined = undefined;
 
         let destinationFolderPath;

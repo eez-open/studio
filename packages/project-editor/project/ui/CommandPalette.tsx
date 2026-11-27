@@ -741,7 +741,11 @@ function getCommandItems(projectStore: ProjectStore) {
                 );
             }
 
-            if (project.settings.general.projectType == ProjectType.FIRMWARE) {
+            // a project with a master project doesn't export
+            if (
+                project.settings.general.projectType == ProjectType.FIRMWARE &&
+                !project.settings.general.masterProject
+            ) {
                 items.push({
                     id: "exported-items",
                     label: "Exported Items...",

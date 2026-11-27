@@ -48,6 +48,7 @@ import {
     createObject,
     ProjectStore
 } from "project-editor/store";
+import { checkIds, isIdHidden } from "project-editor/project/ids";
 import {
     isEezGuiLiteProject,
     isEezGuiProject,
@@ -1555,7 +1556,9 @@ export class Font extends EezObject {
                 unique: true,
                 propertyGridGroup: generalGroup,
                 disabled: (font: Font) =>
-                    isLVGLProject(font) || isEezGuiLiteProject(font)
+                    isLVGLProject(font) ||
+                    isEezGuiLiteProject(font) ||
+                    isIdHidden(font)
             },
             {
                 name: "name",
@@ -2862,6 +2865,8 @@ const feature: ProjectEditorFeature = {
                 )
             );
         }
+
+        checkIds(projectStore, "font", object, messages);
     },
     fromJsHook: (jsObject: Project) => {
         if (jsObject.fonts) {

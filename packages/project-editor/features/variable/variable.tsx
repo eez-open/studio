@@ -54,6 +54,7 @@ import type {
     IVariable
 } from "project-editor/flow/flow-interfaces";
 import { getProjectStore } from "project-editor/store";
+import { checkIds, isIdHidden } from "project-editor/project/ids";
 import {
     evalConstantExpression,
     parseIdentifier
@@ -624,7 +625,8 @@ export class Variable extends EezObject {
                 disabled: (variable: Variable) =>
                     !isGlobalVariable(variable) ||
                     isLVGLProject(variable) ||
-                    isEezGuiLiteProject(variable)
+                    isEezGuiLiteProject(variable) ||
+                    isIdHidden(variable)
             },
             {
                 name: "name",
@@ -2541,6 +2543,8 @@ const feature: ProjectEditorFeature = {
                 )
             );
         }
+
+        checkIds(projectStore, "global variable", object, messages);
     }
 };
 

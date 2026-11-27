@@ -16,6 +16,7 @@ import {
 } from "project-editor/core/object";
 import { makeTagsProperty } from "project-editor/core/tags";
 import { createObject, Message } from "project-editor/store";
+import { checkIds, isIdHidden } from "project-editor/project/ids";
 import {
     hasFlowSupport,
     isAppletProject,
@@ -200,7 +201,7 @@ export class Action extends Flow {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                disabled: (object: IEezObject) => isLVGLProject(object) || isEezGuiLiteProject(object)
+                disabled: (object: IEezObject) => isLVGLProject(object) || isEezGuiLiteProject(object) || isIdHidden(object)
             },
             {
                 name: "name",
@@ -431,6 +432,8 @@ const feature: ProjectEditorFeature = {
                 )
             );
         }
+
+        checkIds(projectStore, "action", object, messages);
     }
 };
 

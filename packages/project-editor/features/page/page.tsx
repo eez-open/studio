@@ -26,6 +26,7 @@ import {
     Message,
     propertyNotFoundMessage
 } from "project-editor/store";
+import { checkIds, isIdHidden } from "project-editor/project/ids";
 import {
     hasFlowSupport,
     isDashboardProject,
@@ -242,7 +243,7 @@ export class Page extends Flow {
                 isOptional: true,
                 unique: true,
                 propertyGridGroup: generalGroup,
-                disabled: (object: Page) => isLVGLProject(object) || isEezGuiLiteProject(object)
+                disabled: (object: Page) => isLVGLProject(object) || isEezGuiLiteProject(object) || isIdHidden(object)
             },
             {
                 name: "name",
@@ -1187,7 +1188,10 @@ const feature: ProjectEditorFeature = {
     type: PropertyType.Array,
     typeClass: Page,
     icon: "svg:pages",
-    create: () => []
+    create: () => [],
+    check: (projectStore, object: IEezObject, messages: IMessage[]) => {
+        checkIds(projectStore, "page", object, messages);
+    }
 };
 
 export default feature;
