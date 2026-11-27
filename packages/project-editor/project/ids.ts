@@ -36,7 +36,8 @@ const ID_KINDS: IdKind[] = [
 ];
 
 // the ID property is hidden in a project with a master project, unless the
-// object has one (copied from another project): then it can be removed
+// object has one (a paste drops it, see dropIdsInProjectWithMasterProject,
+// but a file can have one): then it can be removed
 export function isIdHidden(object: IEezObject) {
     return (
         !!getProject(object)?.settings.general.masterProject &&

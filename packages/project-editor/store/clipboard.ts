@@ -20,6 +20,7 @@ import {
     PropertyInfo
 } from "project-editor/core/object";
 import { ProjectEditor } from "project-editor/project-editor-interface";
+import { visitObjects } from "project-editor/core/search";
 
 import {
     createObject,
@@ -153,9 +154,46 @@ export function clipboardDataToObject(
             );
             rewireEnd(serializedData.objects);
         }
+
+        dropIdsInProjectWithMasterProject(
+            projectStore,
+            serializedData.object
+                ? [serializedData.object]
+                : serializedData.objects ?? []
+        );
     }
 
     return serializedData;
+}
+
+// A project with a master project doesn't export (see project/ids.ts): the
+// objects pasted into it lose their ID (copied from the master project, for
+// example).
+export function dropIdsInProjectWithMasterProject(
+    projectStore: ProjectStore,
+    objects: IEezObject[]
+) {
+    if (!projectStore.project?.settings.general.masterProject) {
+        return;
+    }
+    runInAction(() => {
+        for (const object of objects) {
+            for (const child of visitObjects(object)) {
+                if (
+                    (child as { id?: number }).id != undefined &&
+                    (child instanceof ProjectEditor.PageClass ||
+                        child instanceof ProjectEditor.VariableClass ||
+                        child instanceof ProjectEditor.ActionClass ||
+                        child instanceof ProjectEditor.StyleClass ||
+                        child instanceof ProjectEditor.FontClass ||
+                        child instanceof ProjectEditor.BitmapClass ||
+                        child instanceof ProjectEditor.ColorClass)
+                ) {
+                    (child as { id?: number }).id = undefined;
+                }
+            }
+        }
+    });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
