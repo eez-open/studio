@@ -95,6 +95,9 @@ const MIN_VIEW_SPAN = 1e-5;
 // a mouse move shorter than this (px) is not a drag
 const DRAG_THRESHOLD = 4;
 
+// the margin around the plot in a screenshot (px)
+const CAPTURE_MARGIN = 10;
+
 // the ranges shown in the scales panel are updated this often (ms)
 const OPTIONS_UPDATE_INTERVAL = 500;
 // the trigger status is updated this often (ms)
@@ -1823,6 +1826,31 @@ export class ScopeCanvas {
         ctx.font = FONT;
     }
 
+    // The plot as drawn now (drawn again without the cursor readout) as a
+    // PNG, on the background of its card with a margin, in device pixels;
+    // undefined if nothing is drawn.
+    capturePng() {
+        this.mouse = undefined;
+        this.readoutWidths = undefined;
+        this.draw();
+        this.needsDraw = true;
+        const canvas = this.canvas;
+        if (!this.layout || canvas.width == 0 || canvas.height == 0) {
+            return undefined;
+        }
+        const ratio = window.devicePixelRatio || 1;
+        const margin = Math.round(CAPTURE_MARGIN * ratio);
+        const image = document.createElement("canvas");
+        image.width = canvas.width + 2 * margin;
+        image.height = canvas.height + 2 * margin;
+        const ctx = image.getContext("2d")!;
+        ctx.fillStyle = this.getBackgroundColor();
+        ctx.fillRect(0, 0, image.width, image.height);
+        ctx.drawImage(canvas, margin, margin);
+        const url = image.toDataURL("image/png");
+        return Buffer.from(url.slice(url.indexOf(",") + 1), "base64");
+    }
+
     // the background of the plot (of its card), for the rings of the dots
     private getBackgroundColor() {
         return getComputedStyle(this.container.parentElement ?? this.container)
@@ -1870,7 +1898,8 @@ export class ScopeView extends BB3PlusView {
             this.scopeCanvas
         );
         this.toolbar = new ScopeToolbar(bb3PlusInstrument, this.scopeCanvas, {
-            addToHistory: () => this.addDlogToHistory()
+            addToHistory: () => this.addDlogToHistory(),
+            addScreenshot: () => this.addScreenshotToHistory()
         });
         this.channels = new ScopeChannels(
             bb3PlusInstrument,
@@ -2115,6 +2144,37 @@ export class ScopeView extends BB3PlusView {
             { undoable: false }
         );
         notification.success("DLOG chart added to the history");
+    }
+
+    // The plot as drawn now as a PNG image in the history of the instrument
+    // (it can be saved or copied to the clipboard there), with the rate and
+    // the time shown in its note.
+    private addScreenshotToHistory() {
+        const bb3PlusInstrument = this.bb3PlusInstrument;
+        const data = this.scopeCanvas.capturePng();
+        if (!data) {
+            notification.warn("Nothing is drawn");
+            return;
+        }
+        const comment = `BB3+ scope screenshot, ${formatRate(
+            bb3PlusInstrument.settings.scopeRate
+        )}, ${formatTime(this.scopeCanvas.getTimeWindow().span)}`;
+        log(
+            activityLogStore,
+            {
+                oid: bb3PlusInstrument.instrument.id,
+                type: "instrument/file-attachment",
+                message: JSON.stringify({
+                    state: "success",
+                    fileType: { ext: "png", mime: "image/png" },
+                    dataLength: data.length,
+                    note: JSON.stringify([{ insert: comment }])
+                }),
+                data
+            },
+            { undoable: false }
+        );
+        notification.success("Screenshot added to the history");
     }
 
     private update() {

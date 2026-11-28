@@ -277,7 +277,8 @@ function showShortcuts() {
 // Run / Stop and the status of the trigger; the rate, the span and the time
 // of a division; the trigger: its mode, then (not Off) the source trace, the
 // edge, the level of an analog source or the pin of a bit field, the
-// pre-trigger. Under them the zoom, Save to history and the scales panel.
+// pre-trigger. Under them the zoom, the screenshot, Save to history and the
+// scales panel.
 export class ScopeToolbar {
     element: HTMLDivElement;
     private runButton: HTMLButtonElement;
@@ -319,7 +320,7 @@ export class ScopeToolbar {
     constructor(
         private bb3PlusInstrument: BB3PlusInstrument,
         private scopeCanvas: ScopeCanvas,
-        actions: { addToHistory: () => void }
+        actions: { addToHistory: () => void; addScreenshot: () => void }
     ) {
         this.runButton = h(
             "button",
@@ -539,6 +540,12 @@ export class ScopeToolbar {
                     () => scopeCanvas.zoomTime(BUTTON_ZOOM)
                 ),
                 this.resetZoomButton,
+                separator(),
+                ghostButton(
+                    ICONS.camera,
+                    "Screenshot: the plot as drawn now to the history of the instrument as a PNG image",
+                    () => actions.addScreenshot()
+                ),
                 h(
                     "button",
                     {

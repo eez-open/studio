@@ -98,6 +98,7 @@ export const ICONS = {
     help: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.4M12 16.8h.01",
     risingEdge: "M3 18h6l6-12h6",
     fallingEdge: "M3 6h6l6 12h6",
+    camera: "M3.5 8.5A1.5 1.5 0 0 1 5 7h2.5L9 4.5h6L16.5 7H19a1.5 1.5 0 0 1 1.5 1.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18zM12 9.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7",
     // the navigation items
     scope: "M3 5h18v14H3zM5.5 13l2.5-4 3 7 3-9 2.5 6 2-2.5",
     fields: "M4 6h2M10 6h10M4 12h2M10 12h10M4 18h2M10 18h10",
