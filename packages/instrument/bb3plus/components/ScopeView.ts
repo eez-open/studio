@@ -2166,9 +2166,17 @@ class TriggerBar {
             this.positionText,
             this.status
         ];
+        // below the plot: the line between them at the top (in the color of
+        // the grid, it fits both themes)
         this.element = h(
             "div",
-            { className: "EezStudio_BB3Plus_Toolbar" },
+            {
+                className: "EezStudio_BB3Plus_Toolbar",
+                style: {
+                    borderBottom: "none",
+                    borderTop: "1px solid rgba(128, 128, 128, 0.3)"
+                }
+            },
             h("label", null, "Trigger"),
             // the help: an info icon without a border, a background on hover
             h(
@@ -2419,10 +2427,10 @@ export class ScopeView extends BB3PlusView {
                 this.pushStatus.element,
                 this.samplesError.element
             ),
-            this.triggerBar.element,
             this.options.element,
             this.legend,
-            this.scopeCanvas.container
+            this.scopeCanvas.container,
+            this.triggerBar.element
         );
 
         this.listen(["scope", "fields"], () => this.update());
