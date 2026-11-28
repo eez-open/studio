@@ -219,6 +219,11 @@
     padding: 10px;
     background-color: var(--bb3plus-page);
     font-size: 13px;
+
+    // focused by a click in the plot (for Ctrl+C), no outline
+    &:focus {
+        outline: none;
+    }
 }
 
 [data-bs-theme="dark"] .EezStudio_BB3Plus_Scope {
@@ -410,6 +415,36 @@
         &:disabled {
             cursor: default;
         }
+    }
+}
+
+// a chip and an arrow chip for its menu, joined
+.EezStudio_BB3Plus_SplitButton {
+    display: inline-flex;
+
+    & > .EezStudio_BB3Plus_Chip.main {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    & > .EezStudio_BB3Plus_Chip.caret {
+        margin-left: -1px;
+        padding: 0 7px;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    // the border of the one under the mouse over the other one
+    & > .EezStudio_BB3Plus_Chip:hover {
+        z-index: 1;
+    }
+
+    // its menu open
+    & > .EezStudio_BB3Plus_Chip.caret.active {
+        z-index: 1;
+        border-color: var(--bs-primary-border-subtle);
+        background-color: var(--bs-primary-bg-subtle);
+        color: var(--bs-primary-text-emphasis);
     }
 }
 
@@ -884,6 +919,39 @@
             color: var(--bs-secondary-color);
             font-size: 12px;
             white-space: nowrap;
+        }
+
+        .description {
+            display: block;
+            margin-top: 2px;
+            color: var(--bs-secondary-color);
+            font-size: 11.5px;
+            white-space: normal;
+        }
+
+        .shortcut {
+            padding: 2px 5px;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--bs-body-color);
+            font-family: inherit;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        // the icon and the detail by the first line
+        &.with-description {
+            align-items: flex-start;
+            max-width: 330px;
+
+            .label {
+                white-space: normal;
+            }
+
+            .icon {
+                margin-top: 1px;
+            }
         }
 
         .check {

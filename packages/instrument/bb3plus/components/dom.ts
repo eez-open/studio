@@ -99,6 +99,9 @@ export const ICONS = {
     risingEdge: "M3 18h6l6-12h6",
     fallingEdge: "M3 6h6l6 12h6",
     camera: "M3.5 8.5A1.5 1.5 0 0 1 5 7h2.5L9 4.5h6L16.5 7H19a1.5 1.5 0 0 1 1.5 1.5V18a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 18zM12 9.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7",
+    copy: "M9 9h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1zM15 9V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h4",
+    wave: "M2.5 12q2.375-7 4.75 0t4.75 0t4.75 0t4.75 0",
+    chevronDown: "M6 9l6 6l6-6",
     // the navigation items
     scope: "M3 5h18v14H3zM5.5 13l2.5-4 3 7 3-9 2.5 6 2-2.5",
     fields: "M4 6h2M10 6h10M4 12h2M10 12h10M4 18h2M10 18h10",

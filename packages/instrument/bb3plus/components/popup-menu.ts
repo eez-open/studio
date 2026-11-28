@@ -1,6 +1,7 @@
 // A popup menu under a button, plain DOM in the document body (it follows the
-// Bootstrap theme): items with an icon or a color swatch, a detail text, a
-// check mark, a submenu; separators, section headers and custom elements.
+// Bootstrap theme): items with an icon or a color swatch, a description, a
+// detail text, a key shortcut, a check mark, a submenu; separators, section
+// headers and custom elements.
 // One menu is open at a time; a click outside, Esc, a resize or the window
 // losing the focus close it.
 
@@ -13,7 +14,11 @@ export type MenuItem =
           // the path data of an ICONS item, or a color swatch
           icon?: string;
           color?: string;
+          // a second line under the label, a detail right of it, a key
+          // shortcut
+          description?: string;
           detail?: string;
+          shortcut?: string;
           checked?: boolean;
           danger?: boolean;
           disabled?: boolean;
@@ -204,6 +209,7 @@ export class PopupMenu {
             {
                 className:
                     "item" +
+                    (item.description ? " with-description" : "") +
                     (item.danger ? " danger" : "") +
                     (item.disabled ? " disabled" : ""),
                 title: item.title,
@@ -217,9 +223,19 @@ export class PopupMenu {
                 : item.icon
                   ? h("span", { className: "icon" }, svgIcon(item.icon, 16))
                   : null,
-            h("span", { className: "label" }, item.label),
+            item.description
+                ? h(
+                      "span",
+                      { className: "label" },
+                      item.label,
+                      h("span", { className: "description" }, item.description)
+                  )
+                : h("span", { className: "label" }, item.label),
             item.detail
                 ? h("span", { className: "detail" }, item.detail)
+                : null,
+            item.shortcut
+                ? h("kbd", { className: "shortcut" }, item.shortcut)
                 : null,
             item.checked
                 ? h("span", { className: "check" }, svgIcon(ICONS.check, 16))

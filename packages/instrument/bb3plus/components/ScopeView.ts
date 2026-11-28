@@ -1,3 +1,5 @@
+import { clipboard, nativeImage } from "electron";
+
 import * as notification from "eez-studio-ui/notification";
 import { MIME_EEZ_DLOG } from "instrument/connection/file-type";
 import {
@@ -1890,6 +1892,8 @@ export class ScopeView extends BB3PlusView {
     constructor(bb3PlusInstrument: BB3PlusInstrument) {
         super(bb3PlusInstrument);
         this.element.classList.add("EezStudio_BB3Plus_Scope");
+        // focused by a click in the plot, for Ctrl+C (see onCopy)
+        this.element.tabIndex = -1;
 
         this.scopeCanvas = new ScopeCanvas(bb3PlusInstrument);
         this.addDisposer(() => this.scopeCanvas.destroy());
@@ -1900,7 +1904,8 @@ export class ScopeView extends BB3PlusView {
         );
         this.toolbar = new ScopeToolbar(bb3PlusInstrument, this.scopeCanvas, {
             addToHistory: () => this.addDlogToHistory(),
-            addScreenshot: () => this.addScreenshotToHistory()
+            addScreenshot: () => this.addScreenshotToHistory(),
+            copyScreenshot: () => this.copyScreenshot()
         });
         this.channels = new ScopeChannels(
             bb3PlusInstrument,
@@ -1933,6 +1938,16 @@ export class ScopeView extends BB3PlusView {
             this.toolbar.updateScale();
             this.channels.updateScale();
         };
+
+        // the canvas prevents the default of a press (the drags), so it
+        // doesn't move the focus by itself
+        this.scopeCanvas.container.addEventListener("pointerdown", () =>
+            this.element.focus({ preventScroll: true })
+        );
+        document.addEventListener("copy", this.onCopy);
+        this.addDisposer(() =>
+            document.removeEventListener("copy", this.onCopy)
+        );
 
         this.listen(["scope", "fields"], () => this.update());
         this.listen(["status"], () => this.toolbar.updateStatus());
@@ -2147,6 +2162,44 @@ export class ScopeView extends BB3PlusView {
             { undoable: false }
         );
         notification.success("DLOG chart added to the history");
+    }
+
+    // Ctrl+C (Edit > Copy fires the "copy" event on the focused element, or
+    // on the body if none) copies the screenshot while the scope is shown:
+    // not with text selected, in an input or in a dialog. Ctrl+Shift+C is
+    // Connect/Disconnect of the instrument window.
+    private onCopy = (event: ClipboardEvent) => {
+        if (event.defaultPrevented || this.element.clientWidth == 0) {
+            return;
+        }
+        const selection = window.getSelection();
+        if (selection && !selection.isCollapsed) {
+            return;
+        }
+        const target = event.target;
+        if (
+            !(target instanceof HTMLElement) ||
+            !(this.element.contains(target) || target == document.body) ||
+            target instanceof HTMLInputElement ||
+            target instanceof HTMLTextAreaElement ||
+            target.isContentEditable ||
+            document.querySelector(".modal.show")
+        ) {
+            return;
+        }
+        event.preventDefault();
+        this.copyScreenshot();
+    };
+
+    // the plot as drawn now as a PNG image to the clipboard, not saved
+    private copyScreenshot() {
+        const data = this.scopeCanvas.capturePng();
+        if (!data) {
+            notification.warn("Nothing is drawn");
+            return;
+        }
+        clipboard.writeImage(nativeImage.createFromBuffer(data));
+        notification.success("Screenshot copied to the clipboard");
     }
 
     // The plot as drawn now as a PNG image in the history of the instrument

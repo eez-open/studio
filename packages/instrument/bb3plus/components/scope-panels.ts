@@ -65,6 +65,9 @@ import {
 // the short names of the cursor readout sizes (READOUT_SIZES)
 const READOUT_SIZE_NAMES = ["S", "M", "L", "XL"];
 
+// the key of copy: the "copy" event of Edit > Copy (see ScopeView)
+export const COPY_SHORTCUT = "Ctrl+C";
+
 // how long a section of the scales panel is highlighted when a channel
 // menu opens it (ms)
 const FLASH_TIME = 1200;
@@ -78,6 +81,10 @@ const SHORTCUTS: [string, string][] = [
     ["Drag the line with the tag T", "The trigger level"],
     ["Drag the trigger point (the handle at the top)", "The pre-trigger"],
     ["Esc", "Cancel the drag"],
+    [
+        "Ctrl+C (after a click in the plot)",
+        "Copy a screenshot of the plot to the clipboard"
+    ],
     ["Double click", "Reset the zoom: the whole span, the default scales"],
     ["Double click on an axis", "Its default scale"]
 ];
@@ -279,8 +286,9 @@ function showShortcuts() {
 // Run / Stop and the status of the trigger; the rate, the span and the time
 // of a division; the trigger: its mode, then (not Off) the source trace, the
 // edge, the level of an analog source or the pin of a bit field, the
-// pre-trigger. Under them the zoom, the screenshot, Save to history and the
-// scales panel.
+// pre-trigger. Under them the zoom, copy the screenshot, Save to history
+// (the waveform data; a screenshot and copy in its menu) and the scales
+// panel.
 export class ScopeToolbar {
     element: HTMLDivElement;
     private runButton: HTMLButtonElement;
@@ -322,7 +330,11 @@ export class ScopeToolbar {
     constructor(
         private bb3PlusInstrument: BB3PlusInstrument,
         private scopeCanvas: ScopeCanvas,
-        actions: { addToHistory: () => void; addScreenshot: () => void }
+        actions: {
+            addToHistory: () => void;
+            addScreenshot: () => void;
+            copyScreenshot: () => void;
+        }
     ) {
         this.runButton = h(
             "button",
@@ -479,6 +491,64 @@ export class ScopeToolbar {
                 )
         );
 
+        // Save to history: the waveform data (the main part), the other ways
+        // to save and copy in the menu of the arrow
+        const saveMenuButton: HTMLButtonElement = h(
+            "button",
+            {
+                type: "button",
+                className: "EezStudio_BB3Plus_Chip caret",
+                title: "Save a screenshot, copy",
+                onclick: () =>
+                    PopupMenu.show(
+                        saveMenuButton,
+                        () => [
+                            { type: "header", label: "Save to history" },
+                            {
+                                label: "Waveform data",
+                                icon: ICONS.wave,
+                                description:
+                                    "All samples, zoomable later, CSV export",
+                                detail: "Default",
+                                onClick: () => actions.addToHistory()
+                            },
+                            {
+                                label: "Screenshot",
+                                icon: ICONS.camera,
+                                description: "PNG of the plot as shown now",
+                                onClick: () => actions.addScreenshot()
+                            },
+                            { type: "separator" },
+                            {
+                                label: "Copy screenshot",
+                                icon: ICONS.copy,
+                                description: "To the clipboard only, not saved",
+                                shortcut: COPY_SHORTCUT,
+                                onClick: () => actions.copyScreenshot()
+                            }
+                        ],
+                        "right"
+                    )
+            },
+            svgIcon(ICONS.chevronDown, 14)
+        );
+        const saveButton = h(
+            "span",
+            { className: "EezStudio_BB3Plus_SplitButton" },
+            h(
+                "button",
+                {
+                    type: "button",
+                    className: "EezStudio_BB3Plus_Chip main",
+                    title: "Save the waveform data of the time shown to the history of the instrument (a DLOG chart: zoomable later, CSV export)",
+                    onclick: () => actions.addToHistory()
+                },
+                svgIcon(ICONS.history, 15),
+                "Save to history"
+            ),
+            saveMenuButton
+        );
+
         const separator = () =>
             h("span", { className: "EezStudio_BB3Plus_Separator" });
         const groupLabel = (label: string) =>
@@ -544,21 +614,11 @@ export class ScopeToolbar {
                 this.resetZoomButton,
                 separator(),
                 ghostButton(
-                    ICONS.camera,
-                    "Screenshot: the plot as drawn now to the history of the instrument as a PNG image",
-                    () => actions.addScreenshot()
+                    ICONS.copy,
+                    `Copy a screenshot of the plot to the clipboard (${COPY_SHORTCUT})`,
+                    () => actions.copyScreenshot()
                 ),
-                h(
-                    "button",
-                    {
-                        type: "button",
-                        className: "EezStudio_BB3Plus_Chip",
-                        title: "Add the samples of the time shown to the history of the instrument as a DLOG chart",
-                        onclick: () => actions.addToHistory()
-                    },
-                    svgIcon(ICONS.history, 15),
-                    "Save to history"
-                ),
+                saveButton,
                 this.panelButton
             )
         );
