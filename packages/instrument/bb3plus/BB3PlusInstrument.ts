@@ -49,8 +49,9 @@ import {
 } from "instrument/bb3plus/log-model";
 import { SampleBuffer } from "instrument/bb3plus/sample-buffer";
 
-// samples per second asked for: BB3+ samples at least this fast, up to the
-// max sample rate of each field
+// samples per second asked for: BB3+ sends the averages of the module
+// readings at this rate, every reading if the module doesn't read faster (the
+// module reads at least this fast, up to the max sample rate of the field)
 export const SCOPE_RATES = [100, 1000, 10000, 16000, 32000, 64000, 128000];
 export const SCOPE_SPANS = [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10, 30, 60];
 const DEFAULT_RATE = 10000;
@@ -136,6 +137,46 @@ export const DEFAULT_AXIS_SETTINGS: ScopeAxisSettings = {
     includeZero: false
 };
 
+// The trigger of the scope, found in the samples received, on an edge of one
+// trace (the source):
+//     off     the samples scroll as they come
+//     auto    as normal, but without a trigger for a while
+//             (AUTO_TIMEOUT, at least twice the span) the samples scroll
+//             again
+//     normal  each trigger shows its window (the span), it stays until the
+//             next trigger
+//     single  the first trigger shows its window and stops (Run arms it
+//             again)
+export type ScopeTriggerMode = "off" | "auto" | "normal" | "single";
+export const SCOPE_TRIGGER_MODES: { value: ScopeTriggerMode; label: string }[] = [
+    { value: "off", label: "Off" },
+    { value: "auto", label: "Auto" },
+    { value: "normal", label: "Normal" },
+    { value: "single", label: "Single" }
+];
+export type ScopeTriggerEdge = "rising" | "falling";
+
+// Auto: the samples scroll again after this long without a trigger (s), at
+// least twice the span
+const AUTO_TIMEOUT = 0.5;
+// a trace without the samples to the end of the window of a trigger doesn't
+// hold its capture back longer than this after the window (s)
+const CAPTURE_TIMEOUT = 2.0;
+// the status is "triggered" this long after a capture (s)
+const TRIGGERED_STATUS_TIME = 0.3;
+
+// The window of a trigger: a copy of the samples of each trace (the buffers
+// go on), the time of the trigger (time 0 of the window) and the seconds of
+// the window before and after it (as they were at the capture).
+export interface ScopeCapture {
+    time: number;
+    pre: number;
+    post: number;
+    // performance.now() of the capture, seconds
+    capturedAt: number;
+    buffers: Map<ScopeTrace, SampleBuffer>;
+}
+
 // the font sizes of the values at the cursor (px)
 export const READOUT_SIZES = [
     { value: 12, label: "Small" },
@@ -160,6 +201,16 @@ interface Settings {
     scopeShowOptions: boolean;
     // the traces in the channel colors, not in the field colors
     scopeChannelColors: boolean;
+    // the trigger (ScopeTriggerMode): the key of the source trace (the first
+    // trace if it isn't one), the edge, the level of an analog source, the
+    // bit of a bit field source, the part of the span before the trigger
+    // (0 - 1)
+    scopeTriggerMode: ScopeTriggerMode;
+    scopeTriggerSource: string;
+    scopeTriggerEdge: ScopeTriggerEdge;
+    scopeTriggerLevel: number;
+    scopeTriggerBit: number;
+    scopeTriggerPosition: number;
 }
 
 export class ScopeTrace {
@@ -234,6 +285,14 @@ export class BB3PlusInstrument {
     // (while running the window ends at the newest sample)
     scopeViewSpan: number | undefined;
     scopeViewEnd: number | undefined;
+
+    // The trigger: the last capture, the scan of the source (its generation
+    // and the number to go on from), a trigger found that waits for the
+    // samples of its window (its time, performance.now() seconds when found).
+    scopeCapture: ScopeCapture | undefined;
+    private triggerScanGeneration = -1;
+    private triggerScanNumber = 0;
+    private triggerWaiting: { time: number; foundAt: number } | undefined;
 
     // the state of the Studio instrument, set by the autorun
     instrumentConnected = false;
@@ -401,7 +460,34 @@ export class BB3PlusInstrument {
                 ? saved.scopeReadoutSize
                 : DEFAULT_READOUT_SIZE,
             scopeShowOptions: saved.scopeShowOptions === true,
-            scopeChannelColors: saved.scopeChannelColors === true
+            scopeChannelColors: saved.scopeChannelColors === true,
+            scopeTriggerMode: SCOPE_TRIGGER_MODES.find(
+                mode => mode.value == saved.scopeTriggerMode
+            )
+                ? saved.scopeTriggerMode
+                : "off",
+            scopeTriggerSource:
+                typeof saved.scopeTriggerSource == "string"
+                    ? saved.scopeTriggerSource
+                    : "",
+            scopeTriggerEdge:
+                saved.scopeTriggerEdge == "falling" ? "falling" : "rising",
+            scopeTriggerLevel:
+                typeof saved.scopeTriggerLevel == "number" &&
+                isFinite(saved.scopeTriggerLevel)
+                    ? saved.scopeTriggerLevel
+                    : 0,
+            scopeTriggerBit:
+                Number.isInteger(saved.scopeTriggerBit) &&
+                saved.scopeTriggerBit >= 0 &&
+                saved.scopeTriggerBit < 32
+                    ? saved.scopeTriggerBit
+                    : 0,
+            scopeTriggerPosition:
+                saved.scopeTriggerPosition >= 0 &&
+                saved.scopeTriggerPosition <= 1
+                    ? saved.scopeTriggerPosition
+                    : 0.5
         };
     }
 
@@ -727,11 +813,13 @@ export class BB3PlusInstrument {
         this.settingsChanged();
         this.scopeViewSpan = undefined;
         this.scopeViewEnd = undefined;
-        // while stopped the samples stay, the buffers are made again by Run
+        // while stopped the samples (and the capture) stay, the buffers are
+        // made again by Run
         if (this.scopeRunning) {
             for (const trace of this.traces) {
                 trace.buffer.setSpan(this.getBufferSpan());
             }
+            this.resetTrigger();
         }
         this.emit("scope");
     }
@@ -743,6 +831,8 @@ export class BB3PlusInstrument {
             for (const trace of this.traces) {
                 trace.buffer.setSpan(this.getBufferSpan());
             }
+            // Run arms the trigger again
+            this.resetTrigger();
         }
         // the time zoom stays, the window ends at the stop time or at the
         // newest sample
@@ -811,9 +901,242 @@ export class BB3PlusInstrument {
         this.emit("scope");
     }
 
-    // the samples kept: a bit more than the span, they arrive late
+    // the samples kept: a bit more than the span, they arrive late; with the
+    // trigger also the time to find it and to wait for the end of its window
     private getBufferSpan() {
-        return this.settings.scopeSpan * 1.2 + 0.5;
+        return this.settings.scopeTriggerMode == "off"
+            ? this.settings.scopeSpan * 1.2 + 0.5
+            : this.settings.scopeSpan * 2 + 1;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // trigger
+
+    // the trace of the trigger: of the settings, else the first one
+    get scopeTriggerSource(): ScopeTrace | undefined {
+        return (
+            this.traces.find(
+                trace => trace.key == this.settings.scopeTriggerSource
+            ) ?? this.traces[0]
+        );
+    }
+
+    setScopeTriggerMode(mode: ScopeTriggerMode) {
+        const wasOff = this.settings.scopeTriggerMode == "off";
+        const isOff = mode == "off";
+        if (wasOff && !isOff) {
+            // a level the source doesn't reach now goes to its middle (before
+            // the buffers are made again)
+            const range = this.getSourceRange();
+            const level = this.settings.scopeTriggerLevel;
+            if (range && !(level > range.min && level < range.max)) {
+                this.settings.scopeTriggerLevel = (range.min + range.max) / 2;
+            }
+        }
+        this.settings.scopeTriggerMode = mode;
+        this.settingsChanged();
+        if (!isOff && !this.scopeRunning) {
+            // a trigger mode runs the scope (Run makes the buffers again)
+            this.setScopeRunning(true);
+        } else if (wasOff != isOff && this.scopeRunning) {
+            // the buffers keep more samples with the trigger
+            for (const trace of this.traces) {
+                trace.buffer.setSpan(this.getBufferSpan());
+            }
+        }
+        this.resetTrigger();
+        this.emit("scope");
+    }
+
+    setScopeTriggerSource(key: string) {
+        this.settings.scopeTriggerSource = key;
+        this.settingsChanged();
+        this.setLevelToMiddle();
+        this.resetTrigger();
+        this.emit("scope");
+    }
+
+    setScopeTriggerEdge(edge: ScopeTriggerEdge) {
+        this.settings.scopeTriggerEdge = edge;
+        this.settingsChanged();
+        this.resetTrigger();
+        this.emit("scope");
+    }
+
+    setScopeTriggerLevel(level: number) {
+        this.settings.scopeTriggerLevel = level;
+        this.settingsChanged();
+        this.resetTrigger();
+        this.emit("scope");
+    }
+
+    setScopeTriggerBit(bit: number) {
+        this.settings.scopeTriggerBit = bit;
+        this.settingsChanged();
+        this.resetTrigger();
+        this.emit("scope");
+    }
+
+    // The next capture has it, the capture shown moves its window around its
+    // trigger (it has the samples of a whole span before the trigger, after
+    // it only those of its window).
+    setScopeTriggerPosition(position: number) {
+        position = Math.min(Math.max(position, 0), 1);
+        this.settings.scopeTriggerPosition = position;
+        this.settingsChanged();
+        const capture = this.scopeCapture;
+        if (capture) {
+            const full = capture.pre + capture.post;
+            capture.pre = full * position;
+            capture.post = full - capture.pre;
+        }
+        this.emit("scope");
+    }
+
+    // the range of the samples of the source in the span up to the newest
+    // sample, undefined for a bit field or without samples
+    private getSourceRange() {
+        const source = this.scopeTriggerSource;
+        if (!source || source.bits) {
+            return undefined;
+        }
+        const end = source.buffer.getNewestTime();
+        return source.buffer.getRange(end - this.settings.scopeSpan, end);
+    }
+
+    private setLevelToMiddle() {
+        const range = this.getSourceRange();
+        if (range) {
+            this.settings.scopeTriggerLevel = (range.min + range.max) / 2;
+            this.settingsChanged();
+        }
+    }
+
+    // no capture, the scan starts again
+    private resetTrigger() {
+        this.scopeCapture = undefined;
+        this.triggerScanGeneration = -1;
+        this.triggerScanNumber = 0;
+        this.triggerWaiting = undefined;
+    }
+
+    // the capture shown instead of the samples as they come, undefined if
+    // none (Auto: none after the timeout while running)
+    get scopeShownCapture(): ScopeCapture | undefined {
+        const capture = this.scopeCapture;
+        const mode = this.settings.scopeTriggerMode;
+        if (!capture || mode == "off") {
+            return undefined;
+        }
+        if (mode == "auto" && this.scopeRunning) {
+            const timeout = Math.max(AUTO_TIMEOUT, this.settings.scopeSpan * 2);
+            if (performance.now() / 1000 - capture.capturedAt >= timeout) {
+                return undefined;
+            }
+        }
+        return capture;
+    }
+
+    get scopeTriggerStatus() {
+        const mode = this.settings.scopeTriggerMode;
+        if (mode == "off") {
+            return "";
+        }
+        if (!this.scopeTriggerSource) {
+            return "no source";
+        }
+        if (!this.scopeRunning) {
+            return this.scopeCapture ? "stopped" : "stopped, not triggered";
+        }
+        if (
+            this.triggerWaiting ||
+            (this.scopeCapture &&
+                performance.now() / 1000 - this.scopeCapture.capturedAt <
+                    TRIGGERED_STATUS_TIME)
+        ) {
+            return "triggered";
+        }
+        if (mode == "auto" && !this.scopeShownCapture) {
+            return "auto";
+        }
+        return "armed";
+    }
+
+    // Finds the trigger in the new samples of the source and captures its
+    // window when all the traces have it (or after CAPTURE_TIMEOUT), then
+    // goes on after the window. Single stops the scope at the capture.
+    private updateTrigger() {
+        const mode = this.settings.scopeTriggerMode;
+        const source = this.scopeTriggerSource;
+        if (!this.scopeRunning || mode == "off" || !source) {
+            return;
+        }
+        const buffer = source.buffer;
+        if (buffer.streamGeneration != this.triggerScanGeneration) {
+            // the stream started again
+            this.triggerScanGeneration = buffer.streamGeneration;
+            this.triggerScanNumber = 0;
+            this.triggerWaiting = undefined;
+        }
+
+        const now = performance.now() / 1000;
+        const span = this.settings.scopeSpan;
+        const pre = span * this.settings.scopeTriggerPosition;
+        const post = span - pre;
+
+        if (!this.triggerWaiting) {
+            const found = buffer.findCrossing(
+                this.triggerScanNumber,
+                this.settings.scopeTriggerEdge == "rising",
+                source.bits ? 0.5 : this.settings.scopeTriggerLevel,
+                source.bits ? this.settings.scopeTriggerBit : -1
+            );
+            this.triggerScanNumber = found.next;
+            if (found.time != undefined) {
+                this.triggerWaiting = { time: found.time, foundAt: now };
+            }
+        }
+
+        const waiting = this.triggerWaiting;
+        if (!waiting) {
+            return;
+        }
+        const ready = this.traces.every(
+            trace =>
+                trace.buffer.size == 0 ||
+                trace.buffer.getNewestTime() >= waiting.time + post
+        );
+        if (!ready && now - waiting.foundAt < post + CAPTURE_TIMEOUT) {
+            return;
+        }
+
+        // a whole span before the trigger: the pre-trigger can grow later
+        // (setScopeTriggerPosition)
+        const buffers = new Map<ScopeTrace, SampleBuffer>();
+        for (const trace of this.traces) {
+            buffers.set(
+                trace,
+                trace.buffer.copyWindow(waiting.time - span, waiting.time + post)
+            );
+        }
+        this.scopeCapture = {
+            time: waiting.time,
+            pre,
+            post,
+            capturedAt: now,
+            buffers
+        };
+        this.triggerWaiting = undefined;
+        // the next trigger after this window
+        this.triggerScanNumber = Math.max(
+            this.triggerScanNumber,
+            buffer.getFirstNumberAt(waiting.time + post)
+        );
+        if (mode == "single") {
+            this.setScopeRunning(false);
+        } else {
+            this.emit("scope");
+        }
     }
 
     // the time of the newest sample of all the traces, 0 if none
@@ -877,7 +1200,12 @@ export class BB3PlusInstrument {
         if (index == -1) {
             return;
         }
+        const wasSource = trace == this.scopeTriggerSource;
         this.traces.splice(index, 1);
+        if (wasSource) {
+            // another trace is the source now
+            this.resetTrigger();
+        }
         if (trace.subscribedPeriod > 0 && this.isPushConnected) {
             this.sendCommand(
                 `SUBScribe:SAMPles ${trace.slot},"${trace.fieldName}",0`
@@ -902,6 +1230,14 @@ export class BB3PlusInstrument {
         return slotFields && slotFields.state == "ok"
             ? slotFields.fields.find(field => field.name == trace.fieldName)
             : undefined;
+    }
+
+    // the catalog of the slot of the trace and its field, undefined if the
+    // module in the slot doesn't have the field (now)
+    getTraceCatalog(trace: ScopeTrace) {
+        const slotFields = this.fields.slots[trace.slot - 1];
+        const field = this.findTraceField(trace);
+        return slotFields && field ? { slotFields, field } : undefined;
     }
 
     private resolveTraceField(trace: ScopeTrace) {
@@ -1036,6 +1372,7 @@ export class BB3PlusInstrument {
                 );
             }
         }
+        this.updateTrigger();
     }
 }
 

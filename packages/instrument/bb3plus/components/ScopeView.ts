@@ -1,31 +1,47 @@
+import * as notification from "eez-studio-ui/notification";
+import { MIME_EEZ_DLOG } from "instrument/connection/file-type";
+import {
+    activityLogStore,
+    log
+} from "instrument/window/history/activity-log";
+import { Unit as DlogUnit } from "instrument/window/waveform/dlog-file";
+
 import {
     BB3PlusInstrument,
     ScopeTrace,
     ScopeAxisMode,
     ScopeAxisSettings,
+    ScopeCapture,
+    ScopeTriggerMode,
     DEFAULT_AXIS_SETTINGS,
     SCOPE_RATES,
     SCOPE_SPANS,
+    SCOPE_TRIGGER_MODES,
     READOUT_SIZES
 } from "instrument/bb3plus/BB3PlusInstrument";
+import { SampleBuffer } from "instrument/bb3plus/sample-buffer";
+import { showTriggerHelp } from "instrument/bb3plus/components/trigger-help";
 import {
     getUnitName,
     formatNumber,
     getFieldNameParts
 } from "instrument/bb3plus/fields-model";
 import { getListName } from "instrument/bb3plus/labels";
+import { encodeDlog, DlogColumn } from "instrument/bb3plus/dlog-writer";
 import {
     h,
     setText,
     setVisible,
     setClass,
     createSelect,
+    setSelectOptions,
     setSelectValue,
     BB3PlusView,
     PushStatus,
     ErrorText,
     ICONS,
-    svgIcon
+    svgIcon,
+    infoIcon
 } from "instrument/bb3plus/components/dom";
 
 const AXIS_WIDTH = 58;
@@ -37,6 +53,32 @@ const RIGHT_MARGIN = 12;
 const FONT = "11px Roboto, sans-serif";
 
 const TRACE_LINE_WIDTH = 1.5;
+
+// The samples are drawn as points when they are at least this far apart
+// (px); closer they are a line (points would merge into a thick line
+// anyway). The radius of a point. Between the points a thin faint line (the
+// steps of a bit field), the width and the opacity.
+const POINTS_MIN_SPACING = 6;
+const POINT_RADIUS = 2.5;
+const POINTS_LINE_WIDTH = 1;
+const POINTS_LINE_ALPHA = 0.4;
+
+// the trigger level line and the trigger point, on a dark and on a light
+// background; the level line is dragged within this distance (px)
+const TRIGGER_COLOR_DARK = "#FFD933";
+const TRIGGER_COLOR_LIGHT = "#C98A00";
+const LEVEL_HIT_DISTANCE = 4;
+
+// the samples of a trace that is not in the capture shown (added after it)
+const EMPTY_BUFFER = new SampleBuffer();
+
+// The readout box at the cursor is at least as wide as these (in its
+// monospace font), so it doesn't jump as the digits change: a value with 6
+// significant digits and a sign (formatNumber: all from 0.1 to 999999), a
+// bit field value (0 - 255), a time with 4 significant digits (formatTime).
+const READOUT_VALUE_TEMPLATE = "-0.000000";
+const READOUT_BITS_TEMPLATE = "000";
+const READOUT_TIME_TEMPLATE = "-000.0 ms";
 
 // zoom factor per wheel notch and per zoom button
 const WHEEL_ZOOM = 1.25;
@@ -51,6 +93,8 @@ const DRAG_THRESHOLD = 4;
 
 // the ranges shown in the options are updated this often (ms)
 const OPTIONS_UPDATE_INTERVAL = 500;
+// the trigger status is updated this often (ms)
+const TRIGGER_STATUS_INTERVAL = 100;
 
 const MOUSE_HELP =
     "Mouse wheel: zoom time. Ctrl + wheel, or wheel over an axis: zoom values. " +
@@ -167,13 +211,38 @@ interface TracePoints {
     envelope: boolean;
 }
 
+// a point at each sample (not at the NaN gaps)
+function fillPoints(
+    ctx: CanvasRenderingContext2D,
+    points: TracePoints,
+    timeToX: (time: number) => number,
+    valueToY: (value: number) => number
+) {
+    ctx.beginPath();
+    for (let i = 0; i < points.times.length; i++) {
+        const value = points.values[i];
+        if (isNaN(value)) {
+            continue;
+        }
+        const x = timeToX(points.times[i]);
+        const y = valueToY(value);
+        ctx.moveTo(x + POINT_RADIUS, y);
+        ctx.arc(x, y, POINT_RADIUS, 0, Math.PI * 2);
+    }
+    ctx.fill();
+}
+
 // The envelope of a trace (SampleBuffer.getWindowPoints): a rectangle per
-// pixel column from its minimum to its maximum, on whole device pixels.
-// Rectangles are the cheapest to rasterize (a line or a polygon through the
-// columns of a fast signal has thousands of steep antialiased edges, too slow
-// for a large canvas). A column is at least as high as the trace line, so a
-// flat signal is still a line; the columns of the same height are one
-// rectangle.
+// pixel column from its minimum to its maximum. Rectangles are the cheapest
+// to rasterize (a line or a polygon through the columns of a fast signal has
+// thousands of steep antialiased edges, too slow for a large canvas). The
+// columns are on whole device pixels (no seams between them), their tops and
+// bottoms exact (antialiased) and a column at least as high as the trace
+// line is wide, so the envelope looks as the line drawn when the samples are
+// fewer (no jump in the thickness when the zoom crosses between them). Next
+// columns that don't overlap (a steep signal, a step between them) both
+// reach the middle of the gap between them, as a line through the samples
+// would. The columns of the same height are one rectangle.
 function fillEnvelope(
     ctx: CanvasRenderingContext2D,
     points: TracePoints,
@@ -183,18 +252,18 @@ function fillEnvelope(
 ) {
     const { times, values } = points;
     const toPixel = (value: number) => Math.round(value * ratio) / ratio;
-    const minHeight = Math.max(1 / ratio, toPixel(TRACE_LINE_WIDTH));
+    const minHeight = TRACE_LINE_WIDTH;
 
     // the columns: x, top and bottom (NaN: a gap)
     const xs: number[] = [];
-    const tops: number[] = [];
-    const bottoms: number[] = [];
+    const columnTops: number[] = [];
+    const columnBottoms: number[] = [];
     let i = 0;
     while (i < values.length) {
         xs.push(toPixel(timeToX(times[i])));
         if (isNaN(values[i])) {
-            tops.push(NaN);
-            bottoms.push(NaN);
+            columnTops.push(NaN);
+            columnBottoms.push(NaN);
             i++;
             continue;
         }
@@ -205,12 +274,38 @@ function fillEnvelope(
             top = middle - minHeight / 2;
             bottom = middle + minHeight / 2;
         }
-        tops.push(Math.floor(top * ratio) / ratio);
-        bottoms.push(Math.ceil(bottom * ratio) / ratio);
+        columnTops.push(top);
+        columnBottoms.push(bottom);
         i += 2;
     }
 
     const n = xs.length;
+
+    // joined to the next columns (not across a NaN gap)
+    const tops: number[] = [];
+    const bottoms: number[] = [];
+    for (let j = 0; j < n; j++) {
+        let top = columnTops[j];
+        let bottom = columnBottoms[j];
+        for (let k = j - 1; k <= j + 1; k += 2) {
+            if (k < 0 || k >= n || isNaN(columnTops[k])) {
+                continue;
+            }
+            if (columnBottoms[k] < columnTops[j]) {
+                // the next column is above
+                top = Math.min(top, (columnBottoms[k] + columnTops[j]) / 2);
+            } else if (columnTops[k] > columnBottoms[j]) {
+                // below
+                bottom = Math.max(
+                    bottom,
+                    (columnTops[k] + columnBottoms[j]) / 2
+                );
+            }
+        }
+        tops.push(top);
+        bottoms.push(bottom);
+    }
+
     let left = 0;
     let right = 0;
     let top = NaN;
@@ -269,18 +364,26 @@ interface Layout {
     window: TimeWindow;
     plots: PlotLayout[];
     axes: AxisLayout[];
+    // the trigger level line (on the axis of the source), undefined if not
+    // drawn
+    triggerLevel: { axis: AxisLayout; y: number } | undefined;
+    // the trigger point line (the pre-trigger), undefined if not drawn
+    triggerPosition: { x: number } | undefined;
 }
 
 interface TimeWindow {
     start: number;
     end: number;
     span: number;
-    // the time labels are relative to it: the newest sample or the stop time
+    // the time labels are relative to it: the newest sample, the stop time
+    // or the trigger of the capture shown
     ref: number;
 }
 
 type Hit =
     | { kind: "axis"; axis: AxisLayout }
+    | { kind: "level"; axis: AxisLayout }
+    | { kind: "position"; plot: PlotLayout }
     | { kind: "plot"; plot: PlotLayout }
     | undefined;
 
@@ -310,6 +413,22 @@ type Drag =
           y0: number;
           range: Range;
           before: ZoomState;
+      }
+    | {
+          // the trigger level line, Esc goes back to the level before
+          kind: "level";
+          axis: AxisLayout;
+          before: number;
+      }
+    | {
+          // the trigger point line: the seconds before the trigger at the
+          // start (of the window of full seconds), Esc goes back to the
+          // pre-trigger before
+          kind: "position";
+          x0: number;
+          pre0: number;
+          full: number;
+          before: number;
       };
 
 // the zoom before a drag, Esc goes back to it
@@ -406,7 +525,14 @@ class ScopeCanvas {
     // the end of the time window drawn last and the seconds of a pixel,
     // undefined if nothing was drawn
     private lastDraw: { end: number; secondsPerPixel: number } | undefined;
+    // the capture of the trigger drawn last, undefined if none
+    private lastDrawCapture: ScopeCapture | undefined;
     private layout: Layout | undefined;
+    // the widths of the time and of the values in the readout box while it
+    // is shown (they only grow), for the traces and the size of key
+    private readoutWidths:
+        | { key: string; header: number; value: number }
+        | undefined;
     // the ranges of the "grow" axes
     private growRanges = new Map<string, Range>();
 
@@ -463,16 +589,25 @@ class ScopeCanvas {
             if (!this.bb3PlusInstrument.scopeRunning) {
                 return;
             }
-            // running: again when the window moved by a pixel (a long span
-            // moves less than a pixel per frame)
-            const lastDraw = this.lastDraw;
-            if (
-                lastDraw &&
-                Math.abs(
-                    this.bb3PlusInstrument.getNewestSampleTime() - lastDraw.end
-                ) < lastDraw.secondsPerPixel
-            ) {
+            const capture = this.bb3PlusInstrument.scopeShownCapture;
+            if (capture != this.lastDrawCapture) {
+                // another capture or back to the samples as they come (Auto)
+            } else if (capture) {
+                // the capture stays
                 return;
+            } else {
+                // running: again when the window moved by a pixel (a long
+                // span moves less than a pixel per frame)
+                const lastDraw = this.lastDraw;
+                if (
+                    lastDraw &&
+                    Math.abs(
+                        this.bb3PlusInstrument.getNewestSampleTime() -
+                            lastDraw.end
+                    ) < lastDraw.secondsPerPixel
+                ) {
+                    return;
+                }
             }
         }
         this.needsDraw = false;
@@ -482,28 +617,59 @@ class ScopeCanvas {
     ////////////////////////////////////////////////////////////////////////////
     // zoom
 
-    // the time window shown
-    getTimeWindow(): TimeWindow {
+    // the samples of the trace shown: of the capture of the trigger shown,
+    // else as they come
+    bufferOf(
+        trace: ScopeTrace,
+        capture = this.bb3PlusInstrument.scopeShownCapture
+    ) {
+        return capture
+            ? (capture.buffers.get(trace) ?? EMPTY_BUFFER)
+            : trace.buffer;
+    }
+
+    // The whole window that can be shown: the window of the capture shown
+    // (the time labels from the trigger), else the span up to the newest
+    // sample (running) or up to the stop time.
+    private getFullWindow(capture: ScopeCapture | undefined) {
         const bb3PlusInstrument = this.bb3PlusInstrument;
-        const full = bb3PlusInstrument.scopeSpan;
-        const span = Math.min(bb3PlusInstrument.scopeViewSpan ?? full, full);
-        if (bb3PlusInstrument.scopeRunning) {
-            const end = bb3PlusInstrument.getNewestSampleTime();
-            return { start: end - span, end, span, ref: end };
+        if (capture) {
+            return {
+                start: capture.time - capture.pre,
+                end: capture.time + capture.post,
+                ref: capture.time
+            };
         }
-        const ref = bb3PlusInstrument.scopeStopTime;
-        const end = clamp(
-            bb3PlusInstrument.scopeViewEnd ?? ref,
-            ref - full + span,
-            ref
-        );
-        return { start: end - span, end, span, ref };
+        const ref = bb3PlusInstrument.scopeRunning
+            ? bb3PlusInstrument.getNewestSampleTime()
+            : bb3PlusInstrument.scopeStopTime;
+        return { start: ref - bb3PlusInstrument.scopeSpan, end: ref, ref };
+    }
+
+    // The time window shown: the whole window or its zoom. The zoom ends at
+    // the end set while stopped, else at the newest sample (running) or the
+    // stop time; in a capture it keeps the trigger at its place.
+    getTimeWindow(
+        capture = this.bb3PlusInstrument.scopeShownCapture
+    ): TimeWindow {
+        const bb3PlusInstrument = this.bb3PlusInstrument;
+        const window = this.getFullWindow(capture);
+        const full = window.end - window.start;
+        const span = Math.min(bb3PlusInstrument.scopeViewSpan ?? full, full);
+        let end = window.end;
+        if (bb3PlusInstrument.scopeViewEnd != undefined) {
+            end = bb3PlusInstrument.scopeViewEnd;
+        } else if (capture) {
+            end = capture.time + span * (capture.post / full);
+        }
+        end = clamp(end, window.start + span, window.end);
+        return { start: end - span, end, span, ref: window.ref };
     }
 
     private getMinViewSpan() {
         let period = 0;
         for (const trace of this.bb3PlusInstrument.traces) {
-            const tracePeriod = trace.buffer.period;
+            const tracePeriod = this.bufferOf(trace).period;
             if (tracePeriod > 0 && (period == 0 || tracePeriod < period)) {
                 period = tracePeriod;
             }
@@ -514,15 +680,15 @@ class ScopeCanvas {
     // a time window of span seconds ending at end (while stopped)
     private setTimeWindow(span: number, end: number | undefined) {
         const bb3PlusInstrument = this.bb3PlusInstrument;
-        const full = bb3PlusInstrument.scopeSpan;
+        const window = this.getFullWindow(bb3PlusInstrument.scopeShownCapture);
+        const full = window.end - window.start;
         span = clamp(span, this.getMinViewSpan(), full);
         if (span >= full * 0.999) {
             bb3PlusInstrument.setScopeView(undefined, undefined);
             return;
         }
         if (end != undefined) {
-            const ref = bb3PlusInstrument.scopeStopTime;
-            end = clamp(end, ref - full + span, ref);
+            end = clamp(end, window.start + span, window.end);
         }
         bb3PlusInstrument.setScopeView(span, end);
     }
@@ -591,6 +757,23 @@ class ScopeCanvas {
                 return { kind: "axis", axis };
             }
         }
+        const level = layout.triggerLevel;
+        if (
+            level &&
+            x >= layout.plotLeft &&
+            x <= layout.plotRight &&
+            Math.abs(y - level.y) <= LEVEL_HIT_DISTANCE
+        ) {
+            return { kind: "level", axis: level.axis };
+        }
+        const position = layout.triggerPosition;
+        if (position && Math.abs(x - position.x) <= LEVEL_HIT_DISTANCE) {
+            for (const plot of layout.plots) {
+                if (y >= plot.top && y <= plot.bottom) {
+                    return { kind: "position", plot };
+                }
+            }
+        }
         if (x >= layout.plotLeft && x <= layout.plotRight) {
             for (const plot of layout.plots) {
                 if (y >= plot.top && y <= plot.bottom) {
@@ -637,14 +820,53 @@ class ScopeCanvas {
                 range: { min: hit.axis.min, max: hit.axis.max },
                 before: this.getZoomState()
             };
-        } else if (event.shiftKey || event.button == 1 || event.button == 2) {
+            // the level line with the left button, else as the plot
+        } else if (
+            hit.kind == "level" &&
+            event.button == 0 &&
+            !event.shiftKey
+        ) {
             this.drag = {
+                kind: "level",
+                axis: hit.axis,
+                before: this.bb3PlusInstrument.settings.scopeTriggerLevel
+            };
+        } else if (
+            hit.kind == "position" &&
+            event.button == 0 &&
+            !event.shiftKey
+        ) {
+            const bb3PlusInstrument = this.bb3PlusInstrument;
+            const position = bb3PlusInstrument.settings.scopeTriggerPosition;
+            const capture = bb3PlusInstrument.scopeShownCapture;
+            const full = capture
+                ? capture.pre + capture.post
+                : bb3PlusInstrument.scopeSpan;
+            this.drag = {
+                kind: "position",
+                x0: x,
+                pre0: capture ? capture.pre : full * position,
+                full,
+                before: position
+            };
+            // the window follows the trigger (not a place moved to while
+            // stopped), so the line follows the mouse
+            if (bb3PlusInstrument.scopeViewEnd != undefined) {
+                bb3PlusInstrument.setScopeView(
+                    bb3PlusInstrument.scopeViewSpan,
+                    undefined
+                );
+            }
+        } else if (event.shiftKey || event.button == 1 || event.button == 2) {
+            const plot = hit.kind == "level" ? hit.axis.plot : hit.plot;
+            this.drag = {
+                // (a hit on the trigger point line moves the plot too)
                 kind: "move",
-                plot: hit.plot,
+                plot,
                 x0: x,
                 y0: y,
                 window: this.getTimeWindow(),
-                ranges: hit.plot.axes.map(axis => ({
+                ranges: plot.axes.map(axis => ({
                     min: axis.min,
                     max: axis.max
                 })),
@@ -652,7 +874,7 @@ class ScopeCanvas {
                 movedValues: false,
                 before: this.getZoomState()
             };
-        } else if (event.button == 0) {
+        } else if (event.button == 0 && hit.kind != "level") {
             this.drag = {
                 kind: "box",
                 plot: hit.plot,
@@ -709,7 +931,11 @@ class ScopeCanvas {
         event.preventDefault();
         event.stopPropagation();
         this.endDrag();
-        if (drag.kind != "box") {
+        if (drag.kind == "level") {
+            this.bb3PlusInstrument.setScopeTriggerLevel(drag.before);
+        } else if (drag.kind == "position") {
+            this.bb3PlusInstrument.setScopeTriggerPosition(drag.before);
+        } else if (drag.kind != "box") {
             this.bb3PlusInstrument.setScopeAxes(drag.before.axes);
             this.bb3PlusInstrument.setScopeView(
                 drag.before.viewSpan,
@@ -727,17 +953,32 @@ class ScopeCanvas {
         if (!drag) {
             const hit = this.hitTest(x, y);
             this.container.style.cursor =
-                hit?.kind == "axis"
+                hit?.kind == "axis" || hit?.kind == "level"
                     ? "ns-resize"
-                    : hit?.kind == "plot"
-                      ? "crosshair"
-                      : "";
+                    : hit?.kind == "position"
+                      ? "ew-resize"
+                      : hit?.kind == "plot"
+                        ? "crosshair"
+                        : "";
             return;
         }
 
         if (drag.kind == "box") {
             drag.x1 = x;
             drag.y1 = y;
+        } else if (drag.kind == "position") {
+            // the trigger is at pre / full of the plot width (also zoomed,
+            // see getTimeWindow)
+            const layout = this.layout!;
+            const pre =
+                drag.pre0 +
+                ((x - drag.x0) / (layout.plotRight - layout.plotLeft)) *
+                    drag.full;
+            this.bb3PlusInstrument.setScopeTriggerPosition(pre / drag.full);
+        } else if (drag.kind == "level") {
+            this.bb3PlusInstrument.setScopeTriggerLevel(
+                this.yToValue(drag.axis, drag.axis.plot, y)
+            );
         } else if (drag.kind == "axis") {
             const height = drag.axis.plot.bottom - drag.axis.plot.top;
             const delta =
@@ -837,7 +1078,7 @@ class ScopeCanvas {
         if (hit?.kind == "axis") {
             this.bb3PlusInstrument.resetScopeAxes([hit.axis.key]);
             this.growRanges.delete(hit.axis.key);
-        } else if (hit?.kind == "plot") {
+        } else if (hit) {
             this.resetZoom();
         }
     }
@@ -863,8 +1104,9 @@ class ScopeCanvas {
                 this.yToValue(hit.axis, hit.axis.plot, y)
             );
         } else if (event.ctrlKey || event.metaKey) {
-            for (const axis of hit.plot.axes) {
-                this.zoomAxis(axis, factor, this.yToValue(axis, hit.plot, y));
+            const plot = hit.kind == "level" ? hit.axis.plot : hit.plot;
+            for (const axis of plot.axes) {
+                this.zoomAxis(axis, factor, this.yToValue(axis, plot, y));
             }
         } else {
             this.zoomTime(factor, this.xToTime(x));
@@ -946,7 +1188,10 @@ class ScopeCanvas {
         ctx.font = FONT;
 
         const bb3PlusInstrument = this.bb3PlusInstrument;
-        const timeWindow = this.getTimeWindow();
+        // the capture of the trigger shown in this frame
+        const capture = bb3PlusInstrument.scopeShownCapture;
+        this.lastDrawCapture = capture;
+        const timeWindow = this.getTimeWindow(capture);
         const { start, end, span } = timeWindow;
 
         const allAxes = getAxes(bb3PlusInstrument.traces);
@@ -988,12 +1233,17 @@ class ScopeCanvas {
         const timeToX = (time: number) =>
             plotLeft + ((time - start) / span) * plotWidth;
 
-        // the points of the window
+        // the points of the window, the envelope columns on device pixels
+        // (a column of the envelope is a pixel wide, see fillEnvelope)
         const points = new Map<ScopeTrace, TracePoints>();
         for (const trace of traces) {
             points.set(
                 trace,
-                trace.buffer.getWindowPoints(start, end, plotWidth)
+                this.bufferOf(trace, capture).getWindowPoints(
+                    start,
+                    end,
+                    plotWidth * ratio
+                )
             );
         }
 
@@ -1010,8 +1260,29 @@ class ScopeCanvas {
             plotRight,
             window: timeWindow,
             plots: [],
-            axes: []
+            axes: [],
+            triggerLevel: undefined,
+            triggerPosition: undefined
         };
+
+        // the trigger: its level line on the axis of an analog source, the
+        // trigger point of the capture shown
+        const triggerColor = bb3PlusInstrument.darkTheme
+            ? TRIGGER_COLOR_DARK
+            : TRIGGER_COLOR_LIGHT;
+        const triggerSource =
+            bb3PlusInstrument.settings.scopeTriggerMode != "off"
+                ? bb3PlusInstrument.scopeTriggerSource
+                : undefined;
+        // the trigger point: of the capture shown, else where the next
+        // trigger will be in the window (the pre-trigger); dragged, see
+        // hitTest
+        const triggerX = capture
+            ? timeToX(capture.time)
+            : triggerSource
+              ? plotLeft +
+                bb3PlusInstrument.settings.scopeTriggerPosition * plotWidth
+              : undefined;
 
         const timeTicks = getTicks(
             start - timeWindow.ref,
@@ -1139,10 +1410,18 @@ class ScopeCanvas {
                         );
                         continue;
                     }
+                    const buffer = this.bufferOf(trace, capture);
+                    const asPoints =
+                        (buffer.period / span) * plotWidth >=
+                        POINTS_MIN_SPACING;
                     ctx.strokeStyle = trace.color;
-                    ctx.lineWidth = TRACE_LINE_WIDTH;
+                    ctx.lineWidth = asPoints
+                        ? POINTS_LINE_WIDTH
+                        : TRACE_LINE_WIDTH;
+                    ctx.globalAlpha = asPoints ? POINTS_LINE_ALPHA : 1;
                     ctx.beginPath();
                     let drawing = false;
+                    let lastX = 0;
                     let lastY = 0;
                     for (let i = 0; i < tracePoints.times.length; i++) {
                         const value = tracePoints.values[i];
@@ -1162,21 +1441,92 @@ class ScopeCanvas {
                         } else {
                             ctx.lineTo(x, y);
                         }
+                        lastX = x;
                         lastY = y;
                     }
                     if (drawing && trace.bits) {
-                        // the last value up to the newest time shown
-                        ctx.lineTo(
-                            timeToX(
-                                Math.min(trace.buffer.getNewestTime(), end)
-                            ),
-                            lastY
+                        // the last value up to the newest time shown (not
+                        // after a sample past the window)
+                        const newestX = timeToX(
+                            Math.min(buffer.getNewestTime(), end)
                         );
+                        if (newestX > lastX) {
+                            ctx.lineTo(newestX, lastY);
+                        }
                     }
                     ctx.stroke();
+                    ctx.globalAlpha = 1;
+                    if (asPoints) {
+                        // the samples on the thin line (a bit field holds
+                        // its value until the next sample: steps)
+                        ctx.fillStyle = trace.color;
+                        fillPoints(ctx, tracePoints, timeToX, valueToY);
+                    }
+                }
+
+                // the trigger level on the axis of an analog source, with
+                // the tag "T" at the right (dragged, see hitTest)
+                if (
+                    triggerSource &&
+                    !triggerSource.bits &&
+                    axis.traces.includes(triggerSource)
+                ) {
+                    const y =
+                        Math.round(
+                            valueToY(
+                                bb3PlusInstrument.settings.scopeTriggerLevel
+                            )
+                        ) + 0.5;
+                    if (y >= plot.top && y <= plot.bottom) {
+                        ctx.strokeStyle = triggerColor;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(plotLeft, y);
+                        ctx.lineTo(plotRight, y);
+                        ctx.stroke();
+                        ctx.fillStyle = triggerColor;
+                        ctx.fillRect(plotRight - 15, y - 7, 14, 14);
+                        ctx.fillStyle = "#000";
+                        ctx.font = "bold 10px Roboto, sans-serif";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText("T", plotRight - 8, y + 0.5);
+                        ctx.font = FONT;
+                        layout.triggerLevel = { axis: axisLayout, y };
+                    }
                 }
                 ctx.restore();
             });
+
+            // the trigger point: a line (dashed before a capture), a
+            // handle at the top of the first plot
+            if (triggerX != undefined) {
+                const x = Math.round(triggerX) + 0.5;
+                if (x >= plotLeft && x <= plotRight) {
+                    ctx.strokeStyle = triggerColor;
+                    ctx.globalAlpha = 0.6;
+                    ctx.lineWidth = 1;
+                    if (!capture) {
+                        ctx.setLineDash([4, 4]);
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(x, plot.top);
+                    ctx.lineTo(x, plot.bottom);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.globalAlpha = 1;
+                    if (plot == plots[0]) {
+                        ctx.fillStyle = triggerColor;
+                        ctx.beginPath();
+                        ctx.moveTo(x - 6, plot.top + 1);
+                        ctx.lineTo(x + 6, plot.top + 1);
+                        ctx.lineTo(x, plot.top + 9);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    layout.triggerPosition = { x };
+                }
+            }
         }
 
         this.layout = layout;
@@ -1229,6 +1579,9 @@ class ScopeCanvas {
             traces.length > 0
         ) {
             this.drawReadout(ctx, layout, plots, points, textColor, height);
+        } else {
+            // the next readout starts from the templates
+            this.readoutWidths = undefined;
         }
     }
 
@@ -1256,24 +1609,46 @@ class ScopeCanvas {
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        const rows: { trace: ScopeTrace; name: string; value: string }[] = [];
+        const rows: {
+            trace: ScopeTrace;
+            name: string;
+            value: string;
+            // a value at least as wide as most (see READOUT_VALUE_TEMPLATE)
+            template: string;
+        }[] = [];
         for (const plot of plots) {
             for (const axis of plot.axes) {
                 for (const trace of axis.traces) {
                     if (!points.has(trace)) {
                         continue;
                     }
-                    const value = trace.buffer.getValueAt(time, trace.bits);
+                    // the sample, not interpolated: the nearest one, of a
+                    // bit field the one before
+                    const sample = this.bufferOf(
+                        trace,
+                        this.lastDrawCapture
+                    ).getSampleAt(time, trace.bits);
+                    const value = sample ? sample.value : NaN;
                     const unit = trace.bits ? "" : getUnitName(trace.unit);
                     rows.push({
                         trace,
                         name: trace.name,
                         value: isNaN(value)
                             ? "-"
-                            : formatNumber(value, 6) + (unit ? " " + unit : "")
+                            : formatNumber(value, 6) + (unit ? " " + unit : ""),
+                        template: trace.bits
+                            ? READOUT_BITS_TEMPLATE
+                            : READOUT_VALUE_TEMPLATE + (unit ? " " + unit : "")
                     });
-                    if (!isNaN(value)) {
-                        // the dot on the trace
+                    if (sample && !isNaN(value)) {
+                        // the dot: on the sample, of a bit field on its step
+                        // at the mouse
+                        const dotX = trace.bits
+                            ? mouseX
+                            : plotLeft +
+                              ((sample.time - timeWindow.start) /
+                                  timeWindow.span) *
+                                  (plotRight - plotLeft);
                         const y =
                             plot.bottom -
                             ((value - axis.min) / (axis.max - axis.min)) *
@@ -1281,7 +1656,7 @@ class ScopeCanvas {
                         if (y >= plot.top && y <= plot.bottom) {
                             ctx.fillStyle = trace.color;
                             ctx.beginPath();
-                            ctx.arc(mouseX, y, 3.5, 0, Math.PI * 2);
+                            ctx.arc(dotX, y, 3.5, 0, Math.PI * 2);
                             ctx.fill();
                         }
                     }
@@ -1298,14 +1673,35 @@ class ScopeCanvas {
 
         const header = formatTime(time - timeWindow.ref);
         ctx.font = valueFont;
-        const headerWidth = ctx.measureText(header).width;
-        const valueWidth = Math.max(
-            ...rows.map(row => ctx.measureText(row.value).width)
+        let headerWidth = Math.max(
+            ctx.measureText(header).width,
+            ctx.measureText(READOUT_TIME_TEMPLATE).width
+        );
+        let valueWidth = Math.max(
+            ...rows.map(row =>
+                Math.max(
+                    ctx.measureText(row.value).width,
+                    ctx.measureText(row.template).width
+                )
+            )
         );
         ctx.font = nameFont;
         const nameWidth = Math.max(
             ...rows.map(row => ctx.measureText(row.name).width)
         );
+
+        // the box doesn't jump: its widths only grow while the cursor stays
+        // in the plot with the same traces and size
+        const key = [
+            size,
+            ...rows.map(row => row.name + "\t" + row.template)
+        ].join("\n");
+        const kept = this.readoutWidths;
+        if (kept && kept.key == key) {
+            headerWidth = Math.max(headerWidth, kept.header);
+            valueWidth = Math.max(valueWidth, kept.value);
+        }
+        this.readoutWidths = { key, header: headerWidth, value: valueWidth };
 
         const gap = size;
         const boxWidth =
@@ -1679,6 +2075,217 @@ function iconButton(icon: string, title: string, onclick: () => void) {
     );
 }
 
+const TRIGGER_EDGES = [
+    { value: "rising" as const, label: "Rising" },
+    { value: "falling" as const, label: "Falling" }
+];
+
+// The trigger settings (BB3PlusInstrument.setScopeTrigger...) and its
+// status: the mode, then (not Off) the source trace, the edge, the level of
+// an analog source or the pin of a bit field, the part of the window before
+// the trigger.
+class TriggerBar {
+    element: HTMLDivElement;
+    private modeSelect: HTMLSelectElement;
+    private sourceSelect = h("select", {
+        className: "form-select form-select-sm",
+        style: { width: "140px" },
+        title: "The trace of the trigger"
+    });
+    private sourceKey = "";
+    private edgeSelect: HTMLSelectElement;
+    private levelLabel = h("label", null, "Level");
+    private levelInput = h("input", {
+        className: "form-control form-control-sm",
+        style: { width: "100px" },
+        title: "The level of the edge, also dragged in the plot (the line with the tag T)"
+    });
+    private bitSelect = h("select", {
+        className: "form-select form-select-sm",
+        style: { width: "110px" },
+        title: "The pin of the edge"
+    });
+    private bitKey = "";
+    private positionLabel = h("label", null, "Pre-trigger");
+    private positionInput = h("input", {
+        type: "range",
+        className: "form-range",
+        min: "0",
+        max: "100",
+        step: "5",
+        style: { width: "100px" },
+        title: "The part of the window before the trigger, also dragged in the plot (the trigger point line, its handle at the top)"
+    });
+    private positionText = h("span", { style: { width: "40px" } });
+    private status = h("span", { className: "EezStudio_BB3Plus_Status" });
+    // shown only with a trigger mode
+    private details: HTMLElement[];
+
+    constructor(private bb3PlusInstrument: BB3PlusInstrument) {
+        this.modeSelect = createSelect<ScopeTriggerMode>(
+            SCOPE_TRIGGER_MODES,
+            {
+                style: { width: "100px" },
+                title: "Off: the samples scroll as they come. Auto: as Normal, but without a trigger for a while they scroll again. Normal: each trigger shows its window until the next one. Single: the first trigger shows its window and stops the scope (Run arms it again)."
+            },
+            mode => bb3PlusInstrument.setScopeTriggerMode(mode)
+        );
+        this.sourceSelect.addEventListener("change", () =>
+            bb3PlusInstrument.setScopeTriggerSource(this.sourceSelect.value)
+        );
+        this.edgeSelect = createSelect(
+            TRIGGER_EDGES,
+            { style: { width: "90px" }, title: "The edge of the trigger" },
+            edge => bb3PlusInstrument.setScopeTriggerEdge(edge)
+        );
+        this.levelInput.addEventListener("change", () => {
+            const level = parseFloat(this.levelInput.value);
+            if (isFinite(level)) {
+                bb3PlusInstrument.setScopeTriggerLevel(level);
+            } else {
+                this.updateLevel(true);
+            }
+        });
+        this.bitSelect.addEventListener("change", () =>
+            bb3PlusInstrument.setScopeTriggerBit(Number(this.bitSelect.value))
+        );
+        this.positionInput.addEventListener("input", () =>
+            bb3PlusInstrument.setScopeTriggerPosition(
+                Number(this.positionInput.value) / 100
+            )
+        );
+
+        this.details = [
+            this.sourceSelect,
+            this.edgeSelect,
+            this.levelLabel,
+            this.levelInput,
+            this.bitSelect,
+            this.positionLabel,
+            this.positionInput,
+            this.positionText,
+            this.status
+        ];
+        this.element = h(
+            "div",
+            { className: "EezStudio_BB3Plus_Toolbar" },
+            h("label", null, "Trigger"),
+            // the help: an info icon without a border, a background on hover
+            h(
+                "button",
+                {
+                    className: "btn btn-sm border-0",
+                    style: {
+                        display: "inline-flex",
+                        padding: "3px",
+                        color: "var(--bs-primary, #0d6efd)"
+                    },
+                    title: "How the trigger works",
+                    onmouseenter: (event: MouseEvent) =>
+                        ((event.currentTarget as HTMLElement).style.background =
+                            "rgba(128, 128, 128, 0.25)"),
+                    onmouseleave: (event: MouseEvent) =>
+                        ((event.currentTarget as HTMLElement).style.background =
+                            ""),
+                    onclick: () =>
+                        showTriggerHelp(
+                            bb3PlusInstrument.darkTheme
+                                ? TRIGGER_COLOR_DARK
+                                : TRIGGER_COLOR_LIGHT
+                        )
+                },
+                infoIcon(20)
+            ),
+            this.modeSelect,
+            ...this.details
+        );
+    }
+
+    update() {
+        const bb3PlusInstrument = this.bb3PlusInstrument;
+        const settings = bb3PlusInstrument.settings;
+        setSelectValue(this.modeSelect, settings.scopeTriggerMode);
+        const on = settings.scopeTriggerMode != "off";
+        for (const element of this.details) {
+            setVisible(element, on);
+        }
+        if (!on) {
+            return;
+        }
+
+        // the traces
+        const traces = bb3PlusInstrument.traces;
+        const sourceKey = JSON.stringify(
+            traces.map(trace => [trace.key, trace.name])
+        );
+        if (sourceKey != this.sourceKey) {
+            this.sourceKey = sourceKey;
+            setSelectOptions(
+                this.sourceSelect,
+                traces.map(trace => ({ value: trace.key, label: trace.name }))
+            );
+        }
+        const source = bb3PlusInstrument.scopeTriggerSource;
+        setSelectValue(this.sourceSelect, source?.key ?? "");
+        this.sourceSelect.disabled = traces.length == 0;
+
+        setSelectValue(this.edgeSelect, settings.scopeTriggerEdge);
+
+        // a bit field: its pins, else the level
+        const bits = source?.bits ?? false;
+        setVisible(this.levelLabel, !bits);
+        setVisible(this.levelInput, !bits);
+        setVisible(this.bitSelect, bits);
+        if (bits && source) {
+            const field = bb3PlusInstrument.getTraceCatalog(source)?.field;
+            const numBits = field?.bits || 8;
+            const pins = Array.from(
+                { length: numBits },
+                (_, bit) => field?.pinLabels[bit] || `Bit ${bit + 1}`
+            );
+            const bitKey = JSON.stringify(pins);
+            if (bitKey != this.bitKey) {
+                this.bitKey = bitKey;
+                setSelectOptions(
+                    this.bitSelect,
+                    pins.map((label, bit) => ({ value: bit, label }))
+                );
+            }
+            setSelectValue(this.bitSelect, settings.scopeTriggerBit);
+        } else {
+            this.updateLevel(false);
+        }
+
+        const percent = Math.round(settings.scopeTriggerPosition * 100);
+        if (Number(this.positionInput.value) != percent) {
+            this.positionInput.value = String(percent);
+        }
+        setText(this.positionText, `${percent} %`);
+
+        this.updateStatus();
+    }
+
+    // the level of the settings, not while it is typed in (unless force)
+    private updateLevel(force: boolean) {
+        if (force || document.activeElement != this.levelInput) {
+            const text = formatNumber(
+                this.bb3PlusInstrument.settings.scopeTriggerLevel,
+                6
+            );
+            if (this.levelInput.value != text) {
+                this.levelInput.value = text;
+            }
+        }
+    }
+
+    // also by a timer: "triggered" and "auto" go by the time
+    updateStatus() {
+        const status = this.bb3PlusInstrument.scopeTriggerStatus;
+        setText(this.status, status);
+        setClass(this.status, "text-warning", status == "triggered");
+    }
+}
+
 export class ScopeView extends BB3PlusView {
     private runButton: HTMLButtonElement;
     private rateSelect: HTMLSelectElement;
@@ -1687,6 +2294,7 @@ export class ScopeView extends BB3PlusView {
     private addKey = "";
     private resetZoomButton: HTMLButtonElement;
     private optionsButton: HTMLButtonElement;
+    private historyButton: HTMLButtonElement;
     private droppedText = h("span", {
         className: "text-warning",
         title: "BB3+ dropped them because they were not read fast enough"
@@ -1697,6 +2305,7 @@ export class ScopeView extends BB3PlusView {
     private legendKey = "";
     private scopeCanvas: ScopeCanvas;
     private options: ScopeOptions;
+    private triggerBar: TriggerBar;
 
     constructor(bb3PlusInstrument: BB3PlusInstrument) {
         super(bb3PlusInstrument);
@@ -1714,7 +2323,7 @@ export class ScopeView extends BB3PlusView {
             SCOPE_RATES.map(rate => ({ value: rate, label: formatRate(rate) })),
             {
                 style: { width: "110px" },
-                title: "BB3+ samples the fields at least this fast, up to the max sample rate of each field"
+                title: "BB3+ sends the averages of the module readings at this rate, every reading if the module doesn't read faster"
             },
             rate => bb3PlusInstrument.setScopeRate(rate)
         );
@@ -1744,6 +2353,7 @@ export class ScopeView extends BB3PlusView {
         this.addDisposer(() => this.scopeCanvas.destroy());
 
         this.options = new ScopeOptions(bb3PlusInstrument, this.scopeCanvas);
+        this.triggerBar = new TriggerBar(bb3PlusInstrument);
 
         this.resetZoomButton = iconButton(
             ICONS.zoomReset,
@@ -1764,6 +2374,18 @@ export class ScopeView extends BB3PlusView {
             },
             svgIcon(ICONS.scales),
             "Scales"
+        );
+
+        this.historyButton = h(
+            "button",
+            {
+                className:
+                    "btn btn-sm btn-outline-secondary EezStudio_BB3Plus_IconButton",
+                title: "Add the samples of the time shown to the history of the instrument as a DLOG chart",
+                onclick: () => this.addDlogToHistory()
+            },
+            svgIcon(ICONS.history),
+            "To history"
         );
 
         this.element.append(
@@ -1792,10 +2414,12 @@ export class ScopeView extends BB3PlusView {
                     this.resetZoomButton
                 ),
                 this.optionsButton,
+                this.historyButton,
                 this.droppedText,
                 this.pushStatus.element,
                 this.samplesError.element
             ),
+            this.triggerBar.element,
             this.options.element,
             this.legend,
             this.scopeCanvas.container
@@ -1816,6 +2440,155 @@ export class ScopeView extends BB3PlusView {
             }
         }, OPTIONS_UPDATE_INTERVAL);
         this.addDisposer(() => clearInterval(timer));
+
+        // the trigger status goes by the time too ("triggered", "auto")
+        const statusTimer = setInterval(() => {
+            if (
+                bb3PlusInstrument.settings.scopeTriggerMode != "off" &&
+                this.element.clientWidth > 0
+            ) {
+                this.triggerBar.updateStatus();
+            }
+        }, TRIGGER_STATUS_INTERVAL);
+        this.addDisposer(() => clearInterval(statusTimer));
+    }
+
+    // The samples of the traces in the time window shown (of the capture of
+    // the trigger shown): of the fastest trace at its rate, a slower trace
+    // has the sample shown at each of those times (held, not interpolated).
+    // Undefined (with a warning) if there are none.
+    private getWindowSamples() {
+        const bb3PlusInstrument = this.bb3PlusInstrument;
+        const capture = bb3PlusInstrument.scopeShownCapture;
+        const { start, end } = this.scopeCanvas.getTimeWindow(capture);
+        const bufferOf = (trace: ScopeTrace) =>
+            this.scopeCanvas.bufferOf(trace, capture);
+
+        const traces = bb3PlusInstrument.traces.filter(
+            trace => bufferOf(trace).period > 0
+        );
+        let reference: ScopeTrace | undefined;
+        for (const trace of traces) {
+            if (
+                !reference ||
+                bufferOf(trace).period < bufferOf(reference).period
+            ) {
+                reference = trace;
+            }
+        }
+        const referenceBuffer = reference ? bufferOf(reference) : undefined;
+        const samples = referenceBuffer?.getSamples(start, end);
+        if (!reference || !referenceBuffer || !samples) {
+            notification.warn("No samples in the time shown");
+            return undefined;
+        }
+
+        const period = referenceBuffer.period;
+        const count = samples.values.length;
+        const firstTime = referenceBuffer.getTime(samples.first);
+        const channels = traces.map(trace =>
+            trace == reference
+                ? samples.values
+                : bufferOf(trace).getValuesAt(
+                      firstTime,
+                      period,
+                      count,
+                      trace.bits
+                  )
+        );
+        return { traces, period, count, firstTime, channels };
+    }
+
+    // The traces in the time window shown as a DLOG chart in the history of
+    // the instrument (see dlog-writer.ts and getWindowSamples), as BB3+
+    // records them: a float column per analog trace, a bit column per pin
+    // of a bit field, the names and the colors from the catalogs.
+    private addDlogToHistory() {
+        const bb3PlusInstrument = this.bb3PlusInstrument;
+        const samples = this.getWindowSamples();
+        if (!samples) {
+            return;
+        }
+        const { traces, period, count, firstTime, channels } = samples;
+
+        const columns: DlogColumn[] = [];
+        traces.forEach((trace, i) => {
+            const catalog = bb3PlusInstrument.getTraceCatalog(trace);
+            const field = catalog?.field;
+            const nameAndColors = catalog
+                ? {
+                      module: catalog.slotFields.moduleName,
+                      slot: trace.slot,
+                      channel: catalog.field.channel + 1,
+                      slotLabel: catalog.slotFields.slotLabel,
+                      channelLabel: catalog.field.channelLabel,
+                      color: catalog.field.color,
+                      channelColor: catalog.field.channelColor
+                  }
+                : {};
+            const label = field ? field.label || field.name : trace.name;
+            if (trace.bits) {
+                const numBits = field?.bits || 8;
+                for (let bit = 0; bit < numBits; bit++) {
+                    columns.push({
+                        values: channels[i],
+                        bitIndex: bit,
+                        unit: DlogUnit.UNIT_NONE,
+                        rangeMin: 0,
+                        rangeMax: 1,
+                        label: `${label}${bit + 1}`,
+                        pinLabel: field?.pinLabels[bit],
+                        ...nameAndColors
+                    });
+                }
+            } else {
+                const range = trace.fullRange;
+                const hasRange = range != undefined && range.min < range.max;
+                columns.push({
+                    values: channels[i],
+                    unit:
+                        field && field.unit != 255
+                            ? field.unit
+                            : DlogUnit.UNIT_NONE,
+                    rangeMin: hasRange ? range.min : 0,
+                    rangeMax: hasRange ? range.max : 1,
+                    label,
+                    ...nameAndColors
+                });
+            }
+        });
+
+        const comment = `BB3+ scope, ${formatRate(
+            Math.max(1, Math.round(1 / period))
+        )}, ${formatTime(count * period)}`;
+        // the sample times are performance.now() seconds
+        const startTime = Math.floor(
+            Date.now() / 1000 - (performance.now() / 1000 - firstTime)
+        );
+        const data = encodeDlog({
+            comment,
+            startTime,
+            period,
+            numRows: count,
+            columns
+        });
+
+        log(
+            activityLogStore,
+            {
+                oid: bb3PlusInstrument.instrument.id,
+                type: "instrument/file-attachment",
+                message: JSON.stringify({
+                    state: "success",
+                    fileType: { ext: "dlog", mime: MIME_EEZ_DLOG },
+                    dataLength: data.length,
+                    note: JSON.stringify([{ insert: comment }])
+                }),
+                data
+            },
+            { undoable: false }
+        );
+        notification.success("DLOG chart added to the history");
     }
 
     private updateStatus() {
@@ -1850,6 +2623,8 @@ export class ScopeView extends BB3PlusView {
                 axis => axis.mode != DEFAULT_AXIS_SETTINGS.mode
             );
         this.resetZoomButton.disabled = !zoomed;
+
+        this.triggerBar.update();
 
         setClass(this.optionsButton, "active", settings.scopeShowOptions);
         setVisible(this.options.element, settings.scopeShowOptions);

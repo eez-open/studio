@@ -156,6 +156,12 @@ export class SampleBuffer {
         return this._period;
     }
 
+    // the generation of the stream (a new one starts the samples again), -1
+    // before the first chunk
+    get streamGeneration() {
+        return this.generation;
+    }
+
     private push(value: number) {
         const capacity = this.data.length;
         if (this._size < capacity) {
@@ -322,7 +328,8 @@ export class SampleBuffer {
     }
 
     // The points to draw the samples from tFrom to tTo in a plot pixels
-    // wide: all of them if they fit, otherwise the minimum and the maximum of
+    // wide: all of them if they fit (and the one before and after the
+    // window), otherwise the minimum and the maximum of
     // each pixel column (an all NaN column is a NaN point, a gap), envelope
     // is then true. The columns start at fixed sample numbers (multiples of
     // the samples per column of the span), so the envelope doesn't change
@@ -339,7 +346,11 @@ export class SampleBuffer {
         pixels = Math.max(1, Math.floor(pixels));
 
         if (count <= pixels * 2) {
-            for (let number = first; number <= last; number++) {
+            // with the samples just outside the window (if kept): the lines
+            // to them reach the edges of the plot, which clips them
+            const from = Math.max(this.nextNumber - this._size, first - 1);
+            const to = Math.min(this.nextNumber - 1, last + 1);
+            for (let number = from; number <= to; number++) {
                 times.push(this.getTime(number));
                 values.push(this.getByNumber(number));
             }
@@ -379,7 +390,10 @@ export class SampleBuffer {
             } else {
                 this.getMinMax(begin, end);
             }
-            const time = this.getTime(begin);
+            // the time of the column boundary, not of its first sample (a
+            // whole sample number): the columns are equally wide, a pixel
+            // each, also with a fractional number of samples per column
+            const time = this.getTime(column * step);
             if (this.resultMin > this.resultMax) {
                 // only NaN: a gap
                 times.push(time);
@@ -392,23 +406,144 @@ export class SampleBuffer {
         return { times, values, envelope: true };
     }
 
-    // the value at the time, NaN outside; between the samples linear, or
-    // with steps the one before (a bit field)
-    getValueAt(time: number, steps: boolean) {
+    // The number of the sample shown at the time, not interpolated: the
+    // nearest one, or with steps the one before (a bit field holds its value
+    // until the next sample); NaN outside the samples.
+    private getNumberAt(time: number, steps: boolean) {
         if (this._size == 0 || !(this._period > 0)) {
             return NaN;
         }
         const position = (time - this.t0) / this._period;
         const oldest = this.nextNumber - this._size;
-        if (position < oldest || position > this.nextNumber - 1) {
+        const newest = this.nextNumber - 1;
+        if (steps) {
+            // a time at a sample is that sample, also with a rounding error
+            const number = Math.floor(position + 1e-6);
+            return number >= oldest && number <= newest ? number : NaN;
+        }
+        if (position < oldest - 0.5 || position > newest + 0.5) {
             return NaN;
         }
-        const number = Math.floor(position);
-        const value = this.getByNumber(number);
-        if (steps || number + 1 > this.nextNumber - 1) {
-            return value;
+        return Math.min(Math.max(Math.round(position), oldest), newest);
+    }
+
+    // the sample shown at the time (see getNumberAt), undefined outside the
+    // samples
+    getSampleAt(time: number, steps: boolean) {
+        const number = this.getNumberAt(time, steps);
+        if (isNaN(number)) {
+            return undefined;
         }
-        const next = this.getByNumber(number + 1);
-        return value + (next - value) * (position - number);
+        return { time: this.getTime(number), value: this.getByNumber(number) };
+    }
+
+    // the number of the first sample at or after the time
+    getFirstNumberAt(time: number) {
+        return Math.ceil((time - this.t0) / this._period);
+    }
+
+    // The first edge of the samples crossing the level from the number
+    // fromNumber on (each sample with the one before it): rising (from below
+    // to at or above the level) or falling. A bit field crosses with its bit
+    // (0 or 1) if bit >= 0. A NaN sample (a gap) is not an edge. The time of
+    // the crossing (linear between the two samples), undefined if none (yet),
+    // and the number to go on from (after the crossing, else after the newest
+    // sample).
+    findCrossing(
+        fromNumber: number,
+        rising: boolean,
+        level: number,
+        bit: number
+    ): { time: number | undefined; next: number } {
+        const next = this.nextNumber;
+        if (this._size < 2) {
+            return { time: undefined, next };
+        }
+        const valueOf = (number: number) => {
+            const value = this.getByNumber(number);
+            return bit < 0 || isNaN(value) ? value : (value >> bit) & 1;
+        };
+        // each sample needs the one before it
+        let number = Math.max(fromNumber, next - this._size + 1);
+        for (; number < next; number++) {
+            const previous = valueOf(number - 1);
+            const current = valueOf(number);
+            if (
+                rising
+                    ? previous < level && current >= level
+                    : previous > level && current <= level
+            ) {
+                const fraction = (level - previous) / (current - previous);
+                return {
+                    time: this.getTime(number - 1 + fraction),
+                    next: number + 1
+                };
+            }
+        }
+        return { time: undefined, next };
+    }
+
+    // The samples kept from tFrom to tTo (and the one before and after) in a
+    // new buffer, with the same numbers and times: the capture of a trigger.
+    copyWindow(tFrom: number, tTo: number) {
+        const copy = new SampleBuffer();
+        copy.span = this.span;
+        copy.generation = this.generation;
+        copy._period = this._period;
+        copy.t0 = this.t0;
+        copy.lastArrival = this.lastArrival;
+        const window = this.getWindow(tFrom, tTo);
+        if (!window) {
+            copy.nextNumber = copy.nextSeq = this.nextNumber;
+            return copy;
+        }
+        const from = Math.max(this.nextNumber - this._size, window.first - 1);
+        const to = Math.min(this.nextNumber - 1, window.last + 1);
+        copy.data = new Float32Array(to - from + 1);
+        copy.levels = createLevels(copy.data.length);
+        copy.nextNumber = from;
+        for (let number = from; number <= to; number++) {
+            copy.push(this.getByNumber(number));
+        }
+        copy.nextSeq = copy.nextNumber;
+        return copy;
+    }
+
+    // the minimum and the maximum of the samples kept from tFrom to tTo,
+    // undefined if there are none (or only NaN)
+    getRange(tFrom: number, tTo: number) {
+        const window = this.getWindow(tFrom, tTo);
+        if (!window) {
+            return undefined;
+        }
+        this.getMinMax(window.first, window.last + 1);
+        return this.resultMin <= this.resultMax
+            ? { min: this.resultMin, max: this.resultMax }
+            : undefined;
+    }
+
+    // the samples kept with a time from tFrom to tTo: the number of the
+    // first and the values, undefined if none
+    getSamples(tFrom: number, tTo: number) {
+        const window = this.getWindow(tFrom, tTo);
+        if (!window) {
+            return undefined;
+        }
+        const values = new Float32Array(window.last - window.first + 1);
+        for (let i = 0; i < values.length; i++) {
+            values[i] = this.getByNumber(window.first + i);
+        }
+        return { first: window.first, values };
+    }
+
+    // the values of the samples shown at the times start + i * step, i from
+    // 0 to count - 1 (see getNumberAt), NaN outside the samples
+    getValuesAt(start: number, step: number, count: number, steps: boolean) {
+        const values = new Float32Array(count);
+        for (let i = 0; i < count; i++) {
+            const number = this.getNumberAt(start + i * step, steps);
+            values[i] = isNaN(number) ? NaN : this.getByNumber(number);
+        }
+        return values;
     }
 }

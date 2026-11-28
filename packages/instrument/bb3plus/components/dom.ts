@@ -79,6 +79,7 @@ export const ICONS = {
         "M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13M15.5 15.5L21 21M7.5 10.5h6",
     zoomReset: "M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5",
     scales: "M4 6h16M9 3.5v5M4 12h16M15 9.5v5M4 18h16M7 15.5v5",
+    history: "M3.5 12a8.5 8.5 0 1 0 2.5-6M3.5 4v4h4M12 8v4.5l3 2",
     // the navigation items
     scope: "M3 5h18v14H3zM5.5 13l2.5-4 3 7 3-9 2.5 6 2-2.5",
     fields: "M4 6h2M10 6h10M4 12h2M10 12h10M4 18h2M10 18h10",
@@ -101,6 +102,21 @@ export function svgIcon(path: string, size: number = 16) {
     const element = document.createElementNS(NS, "path");
     element.setAttribute("d", path);
     svg.appendChild(element);
+    return svg;
+}
+
+// the info icon: a filled circle in the color of the text with a white "i"
+export function infoIcon(size: number) {
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("width", String(size));
+    svg.setAttribute("height", String(size));
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML =
+        '<circle cx="12" cy="12" r="11" fill="currentColor"/>' +
+        '<circle cx="12" cy="6.8" r="1.7" fill="#fff"/>' +
+        '<rect x="10.4" y="10" width="3.2" height="8.5" rx="1.2" fill="#fff"/>';
     return svg;
 }
 
