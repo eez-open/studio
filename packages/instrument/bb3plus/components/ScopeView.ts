@@ -9,48 +9,49 @@ import { Unit as DlogUnit } from "instrument/window/waveform/dlog-file";
 import {
     BB3PlusInstrument,
     ScopeTrace,
-    ScopeAxisMode,
     ScopeAxisSettings,
-    ScopeCapture,
-    ScopeTriggerMode,
-    DEFAULT_AXIS_SETTINGS,
-    SCOPE_RATES,
-    SCOPE_SPANS,
-    SCOPE_TRIGGER_MODES,
-    READOUT_SIZES
+    ScopeCapture
 } from "instrument/bb3plus/BB3PlusInstrument";
-import { SampleBuffer } from "instrument/bb3plus/sample-buffer";
-import { showTriggerHelp } from "instrument/bb3plus/components/trigger-help";
-import {
-    getUnitName,
-    formatNumber,
-    getFieldNameParts
-} from "instrument/bb3plus/fields-model";
-import { getListName } from "instrument/bb3plus/labels";
+import { SampleBuffer, SampleStats } from "instrument/bb3plus/sample-buffer";
+import { getUnitName, formatNumber } from "instrument/bb3plus/fields-model";
 import { encodeDlog, DlogColumn } from "instrument/bb3plus/dlog-writer";
+import { h, BB3PlusView } from "instrument/bb3plus/components/dom";
 import {
-    h,
-    setText,
-    setVisible,
-    setClass,
-    createSelect,
-    setSelectOptions,
-    setSelectValue,
-    BB3PlusView,
-    PushStatus,
-    ErrorText,
-    ICONS,
-    svgIcon,
-    infoIcon
-} from "instrument/bb3plus/components/dom";
+    Axis,
+    Range,
+    getFullRange,
+    TRIGGER_COLOR_DARK,
+    TRIGGER_COLOR_LIGHT,
+    formatRate,
+    formatTime,
+    withSign,
+    getTimeUnit,
+    getTickStep,
+    getStepAtLeast,
+    getNextStep,
+    getTicksWithStep,
+    clamp,
+    getAxes,
+    getAxisTitle
+} from "instrument/bb3plus/components/scope-common";
+import {
+    ScopeToolbar,
+    ScopeChannels,
+    ScopeSidePanel,
+    ScopeMeasureBar
+} from "instrument/bb3plus/components/scope-panels";
 
 const AXIS_WIDTH = 58;
-const TIME_AXIS_HEIGHT = 22;
-// above each plot: the units of its axes
-const PLOT_GAP = 18;
-const TOP_MARGIN = 18;
+// the time labels and their unit under them
+const TIME_AXIS_HEIGHT = 34;
+// above each plot: the titles of its axes
+const PLOT_GAP = 20;
+const TOP_MARGIN = 20;
+// without an axis on that side
+const LEFT_MARGIN = 12;
 const RIGHT_MARGIN = 12;
 const FONT = "11px Roboto, sans-serif";
+const TITLE_FONT = "600 11px Roboto, sans-serif";
 
 const TRACE_LINE_WIDTH = 1.5;
 
@@ -63,11 +64,10 @@ const POINT_RADIUS = 2.5;
 const POINTS_LINE_WIDTH = 1;
 const POINTS_LINE_ALPHA = 0.4;
 
-// the trigger level line and the trigger point, on a dark and on a light
-// background; the level line is dragged within this distance (px)
-const TRIGGER_COLOR_DARK = "#FFD933";
-const TRIGGER_COLOR_LIGHT = "#C98A00";
+// the trigger level line and the trigger point line are dragged within this
+// distance (px); the tag "T" of the level line (px)
 const LEVEL_HIT_DISTANCE = 4;
+const LEVEL_TAG_SIZE = 14;
 
 // the samples of a trace that is not in the capture shown (added after it)
 const EMPTY_BUFFER = new SampleBuffer();
@@ -78,11 +78,15 @@ const EMPTY_BUFFER = new SampleBuffer();
 // bit field value (0 - 255), a time with 4 significant digits (formatTime).
 const READOUT_VALUE_TEMPLATE = "-0.000000";
 const READOUT_BITS_TEMPLATE = "000";
-const READOUT_TIME_TEMPLATE = "-000.0 ms";
+const READOUT_TIME_TEMPLATE = "t = -000.0 ms";
+// the readout box: dark on the light theme, raised on the dark theme
+const READOUT_BACKGROUND_LIGHT = "rgba(28, 32, 38, 0.94)";
+const READOUT_BACKGROUND_DARK = "rgba(62, 68, 76, 0.96)";
+const READOUT_TEXT = "#f1f3f5";
+const READOUT_MUTED_TEXT = "rgba(241, 243, 245, 0.7)";
 
 // zoom factor per wheel notch and per zoom button
 const WHEEL_ZOOM = 1.25;
-const BUTTON_ZOOM = 2;
 
 // the shortest time window: this many samples of the fastest trace
 const MIN_VIEW_SAMPLES = 10;
@@ -91,118 +95,14 @@ const MIN_VIEW_SPAN = 1e-5;
 // a mouse move shorter than this (px) is not a drag
 const DRAG_THRESHOLD = 4;
 
-// the ranges shown in the options are updated this often (ms)
+// the ranges shown in the scales panel are updated this often (ms)
 const OPTIONS_UPDATE_INTERVAL = 500;
 // the trigger status is updated this often (ms)
 const TRIGGER_STATUS_INTERVAL = 100;
-
-const MOUSE_HELP =
-    "Mouse wheel: zoom time. Ctrl + wheel, or wheel over an axis: zoom values. " +
-    "Drag: zoom to the box. Shift + drag, or right drag: move. " +
-    "Drag an axis: move its values. Esc: cancel the drag. " +
-    "Double click: reset the zoom (on an axis: back to the full range).";
-
-const AXIS_MODES: { value: ScopeAxisMode; label: string }[] = [
-    { value: "full", label: "Full range" },
-    { value: "auto", label: "Auto" },
-    { value: "grow", label: "Auto, grow only" },
-    { value: "fixed", label: "Fixed" }
-];
-
-function formatRate(rate: number) {
-    return rate >= 1000 ? `${rate / 1000} kSPS` : `${rate} SPS`;
-}
-
-function formatTime(seconds: number) {
-    const abs = Math.abs(seconds);
-    if (abs == 0) {
-        return "0";
-    }
-    if (abs < 1e-3) {
-        return `${formatNumber(seconds * 1e6, 4)} us`;
-    }
-    if (abs < 1) {
-        return `${formatNumber(seconds * 1e3, 4)} ms`;
-    }
-    return `${formatNumber(seconds, 4)} s`;
-}
-
-// the 1, 2, 5 step for about count values from min to max
-function getTickStep(min: number, max: number, count: number) {
-    const rough = (max - min) / Math.max(1, count);
-    const magnitude = Math.pow(10, Math.floor(Math.log10(rough)));
-    const normalized = rough / magnitude;
-    return (
-        (normalized < 1.5 ? 1 : normalized < 3 ? 2 : normalized < 7 ? 5 : 10) *
-        magnitude
-    );
-}
-
-// about count values from min to max at a 1, 2, 5 step
-function getTicks(min: number, max: number, count: number) {
-    if (!(max - min > 0) || count < 1) {
-        return [];
-    }
-    const step = getTickStep(min, max, count);
-    const ticks: number[] = [];
-    for (
-        let value = Math.ceil(min / step) * step;
-        value <= max;
-        value += step
-    ) {
-        // no -0 and no 0.30000000000000004
-        ticks.push(Math.abs(value) < step * 1e-9 ? 0 : +value.toPrecision(12));
-    }
-    return ticks;
-}
-
-function clamp(value: number, min: number, max: number) {
-    return Math.max(min, Math.min(max, value));
-}
-
-// the Y axis of a trace: one per unit of the float fields, one for the
-// integer fields (drawn as steps in the lower plot)
-function getAxisKey(trace: ScopeTrace) {
-    return trace.bits ? "bits" : "unit" + trace.unit;
-}
-
-function getAxisLabel(trace: ScopeTrace) {
-    return trace.bits ? "Integer" : getUnitName(trace.unit) || "No unit";
-}
-
-// the traces drawn, by their axes, the integer fields last
-function getAxes(traces: ScopeTrace[]) {
-    const axes: Axis[] = [];
-    for (const trace of traces) {
-        if (trace.fieldIndex < 0) {
-            continue;
-        }
-        const key = getAxisKey(trace);
-        let axis = axes.find(axis => axis.key == key);
-        if (!axis) {
-            axis = {
-                key,
-                label: trace.bits ? "" : getUnitName(trace.unit),
-                traces: [],
-                min: 0,
-                max: 1
-            };
-            axes.push(axis);
-        }
-        axis.traces.push(trace);
-    }
-    return axes.sort((a, b) =>
-        a.key == "bits" ? 1 : b.key == "bits" ? -1 : 0
-    );
-}
-
-interface Axis {
-    key: string;
-    label: string;
-    traces: ScopeTrace[];
-    min: number;
-    max: number;
-}
+// the measurements are made again this often (ms), less often if they take
+// longer than this part of the time (many samples in the window)
+const MEASURE_INTERVAL = 250;
+const MEASURE_MAX_LOAD = 0.1;
 
 interface TracePoints {
     times: number[];
@@ -336,11 +236,6 @@ function fillEnvelope(
     }
 }
 
-interface Range {
-    min: number;
-    max: number;
-}
-
 // where the plots and the axes were drawn, for the mouse
 interface PlotLayout {
     top: number;
@@ -438,21 +333,6 @@ interface ZoomState {
     viewEnd: number | undefined;
 }
 
-// the full range of the traces of the axis, undefined if it isn't known
-// for all of them
-function getFullRange(axis: Axis): Range | undefined {
-    let min = Infinity;
-    let max = -Infinity;
-    for (const trace of axis.traces) {
-        if (!trace.fullRange) {
-            return undefined;
-        }
-        min = Math.min(min, trace.fullRange.min);
-        max = Math.max(max, trace.fullRange.max);
-    }
-    return min < max ? { min, max } : undefined;
-}
-
 // the min and the max of the values of the traces of the axis, undefined if
 // there are none
 function getDataRange(axis: Axis, points: Map<ScopeTrace, TracePoints>) {
@@ -494,6 +374,60 @@ function getNiceRange(min: number, max: number, ticks: number) {
     };
 }
 
+// The range of an axis to fit to (getTargetRange): fixed or full as they are,
+// auto and grow (nice) padded and out to whole steps.
+interface TargetRange extends Range {
+    nice: boolean;
+}
+
+// A range for the target on the grid of the primary axis of the plot: its
+// ticks (a 1, 2, 5 step) on the lines of the grid, the smallest step with
+// which the target fits, the target as near the middle as the ticks allow.
+function alignRange(
+    target: TargetRange,
+    primary: Range & { step: number }
+): Range & { step: number } {
+    let { min, max } = target;
+    if (target.nice) {
+        if (min == max) {
+            const delta = Math.abs(min) > 0 ? Math.abs(min) * 0.1 : 0.5;
+            min -= delta;
+            max += delta;
+        } else {
+            const padding = (max - min) * 0.05;
+            min -= padding;
+            max += padding;
+        }
+    }
+    const primarySpan = primary.max - primary.min;
+    // the parts of the height: a step of the grid, to its first line
+    const stepPart = primary.step / primarySpan;
+    const firstPart =
+        (Math.ceil(primary.min / primary.step - 1e-9) * primary.step -
+            primary.min) /
+        primarySpan;
+    let step = getStepAtLeast((max - min) * stepPart);
+    for (let i = 0; i < 20; i++) {
+        const span = step / stepPart;
+        // the tick k * step on the first line of the grid: the range from
+        // k * step - firstPart * span, the k with which the target fits
+        // (from the highest k the bottom fits to the lowest the top fits),
+        // the one nearest the middle
+        const kHigh = Math.floor((min + firstPart * span) / step + 1e-9);
+        const kLow = Math.ceil((max - span + firstPart * span) / step - 1e-9);
+        if (kLow <= kHigh) {
+            const kMiddle = Math.round(
+                ((min + max) / 2 + firstPart * span - span / 2) / step
+            );
+            const k = clamp(kMiddle, kLow, kHigh);
+            const alignedMin = k * step - firstPart * span;
+            return { min: alignedMin, max: alignedMin + span, step };
+        }
+        step = getNextStep(step);
+    }
+    return { min, max, step: getTickStep(min, max, 1 / stepPart) };
+}
+
 // a small padlock (8 x 10 px) at x, y with the fill color
 function drawLock(ctx: CanvasRenderingContext2D, x: number, y: number) {
     ctx.save();
@@ -511,7 +445,7 @@ function drawLock(ctx: CanvasRenderingContext2D, x: number, y: number) {
 
 // the traces drawn on a canvas, again at each animation frame while the
 // scope runs, and the zoom with the mouse
-class ScopeCanvas {
+export class ScopeCanvas {
     container: HTMLDivElement;
     canvas: HTMLCanvasElement;
     private animationFrame: number | undefined;
@@ -535,6 +469,16 @@ class ScopeCanvas {
         | undefined;
     // the ranges of the "grow" axes
     private growRanges = new Map<string, Range>();
+
+    // The steps of the grid drawn last (the seconds and the values of a
+    // division): of the time, of each Y axis drawn (by its key);
+    // onScaleChange is called after a draw that changed them.
+    scale: { time: number; axes: Map<string, number> } = {
+        time: 0,
+        axes: new Map()
+    };
+    private scaleKey = "";
+    onScaleChange: (() => void) | undefined;
 
     constructor(private bb3PlusInstrument: BB3PlusInstrument) {
         this.canvas = h("canvas");
@@ -1116,15 +1060,40 @@ class ScopeCanvas {
     ////////////////////////////////////////////////////////////////////////////
     // drawing
 
-    // the range of the axis by its settings
+    // The range of the axis by its settings and its step of the ticks for
+    // about ticks of them; on the grid of the primary axis of the plot if
+    // it is given (see alignRange), not a fixed scale.
     private computeAxisRange(
         axis: Axis,
         points: Map<ScopeTrace, TracePoints>,
-        ticks: number
-    ): Range {
+        ticks: number,
+        primary: (Range & { step: number }) | undefined
+    ): Range & { step: number } {
+        const target = this.getTargetRange(axis, points);
+        if (
+            primary &&
+            this.bb3PlusInstrument.getScopeAxis(axis.key).mode != "fixed"
+        ) {
+            return alignRange(target, primary);
+        }
+        const range = target.nice
+            ? getNiceRange(target.min, target.max, ticks)
+            : target;
+        return {
+            min: range.min,
+            max: range.max,
+            step: getTickStep(range.min, range.max, ticks)
+        };
+    }
+
+    // the range the axis fits to by its settings (see TargetRange)
+    private getTargetRange(
+        axis: Axis,
+        points: Map<ScopeTrace, TracePoints>
+    ): TargetRange {
         const settings = this.bb3PlusInstrument.getScopeAxis(axis.key);
         if (settings.mode == "fixed") {
-            return { min: settings.min, max: settings.max };
+            return { min: settings.min, max: settings.max, nice: false };
         }
 
         if (settings.mode == "full") {
@@ -1132,7 +1101,11 @@ class ScopeCanvas {
             if (full) {
                 // a bit more, the values at the ends are not on the frame
                 const padding = (full.max - full.min) * 0.03;
-                return { min: full.min - padding, max: full.max + padding };
+                return {
+                    min: full.min - padding,
+                    max: full.max + padding,
+                    nice: false
+                };
             }
             // not known: auto
         }
@@ -1158,7 +1131,7 @@ class ScopeCanvas {
             min = Math.min(min, 0);
             max = Math.max(max, 0);
         }
-        return getNiceRange(min, max, ticks);
+        return { min, max, nice: true };
     }
 
     draw() {
@@ -1184,6 +1157,8 @@ class ScopeCanvas {
 
         const style = getComputedStyle(container);
         const textColor = style.color;
+        const mutedColor =
+            style.getPropertyValue("--bb3plus-muted").trim() || textColor;
         const gridColor = style.getPropertyValue("--bb3plus-grid") || "#8884";
         ctx.font = FONT;
 
@@ -1199,13 +1174,27 @@ class ScopeCanvas {
         const bitsAxis = allAxes.find(axis => axis.key == "bits");
         const traces = allAxes.flatMap(axis => axis.traces);
 
-        // the Y axes alternating left and right, the integer fields on the
-        // left of the lower plot
-        const leftAxes = Math.max(1, Math.ceil(axes.length / 2));
-        const rightAxes = Math.floor(axes.length / 2);
-        const plotLeft = leftAxes * AXIS_WIDTH;
+        // the sides of the Y axes (chosen, else alternating), the integer
+        // fields on the left of the lower plot
+        const sides = new Map(
+            axes.map((axis, i) => [
+                axis,
+                bb3PlusInstrument.getScopeAxisSide(axis.key, i)
+            ])
+        );
+        if (bitsAxis) {
+            sides.set(bitsAxis, "left");
+        }
+        const countOnSide = (side: string) =>
+            axes.filter(axis => sides.get(axis) == side).length;
+        const leftAxes = Math.max(countOnSide("left"), bitsAxis ? 1 : 0);
+        const rightAxes = countOnSide("right");
+        const plotLeft =
+            leftAxes > 0 || axes.length == 0
+                ? Math.max(1, leftAxes) * AXIS_WIDTH
+                : LEFT_MARGIN;
         const plotRight =
-            width - Math.max(RIGHT_MARGIN, rightAxes * AXIS_WIDTH);
+            width - (rightAxes > 0 ? rightAxes * AXIS_WIDTH : RIGHT_MARGIN);
         const plotWidth = plotRight - plotLeft;
         if (plotWidth < 20 || height < 60) {
             this.layout = undefined;
@@ -1264,6 +1253,7 @@ class ScopeCanvas {
             triggerLevel: undefined,
             triggerPosition: undefined
         };
+        const scale = { time: 0, axes: new Map<string, number>() };
 
         // the trigger: its level line on the axis of an analog source, the
         // trigger point of the capture shown
@@ -1284,11 +1274,18 @@ class ScopeCanvas {
                 bb3PlusInstrument.settings.scopeTriggerPosition * plotWidth
               : undefined;
 
-        const timeTicks = getTicks(
+        const timeCount = Math.max(2, plotWidth / 100);
+        const timeStep = getTickStep(
             start - timeWindow.ref,
             end - timeWindow.ref,
-            Math.max(2, plotWidth / 100)
+            timeCount
         );
+        const timeTicks = getTicksWithStep(
+            start - timeWindow.ref,
+            end - timeWindow.ref,
+            timeStep
+        );
+        scale.time = timeStep;
 
         for (const plot of plots) {
             const plotHeight = plot.bottom - plot.top;
@@ -1320,18 +1317,34 @@ class ScopeCanvas {
             ctx.stroke();
 
             const ticksCount = Math.max(2, plotHeight / 40);
+            // the grid of the first axis, the others on it (the option)
+            let primary: (Range & { step: number }) | undefined;
+            const align = bb3PlusInstrument.settings.scopeAlignAxes;
 
             plot.axes.forEach((axis, axisIndex) => {
-                const range = this.computeAxisRange(axis, points, ticksCount);
+                const range = this.computeAxisRange(
+                    axis,
+                    points,
+                    ticksCount,
+                    align ? primary : undefined
+                );
+                if (axisIndex == 0) {
+                    primary = range;
+                }
                 axis.min = range.min;
                 axis.max = range.max;
+                scale.axes.set(axis.key, range.step);
                 const valueToY = (value: number) =>
                     plot.bottom -
                     ((value - axis.min) / (axis.max - axis.min)) * plotHeight;
 
-                // the axis: its ticks, the grid of the first one
-                const onLeft = axisIndex % 2 == 0;
-                const slot = Math.floor(axisIndex / 2);
+                // the axis: on its side next to the axes before it
+                const onLeft = sides.get(axis) != "right";
+                const slot = plot.axes
+                    .slice(0, axisIndex)
+                    .filter(
+                        other => (sides.get(other) != "right") == onLeft
+                    ).length;
                 const axisX = onLeft
                     ? plotLeft - slot * AXIS_WIDTH
                     : plotRight + slot * AXIS_WIDTH;
@@ -1347,11 +1360,12 @@ class ScopeCanvas {
                 plotLayout.axes.push(axisLayout);
                 layout.axes.push(axisLayout);
 
-                const ticks = getTicks(axis.min, axis.max, ticksCount);
-                ctx.fillStyle =
-                    axis.traces.length == 1 && plot.axes.length > 1
-                        ? axis.traces[0].color
-                        : textColor;
+                // the ticks: of the first axis muted (its grid is drawn),
+                // of the others in the color of their trace
+                const axisColor =
+                    axis.traces.length == 1 ? axis.traces[0].color : textColor;
+                const ticks = getTicksWithStep(axis.min, axis.max, range.step);
+                ctx.fillStyle = axisIndex == 0 ? mutedColor : axisColor;
                 ctx.textAlign = onLeft ? "right" : "left";
                 ctx.textBaseline = "middle";
                 ctx.beginPath();
@@ -1363,31 +1377,40 @@ class ScopeCanvas {
                     }
                     // inside the height of the plot
                     ctx.fillText(
-                        formatNumber(tick, 4),
-                        axisX + (onLeft ? -4 : 4),
+                        withSign(formatNumber(tick, 4), tick, false),
+                        axisX + (onLeft ? -6 : 6),
                         clamp(y, plot.top + 6, plot.bottom - 6)
                     );
                 }
                 ctx.strokeStyle = gridColor;
                 ctx.stroke();
-                // above the plot: the unit, a lock when the scale is fixed
+
+                // above the plot: the title (the traces and the unit) from
+                // the outer edge of the axis, a lock when the scale is
+                // fixed; the title of the inner axis may go over the plot
+                const title = getAxisTitle(axis);
                 const fixed =
                     bb3PlusInstrument.getScopeAxis(axis.key).mode == "fixed";
-                const labelX = axisX + (onLeft ? -4 : 4);
+                ctx.font = TITLE_FONT;
+                ctx.fillStyle = axisColor;
                 ctx.textBaseline = "bottom";
-                if (axis.label) {
-                    ctx.fillText(axis.label, labelX, plot.top - 4);
-                }
+                const maxTitleWidth =
+                    slot == 0 ? AXIS_WIDTH + plotWidth / 3 : AXIS_WIDTH - 8;
+                const titleText = fitText(ctx, title, maxTitleWidth - 12);
+                const titleWidth = ctx.measureText(titleText).width;
+                const titleX = onLeft ? axisLayout.x0 + 4 : axisLayout.x1 - 4;
+                ctx.textAlign = onLeft ? "left" : "right";
+                ctx.fillText(titleText, titleX, plot.top - 5);
                 if (fixed) {
-                    const labelWidth = axis.label
-                        ? ctx.measureText(axis.label).width + 4
-                        : 0;
                     drawLock(
                         ctx,
-                        onLeft ? labelX - labelWidth - 8 : labelX + labelWidth,
-                        plot.top - 15
+                        onLeft
+                            ? titleX + titleWidth + 4
+                            : titleX - titleWidth - 12,
+                        plot.top - 16
                     );
                 }
+                ctx.font = FONT;
 
                 // the traces
                 ctx.save();
@@ -1464,8 +1487,9 @@ class ScopeCanvas {
                     }
                 }
 
-                // the trigger level on the axis of an analog source, with
-                // the tag "T" at the right (dragged, see hitTest)
+                // the trigger level on the axis of an analog source: a
+                // dashed line in its color, the tag "T" at the side of its
+                // axis (dragged, see hitTest)
                 if (
                     triggerSource &&
                     !triggerSource.bits &&
@@ -1478,19 +1502,34 @@ class ScopeCanvas {
                             )
                         ) + 0.5;
                     if (y >= plot.top && y <= plot.bottom) {
-                        ctx.strokeStyle = triggerColor;
+                        ctx.strokeStyle = triggerSource.color;
+                        ctx.globalAlpha = 0.75;
                         ctx.lineWidth = 1;
+                        ctx.setLineDash([5, 4]);
                         ctx.beginPath();
                         ctx.moveTo(plotLeft, y);
                         ctx.lineTo(plotRight, y);
                         ctx.stroke();
-                        ctx.fillStyle = triggerColor;
-                        ctx.fillRect(plotRight - 15, y - 7, 14, 14);
-                        ctx.fillStyle = "#000";
+                        ctx.setLineDash([]);
+                        ctx.globalAlpha = 1;
+                        const tagX = onLeft
+                            ? plotLeft + 1
+                            : plotRight - 1 - LEVEL_TAG_SIZE;
+                        ctx.fillStyle = triggerSource.color;
+                        ctx.beginPath();
+                        ctx.roundRect(
+                            tagX,
+                            y - LEVEL_TAG_SIZE / 2,
+                            LEVEL_TAG_SIZE,
+                            LEVEL_TAG_SIZE,
+                            3
+                        );
+                        ctx.fill();
+                        ctx.fillStyle = "#fff";
                         ctx.font = "bold 10px Roboto, sans-serif";
                         ctx.textAlign = "center";
                         ctx.textBaseline = "middle";
-                        ctx.fillText("T", plotRight - 8, y + 0.5);
+                        ctx.fillText("T", tagX + LEVEL_TAG_SIZE / 2, y + 0.5);
                         ctx.font = FONT;
                         layout.triggerLevel = { axis: axisLayout, y };
                     }
@@ -1498,17 +1537,15 @@ class ScopeCanvas {
                 ctx.restore();
             });
 
-            // the trigger point: a line (dashed before a capture), a
-            // handle at the top of the first plot
+            // the trigger point: a dashed line, a handle at the top of the
+            // first plot
             if (triggerX != undefined) {
                 const x = Math.round(triggerX) + 0.5;
                 if (x >= plotLeft && x <= plotRight) {
-                    ctx.strokeStyle = triggerColor;
-                    ctx.globalAlpha = 0.6;
+                    ctx.strokeStyle = textColor;
+                    ctx.globalAlpha = 0.45;
                     ctx.lineWidth = 1;
-                    if (!capture) {
-                        ctx.setLineDash([4, 4]);
-                    }
+                    ctx.setLineDash([4, 4]);
                     ctx.beginPath();
                     ctx.moveTo(x, plot.top);
                     ctx.lineTo(x, plot.bottom);
@@ -1518,9 +1555,9 @@ class ScopeCanvas {
                     if (plot == plots[0]) {
                         ctx.fillStyle = triggerColor;
                         ctx.beginPath();
-                        ctx.moveTo(x - 6, plot.top + 1);
-                        ctx.lineTo(x + 6, plot.top + 1);
-                        ctx.lineTo(x, plot.top + 9);
+                        ctx.moveTo(x - 6, plot.top - 1);
+                        ctx.lineTo(x + 6, plot.top - 1);
+                        ctx.lineTo(x, plot.top + 8);
                         ctx.closePath();
                         ctx.fill();
                     }
@@ -1532,12 +1569,24 @@ class ScopeCanvas {
         this.layout = layout;
         this.lastDraw = { end, secondsPerPixel: span / plotWidth };
 
-        // time axis
-        ctx.fillStyle = textColor;
+        // time axis: the values in the unit under them, from the trigger
+        // with a sign
+        const timeUnit = getTimeUnit(
+            Math.max(
+                Math.abs(start - timeWindow.ref),
+                Math.abs(end - timeWindow.ref)
+            )
+        );
+        const signed = timeTicks.some(tick => tick < 0);
+        ctx.fillStyle = mutedColor;
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         for (const tick of timeTicks) {
-            const label = formatTime(tick);
+            const label = withSign(
+                formatNumber(+(tick * timeUnit.scale).toPrecision(10), 4),
+                tick,
+                signed
+            );
             // inside the canvas
             const half = ctx.measureText(label).width / 2;
             const x = Math.min(
@@ -1546,6 +1595,13 @@ class ScopeCanvas {
             );
             ctx.fillText(label, x, plotsBottom + 5);
         }
+        ctx.fillText(
+            timeUnit.name,
+            (plotLeft + plotRight) / 2,
+            plotsBottom + 19
+        );
+
+        this.setScale(scale);
 
         const drag = this.drag;
         if (drag?.kind == "box") {
@@ -1585,8 +1641,19 @@ class ScopeCanvas {
         }
     }
 
+    // the steps of the grid drawn (see scale), onScaleChange if they changed
+    private setScale(scale: { time: number; axes: Map<string, number> }) {
+        const key = JSON.stringify([scale.time, Array.from(scale.axes)]);
+        if (key == this.scaleKey) {
+            return;
+        }
+        this.scaleKey = key;
+        this.scale = scale;
+        this.onScaleChange?.();
+    }
+
     // the values at the mouse: a line, a dot on each trace and a box with the
-    // values
+    // time and the values
     private drawReadout(
         ctx: CanvasRenderingContext2D,
         layout: Layout,
@@ -1602,7 +1669,8 @@ class ScopeCanvas {
         const plotsBottom = height - TIME_AXIS_HEIGHT;
 
         ctx.strokeStyle = textColor;
-        ctx.globalAlpha = 0.6;
+        ctx.globalAlpha = 0.7;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(x, TOP_MARGIN);
         ctx.lineTo(x, plotsBottom);
@@ -1642,7 +1710,7 @@ class ScopeCanvas {
                     });
                     if (sample && !isNaN(value)) {
                         // the dot: on the sample, of a bit field on its step
-                        // at the mouse
+                        // at the mouse; a ring in the background color
                         const dotX = trace.bits
                             ? mouseX
                             : plotLeft +
@@ -1655,9 +1723,12 @@ class ScopeCanvas {
                                 (plot.bottom - plot.top);
                         if (y >= plot.top && y <= plot.bottom) {
                             ctx.fillStyle = trace.color;
+                            ctx.strokeStyle = this.getBackgroundColor();
+                            ctx.lineWidth = 1.5;
                             ctx.beginPath();
-                            ctx.arc(dotX, y, 3.5, 0, Math.PI * 2);
+                            ctx.arc(dotX, y, 4, 0, Math.PI * 2);
                             ctx.fill();
+                            ctx.stroke();
                         }
                     }
                 }
@@ -1665,13 +1736,14 @@ class ScopeCanvas {
         }
 
         const size = this.bb3PlusInstrument.settings.scopeReadoutSize;
-        const lineHeight = Math.round(size * 1.4);
-        const padding = Math.round(size * 0.5);
-        const swatch = Math.round(size * 0.7);
+        const lineHeight = Math.round(size * 1.45);
+        const padding = Math.round(size * 0.6);
+        const bar = Math.max(3, Math.round(size * 0.2));
         const nameFont = `${size}px Roboto, sans-serif`;
-        const valueFont = `bold ${size}px "Roboto Mono", monospace`;
+        const valueFont = `600 ${size}px "Roboto Mono", monospace`;
 
-        const header = formatTime(time - timeWindow.ref);
+        const relative = time - timeWindow.ref;
+        const header = "t = " + withSign(formatTime(relative), relative, true);
         ctx.font = valueFont;
         let headerWidth = Math.max(
             ctx.measureText(header).width,
@@ -1706,30 +1778,24 @@ class ScopeCanvas {
         const gap = size;
         const boxWidth =
             padding * 2 +
-            Math.max(
-                headerWidth,
-                swatch + padding + nameWidth + gap + valueWidth
-            );
-        const boxHeight = padding * 2 + lineHeight * (rows.length + 1);
+            Math.max(headerWidth, bar + padding + nameWidth + gap + valueWidth);
+        const boxHeight = padding * 2 + lineHeight * (rows.length + 1) - 2;
         const boxX =
             x + 12 + boxWidth < plotRight
                 ? x + 12
                 : Math.max(plotLeft, x - 12 - boxWidth);
-        const boxY = TOP_MARGIN + 4;
+        const boxY = TOP_MARGIN + 8;
 
-        // the background of the view, readable in both themes
-        ctx.fillStyle = getComputedStyle(
-            this.container.parentElement ?? this.container
-        ).backgroundColor;
-        ctx.globalAlpha = 0.92;
-        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-        ctx.globalAlpha = 1;
-        ctx.strokeStyle = textColor;
-        ctx.strokeRect(boxX + 0.5, boxY + 0.5, boxWidth - 1, boxHeight - 1);
+        ctx.fillStyle = this.bb3PlusInstrument.darkTheme
+            ? READOUT_BACKGROUND_DARK
+            : READOUT_BACKGROUND_LIGHT;
+        ctx.beginPath();
+        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 6);
+        ctx.fill();
 
         ctx.textBaseline = "middle";
-        let y = boxY + padding + lineHeight / 2;
-        ctx.fillStyle = textColor;
+        let y = boxY + padding + lineHeight / 2 - 1;
+        ctx.fillStyle = READOUT_MUTED_TEXT;
         ctx.font = valueFont;
         ctx.textAlign = "left";
         ctx.fillText(header, boxX + padding, y);
@@ -1737,734 +1803,185 @@ class ScopeCanvas {
         for (const row of rows) {
             y += lineHeight;
             ctx.fillStyle = row.trace.color;
-            ctx.fillRect(boxX + padding, y - swatch / 2, swatch, swatch);
-            ctx.fillStyle = textColor;
+            ctx.beginPath();
+            ctx.roundRect(
+                boxX + padding,
+                y - size * 0.45,
+                bar,
+                size * 0.9,
+                bar / 2
+            );
+            ctx.fill();
+            ctx.fillStyle = READOUT_TEXT;
             ctx.font = nameFont;
             ctx.textAlign = "left";
-            ctx.fillText(row.name, boxX + padding + swatch + padding, y);
+            ctx.fillText(row.name, boxX + padding + bar + padding, y);
             ctx.font = valueFont;
             ctx.textAlign = "right";
             ctx.fillText(row.value, boxX + boxWidth - padding, y);
         }
         ctx.font = FONT;
     }
-}
 
-// the options of the scales: a row per Y axis, the time zoom, the size of
-// the values at the cursor, the colors
-class ScopeOptions {
-    element = h("div", { className: "EezStudio_BB3Plus_ScopeOptions" });
-    private axesElement = h("div");
-    private axesKey = "";
-    private axisRows = new Map<
-        string,
-        {
-            axis: Axis;
-            mode: HTMLSelectElement;
-            min: HTMLInputElement;
-            max: HTMLInputElement;
-            includeZero: HTMLInputElement;
-            restart: HTMLButtonElement;
-            note: HTMLSpanElement;
-        }
-    >();
-    private timeText = h("span");
-    private showAllButton: HTMLButtonElement;
-    private readoutSelect: HTMLSelectElement;
-    private channelColorsCheckbox: HTMLInputElement;
-
-    constructor(
-        private bb3PlusInstrument: BB3PlusInstrument,
-        private scopeCanvas: ScopeCanvas
-    ) {
-        this.showAllButton = h(
-            "button",
-            {
-                className: "btn btn-sm btn-outline-secondary",
-                onclick: () =>
-                    bb3PlusInstrument.setScopeView(undefined, undefined)
-            },
-            "Show the whole span"
-        );
-
-        this.readoutSelect = createSelect(
-            READOUT_SIZES,
-            { style: { width: "130px" } },
-            size => bb3PlusInstrument.setScopeReadoutSize(size)
-        );
-
-        this.channelColorsCheckbox = h("input", {
-            type: "checkbox",
-            className: "form-check-input me-1",
-            onchange: () =>
-                bb3PlusInstrument.setScopeChannelColors(
-                    this.channelColorsCheckbox.checked
-                )
-        });
-
-        this.element.append(
-            this.axesElement,
-            h(
-                "div",
-                { className: "EezStudio_BB3Plus_ScopeOptionsRow" },
-                h("span", { className: "name" }, "Time"),
-                this.timeText,
-                this.showAllButton,
-                h("label", { className: "ms-4" }, "Size of the cursor values"),
-                this.readoutSelect
-            ),
-            h(
-                "div",
-                { className: "EezStudio_BB3Plus_ScopeOptionsRow" },
-                h("span", { className: "name" }, "Colors"),
-                h(
-                    "label",
-                    {
-                        className: "form-check-label",
-                        title: "The colors BB3+ draws the channels with (the channel or the slot color), not the colors of the fields"
-                    },
-                    this.channelColorsCheckbox,
-                    "Channel colors"
-                )
-            ),
-            h(
-                "div",
-                { className: "EezStudio_BB3Plus_ScopeOptionsRow text-muted" },
-                MOUSE_HELP
-            )
-        );
-    }
-
-    update() {
-        const bb3PlusInstrument = this.bb3PlusInstrument;
-
-        // a row per axis
-        const axes = getAxes(bb3PlusInstrument.traces);
-        const axesKey = JSON.stringify(
-            axes.map(axis => [
-                axis.key,
-                axis.traces.map(trace => [trace.key, trace.name, trace.color])
-            ])
-        );
-        if (axesKey != this.axesKey) {
-            this.axesKey = axesKey;
-            this.axisRows.clear();
-            this.axesElement.replaceChildren(
-                ...axes.map(axis => this.createAxisRow(axis))
-            );
-            if (axes.length == 0) {
-                this.axesElement.append(
-                    h(
-                        "div",
-                        {
-                            className:
-                                "EezStudio_BB3Plus_ScopeOptionsRow text-muted"
-                        },
-                        "The scales of the values are here when there are traces."
-                    )
-                );
-            }
-        }
-        this.updateAxisRows();
-
-        // time
-        const full = bb3PlusInstrument.scopeSpan;
-        const viewSpan = bb3PlusInstrument.scopeViewSpan;
-        setText(
-            this.timeText,
-            viewSpan != undefined
-                ? `Zoomed: ${formatTime(viewSpan)} of ${formatTime(full)}`
-                : `The whole span, ${formatTime(full)}`
-        );
-        this.showAllButton.disabled = viewSpan == undefined;
-
-        setSelectValue(
-            this.readoutSelect,
-            bb3PlusInstrument.settings.scopeReadoutSize
-        );
-
-        this.channelColorsCheckbox.checked =
-            bb3PlusInstrument.settings.scopeChannelColors;
-    }
-
-    // the values of the rows, the ranges of the auto axes as drawn
-    updateAxisRows() {
-        for (const [key, row] of this.axisRows) {
-            const settings = this.bb3PlusInstrument.getScopeAxis(key);
-            setSelectValue(row.mode, settings.mode);
-            const range =
-                settings.mode == "fixed"
-                    ? settings
-                    : this.scopeCanvas.getAxisRange(key);
-            for (const [input, value] of [
-                [row.min, range?.min],
-                [row.max, range?.max]
-            ] as [HTMLInputElement, number | undefined][]) {
-                if (document.activeElement != input) {
-                    input.value =
-                        value != undefined ? formatNumber(value, 6) : "";
-                    setClass(input, "is-invalid", false);
-                }
-            }
-            // full range: auto if it isn't known
-            const fullKnown = getFullRange(row.axis) != undefined;
-            const auto =
-                settings.mode == "auto" ||
-                settings.mode == "grow" ||
-                (settings.mode == "full" && !fullKnown);
-            row.includeZero.checked = settings.includeZero;
-            row.includeZero.disabled = !auto;
-            setVisible(row.restart, settings.mode == "grow");
-            setVisible(row.note, settings.mode == "full" && !fullKnown);
-        }
-    }
-
-    private createAxisRow(axis: Axis) {
-        const bb3PlusInstrument = this.bb3PlusInstrument;
-        const key = axis.key;
-        const trace = axis.traces[0];
-
-        const mode = createSelect(
-            AXIS_MODES,
-            { style: { width: "150px" } },
-            mode => {
-                if (mode == "fixed") {
-                    // the range typed in last, or the range shown now
-                    const settings = bb3PlusInstrument.getScopeAxis(key);
-                    const range =
-                        settings.enteredMin != undefined &&
-                        settings.enteredMax != undefined
-                            ? {
-                                  min: settings.enteredMin,
-                                  max: settings.enteredMax
-                              }
-                            : this.scopeCanvas.getAxisRange(key);
-                    bb3PlusInstrument.setScopeAxis(key, {
-                        mode,
-                        ...(range ?? {})
-                    });
-                } else {
-                    if (mode == "grow") {
-                        this.scopeCanvas.restartGrow(key);
-                    }
-                    bb3PlusInstrument.setScopeAxis(key, { mode });
-                }
-            }
-        );
-
-        // a value typed in fixes the scale
-        const onRangeChange = () => {
-            const min = parseFloat(minInput.value);
-            const max = parseFloat(maxInput.value);
-            const valid = isFinite(min) && isFinite(max) && min < max;
-            setClass(minInput, "is-invalid", !valid);
-            setClass(maxInput, "is-invalid", !valid);
-            if (valid) {
-                // remembered for Fixed
-                bb3PlusInstrument.setScopeAxis(key, {
-                    mode: "fixed",
-                    min,
-                    max,
-                    enteredMin: min,
-                    enteredMax: max
-                });
-            }
-        };
-        const createRangeInput = (title: string) =>
-            h("input", {
-                className: "form-control form-control-sm",
-                style: { width: "100px" },
-                title,
-                onchange: onRangeChange,
-                onkeydown: (event: KeyboardEvent) => {
-                    if (event.key == "Enter") {
-                        onRangeChange();
-                    }
-                }
-            });
-        const minInput = createRangeInput(
-            "The lowest value shown, typing a value fixes the scale"
-        );
-        const maxInput = createRangeInput(
-            "The highest value shown, typing a value fixes the scale"
-        );
-
-        const includeZero = h("input", {
-            type: "checkbox",
-            className: "form-check-input me-1",
-            onchange: () =>
-                bb3PlusInstrument.setScopeAxis(key, {
-                    includeZero: includeZero.checked
-                })
-        });
-
-        const restart = h(
-            "button",
-            {
-                className: "btn btn-sm btn-outline-secondary",
-                title: "Fit the values shown now and grow from there",
-                onclick: () => this.scopeCanvas.restartGrow(key)
-            },
-            "Restart"
-        );
-
-        const note = h(
-            "span",
-            { className: "text-muted" },
-            "No full range received yet, shown as Auto"
-        );
-
-        this.axisRows.set(key, {
-            axis,
-            mode,
-            min: minInput,
-            max: maxInput,
-            includeZero,
-            restart,
-            note
-        });
-
-        return h(
-            "div",
-            { className: "EezStudio_BB3Plus_ScopeOptionsRow" },
-            h(
-                "span",
-                {
-                    className: "name",
-                    title: axis.traces.map(trace => trace.name).join(", ")
-                },
-                ...axis.traces.map(trace =>
-                    h("span", {
-                        className: "swatch",
-                        style: { backgroundColor: trace.color }
-                    })
-                ),
-                getAxisLabel(trace)
-            ),
-            mode,
-            h("label", null, "from"),
-            minInput,
-            h("label", null, "to"),
-            maxInput,
-            h(
-                "label",
-                {
-                    className: "form-check-label",
-                    title: "The auto scales always show the value 0"
-                },
-                includeZero,
-                "Include 0"
-            ),
-            restart,
-            note
-        );
+    // the background of the plot (of its card), for the rings of the dots
+    private getBackgroundColor() {
+        return getComputedStyle(this.container.parentElement ?? this.container)
+            .backgroundColor;
     }
 }
 
-function iconButton(icon: string, title: string, onclick: () => void) {
-    // icon: the path data of an ICONS item
-    return h(
-        "button",
-        {
-            className:
-                "btn btn-sm btn-outline-secondary EezStudio_BB3Plus_IconButton",
-            title,
-            onclick
-        },
-        svgIcon(icon)
-    );
+// the text cut with an ellipsis to the width (px) in the font of ctx
+function fitText(ctx: CanvasRenderingContext2D, text: string, width: number) {
+    if (ctx.measureText(text).width <= width) {
+        return text;
+    }
+    let cut = text;
+    while (cut.length > 1 && ctx.measureText(cut + "…").width > width) {
+        cut = cut.slice(0, -1);
+    }
+    return cut + "…";
 }
 
-const TRIGGER_EDGES = [
-    { value: "rising" as const, label: "Rising" },
-    { value: "falling" as const, label: "Falling" }
-];
-
-// The trigger settings (BB3PlusInstrument.setScopeTrigger...) and its
-// status: the mode, then (not Off) the source trace, the edge, the level of
-// an analog source or the pin of a bit field, the part of the window before
-// the trigger.
-class TriggerBar {
-    element: HTMLDivElement;
-    private modeSelect: HTMLSelectElement;
-    private sourceSelect = h("select", {
-        className: "form-select form-select-sm",
-        style: { width: "140px" },
-        title: "The trace of the trigger"
-    });
-    private sourceKey = "";
-    private edgeSelect: HTMLSelectElement;
-    private levelLabel = h("label", null, "Level");
-    private levelInput = h("input", {
-        className: "form-control form-control-sm",
-        style: { width: "100px" },
-        title: "The level of the edge, also dragged in the plot (the line with the tag T)"
-    });
-    private bitSelect = h("select", {
-        className: "form-select form-select-sm",
-        style: { width: "110px" },
-        title: "The pin of the edge"
-    });
-    private bitKey = "";
-    private positionLabel = h("label", null, "Pre-trigger");
-    private positionInput = h("input", {
-        type: "range",
-        className: "form-range",
-        min: "0",
-        max: "100",
-        step: "5",
-        style: { width: "100px" },
-        title: "The part of the window before the trigger, also dragged in the plot (the trigger point line, its handle at the top)"
-    });
-    private positionText = h("span", { style: { width: "40px" } });
-    private status = h("span", { className: "EezStudio_BB3Plus_Status" });
-    // shown only with a trigger mode
-    private details: HTMLElement[];
-
-    constructor(private bb3PlusInstrument: BB3PlusInstrument) {
-        this.modeSelect = createSelect<ScopeTriggerMode>(
-            SCOPE_TRIGGER_MODES,
-            {
-                style: { width: "100px" },
-                title: "Off: the samples scroll as they come. Auto: as Normal, but without a trigger for a while they scroll again. Normal: each trigger shows its window until the next one. Single: the first trigger shows its window and stops the scope (Run arms it again)."
-            },
-            mode => bb3PlusInstrument.setScopeTriggerMode(mode)
-        );
-        this.sourceSelect.addEventListener("change", () =>
-            bb3PlusInstrument.setScopeTriggerSource(this.sourceSelect.value)
-        );
-        this.edgeSelect = createSelect(
-            TRIGGER_EDGES,
-            { style: { width: "90px" }, title: "The edge of the trigger" },
-            edge => bb3PlusInstrument.setScopeTriggerEdge(edge)
-        );
-        this.levelInput.addEventListener("change", () => {
-            const level = parseFloat(this.levelInput.value);
-            if (isFinite(level)) {
-                bb3PlusInstrument.setScopeTriggerLevel(level);
-            } else {
-                this.updateLevel(true);
-            }
-        });
-        this.bitSelect.addEventListener("change", () =>
-            bb3PlusInstrument.setScopeTriggerBit(Number(this.bitSelect.value))
-        );
-        this.positionInput.addEventListener("input", () =>
-            bb3PlusInstrument.setScopeTriggerPosition(
-                Number(this.positionInput.value) / 100
-            )
-        );
-
-        this.details = [
-            this.sourceSelect,
-            this.edgeSelect,
-            this.levelLabel,
-            this.levelInput,
-            this.bitSelect,
-            this.positionLabel,
-            this.positionInput,
-            this.positionText,
-            this.status
-        ];
-        // below the plot: the line between them at the top (in the color of
-        // the grid, it fits both themes)
-        this.element = h(
-            "div",
-            {
-                className: "EezStudio_BB3Plus_Toolbar",
-                style: {
-                    borderBottom: "none",
-                    borderTop: "1px solid rgba(128, 128, 128, 0.3)"
-                }
-            },
-            h("label", null, "Trigger"),
-            // the help: an info icon without a border, a background on hover
-            h(
-                "button",
-                {
-                    className: "btn btn-sm border-0",
-                    style: {
-                        display: "inline-flex",
-                        padding: "3px",
-                        color: "var(--bs-primary, #0d6efd)"
-                    },
-                    title: "How the trigger works",
-                    onmouseenter: (event: MouseEvent) =>
-                        ((event.currentTarget as HTMLElement).style.background =
-                            "rgba(128, 128, 128, 0.25)"),
-                    onmouseleave: (event: MouseEvent) =>
-                        ((event.currentTarget as HTMLElement).style.background =
-                            ""),
-                    onclick: () =>
-                        showTriggerHelp(
-                            bb3PlusInstrument.darkTheme
-                                ? TRIGGER_COLOR_DARK
-                                : TRIGGER_COLOR_LIGHT
-                        )
-                },
-                infoIcon(20)
-            ),
-            this.modeSelect,
-            ...this.details
-        );
-    }
-
-    update() {
-        const bb3PlusInstrument = this.bb3PlusInstrument;
-        const settings = bb3PlusInstrument.settings;
-        setSelectValue(this.modeSelect, settings.scopeTriggerMode);
-        const on = settings.scopeTriggerMode != "off";
-        for (const element of this.details) {
-            setVisible(element, on);
-        }
-        if (!on) {
-            return;
-        }
-
-        // the traces
-        const traces = bb3PlusInstrument.traces;
-        const sourceKey = JSON.stringify(
-            traces.map(trace => [trace.key, trace.name])
-        );
-        if (sourceKey != this.sourceKey) {
-            this.sourceKey = sourceKey;
-            setSelectOptions(
-                this.sourceSelect,
-                traces.map(trace => ({ value: trace.key, label: trace.name }))
-            );
-        }
-        const source = bb3PlusInstrument.scopeTriggerSource;
-        setSelectValue(this.sourceSelect, source?.key ?? "");
-        this.sourceSelect.disabled = traces.length == 0;
-
-        setSelectValue(this.edgeSelect, settings.scopeTriggerEdge);
-
-        // a bit field: its pins, else the level
-        const bits = source?.bits ?? false;
-        setVisible(this.levelLabel, !bits);
-        setVisible(this.levelInput, !bits);
-        setVisible(this.bitSelect, bits);
-        if (bits && source) {
-            const field = bb3PlusInstrument.getTraceCatalog(source)?.field;
-            const numBits = field?.bits || 8;
-            const pins = Array.from(
-                { length: numBits },
-                (_, bit) => field?.pinLabels[bit] || `Bit ${bit + 1}`
-            );
-            const bitKey = JSON.stringify(pins);
-            if (bitKey != this.bitKey) {
-                this.bitKey = bitKey;
-                setSelectOptions(
-                    this.bitSelect,
-                    pins.map((label, bit) => ({ value: bit, label }))
-                );
-            }
-            setSelectValue(this.bitSelect, settings.scopeTriggerBit);
-        } else {
-            this.updateLevel(false);
-        }
-
-        const percent = Math.round(settings.scopeTriggerPosition * 100);
-        if (Number(this.positionInput.value) != percent) {
-            this.positionInput.value = String(percent);
-        }
-        setText(this.positionText, `${percent} %`);
-
-        this.updateStatus();
-    }
-
-    // the level of the settings, not while it is typed in (unless force)
-    private updateLevel(force: boolean) {
-        if (force || document.activeElement != this.levelInput) {
-            const text = formatNumber(
-                this.bb3PlusInstrument.settings.scopeTriggerLevel,
-                6
-            );
-            if (this.levelInput.value != text) {
-                this.levelInput.value = text;
-            }
-        }
-    }
-
-    // also by a timer: "triggered" and "auto" go by the time
-    updateStatus() {
-        const status = this.bb3PlusInstrument.scopeTriggerStatus;
-        setText(this.status, status);
-        setClass(this.status, "text-warning", status == "triggered");
-    }
-}
-
+// The scope: the toolbar (run, acquisition, trigger, zoom), a card per
+// trace, the plot with the scales panel next to it, the measure bar.
 export class ScopeView extends BB3PlusView {
-    private runButton: HTMLButtonElement;
-    private rateSelect: HTMLSelectElement;
-    private spanSelect: HTMLSelectElement;
-    private addSelect: HTMLSelectElement;
-    private addKey = "";
-    private resetZoomButton: HTMLButtonElement;
-    private optionsButton: HTMLButtonElement;
-    private historyButton: HTMLButtonElement;
-    private droppedText = h("span", {
-        className: "text-warning",
-        title: "BB3+ dropped them because they were not read fast enough"
-    });
-    private pushStatus: PushStatus;
-    private samplesError = new ErrorText();
-    private legend = h("div", { className: "EezStudio_BB3Plus_Legend" });
-    private legendKey = "";
     private scopeCanvas: ScopeCanvas;
-    private options: ScopeOptions;
-    private triggerBar: TriggerBar;
+    private toolbar: ScopeToolbar;
+    private channels: ScopeChannels;
+    private sidePanel: ScopeSidePanel;
+    private measureBar: ScopeMeasureBar;
+    private plotCard: HTMLDivElement;
+    // the measurements of the analog traces (by updateStats), for the
+    // window of measureKey
+    private stats = new Map<ScopeTrace, SampleStats | undefined>();
+    private measureKey = "";
+    // performance.now() of the next measurements (see MEASURE_MAX_LOAD)
+    private nextMeasureTime = 0;
 
     constructor(bb3PlusInstrument: BB3PlusInstrument) {
         super(bb3PlusInstrument);
-
-        this.runButton = h("button", {
-            className: "btn btn-sm",
-            style: { width: "60px" },
-            onclick: () =>
-                bb3PlusInstrument.setScopeRunning(
-                    !bb3PlusInstrument.scopeRunning
-                )
-        });
-
-        this.rateSelect = createSelect(
-            SCOPE_RATES.map(rate => ({ value: rate, label: formatRate(rate) })),
-            {
-                style: { width: "110px" },
-                title: "BB3+ sends the averages of the module readings at this rate, every reading if the module doesn't read faster"
-            },
-            rate => bb3PlusInstrument.setScopeRate(rate)
-        );
-
-        this.spanSelect = createSelect(
-            SCOPE_SPANS.map(span => ({ value: span, label: formatTime(span) })),
-            { style: { width: "90px" } },
-            span => bb3PlusInstrument.setScopeSpan(span)
-        );
-
-        this.addSelect = h("select", {
-            className: "form-select form-select-sm",
-            style: { width: "240px" },
-            onchange: () => {
-                const value = this.addSelect.value;
-                this.addSelect.value = "";
-                if (value) {
-                    const [slot, fieldName] = JSON.parse(value);
-                    bb3PlusInstrument.addTrace(slot, fieldName);
-                }
-            }
-        });
-
-        this.pushStatus = new PushStatus(bb3PlusInstrument);
+        this.element.classList.add("EezStudio_BB3Plus_Scope");
 
         this.scopeCanvas = new ScopeCanvas(bb3PlusInstrument);
         this.addDisposer(() => this.scopeCanvas.destroy());
 
-        this.options = new ScopeOptions(bb3PlusInstrument, this.scopeCanvas);
-        this.triggerBar = new TriggerBar(bb3PlusInstrument);
-
-        this.resetZoomButton = iconButton(
-            ICONS.zoomReset,
-            "Reset the zoom: the whole span, auto scales (double click on the plot)",
-            () => this.scopeCanvas.resetZoom()
+        this.sidePanel = new ScopeSidePanel(
+            bb3PlusInstrument,
+            this.scopeCanvas
         );
-
-        this.optionsButton = h(
-            "button",
-            {
-                className:
-                    "btn btn-sm btn-outline-secondary EezStudio_BB3Plus_IconButton",
-                title: "Scales, zoom and the size of the cursor values",
-                onclick: () =>
-                    bb3PlusInstrument.setScopeShowOptions(
-                        !bb3PlusInstrument.settings.scopeShowOptions
-                    )
-            },
-            svgIcon(ICONS.scales),
-            "Scales"
+        this.toolbar = new ScopeToolbar(bb3PlusInstrument, this.scopeCanvas, {
+            addToHistory: () => this.addDlogToHistory()
+        });
+        this.channels = new ScopeChannels(
+            bb3PlusInstrument,
+            this.scopeCanvas,
+            this.sidePanel
         );
+        this.measureBar = new ScopeMeasureBar(bb3PlusInstrument);
 
-        this.historyButton = h(
-            "button",
-            {
-                className:
-                    "btn btn-sm btn-outline-secondary EezStudio_BB3Plus_IconButton",
-                title: "Add the samples of the time shown to the history of the instrument as a DLOG chart",
-                onclick: () => this.addDlogToHistory()
-            },
-            svgIcon(ICONS.history),
-            "To history"
+        this.plotCard = h(
+            "div",
+            { className: "EezStudio_BB3Plus_Card EezStudio_BB3Plus_PlotCard" },
+            this.scopeCanvas.container
         );
 
         this.element.append(
+            this.toolbar.element,
+            this.channels.element,
             h(
                 "div",
-                { className: "EezStudio_BB3Plus_Toolbar" },
-                this.runButton,
-                this.addSelect,
-                h("label", null, "Rate"),
-                this.rateSelect,
-                h("label", null, "Span"),
-                this.spanSelect,
-                h(
-                    "span",
-                    { className: "btn-group" },
-                    iconButton(
-                        ICONS.zoomIn,
-                        "Zoom in the time (mouse wheel)",
-                        () => this.scopeCanvas.zoomTime(1 / BUTTON_ZOOM)
-                    ),
-                    iconButton(
-                        ICONS.zoomOut,
-                        "Zoom out the time (mouse wheel)",
-                        () => this.scopeCanvas.zoomTime(BUTTON_ZOOM)
-                    ),
-                    this.resetZoomButton
-                ),
-                this.optionsButton,
-                this.historyButton,
-                this.droppedText,
-                this.pushStatus.element,
-                this.samplesError.element
+                { className: "EezStudio_BB3Plus_ScopeMain" },
+                this.plotCard,
+                this.sidePanel.element
             ),
-            this.options.element,
-            this.legend,
-            this.scopeCanvas.container,
-            this.triggerBar.element
+            this.measureBar.element
         );
 
-        this.listen(["scope", "fields"], () => this.update());
-        this.listen(["status"], () => this.updateStatus());
-        this.update();
-        this.updateStatus();
+        // the steps of the grid: the time per division, the values per
+        // division of the cards
+        this.scopeCanvas.onScaleChange = () => {
+            this.toolbar.updateScale();
+            this.channels.updateScale();
+        };
 
-        // the auto ranges in the options
+        this.listen(["scope", "fields"], () => this.update());
+        this.listen(["status"], () => this.toolbar.updateStatus());
+        this.update();
+        this.toolbar.updateStatus();
+
+        // the auto ranges in the scales panel
         const timer = setInterval(() => {
             if (
                 bb3PlusInstrument.settings.scopeShowOptions &&
                 this.element.clientWidth > 0
             ) {
-                this.options.updateAxisRows();
+                this.sidePanel.updateAxisRows();
             }
         }, OPTIONS_UPDATE_INTERVAL);
         this.addDisposer(() => clearInterval(timer));
 
         // the trigger status goes by the time too ("triggered", "auto")
         const statusTimer = setInterval(() => {
-            if (
-                bb3PlusInstrument.settings.scopeTriggerMode != "off" &&
-                this.element.clientWidth > 0
-            ) {
-                this.triggerBar.updateStatus();
+            if (this.element.clientWidth > 0) {
+                this.toolbar.updateTriggerStatus();
             }
         }, TRIGGER_STATUS_INTERVAL);
         this.addDisposer(() => clearInterval(statusTimer));
+
+        // the measurements of the window shown
+        const measureTimer = setInterval(() => {
+            if (this.element.clientWidth > 0) {
+                this.updateStats();
+            }
+        }, MEASURE_INTERVAL);
+        this.addDisposer(() => clearInterval(measureTimer));
     }
 
-    // The samples of the traces in the time window shown (of the capture of
-    // the trigger shown): of the fastest trace at its rate, a slower trace
-    // has the sample shown at each of those times (held, not interpolated).
-    // Undefined (with a warning) if there are none.
+    // The measurements of the analog traces in the time window shown, again
+    // only if the window or the samples changed (not while stopped), and
+    // after a pause at least MEASURE_MAX_LOAD times longer than they took.
+    private updateStats() {
+        if (performance.now() < this.nextMeasureTime) {
+            return;
+        }
+        const bb3PlusInstrument = this.bb3PlusInstrument;
+        const capture = bb3PlusInstrument.scopeShownCapture;
+        const { start, end } = this.scopeCanvas.getTimeWindow(capture);
+        const traces = bb3PlusInstrument.traces.filter(
+            trace => !trace.bits && trace.fieldIndex >= 0
+        );
+        const key = JSON.stringify([
+            start,
+            end,
+            capture?.capturedAt,
+            traces.map(trace => [
+                trace.key,
+                this.scopeCanvas.bufferOf(trace, capture).getNewestTime(),
+                this.scopeCanvas.bufferOf(trace, capture).size
+            ])
+        ]);
+        if (key == this.measureKey) {
+            return;
+        }
+        this.measureKey = key;
+        const startTime = performance.now();
+        this.stats = new Map(
+            traces.map(trace => [
+                trace,
+                this.scopeCanvas.bufferOf(trace, capture).getStats(start, end)
+            ])
+        );
+        const endTime = performance.now();
+        this.nextMeasureTime =
+            endTime + (endTime - startTime) * (1 / MEASURE_MAX_LOAD - 1);
+        this.channels.updateStats(this.stats);
+        this.measureBar.updateStats(this.stats);
+    }
+
+    // The samples of the traces shown in the time window shown (of the
+    // capture of the trigger shown): of the fastest trace at its rate, a
+    // slower trace has the sample shown at each of those times (held, not
+    // interpolated). Undefined (with a warning) if there are none.
     private getWindowSamples() {
         const bb3PlusInstrument = this.bb3PlusInstrument;
         const capture = bb3PlusInstrument.scopeShownCapture;
@@ -2472,8 +1989,9 @@ export class ScopeView extends BB3PlusView {
         const bufferOf = (trace: ScopeTrace) =>
             this.scopeCanvas.bufferOf(trace, capture);
 
+        // the traces shown
         const traces = bb3PlusInstrument.traces.filter(
-            trace => bufferOf(trace).period > 0
+            trace => !trace.hidden && bufferOf(trace).period > 0
         );
         let reference: ScopeTrace | undefined;
         for (const trace of traces) {
@@ -2599,157 +2117,15 @@ export class ScopeView extends BB3PlusView {
         notification.success("DLOG chart added to the history");
     }
 
-    private updateStatus() {
-        const bb3PlusInstrument = this.bb3PlusInstrument;
-        this.pushStatus.update();
-        this.samplesError.update(bb3PlusInstrument.samplesError);
-        setText(
-            this.droppedText,
-            `${bb3PlusInstrument.droppedSamples} samples dropped`
-        );
-        setVisible(this.droppedText, bb3PlusInstrument.droppedSamples > 0);
-    }
-
     private update() {
-        const bb3PlusInstrument = this.bb3PlusInstrument;
-        const { settings, traces } = bb3PlusInstrument;
-
         this.scopeCanvas.invalidate();
-
-        const running = bb3PlusInstrument.scopeRunning;
-        setText(this.runButton, running ? "Stop" : "Run");
-        setClass(this.runButton, "btn-secondary", running);
-        setClass(this.runButton, "btn-success", !running);
-
-        setSelectValue(this.rateSelect, settings.scopeRate);
-        setSelectValue(this.spanSelect, settings.scopeSpan);
-
-        // zoomed: the time or a fixed scale
-        const zoomed =
-            bb3PlusInstrument.scopeViewSpan != undefined ||
-            Object.values(settings.scopeAxes).some(
-                axis => axis.mode != DEFAULT_AXIS_SETTINGS.mode
-            );
-        this.resetZoomButton.disabled = !zoomed;
-
-        this.triggerBar.update();
-
-        setClass(this.optionsButton, "active", settings.scopeShowOptions);
-        setVisible(this.options.element, settings.scopeShowOptions);
-        if (settings.scopeShowOptions) {
-            this.options.update();
-        }
-
-        // the sampled fields not shown yet
-        const available = bb3PlusInstrument.sampledFields.filter(
-            ({ slot, field }) =>
-                !traces.find(
-                    trace => trace.slot == slot && trace.fieldName == field.name
-                )
-        );
-        const addItems = available.map(({ slot, slotFields, field }) => ({
-            slot,
-            slotLabel: slotFields.slotLabel || slotFields.moduleName,
-            fieldName: field.name,
-            name: getListName(getFieldNameParts(slotFields, field))
-        }));
-        const addKey = JSON.stringify(addItems);
-        if (addKey != this.addKey) {
-            this.addKey = addKey;
-            // a group per slot
-            const groups: HTMLOptGroupElement[] = [];
-            for (const item of addItems) {
-                const groupLabel = `Slot ${item.slot}: ${item.slotLabel}`;
-                let group = groups[groups.length - 1];
-                if (!group || group.label != groupLabel) {
-                    group = h("optgroup", { label: groupLabel });
-                    groups.push(group);
-                }
-                group.append(
-                    h(
-                        "option",
-                        {
-                            value: JSON.stringify([item.slot, item.fieldName]),
-                            title: item.fieldName
-                        },
-                        item.name
-                    )
-                );
-            }
-            this.addSelect.replaceChildren(
-                h("option", { value: "" }, "Add sampled field..."),
-                ...groups
-            );
-            this.addSelect.value = "";
-            this.addSelect.disabled = available.length == 0;
-        }
-
-        this.updateLegend(traces);
-    }
-
-    private updateLegend(traces: ScopeTrace[]) {
-        const key = JSON.stringify(
-            traces.map(trace => [
-                trace.key,
-                trace.name,
-                trace.details,
-                trace.color,
-                trace.fieldIndex,
-                trace.unit,
-                trace.bits
-            ])
-        );
-        if (key == this.legendKey) {
-            return;
-        }
-        this.legendKey = key;
-
-        if (traces.length == 0) {
-            this.legend.replaceChildren(
-                h(
-                    "span",
-                    { className: "text-muted" },
-                    "Add a sampled module field to see its samples."
-                )
-            );
-            return;
-        }
-
-        this.legend.replaceChildren(
-            ...traces.map(trace => {
-                const unit = trace.bits ? "" : getUnitName(trace.unit);
-                const missing = trace.fieldIndex < 0;
-                return h(
-                    "span",
-                    {
-                        className: "EezStudio_BB3Plus_LegendItem",
-                        title: missing
-                            ? "The module in the slot doesn't have this sampled field"
-                            : trace.details
-                    },
-                    h("span", {
-                        className: "swatch",
-                        style: { backgroundColor: trace.color }
-                    }),
-                    h(
-                        "span",
-                        { className: missing ? "text-muted" : "" },
-                        trace.name +
-                            (unit ? ` [${unit}]` : "") +
-                            (missing ? " (not available)" : "")
-                    ),
-                    h(
-                        "button",
-                        {
-                            className: "btn btn-sm btn-link p-0",
-                            title: "Remove",
-                            onclick: () =>
-                                this.bb3PlusInstrument.removeTrace(trace)
-                        },
-                        "✕"
-                    )
-                );
-            })
-        );
+        this.toolbar.update();
+        this.channels.update();
+        this.sidePanel.update();
+        this.measureBar.update();
+        // the cards and the measurements made again have the values (a new
+        // trace gets them with the next measurements)
+        this.channels.updateStats(this.stats);
+        this.measureBar.updateStats(this.stats);
     }
 }

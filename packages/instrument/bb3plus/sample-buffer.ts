@@ -24,6 +24,24 @@ export const CLOCK_CREEP = 2e-4;
 // blocks of a level at each end
 const BLOCK_SIZES = [8, 64, 512, 4096, 32768];
 
+// The edges of getStats: a sample above the middle by this part of the peak
+// to peak is high, below it by this part low; between them it stays what it
+// was, so the noise around the middle is not an edge.
+const STATS_HYSTERESIS = 0.1;
+
+// The measurements of the samples of a time window (getStats); period and
+// frequency are NaN without two rising edges.
+export interface SampleStats {
+    count: number;
+    mean: number;
+    rms: number;
+    min: number;
+    max: number;
+    // seconds
+    period: number;
+    frequency: number;
+}
+
 function createLevels(capacity: number) {
     return BLOCK_SIZES.map(size => new BlockLevel(size, capacity));
 }
@@ -520,6 +538,98 @@ export class SampleBuffer {
         return this.resultMin <= this.resultMax
             ? { min: this.resultMin, max: this.resultMax }
             : undefined;
+    }
+
+    // The measurements of the samples kept from tFrom to tTo (a NaN sample,
+    // a gap, is skipped), undefined if there are none. The period is the
+    // average time between the rising edges through the middle of the
+    // minimum and the maximum (with STATS_HYSTERESIS), each edge at the time
+    // the samples cross the middle (linear between the two samples).
+    getStats(tFrom: number, tTo: number): SampleStats | undefined {
+        const window = this.getWindow(tFrom, tTo);
+        if (!window) {
+            return undefined;
+        }
+        const { first, last } = window;
+        this.getMinMax(first, last + 1);
+        const min = this.resultMin;
+        const max = this.resultMax;
+        if (min > max) {
+            return undefined;
+        }
+        const middle = (min + max) / 2;
+        const high = middle + (max - min) * STATS_HYSTERESIS;
+        const low = middle - (max - min) * STATS_HYSTERESIS;
+
+        let count = 0;
+        let sum = 0;
+        let sumOfSquares = 0;
+        // -1 low, 1 high, 0 not known yet (also after a gap)
+        let state = 0;
+        let previous = NaN;
+        // the sample number of the last crossing of the middle upwards
+        let crossing = NaN;
+        let firstEdge = NaN;
+        let lastEdge = NaN;
+        let edges = 0;
+
+        // the samples in the ring, one or two parts without the modulo
+        const data = this.data;
+        const capacity = data.length;
+        const oldest = this.nextNumber - this._size;
+        let index = (this.start + (first - oldest)) % capacity;
+        let number = first;
+        while (number <= last) {
+            const end = Math.min(last + 1, number + (capacity - index));
+            for (; number < end; number++, index++) {
+                const value = data[index];
+                // (value != value: NaN, a gap)
+                if (value != value) {
+                    state = 0;
+                    previous = NaN;
+                    continue;
+                }
+                count++;
+                sum += value;
+                sumOfSquares += value * value;
+                if (value >= middle) {
+                    if (previous < middle) {
+                        crossing =
+                            number -
+                            1 +
+                            (middle - previous) / (value - previous);
+                    }
+                    if (value > high) {
+                        if (state == -1) {
+                            if (edges == 0) {
+                                firstEdge = crossing;
+                            }
+                            lastEdge = crossing;
+                            edges++;
+                        }
+                        state = 1;
+                    }
+                } else if (value < low) {
+                    state = -1;
+                }
+                previous = value;
+            }
+            index = 0;
+        }
+
+        const period =
+            edges >= 2
+                ? ((lastEdge - firstEdge) / (edges - 1)) * this._period
+                : NaN;
+        return {
+            count,
+            mean: sum / count,
+            rms: Math.sqrt(sumOfSquares / count),
+            min,
+            max,
+            period,
+            frequency: period > 0 ? 1 / period : NaN
+        };
     }
 
     // the samples kept with a time from tFrom to tTo: the number of the

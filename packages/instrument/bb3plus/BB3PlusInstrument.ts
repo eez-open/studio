@@ -48,6 +48,10 @@ import {
     parseLogRecord
 } from "instrument/bb3plus/log-model";
 import { SampleBuffer } from "instrument/bb3plus/sample-buffer";
+import {
+    MeasurementKind,
+    isMeasurementKind
+} from "instrument/bb3plus/scope-measurements";
 
 // samples per second asked for: BB3+ sends the averages of the module
 // readings at this rate, every reading if the module doesn't read faster (the
@@ -104,10 +108,31 @@ interface PendingCommand {
     resolve: (result: { output: string; errors: number[] }) => void;
 }
 
+// a trace of the scope: its field, hidden (not drawn, it still gets the
+// samples), the color the user chose instead of the color of the field, the
+// measurements of the measure bar
 interface TraceSettings {
     slot: number;
     fieldName: string;
+    hidden?: boolean;
+    color?: string;
+    measurements?: MeasurementKind[];
 }
+
+// the colors the user can choose for a trace, readable on both themes
+export const TRACE_CUSTOM_COLORS = [
+    "#e8590c",
+    "#1c7ed6",
+    "#2f9e44",
+    "#9c36b5",
+    "#d6336c",
+    "#0c8599",
+    "#6b7785"
+];
+
+// the side of a Y axis of the scope, by default the axes alternate (the
+// first one on the left)
+export type ScopeAxisSide = "left" | "right";
 
 // the scale of a Y axis of the scope:
 //     full   the full range of the fields (ScopeTrace.fullRange), auto if
@@ -197,6 +222,11 @@ interface Settings {
     // the scales of the Y axes: "unit<unit>" of the float fields, "bits" of
     // the integer fields
     scopeAxes: { [key: string]: ScopeAxisSettings };
+    // the side of each Y axis the user chose (the keys of scopeAxes)
+    scopeAxisSides: { [key: string]: ScopeAxisSide };
+    // the ticks of the other Y axes of a plot on the grid of its first axis
+    // (their scale fits it), not on their own
+    scopeAlignAxes: boolean;
     scopeReadoutSize: number;
     scopeShowOptions: boolean;
     // the traces in the channel colors, not in the field colors
@@ -227,11 +257,18 @@ export class ScopeTrace {
     // period of the subscription sent, 0 if not subscribed
     subscribedPeriod = 0;
 
+    // see TraceSettings
+    hidden = false;
+    customColor: string | undefined;
+    measurements: MeasurementKind[] = [];
+
     // the name shown, as the BB3+ dlog view names its columns ("U",
-    // "Ch1 U", "DCP405+ #2 U"), and the color drawn; set by
+    // "Ch1 U", "DCP405+ #2 U"), the color drawn (customColor or
+    // fieldColor), the color of the field (or of its channel); set by
     // BB3PlusInstrument.updateTraceLooks
     name: string;
     color: string;
+    fieldColor: string;
     // the module, the slot and the field name, for the tooltips
     details = "";
 
@@ -243,6 +280,7 @@ export class ScopeTrace {
     ) {
         this.name = `${slot}: ${fieldName}`;
         this.color = paletteColor;
+        this.fieldColor = paletteColor;
     }
 
     get key() {
@@ -324,7 +362,7 @@ export class BB3PlusInstrument {
         this.settings = this.loadSettings();
 
         for (const traceSettings of this.settings.scopeTraces) {
-            this.createTrace(traceSettings.slot, traceSettings.fieldName);
+            this.createTrace(traceSettings);
         }
         this.updateTraceLooks();
 
@@ -447,19 +485,23 @@ export class BB3PlusInstrument {
                     ? saved.scopeSpan
                     : DEFAULT_SPAN,
             scopeTraces: Array.isArray(saved.scopeTraces)
-                ? saved.scopeTraces.filter(
-                      (trace: any) =>
-                          typeof trace?.slot == "number" &&
-                          typeof trace?.fieldName == "string"
-                  )
+                ? saved.scopeTraces
+                      .filter(
+                          (trace: any) =>
+                              typeof trace?.slot == "number" &&
+                              typeof trace?.fieldName == "string"
+                      )
+                      .map(loadTrace)
                 : [],
             scopeAxes: loadAxes(saved.scopeAxes),
+            scopeAxisSides: loadAxisSides(saved.scopeAxisSides),
+            scopeAlignAxes: saved.scopeAlignAxes !== false,
             scopeReadoutSize: READOUT_SIZES.find(
                 size => size.value == saved.scopeReadoutSize
             )
                 ? saved.scopeReadoutSize
                 : DEFAULT_READOUT_SIZE,
-            scopeShowOptions: saved.scopeShowOptions === true,
+            scopeShowOptions: saved.scopeShowOptions !== false,
             scopeChannelColors: saved.scopeChannelColors === true,
             scopeTriggerMode: SCOPE_TRIGGER_MODES.find(
                 mode => mode.value == saved.scopeTriggerMode
@@ -882,6 +924,30 @@ export class BB3PlusInstrument {
         this.emit("scope");
     }
 
+    // the side of the axis: chosen by the user, else by its index in the
+    // analog axes drawn (alternating, the first one on the left)
+    getScopeAxisSide(key: string, index: number): ScopeAxisSide {
+        return (
+            this.settings.scopeAxisSides[key] ??
+            (index % 2 == 0 ? "left" : "right")
+        );
+    }
+
+    setScopeAxisSide(key: string, side: ScopeAxisSide) {
+        this.settings.scopeAxisSides = {
+            ...this.settings.scopeAxisSides,
+            [key]: side
+        };
+        this.settingsChanged();
+        this.emit("scope");
+    }
+
+    setScopeAlignAxes(align: boolean) {
+        this.settings.scopeAlignAxes = align;
+        this.settingsChanged();
+        this.emit("scope");
+    }
+
     setScopeReadoutSize(size: number) {
         this.settings.scopeReadoutSize = size;
         this.settingsChanged();
@@ -1167,12 +1233,19 @@ export class BB3PlusInstrument {
         return result;
     }
 
-    private createTrace(slot: number, fieldName: string) {
-        const used = new Set(this.traces.map(trace => trace.color));
+    private createTrace(traceSettings: TraceSettings) {
+        const used = new Set(this.traces.map(trace => trace.paletteColor));
         const color =
             TRACE_COLORS.find(color => !used.has(color)) ??
             TRACE_COLORS[this.traces.length % TRACE_COLORS.length];
-        const trace = new ScopeTrace(slot, fieldName, color);
+        const trace = new ScopeTrace(
+            traceSettings.slot,
+            traceSettings.fieldName,
+            color
+        );
+        trace.hidden = traceSettings.hidden ?? false;
+        trace.customColor = traceSettings.color;
+        trace.measurements = traceSettings.measurements ?? [];
         trace.buffer.setSpan(this.getBufferSpan());
         this.resolveTraceField(trace);
         this.traces.push(trace);
@@ -1188,10 +1261,31 @@ export class BB3PlusInstrument {
         ) {
             return;
         }
-        this.createTrace(slot, fieldName);
+        this.createTrace({ slot, fieldName });
         this.updateTraceLooks();
         this.saveTraces();
         this.syncSampleSubscriptions();
+        this.emit("scope");
+    }
+
+    // not drawn (the samples still come, it is shown again at once)
+    setTraceHidden(trace: ScopeTrace, hidden: boolean) {
+        trace.hidden = hidden;
+        this.saveTraces();
+        this.emit("scope");
+    }
+
+    // undefined: the color of the field
+    setTraceColor(trace: ScopeTrace, color: string | undefined) {
+        trace.customColor = color;
+        this.updateTraceLooks();
+        this.saveTraces();
+        this.emit("scope");
+    }
+
+    setTraceMeasurements(trace: ScopeTrace, measurements: MeasurementKind[]) {
+        trace.measurements = measurements;
+        this.saveTraces();
         this.emit("scope");
     }
 
@@ -1220,7 +1314,11 @@ export class BB3PlusInstrument {
     private saveTraces() {
         this.settings.scopeTraces = this.traces.map(trace => ({
             slot: trace.slot,
-            fieldName: trace.fieldName
+            fieldName: trace.fieldName,
+            hidden: trace.hidden || undefined,
+            color: trace.customColor,
+            measurements:
+                trace.measurements.length > 0 ? trace.measurements : undefined
         }));
         this.settingsChanged();
     }
@@ -1262,19 +1360,21 @@ export class BB3PlusInstrument {
             const field = this.findTraceField(trace);
             if (!slotFields || !field) {
                 trace.name = `${trace.slot}: ${trace.fieldName}`;
-                trace.color = trace.paletteColor;
+                trace.fieldColor = trace.paletteColor;
+                trace.color = trace.customColor ?? trace.fieldColor;
                 trace.details = "";
                 continue;
             }
             named.push(trace);
             parts.push(getFieldNameParts(slotFields, field));
-            trace.color =
+            trace.fieldColor =
                 getThemeColor(
                     this.settings.scopeChannelColors
                         ? field.channelColor
                         : field.color,
                     themeName
                 ) ?? trace.paletteColor;
+            trace.color = trace.customColor ?? trace.fieldColor;
             trace.details =
                 `${slotFields.moduleName}, slot ${trace.slot}, ` + field.name;
         }
@@ -1374,6 +1474,34 @@ export class BB3PlusInstrument {
         }
         this.updateTrigger();
     }
+}
+
+function loadTrace(saved: any): TraceSettings {
+    return {
+        slot: saved.slot,
+        fieldName: saved.fieldName,
+        hidden: saved.hidden === true || undefined,
+        color:
+            typeof saved.color == "string" &&
+            /^#[0-9a-f]{6}$/i.test(saved.color)
+                ? saved.color
+                : undefined,
+        measurements: Array.isArray(saved.measurements)
+            ? saved.measurements.filter(isMeasurementKind)
+            : undefined
+    };
+}
+
+function loadAxisSides(saved: any) {
+    const sides: { [key: string]: ScopeAxisSide } = {};
+    if (saved && typeof saved == "object") {
+        for (const key of Object.keys(saved)) {
+            if (saved[key] == "left" || saved[key] == "right") {
+                sides[key] = saved[key];
+            }
+        }
+    }
+    return sides;
 }
 
 function loadAxes(saved: any) {

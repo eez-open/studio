@@ -204,34 +204,414 @@
     word-break: break-all;
 }
 
-// scope
+// scope: cards on a tinted page
 
-.EezStudio_BB3Plus_Legend {
-    flex-shrink: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 14px;
-    padding: 4px 10px;
+.EezStudio_BB3Plus_Scope {
+    --bb3plus-page: var(--bs-tertiary-bg);
+    --bb3plus-card: var(--bs-body-bg);
+    --bb3plus-border: @borderColor;
+    --bb3plus-strong-border: @darkBorderColor;
+    --bb3plus-muted: var(--bs-secondary-color);
+    --bb3plus-hover: rgba(128, 128, 128, 0.14);
+    --bb3plus-grid: rgba(128, 128, 128, 0.22);
+
+    gap: 10px;
+    padding: 10px;
+    background-color: var(--bb3plus-page);
     font-size: 13px;
 }
 
-.EezStudio_BB3Plus_LegendItem {
+[data-bs-theme="dark"] .EezStudio_BB3Plus_Scope {
+    --bb3plus-page: #16191c;
+    --bb3plus-hover: rgba(255, 255, 255, 0.08);
+    --bb3plus-grid: rgba(160, 160, 160, 0.2);
+}
+
+.EezStudio_BB3Plus_Card {
+    flex-shrink: 0;
+    background-color: var(--bb3plus-card);
+    border: 1px solid var(--bb3plus-border);
+    border-radius: 8px;
+}
+
+.EezStudio_BB3Plus_Muted {
+    color: var(--bb3plus-muted);
+}
+
+.EezStudio_BB3Plus_GroupLabel {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bb3plus-muted);
+    white-space: nowrap;
+}
+
+.EezStudio_BB3Plus_Separator {
+    align-self: stretch;
+    width: 1px;
+    margin: 4px;
+    background-color: var(--bb3plus-border);
+}
+
+// toolbar
+
+.EezStudio_BB3Plus_ScopeToolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 10px;
+}
+
+.EezStudio_BB3Plus_ToolbarRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+}
+
+.EezStudio_BB3Plus_ToolbarStatus {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-left: auto;
+    font-size: 12px;
+}
+
+.EezStudio_BB3Plus_RunButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 6px;
+    font-weight: 600;
+
+    .icon {
+        display: inline-flex;
+    }
+
+    svg {
+        fill: currentColor;
+    }
+}
+
+.EezStudio_BB3Plus_StatusPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: default;
+
+    &::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background-color: currentColor;
+    }
+
+    &.green {
+        color: var(--bs-success-text-emphasis);
+        background-color: var(--bs-success-bg-subtle);
+    }
+
+    &.amber {
+        color: var(--bs-warning-text-emphasis);
+        background-color: var(--bs-warning-bg-subtle);
+    }
+
+    &.blue {
+        color: var(--bs-info-text-emphasis);
+        background-color: var(--bs-info-bg-subtle);
+    }
+
+    &.gray {
+        color: var(--bb3plus-muted);
+        background-color: var(--bs-secondary-bg);
+    }
+}
+
+// a value or a command in a small box: a prefix, the value; a <select>
+// over it (invisible) or an input in it
+.EezStudio_BB3Plus_Chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid var(--bb3plus-border);
+    border-radius: 6px;
+    background-color: var(--bb3plus-card);
+    color: var(--bs-body-color);
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover:not(:disabled) {
+        border-color: var(--bb3plus-strong-border);
+    }
+
+    &:focus-within,
+    &:focus-visible {
+        outline: 2px solid rgba(var(--bs-primary-rgb), 0.35);
+        outline-offset: 1px;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+    &.small {
+        height: 26px;
+        padding: 0 9px;
+        font-size: 12px;
+    }
+
+    .prefix {
+        color: var(--bb3plus-muted);
+    }
+
+    .value {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .icon {
+        display: inline-flex;
+    }
+
+    .swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    & > select.overlay {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        font-size: 13px;
+
+        &:disabled {
+            cursor: default;
+        }
+    }
+}
+
+.EezStudio_BB3Plus_InputChip {
+    gap: 4px;
+    cursor: text;
+
+    input {
+        min-width: 3ch;
+        padding: 0;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+    }
+
+    input.percent {
+        width: 3.2ch;
+        -moz-appearance: textfield;
+
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    }
+}
+
+.EezStudio_BB3Plus_GhostButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--bs-body-color);
+
+    &:hover:not(:disabled) {
+        background-color: var(--bb3plus-hover);
+    }
+
+    &:disabled {
+        opacity: 0.35;
+    }
+
+    &.active {
+        color: var(--bs-primary-text-emphasis);
+        background-color: var(--bs-primary-bg-subtle);
+    }
+}
+
+.EezStudio_BB3Plus_HelpButton {
+    width: 24px;
+    height: 24px;
+    margin-left: -4px;
+    color: var(--bs-primary);
+}
+
+.EezStudio_BB3Plus_LinkButton {
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--bs-link-color);
+    font-size: 12px;
 
-    .swatch {
-        display: inline-block;
-        width: 14px;
-        height: 3px;
-        border-radius: 1px;
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+// channel cards
+
+.EezStudio_BB3Plus_Channels {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.EezStudio_BB3Plus_ChannelCard {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-height: 54px;
+    padding: 6px 6px 6px 20px;
+
+    .bar {
+        position: absolute;
+        left: 8px;
+        top: 9px;
+        bottom: 9px;
+        width: 4px;
+        border-radius: 2px;
     }
 
-    .btn-link {
-        color: var(--bs-secondary-color);
-        text-decoration: none;
-        line-height: 1;
+    .title {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 120px;
     }
+
+    .name {
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .unit {
+        margin-left: 5px;
+        font-weight: 400;
+        color: var(--bb3plus-muted);
+    }
+
+    .sub {
+        font-size: 11.5px;
+        color: var(--bb3plus-muted);
+        white-space: nowrap;
+    }
+
+    .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 58px;
+
+        .label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--bb3plus-muted);
+        }
+
+        .value {
+            font-size: 14px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+    }
+
+    .buttons {
+        display: flex;
+        gap: 2px;
+    }
+
+    &.hidden-trace {
+        .bar,
+        .title,
+        .stat {
+            opacity: 0.4;
+        }
+    }
+
+    &.missing .title {
+        opacity: 0.6;
+    }
+}
+
+.EezStudio_BB3Plus_AddChannel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 54px;
+    padding: 0 18px;
+    border: 1px dashed var(--bb3plus-strong-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--bs-body-color);
+
+    &:hover,
+    &.active {
+        background-color: var(--bb3plus-hover);
+    }
+}
+
+// plot and scales panel
+
+.EezStudio_BB3Plus_ScopeMain {
+    flex-grow: 1;
+    display: flex;
+    gap: 10px;
+    min-height: 0;
+}
+
+.EezStudio_BB3Plus_PlotCard {
+    flex-grow: 1;
+    flex-shrink: 1;
+    display: flex;
+    min-width: 0;
+    padding: 6px 4px 2px;
 }
 
 .EezStudio_BB3Plus_ScopeCanvas {
@@ -239,6 +619,8 @@
     flex-grow: 1;
     min-height: 100px;
     overflow: hidden;
+    touch-action: none;
+    user-select: none;
 
     & > canvas {
         position: absolute;
@@ -247,66 +629,326 @@
     }
 }
 
-.EezStudio_BB3Plus_IconButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding-top: 3px;
-    padding-bottom: 3px;
+.EezStudio_BB3Plus_ScopeSide {
+    width: 290px;
+    overflow-y: auto;
+    padding: 12px 16px 14px;
 
-    svg {
-        flex-shrink: 0;
-    }
-}
-
-.EezStudio_BB3Plus_ScopeOptions {
-    flex-shrink: 0;
-    padding: 4px 10px 6px;
-    border-bottom: 1px solid @borderColor;
-    font-size: 13px;
-}
-
-.EezStudio_BB3Plus_ScopeOptionsRow {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 8px;
-    padding: 3px 0;
-
-    & > label {
-        margin: 0;
-        white-space: nowrap;
-    }
-
-    & > select,
-    & > input {
-        flex-shrink: 0;
-    }
-
-    & > .name {
-        display: inline-flex;
+    .header {
+        display: flex;
         align-items: center;
-        gap: 4px;
-        width: 130px;
+        justify-content: space-between;
+        margin: -4px -8px 4px 0;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .sectionTitle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 14px 0 8px;
         font-weight: 600;
+
+        .swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .EezStudio_BB3Plus_LinkButton {
+            margin-left: auto;
+            font-weight: 400;
+        }
+    }
+
+    .divider {
+        height: 1px;
+        margin-top: 16px;
+        background-color: var(--bb3plus-border);
+    }
+
+    & > .EezStudio_BB3Plus_LinkButton {
+        margin-top: 18px;
+    }
+}
+
+.EezStudio_BB3Plus_AxisSection {
+    margin: 0 -8px;
+    padding: 0 8px 4px;
+    border-radius: 6px;
+    transition: background-color 0.4s;
+
+    &.flash {
+        background-color: rgba(var(--bs-primary-rgb), 0.12);
+    }
+}
+
+.EezStudio_BB3Plus_SideRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.EezStudio_BB3Plus_Segmented {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 7px;
+    background-color: var(--bs-tertiary-bg);
+
+    button {
+        flex: 1;
+        padding: 4px 6px;
+        border: 0;
+        border-radius: 5px;
+        background: transparent;
+        color: var(--bs-secondary-color);
+        font-size: 12.5px;
         white-space: nowrap;
-        overflow: hidden;
+
+        &:hover:not(.active) {
+            color: var(--bs-body-color);
+        }
+
+        &.active {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+        }
     }
 
-    .swatch {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 2px;
-        flex-shrink: 0;
-    }
-
-    &.text-muted {
+    &.compact button {
+        padding: 2px 10px;
         font-size: 12px;
     }
 }
 
-.EezStudio_BB3Plus_ScopeCanvas {
-    touch-action: none;
+[data-bs-theme="dark"] .EezStudio_BB3Plus_Segmented {
+    background-color: rgba(0, 0, 0, 0.3);
+
+    button.active {
+        background-color: var(--bs-tertiary-bg);
+    }
+}
+
+.EezStudio_BB3Plus_RangeInputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+
+    label {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin: 0;
+        font-size: 11.5px;
+        color: var(--bb3plus-muted);
+    }
+
+    input {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+.EezStudio_BB3Plus_Check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 0;
+    font-size: 12.5px;
+    cursor: pointer;
+
+    .form-check-input {
+        margin: 0;
+    }
+}
+
+// measure bar
+
+.EezStudio_BB3Plus_MeasureBar {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    min-height: 50px;
+    padding: 6px 8px 6px 12px;
+
+    .items {
+        flex-grow: 1;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 26px;
+    }
+
+    .item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding-right: 14px;
+
+        .label {
+            font-size: 11px;
+            color: var(--bb3plus-muted);
+            white-space: nowrap;
+        }
+
+        .value {
+            font-size: 14px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .remove {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: none;
+            padding: 2px;
+            border: 0;
+            border-radius: 3px;
+            background: transparent;
+            color: var(--bb3plus-muted);
+            line-height: 0;
+
+            &:hover {
+                background-color: var(--bb3plus-hover);
+                color: var(--bs-body-color);
+            }
+        }
+
+        &:hover .remove {
+            display: block;
+        }
+    }
+}
+
+// popup menu (in the document body)
+
+.EezStudio_BB3Plus_Menu {
+    position: fixed;
+    z-index: 2000;
+    min-width: 240px;
+    padding: 6px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    font-size: 13px;
     user-select: none;
+
+    .item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+
+        .icon {
+            display: inline-flex;
+            width: 16px;
+            color: var(--bs-secondary-color);
+        }
+
+        .swatch {
+            width: 12px;
+            height: 12px;
+            margin: 0 2px;
+            border-radius: 3px;
+        }
+
+        .label {
+            flex-grow: 1;
+            white-space: nowrap;
+        }
+
+        .detail {
+            color: var(--bs-secondary-color);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .check {
+            display: inline-flex;
+            color: var(--bs-primary);
+        }
+
+        .chevron {
+            display: inline-flex;
+            color: var(--bs-secondary-color);
+        }
+
+        &:hover,
+        &.open {
+            background-color: var(--bs-tertiary-bg);
+        }
+
+        &.danger {
+            color: var(--bs-danger-text-emphasis);
+
+            .icon {
+                color: inherit;
+            }
+        }
+
+        &.disabled {
+            opacity: 0.55;
+            cursor: default;
+            background: none;
+        }
+    }
+
+    .separator {
+        height: 1px;
+        margin: 6px 4px;
+        background-color: var(--bs-border-color);
+    }
+
+    .header {
+        padding: 6px 10px 4px;
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--bs-secondary-color);
+    }
+
+    .custom {
+        padding: 4px 10px 6px;
+    }
+}
+
+.EezStudio_BB3Plus_Swatches {
+    display: flex;
+    gap: 8px;
+
+    button {
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+
+        &.selected {
+            box-shadow:
+                0 0 0 2px var(--bs-body-bg),
+                0 0 0 3.5px var(--swatch-color);
+        }
+    }
+}
+
+.EezStudio_BB3Plus_MenuRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 4px;
 }

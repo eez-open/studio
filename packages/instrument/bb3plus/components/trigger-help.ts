@@ -2,9 +2,7 @@
 // Studio theme) with what the trigger does and illustrations of the edge and
 // the level, the pre-trigger, the modes and the next trigger.
 
-import bootstrap from "bootstrap";
-
-import { h } from "instrument/bb3plus/components/dom";
+import { h, showModal } from "instrument/bb3plus/components/dom";
 
 // a trace in the illustrations, readable in both themes
 const TRACE_COLOR = "#3584e4";
@@ -367,53 +365,10 @@ export function showTriggerHelp(triggerColor: string) {
             null,
             h("li", null, "Zoom into a window: the trigger stays where it is in the window."),
             h("li", null, "After Single (or Stop) zoom and move in the window like in any stopped plot."),
-            h("li", null, "To history saves the window shown as a DLOG chart."),
+            h("li", null, "Save to history saves the window shown as a DLOG chart."),
             h("li", null, "The source is one of the traces; a new source puts the level in the middle of its samples.")
         )
     );
 
-    const dialog = h(
-        "div",
-        { className: "modal", tabIndex: -1, role: "dialog" },
-        h(
-            "div",
-            { className: "modal-dialog modal-lg modal-dialog-scrollable" },
-            h(
-                "div",
-                { className: "modal-content" },
-                h(
-                    "div",
-                    { className: "modal-header" },
-                    h("h5", { className: "modal-title" }, "How the trigger works"),
-                    h("button", {
-                        type: "button",
-                        className: "btn-close",
-                        "data-bs-dismiss": "modal",
-                        ariaLabel: "Close"
-                    })
-                ),
-                body,
-                h(
-                    "div",
-                    { className: "modal-footer" },
-                    h(
-                        "button",
-                        {
-                            type: "button",
-                            className: "btn btn-primary",
-                            "data-bs-dismiss": "modal"
-                        },
-                        "Close"
-                    )
-                )
-            )
-        )
-    );
-    document.body.append(dialog);
-    const modal = new bootstrap.Modal(dialog);
-    dialog.addEventListener("hidden.bs.modal", () => {
-        modal.dispose();
-        dialog.remove();
-    });
-    modal.show();
+    showModal("How the trigger works", body);
 }
