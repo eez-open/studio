@@ -24,22 +24,334 @@ export const CLOCK_CREEP = 2e-4;
 // blocks of a level at each end
 const BLOCK_SIZES = [8, 64, 512, 4096, 32768];
 
-// The edges of getStats: a sample above the middle by this part of the peak
-// to peak is high, below it by this part low; between them it stays what it
-// was, so the noise around the middle is not an edge.
-const STATS_HYSTERESIS = 0.1;
+// The top and the base of getStats: the most common value of the upper and
+// of the lower half of the range (a histogram of STATS_BINS bins, the
+// average of the samples of the fullest bin and its neighbors) if that bin
+// has at least STATS_FLAT_RATIO times the average count of the bins of its
+// half (a flat top or base, also with noise); else the maximum and the
+// minimum (a sine, a triangle).
+const STATS_BINS = 256;
+const STATS_FLAT_RATIO = 4;
 
-// The measurements of the samples of a time window (getStats); period and
-// frequency are NaN without two rising edges.
+// The edges of getStats, parts of the amplitude above the base: from below
+// the low level to above the high level is a rising edge (the noise between
+// them is not an edge), the rise and the fall times are between them, the
+// widths and the period between the crossings of the middle level.
+const STATS_EDGE_LOW = 0.1;
+const STATS_EDGE_MIDDLE = 0.5;
+const STATS_EDGE_HIGH = 0.9;
+
+// What getStats measures besides the count, the mean, the RMS, the AC RMS,
+// the minimum and the maximum: the top and the base (and what comes from
+// them), the edges (they need the top and the base).
+export interface StatsOptions {
+    levels?: boolean;
+    edges?: boolean;
+}
+
+// The measurements of the samples of a time window (getStats), NaN if not
+// measured (StatsOptions) or not there (the overshoot of a constant value,
+// the period without two rising edges). Times in seconds, the overshoot,
+// the undershoot and the duty cycles in %.
 export interface SampleStats {
     count: number;
     mean: number;
     rms: number;
+    // the RMS of the values minus the mean (the standard deviation): the
+    // ripple and the noise
+    acRms: number;
     min: number;
     max: number;
-    // seconds
+    top: number;
+    base: number;
+    amplitude: number;
+    // above the top, below the base (% of the amplitude)
+    overshoot: number;
+    undershoot: number;
     period: number;
     frequency: number;
+    riseTime: number;
+    fallTime: number;
+    // from a rising to the next falling edge, from a falling to the next
+    // rising edge; the part of the period (%)
+    positiveWidth: number;
+    negativeWidth: number;
+    positiveDuty: number;
+    negativeDuty: number;
+}
+
+// The level of the histogram bins from to to - 1 (see STATS_BINS), extreme
+// (the maximum or the minimum) if the half has no flat level or its fullest
+// bin is the outermost one (a sine has the most samples at its peaks; a flat
+// level there is the extreme value anyway).
+function getHistogramLevel(
+    counts: Float64Array,
+    sums: Float64Array,
+    from: number,
+    to: number,
+    outermost: number,
+    extreme: number
+) {
+    let mode = from;
+    let total = 0;
+    for (let i = from; i < to; i++) {
+        total += counts[i];
+        if (counts[i] > counts[mode]) {
+            mode = i;
+        }
+    }
+    if (
+        total == 0 ||
+        mode == outermost ||
+        counts[mode] < (STATS_FLAT_RATIO * total) / (to - from)
+    ) {
+        return extreme;
+    }
+    let count = 0;
+    let sum = 0;
+    for (
+        let i = Math.max(from, mode - 1);
+        i <= Math.min(to - 1, mode + 1);
+        i++
+    ) {
+        count += counts[i];
+        sum += sums[i];
+    }
+    return sum / count;
+}
+
+// The passes of getStats over a part of the samples, each a small loop (the
+// JIT makes them fast): the count and the sums of the values minus shift
+// (fewer digits lost for the AC RMS of a small ripple on a large value), the
+// histogram, the edges. A check for NaN (a gap) in a loop makes it several
+// times slower: the sums are made without it, again with it only if they
+// are NaN; the other passes check only if there was a gap.
+class StatsSums {
+    count = 0;
+    sum = 0;
+    sumOfSquares = 0;
+    gaps = false;
+
+    add(data: Float32Array, begin: number, end: number, shift: number) {
+        let count = end - begin;
+        let sum = 0;
+        let sumOfSquares = 0;
+        for (let index = begin; index < end; index++) {
+            const d = data[index] - shift;
+            sum += d;
+            sumOfSquares += d * d;
+        }
+        if (sum != sum) {
+            this.gaps = true;
+            count = 0;
+            sum = 0;
+            sumOfSquares = 0;
+            for (let index = begin; index < end; index++) {
+                const value = data[index];
+                // (value == value: not NaN)
+                if (value == value) {
+                    const d = value - shift;
+                    count++;
+                    sum += d;
+                    sumOfSquares += d * d;
+                }
+            }
+        }
+        this.count += count;
+        this.sum += sum;
+        this.sumOfSquares += sumOfSquares;
+    }
+}
+
+function addToHistogram(
+    data: Float32Array,
+    begin: number,
+    end: number,
+    min: number,
+    scale: number,
+    counts: Float64Array,
+    sums: Float64Array,
+    gaps: boolean
+) {
+    const last = counts.length - 1;
+    if (!gaps) {
+        for (let index = begin; index < end; index++) {
+            const value = data[index];
+            let bin = ((value - min) * scale) | 0;
+            if (bin > last) {
+                bin = last;
+            }
+            counts[bin]++;
+            sums[bin] += value;
+        }
+        return;
+    }
+    for (let index = begin; index < end; index++) {
+        const value = data[index];
+        if (value == value) {
+            let bin = ((value - min) * scale) | 0;
+            if (bin > last) {
+                bin = last;
+            }
+            counts[bin]++;
+            sums[bin] += value;
+        }
+    }
+}
+
+// where the samples previous (number - 1) and value (number) cross the level
+// (they are on its two sides), a fractional sample number
+function getCrossing(
+    number: number,
+    previous: number,
+    value: number,
+    level: number
+) {
+    return number - 1 + (level - previous) / (value - previous);
+}
+
+// The edges between the low and the high level, the crossings of the middle
+// level (see STATS_EDGE_LOW), the times in sample numbers; a gap (NaN)
+// starts again. A sample is in a zone between the levels: only a sample in
+// another zone than the one before crosses a level (with noise, comparing
+// each sample with the one before is a branch the CPU can't predict).
+class EdgeScanner {
+    // the zone of the previous sample: 0 below low, 1 below middle, 2 up to
+    // high, 3 above high; -1 not known (at the start, after a gap)
+    private zone = -1;
+    // -1 below low last, 1 above high last, 0 neither yet
+    private state = 0;
+    private previous = NaN;
+    // the last crossings: low and middle upwards, high and middle downwards;
+    // the middle of the last rising and falling edge
+    private lowUp = NaN;
+    private middleUp = NaN;
+    private highDown = NaN;
+    private middleDown = NaN;
+    private lastRising = NaN;
+    private lastFalling = NaN;
+    // the sums of the times between the edges and their counts
+    periodSum = 0;
+    periods = 0;
+    riseSum = 0;
+    rises = 0;
+    fallSum = 0;
+    falls = 0;
+    positiveSum = 0;
+    positives = 0;
+    negativeSum = 0;
+    negatives = 0;
+
+    constructor(
+        private low: number,
+        private middle: number,
+        private high: number
+    ) {}
+
+    // the samples data[begin, end) are the numbers from firstNumber on;
+    // gaps: they can have NaN
+    scan(
+        data: Float32Array,
+        begin: number,
+        end: number,
+        firstNumber: number,
+        gaps: boolean
+    ) {
+        const { low, middle, high } = this;
+        let {
+            zone,
+            state,
+            previous,
+            lowUp,
+            middleUp,
+            highDown,
+            middleDown,
+            lastRising,
+            lastFalling
+        } = this;
+        let number = firstNumber;
+        for (let index = begin; index < end; index++, number++) {
+            const value = data[index];
+            if (gaps && value != value) {
+                zone = -1;
+                state = 0;
+                lastRising = NaN;
+                lastFalling = NaN;
+                continue;
+            }
+            const newZone =
+                value < low ? 0 : value < middle ? 1 : value > high ? 3 : 2;
+            if (newZone != zone) {
+                if (zone >= 0 && newZone > zone) {
+                    // upwards: previous is below the levels it crosses
+                    if (zone == 0) {
+                        lowUp = getCrossing(number, previous, value, low);
+                    }
+                    if (zone <= 1 && newZone >= 2) {
+                        middleUp = getCrossing(number, previous, value, middle);
+                    }
+                    if (newZone == 3 && state == -1) {
+                        // a rising edge
+                        this.riseSum +=
+                            getCrossing(number, previous, value, high) - lowUp;
+                        this.rises++;
+                        if (lastRising == lastRising) {
+                            this.periodSum += middleUp - lastRising;
+                            this.periods++;
+                        }
+                        if (lastFalling == lastFalling) {
+                            this.negativeSum += middleUp - lastFalling;
+                            this.negatives++;
+                        }
+                        lastRising = middleUp;
+                    }
+                } else if (zone >= 0) {
+                    // downwards
+                    if (zone == 3) {
+                        highDown = getCrossing(number, previous, value, high);
+                    }
+                    if (zone >= 2 && newZone <= 1) {
+                        middleDown = getCrossing(
+                            number,
+                            previous,
+                            value,
+                            middle
+                        );
+                    }
+                    if (newZone == 0 && state == 1) {
+                        // a falling edge
+                        this.fallSum +=
+                            getCrossing(number, previous, value, low) -
+                            highDown;
+                        this.falls++;
+                        if (lastRising == lastRising) {
+                            this.positiveSum += middleDown - lastRising;
+                            this.positives++;
+                        }
+                        lastFalling = middleDown;
+                    }
+                }
+                if (newZone == 3) {
+                    state = 1;
+                } else if (newZone == 0) {
+                    state = -1;
+                }
+                zone = newZone;
+            }
+            previous = value;
+        }
+        Object.assign(this, {
+            zone,
+            state,
+            previous,
+            lowUp,
+            middleUp,
+            highDown,
+            middleDown,
+            lastRising,
+            lastFalling
+        });
+    }
 }
 
 function createLevels(capacity: number) {
@@ -540,12 +852,31 @@ export class SampleBuffer {
             : undefined;
     }
 
+    // the indexes in data of the samples from number first to last: one or
+    // two parts of the ring, [begin, end) each
+    private getDataParts(first: number, last: number): [number, number][] {
+        const capacity = this.data.length;
+        const oldest = this.nextNumber - this._size;
+        const begin = (this.start + (first - oldest)) % capacity;
+        const count = last - first + 1;
+        return begin + count <= capacity
+            ? [[begin, begin + count]]
+            : [
+                  [begin, capacity],
+                  [0, begin + count - capacity]
+              ];
+    }
+
     // The measurements of the samples kept from tFrom to tTo (a NaN sample,
-    // a gap, is skipped), undefined if there are none. The period is the
-    // average time between the rising edges through the middle of the
-    // minimum and the maximum (with STATS_HYSTERESIS), each edge at the time
-    // the samples cross the middle (linear between the two samples).
-    getStats(tFrom: number, tTo: number): SampleStats | undefined {
+    // a gap, is skipped), undefined if there are none; see SampleStats and
+    // StatsOptions. The times of the edges are where the samples cross the
+    // levels (linear between the two samples around it), the times measured
+    // are the averages of the edges in the window (not across a gap).
+    getStats(
+        tFrom: number,
+        tTo: number,
+        options: StatsOptions = {}
+    ): SampleStats | undefined {
         const window = this.getWindow(tFrom, tTo);
         if (!window) {
             return undefined;
@@ -557,79 +888,127 @@ export class SampleBuffer {
         if (min > max) {
             return undefined;
         }
-        const middle = (min + max) / 2;
-        const high = middle + (max - min) * STATS_HYSTERESIS;
-        const low = middle - (max - min) * STATS_HYSTERESIS;
-
-        let count = 0;
-        let sum = 0;
-        let sumOfSquares = 0;
-        // -1 low, 1 high, 0 not known yet (also after a gap)
-        let state = 0;
-        let previous = NaN;
-        // the sample number of the last crossing of the middle upwards
-        let crossing = NaN;
-        let firstEdge = NaN;
-        let lastEdge = NaN;
-        let edges = 0;
-
-        // the samples in the ring, one or two parts without the modulo
         const data = this.data;
-        const capacity = data.length;
-        const oldest = this.nextNumber - this._size;
-        let index = (this.start + (first - oldest)) % capacity;
-        let number = first;
-        while (number <= last) {
-            const end = Math.min(last + 1, number + (capacity - index));
-            for (; number < end; number++, index++) {
-                const value = data[index];
-                // (value != value: NaN, a gap)
-                if (value != value) {
-                    state = 0;
-                    previous = NaN;
-                    continue;
-                }
-                count++;
-                sum += value;
-                sumOfSquares += value * value;
-                if (value >= middle) {
-                    if (previous < middle) {
-                        crossing =
-                            number -
-                            1 +
-                            (middle - previous) / (value - previous);
-                    }
-                    if (value > high) {
-                        if (state == -1) {
-                            if (edges == 0) {
-                                firstEdge = crossing;
-                            }
-                            lastEdge = crossing;
-                            edges++;
-                        }
-                        state = 1;
-                    }
-                } else if (value < low) {
-                    state = -1;
-                }
-                previous = value;
-            }
-            index = 0;
-        }
+        const parts = this.getDataParts(first, last);
 
-        const period =
-            edges >= 2
-                ? ((lastEdge - firstEdge) / (edges - 1)) * this._period
-                : NaN;
-        return {
+        const shift = (min + max) / 2;
+        const sums = new StatsSums();
+        for (const [begin, end] of parts) {
+            sums.add(data, begin, end, shift);
+        }
+        const count = sums.count;
+        const meanOfShifted = sums.sum / count;
+        const meanOfSquaresOfShifted = sums.sumOfSquares / count;
+        const stats: SampleStats = {
             count,
-            mean: sum / count,
-            rms: Math.sqrt(sumOfSquares / count),
+            mean: shift + meanOfShifted,
+            rms: Math.sqrt(
+                Math.max(
+                    0,
+                    meanOfSquaresOfShifted +
+                        2 * shift * meanOfShifted +
+                        shift * shift
+                )
+            ),
+            acRms: Math.sqrt(
+                Math.max(
+                    0,
+                    meanOfSquaresOfShifted - meanOfShifted * meanOfShifted
+                )
+            ),
             min,
             max,
-            period,
-            frequency: period > 0 ? 1 / period : NaN
+            top: NaN,
+            base: NaN,
+            amplitude: NaN,
+            overshoot: NaN,
+            undershoot: NaN,
+            period: NaN,
+            frequency: NaN,
+            riseTime: NaN,
+            fallTime: NaN,
+            positiveWidth: NaN,
+            negativeWidth: NaN,
+            positiveDuty: NaN,
+            negativeDuty: NaN
         };
+        if (!options.levels && !options.edges) {
+            return stats;
+        }
+
+        // top and base: of a constant value the value, without edges
+        if (!(max > min)) {
+            stats.top = max;
+            stats.base = min;
+            stats.amplitude = 0;
+            return stats;
+        }
+        const binCounts = new Float64Array(STATS_BINS);
+        const binSums = new Float64Array(STATS_BINS);
+        for (const [begin, end] of parts) {
+            addToHistogram(
+                data,
+                begin,
+                end,
+                min,
+                STATS_BINS / (max - min),
+                binCounts,
+                binSums,
+                sums.gaps
+            );
+        }
+        const half = STATS_BINS / 2;
+        const top = getHistogramLevel(
+            binCounts,
+            binSums,
+            half,
+            STATS_BINS,
+            STATS_BINS - 1,
+            max
+        );
+        const base = getHistogramLevel(binCounts, binSums, 0, half, 0, min);
+        const amplitude = top - base;
+        stats.top = top;
+        stats.base = base;
+        stats.amplitude = amplitude;
+        stats.overshoot = ((max - top) / amplitude) * 100;
+        stats.undershoot = ((base - min) / amplitude) * 100;
+        if (!options.edges) {
+            return stats;
+        }
+
+        const scanner = new EdgeScanner(
+            base + amplitude * STATS_EDGE_LOW,
+            base + amplitude * STATS_EDGE_MIDDLE,
+            base + amplitude * STATS_EDGE_HIGH
+        );
+        let number = first;
+        for (const [begin, end] of parts) {
+            scanner.scan(data, begin, end, number, sums.gaps);
+            number += end - begin;
+        }
+        const period = this._period;
+        if (scanner.periods > 0) {
+            stats.period = (scanner.periodSum / scanner.periods) * period;
+            stats.frequency = 1 / stats.period;
+        }
+        if (scanner.rises > 0) {
+            stats.riseTime = (scanner.riseSum / scanner.rises) * period;
+        }
+        if (scanner.falls > 0) {
+            stats.fallTime = (scanner.fallSum / scanner.falls) * period;
+        }
+        if (scanner.positives > 0) {
+            stats.positiveWidth =
+                (scanner.positiveSum / scanner.positives) * period;
+            stats.positiveDuty = (stats.positiveWidth / stats.period) * 100;
+        }
+        if (scanner.negatives > 0) {
+            stats.negativeWidth =
+                (scanner.negativeSum / scanner.negatives) * period;
+            stats.negativeDuty = (stats.negativeWidth / stats.period) * 100;
+        }
+        return stats;
     }
 
     // the samples kept with a time from tFrom to tTo: the number of the

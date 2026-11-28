@@ -26,11 +26,13 @@ import { getListName } from "instrument/bb3plus/labels";
 import {
     MeasurementKind,
     MEASUREMENTS,
-    getMeasurementLabel,
+    MEASUREMENT_GROUPS,
+    getMeasurement,
     formatMeasurement
 } from "instrument/bb3plus/scope-measurements";
 import type { ScopeCanvas } from "instrument/bb3plus/components/ScopeView";
 import { showTriggerHelp } from "instrument/bb3plus/components/trigger-help";
+import { showMeasureHelp } from "instrument/bb3plus/components/measure-help";
 import { PopupMenu, MenuItem } from "instrument/bb3plus/components/popup-menu";
 import {
     h,
@@ -1114,19 +1116,54 @@ export class ScopeChannels {
     }
 }
 
-// the measurements of the trace, checked if in the measure bar
+// the item of the measurements help at the end of their menus
+const MEASURE_HELP_ITEMS: MenuItem[] = [
+    { type: "separator" },
+    {
+        label: "How the measurements work",
+        icon: ICONS.help,
+        onClick: () => showMeasureHelp()
+    }
+];
+
+// the measurements of the trace by their groups (the headers after the
+// prefix), checked if in the measure bar; the help at the end
 function getMeasurementItems(
     bb3PlusInstrument: BB3PlusInstrument,
-    trace: ScopeTrace
+    trace: ScopeTrace,
+    prefix: string = ""
 ): MenuItem[] {
-    return MEASUREMENTS.map(measurement => ({
-        label: measurement.label,
-        title: measurement.title,
-        checked: trace.measurements.includes(measurement.kind),
-        keepOpen: true,
-        onClick: () =>
-            toggleMeasurement(bb3PlusInstrument, trace, measurement.kind)
-    }));
+    return [
+        ...getMeasurementGroupItems(bb3PlusInstrument, trace, prefix),
+        ...MEASURE_HELP_ITEMS
+    ];
+}
+
+function getMeasurementGroupItems(
+    bb3PlusInstrument: BB3PlusInstrument,
+    trace: ScopeTrace,
+    prefix: string
+): MenuItem[] {
+    return MEASUREMENT_GROUPS.flatMap(({ group, label }) => [
+        {
+            type: "header" as const,
+            label: prefix ? `${prefix} · ${label}` : label
+        },
+        ...MEASUREMENTS.filter(measurement => measurement.group == group).map(
+            measurement => ({
+                label: measurement.label,
+                title: measurement.title,
+                checked: trace.measurements.includes(measurement.kind),
+                keepOpen: true,
+                onClick: () =>
+                    toggleMeasurement(
+                        bb3PlusInstrument,
+                        trace,
+                        measurement.kind
+                    )
+            })
+        )
+    ]);
 }
 
 function toggleMeasurement(
@@ -1535,11 +1572,26 @@ export class ScopeMeasureBar {
             },
             h(
                 "span",
-                {
-                    className: "EezStudio_BB3Plus_GroupLabel",
-                    title: "The measurements of the samples shown"
-                },
-                "Measure"
+                { className: "EezStudio_BB3Plus_MeasureTitle" },
+                h(
+                    "span",
+                    {
+                        className: "EezStudio_BB3Plus_GroupLabel",
+                        title: "The measurements of the samples shown"
+                    },
+                    "Measure"
+                ),
+                h(
+                    "button",
+                    {
+                        type: "button",
+                        className:
+                            "EezStudio_BB3Plus_GhostButton EezStudio_BB3Plus_HelpButton",
+                        title: "How the measurements work",
+                        onclick: () => showMeasureHelp()
+                    },
+                    svgIcon(ICONS.help, 16)
+                )
             ),
             this.itemsElement,
             this.addButton
@@ -1601,14 +1653,12 @@ export class ScopeMeasureBar {
                     "div",
                     {
                         className: "item",
-                        title: MEASUREMENTS.find(
-                            measurement => measurement.kind == item.kind
-                        )!.title
+                        title: getMeasurement(item.kind).title
                     },
                     h(
                         "span",
                         { className: "label" },
-                        `${item.trace.name} ${getMeasurementLabel(item.kind)}`
+                        `${item.trace.name} ${getMeasurement(item.kind).label}`
                     ),
                     item.value,
                     h(
@@ -1645,22 +1695,30 @@ export class ScopeMeasureBar {
         const bb3PlusInstrument = this.bb3PlusInstrument;
         const traces = this.analogTraces;
         if (traces.length == 0) {
-            return [{ label: "No channels with values", disabled: true }];
-        }
-        if (traces.length == 1) {
             return [
-                { type: "header", label: traces[0].name },
-                ...getMeasurementItems(bb3PlusInstrument, traces[0])
+                { label: "No channels with values", disabled: true },
+                ...MEASURE_HELP_ITEMS
             ];
         }
-        return traces.map(trace => ({
-            label: trace.name,
-            color: trace.color,
-            detail:
-                trace.measurements.length > 0
-                    ? String(trace.measurements.length)
-                    : undefined,
-            submenu: () => getMeasurementItems(bb3PlusInstrument, trace)
-        }));
+        if (traces.length == 1) {
+            return getMeasurementItems(
+                bb3PlusInstrument,
+                traces[0],
+                traces[0].name
+            );
+        }
+        return [
+            ...traces.map(trace => ({
+                label: trace.name,
+                color: trace.color,
+                detail:
+                    trace.measurements.length > 0
+                        ? String(trace.measurements.length)
+                        : undefined,
+                submenu: () =>
+                    getMeasurementGroupItems(bb3PlusInstrument, trace, "")
+            })),
+            ...MEASURE_HELP_ITEMS
+        ];
     }
 }

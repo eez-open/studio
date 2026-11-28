@@ -15,6 +15,7 @@ import {
 import { SampleBuffer, SampleStats } from "instrument/bb3plus/sample-buffer";
 import { getUnitName, formatNumber } from "instrument/bb3plus/fields-model";
 import { encodeDlog, DlogColumn } from "instrument/bb3plus/dlog-writer";
+import { getStatsOptions } from "instrument/bb3plus/scope-measurements";
 import { h, BB3PlusView } from "instrument/bb3plus/components/dom";
 import {
     Axis,
@@ -1997,7 +1998,9 @@ export class ScopeView extends BB3PlusView {
         this.stats = new Map(
             traces.map(trace => [
                 trace,
-                this.scopeCanvas.bufferOf(trace, capture).getStats(start, end)
+                this.scopeCanvas
+                    .bufferOf(trace, capture)
+                    .getStats(start, end, getStatsOptions(trace.measurements))
             ])
         );
         const endTime = performance.now();

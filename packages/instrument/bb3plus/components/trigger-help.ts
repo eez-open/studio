@@ -3,28 +3,13 @@
 // the level, the pre-trigger, the modes and the next trigger.
 
 import { h, showModal } from "instrument/bb3plus/components/dom";
-
-// a trace in the illustrations, readable in both themes
-const TRACE_COLOR = "#3584e4";
-
-// the path of y = f(x) from x0 to x1
-function curve(x0: number, x1: number, f: (x: number) => number, step = 2) {
-    let d = "";
-    for (let x = x0; x <= x1 + 1e-9; x += step) {
-        d += `${d ? "L" : "M"}${x.toFixed(1)} ${f(x).toFixed(1)}`;
-    }
-    return d;
-}
-
-function text(
-    x: number,
-    y: number,
-    content: string,
-    anchor: "start" | "middle" | "end" = "middle",
-    extra = ""
-) {
-    return `<text x="${x}" y="${y}" text-anchor="${anchor}" ${extra}>${content}</text>`;
-}
+import {
+    TRACE_COLOR,
+    curve,
+    text,
+    frame,
+    svg
+} from "instrument/bb3plus/components/help-svg";
 
 // the level line across a frame with the tag "T" at its right end
 function levelLine(x0: number, x1: number, y: number, color: string) {
@@ -32,17 +17,6 @@ function levelLine(x0: number, x1: number, y: number, color: string) {
         `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${color}" stroke-width="1.5"/>` +
         `<rect x="${x1 - 15}" y="${y - 7}" width="14" height="14" fill="${color}"/>` +
         text(x1 - 8, y + 4, "T", "middle", 'fill="#000" font-weight="bold" font-size="10"')
-    );
-}
-
-function frame(x0: number, y0: number, x1: number, y1: number) {
-    return `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="none" stroke="currentColor" stroke-opacity="0.3"/>`;
-}
-
-function svg(width: number, height: number, content: string) {
-    return (
-        `<svg viewBox="0 0 ${width} ${height}" width="100%" style="max-width: ${width}px; display: block; margin: 8px auto 4px" ` +
-        `fill="currentColor" font-size="12" font-family="inherit" xmlns="http://www.w3.org/2000/svg">${content}</svg>`
     );
 }
 
@@ -250,13 +224,14 @@ function nextTriggerIllustration(trigger: string) {
     return svg(640, 185, content);
 }
 
+// the status next to Run / Stop
 const STATUSES: [string, string][] = [
-    ["armed", "waiting for a trigger"],
-    ["triggered", "a trigger was found, its window is (being) shown"],
-    ["auto", "Auto: no trigger for a while, the samples scroll"],
-    ["stopped", "the scope is stopped, the last window stays"],
-    ["stopped, not triggered", "the scope is stopped before a trigger"],
-    ["no source", "there is no trace to trigger on"]
+    ["Running", "the trigger is off, the samples scroll as they come"],
+    ["Armed", "waiting for a trigger"],
+    ["Triggered", "a trigger was found, its window is (being) shown"],
+    ["Auto", "Auto: no trigger for a while, the samples scroll"],
+    ["Stopped", "the scope is stopped, the last window stays (if there was a trigger)"],
+    ["No source", "there is no trace to trigger on"]
 ];
 
 // shows the help, triggerColor is the color of the trigger in the plot (it
@@ -305,7 +280,7 @@ export function showTriggerHelp(triggerColor: string) {
         p("The part of the window before the trigger."),
         preTriggerIllustration(triggerColor),
         p(
-            "Set it with the slider or drag the trigger point line (the handle at the top of the plot; dashed while waiting for a trigger). A window shown moves around its trigger at once: it keeps a whole span before the trigger, after it only the samples of its window."
+            "Type it in Pre in the toolbar or drag the trigger point line (the handle at the top of the plot; dashed while waiting for a trigger). A window shown moves around its trigger at once: it keeps a whole span before the trigger, after it only the samples of its window."
         )
     );
 
@@ -331,7 +306,7 @@ export function showTriggerHelp(triggerColor: string) {
         "Modes",
         modes,
         modesIllustration(triggerColor),
-        p("Before the first trigger the samples scroll (the status is armed). Choosing a mode runs the scope.")
+        p("Before the first trigger the samples scroll (the status is Armed). Choosing a mode runs the scope.")
     );
 
     section(
